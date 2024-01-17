@@ -19,14 +19,16 @@
 
 
 from fastapi import APIRouter
-from .endpoints import certification, hardware, submission
+from .endpoints import certification, hardware  #, submission
 
 router = APIRouter()
-router.include_router(certification.router, prefix="/v1/certification", tags=["certification"])
+router.include_router(
+    certification.router, prefix="/v1/certification", tags=["certification"]
+)
 router.include_router(hardware.router, prefix="/v1/hardware", tags=["hardware"])
-router.include_router(submission.router, prefix="/v1/submission", tags=["submission"])
+# router.include_router(submission.router, prefix="/v1/submission", tags=["submission"])
 
 
 @router.get("/")
 def root():
-    return "Hardware Information API (HiAPI) server"
+    return "Hardware Information API (hi-api) server"

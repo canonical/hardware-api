@@ -18,22 +18,11 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi import APIRouter
 
-from hi_api.router import router
-
-app = FastAPI(redirect_slashes=False)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=[
-        "*",
-    ],
-)
+router = APIRouter()
 
 
-app.include_router(router)
+@router.get("/{oem_id}")
+def fetch_hardware_compatibility(oem_id: str):
+    return {"message": f"Compatibility information for OEM {oem_id}"}
