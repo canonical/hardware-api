@@ -1,9 +1,11 @@
 use hilib::send_collected_info;
+use std::process::exit;
 use tokio;
 
 #[tokio::main]
 async fn main() {
-    if let Err(e) = send_collected_info().await {
-        eprintln!("Failed to process motherboard info: {}", e);
+    match send_collected_info().await {
+        Ok(_) => exit(0),
+        Err(e) => eprintln!("ERROR: {}", e),
     }
 }
