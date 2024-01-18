@@ -1,5 +1,7 @@
 [package]
 name = "hilib"
+description = "collects and sends hardware information to hi-api to find testing status of the device model"
+license = "GPLv3"
 version = "0.1.0"
 edition = "2021"
 
