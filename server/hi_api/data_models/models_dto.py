@@ -17,16 +17,20 @@
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
+from typing import List
+from pydantic import BaseModel
 
-from fastapi import APIRouter
-from .endpoints import certification
-
-router = APIRouter()
-router.include_router(
-    certification.router, prefix="/v1/certification", tags=["certification"]
-)
+from hi_api.data_models.enums import DeviceType
 
 
-@router.get("/")
-def root():
-    return "Hardware Information API (hi-api) server"
+class DeviceDTO(BaseModel):
+    device_type: DeviceType
+    vendor: str
+    model: str
+
+
+class SystemInfoDTO(BaseModel):
+    os_version: str
+    vendor: str
+    model: str
+    devices: List[DeviceDTO]

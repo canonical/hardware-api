@@ -18,11 +18,24 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
 
-from fastapi import APIRouter
-
-router = APIRouter()
+from enum import Enum
 
 
-@router.get("/{oem_id}")
-def fetch_hardware_compatibility(oem_id: str):
-    return {"message": f"Compatibility information for OEM {oem_id}"}
+class DeviceType(str, Enum):
+    AUDIO = "AUDIO"
+    BIOS = "BIOS"
+    BLUETOOTH = "BLUETOOTH"
+    BOARD = "BOARD"
+    CHASSIS = "CHASSIS"
+    CPU = "PROCESSOR"
+    DISK = "DISK"
+    GPU = "GPU"
+    NETWORK_ADAPTER = "NETWORK"
+    VIDEO = "VIDEO"
+    WIFI_ADAPTER = "WIRELESS"
+
+
+class CertificationStatus(str, Enum):
+    CERTIFIED = "Certified"
+    PARTIALLY_CERTIFIED = "Partially Certified"
+    NOT_SEEN = "Not Seen"

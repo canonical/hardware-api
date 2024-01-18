@@ -18,15 +18,16 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
 
-from fastapi import APIRouter
-from .endpoints import certification
+from pydantic import BaseModel
 
-router = APIRouter()
-router.include_router(
-    certification.router, prefix="/v1/certification", tags=["certification"]
-)
+from hi_api.data_models.enums import CertificationStatus
+from hi_api.data_models.models_dto import DeviceDTO
 
 
-@router.get("/")
-def root():
-    return "Hardware Information API (hi-api) server"
+class CertificationResponse(BaseModel):
+    detail: CertificationStatus
+
+
+class PartialCertificationResponse(BaseModel):
+    detail: CertificationStatus
+    certified_components: list[DeviceDTO]

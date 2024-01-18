@@ -18,11 +18,55 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
 
+from pydantic import BaseModel
 from fastapi import APIRouter
+
+from hi_api.data_models.models_dto import SystemInfoDTO, DeviceDTO
+from hi_api.data_models.enums import CertificationStatus, DeviceType
+
 
 router = APIRouter()
 
 
-@router.post("/status")
-def check_certification(data: dict):
-    return {"detail": "Certified/not certified"}
+def check_certification_status(
+    system_info: SystemInfoDTO,
+) -> tuple[CertificationStatus, list[DeviceDTO]]:
+    # Example logic
+    certified_vendors = ["Vendor1", "Vendor2"]
+    certified_models = {"Vendor1": ["Model1", "Model2"], "Vendor2": ["Model3"]}
+
+    if system_info.vendor not in certified_vendors:
+        return CertificationStatus.NOT_SEEN, []
+
+    if system_info.model in certified_models.get(system_info.vendor, []):
+        return CertificationStatus.CERTIFIED, []
+
+    certified_components = []
+    for device in system_info.devices:
+        if device.device_type in [DeviceType.BOARD, DeviceType.CPU, DeviceType.GPU]:
+            certified_components.append(device)
+
+    if not certified_components:
+        return CertificationStatus.NOT_SEEN, []
+
+    return CertificationStatus.PARTIALLY_CERTIFIED, certified_components
+
+
+class CertificationResponse(BaseModel):
+    detail: CertificationStatus
+
+
+class PartialCertificationResponse(BaseModel):
+    detail: CertificationStatus
+    certified_components: list[DeviceDTO]
+
+
+@router.post(
+    "/status", response_model=CertificationResponse | PartialCertificationResponse
+)
+def check_certification(system_info: SystemInfoDTO):
+    status, components = check_certification_status(system_info)
+
+    if status != CertificationStatus.PARTIALLY_CERTIFIED:
+        return {"detail": status}
+    return {"detail": status, "certified_components": components}
