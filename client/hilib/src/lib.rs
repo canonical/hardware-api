@@ -18,14 +18,10 @@ fn collect_info() -> Result<MotherboardInfo, Box<dyn std::error::Error>> {
     let mut manufacturer = String::new();
     let mut product_name = String::new();
 
-    match table_load_from_device() {
-        Ok(data) => {
-            for baseboard in data.collect::<SMBiosBaseboardInformation>() {
-                manufacturer = baseboard.manufacturer().to_string();
-                product_name = baseboard.product().to_string();
-            }
-        }
-        Err(err) => println!("failure: {:?}", err),
+    let data = table_load_from_device()?;
+    for baseboard in data.collect::<SMBiosBaseboardInformation>() {
+        manufacturer = baseboard.manufacturer().to_string();
+        product_name = baseboard.product().to_string();
     }
 
     Ok(MotherboardInfo {
