@@ -1,50 +1,50 @@
-use serde::{Serialize, Deserialize};
-use dmidecode_rs::DmiDecoder;
 use reqwest;
+use serde::{Deserialize, Serialize};
+use smbioslib::*;
 
 #[derive(Serialize, Deserialize)]
 pub struct MotherboardInfo {
     pub manufacturer: String,
     pub product_name: String,
-    // ... other fields ...
 }
 
-pub async fn get_motherboard_info_and_send() -> Result<(), Box<dyn std::error::Error>> {
-    let info = fetch_motherboard_info()?;
-    send_to_web_service(&info).await?;
+pub async fn send_collected_info() -> Result<(), Box<dyn std::error::Error>> {
+    let info = collect_info()?;
+    send_info(&info).await?;
     Ok(())
 }
 
-fn fetch_motherboard_info() -> Result<MotherboardInfo, Box<dyn std::error::Error>> {
-    let decoder = DmiDecoder::new()?;
+fn collect_info() -> Result<MotherboardInfo, Box<dyn std::error::Error>> {
     let mut manufacturer = String::new();
     let mut product_name = String::new();
 
-    for structure in decoder.decode()? {
-        if let Some(baseboard) = structure.baseboard() {
-            manufacturer = baseboard.manufacturer().unwrap_or_default().to_owned();
-            product_name = baseboard.product().unwrap_or_default().to_owned();
+    match table_load_from_device() {
+        Ok(data) => {
+            for baseboard in data.collect::<SMBiosBaseboardInformation>() {
+                manufacturer = baseboard.manufacturer().to_string();
+                product_name = baseboard.product().to_string();
+            }
         }
+        Err(err) => println!("failure: {:?}", err),
     }
 
     Ok(MotherboardInfo {
         manufacturer,
         product_name,
-        // ... other fields ...
     })
 }
 
-async fn send_to_web_service(info: &MotherboardInfo) -> Result<(), reqwest::Error> {
+async fn send_info(info: &MotherboardInfo) -> Result<(), reqwest::Error> {
     let client = reqwest::Client::new();
-    let res = client.post("http://your-web-service-url.com/api")
+    let res = client
+        .post("http://your-web-service-url.com/api")
         .json(&info)
         .send()
         .await?;
-    
+
     if res.status().is_success() {
         Ok(())
     } else {
         Err(res.error_for_status().unwrap_err())
     }
 }
-
