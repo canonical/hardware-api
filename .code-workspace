@@ -1,0 +1,27 @@
+{
+    "folders": [
+        {
+            "name": "Server",
+            "path": "server"
+        },
+        {
+            "name": "Client CLI",
+            "path": "client/cli"
+        },
+        {
+            "name": "Client Library",
+            "path": "client/lib"
+        }
+    ],
+    "settings": {
+        "python.pythonPath": "server/.venv/bin/python",
+        "rust-analyzer.cargo.loadOutDirsFromCheck": true,
+        "rust-analyzer.procMacro.enable": true
+    },
+    "extensions": {
+        "recommendations": [
+            "ms-python.python",
+            "matklad.rust-analyzer"
+        ]
+    }
+}
