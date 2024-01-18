@@ -1,0 +1,235 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "FastAPI",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/v1/certification/status": {
+      "post": {
+        "tags": [
+          "certification"
+        ],
+        "summary": "Check Certification",
+        "operationId": "check_certification_v1_certification_status_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SystemInfoDTO"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/CertificationResponse"
+                    },
+                    {
+                      "$ref": "#/components/schemas/PartialCertificationResponse"
+                    }
+                  ],
+                  "title": "Response Check Certification V1 Certification Status Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/": {
+      "get": {
+        "summary": "Root",
+        "operationId": "root__get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "CertificationResponse": {
+        "properties": {
+          "detail": {
+            "$ref": "#/components/schemas/CertificationStatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail"
+        ],
+        "title": "CertificationResponse"
+      },
+      "CertificationStatus": {
+        "type": "string",
+        "enum": [
+          "Certified",
+          "Partially Certified",
+          "Not Seen"
+        ],
+        "title": "CertificationStatus"
+      },
+      "DeviceDTO": {
+        "properties": {
+          "device_type": {
+            "$ref": "#/components/schemas/DeviceType"
+          },
+          "vendor": {
+            "type": "string",
+            "title": "Vendor"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          }
+        },
+        "type": "object",
+        "required": [
+          "device_type",
+          "vendor",
+          "model"
+        ],
+        "title": "DeviceDTO"
+      },
+      "DeviceType": {
+        "type": "string",
+        "enum": [
+          "AUDIO",
+          "BIOS",
+          "BLUETOOTH",
+          "BOARD",
+          "CHASSIS",
+          "PROCESSOR",
+          "DISK",
+          "GPU",
+          "NETWORK",
+          "VIDEO",
+          "WIRELESS"
+        ],
+        "title": "DeviceType"
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "PartialCertificationResponse": {
+        "properties": {
+          "detail": {
+            "$ref": "#/components/schemas/CertificationStatus"
+          },
+          "certified_components": {
+            "items": {
+              "$ref": "#/components/schemas/DeviceDTO"
+            },
+            "type": "array",
+            "title": "Certified Components"
+          }
+        },
+        "type": "object",
+        "required": [
+          "detail",
+          "certified_components"
+        ],
+        "title": "PartialCertificationResponse"
+      },
+      "SystemInfoDTO": {
+        "properties": {
+          "os_version": {
+            "type": "string",
+            "title": "Os Version"
+          },
+          "vendor": {
+            "type": "string",
+            "title": "Vendor"
+          },
+          "model": {
+            "type": "string",
+            "title": "Model"
+          },
+          "devices": {
+            "items": {
+              "$ref": "#/components/schemas/DeviceDTO"
+            },
+            "type": "array",
+            "title": "Devices"
+          }
+        },
+        "type": "object",
+        "required": [
+          "os_version",
+          "vendor",
+          "model",
+          "devices"
+        ],
+        "title": "SystemInfoDTO"
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}
