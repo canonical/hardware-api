@@ -18,11 +18,11 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
 
-from pydantic import BaseModel
 from fastapi import APIRouter
 
 from hwapi.data_models.models_dto import SystemInfoDTO, DeviceDTO
 from hwapi.data_models.enums import CertificationStatus, DeviceType
+from hwapi.endpoints.response_dto import CertificationResponse, PartialCertificationResponse
 
 
 router = APIRouter()
@@ -50,15 +50,6 @@ def check_certification_status(
         return CertificationStatus.NOT_SEEN, []
 
     return CertificationStatus.PARTIALLY_CERTIFIED, certified_components
-
-
-class CertificationResponse(BaseModel):
-    detail: CertificationStatus
-
-
-class PartialCertificationResponse(BaseModel):
-    detail: CertificationStatus
-    certified_components: list[DeviceDTO]
 
 
 @router.post(
