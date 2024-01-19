@@ -6,7 +6,7 @@ The repo contains the API server and client for retrieving hardware information.
 
 ```bash
 poetry install
-poetry run uvicorn hi_api.main:app —reload
+poetry run uvicorn hi_api.main:app --reload
 ```
 
 ## Build and run the reference CLI tool (`hwctl`)
