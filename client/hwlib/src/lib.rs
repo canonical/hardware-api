@@ -8,9 +8,9 @@ pub struct MotherboardInfo {
     pub product_name: String,
 }
 
-pub async fn send_collected_info() -> Result<(), Box<dyn std::error::Error>> {
+pub async fn send_collected_info(url: &str) -> Result<(), Box<dyn std::error::Error>> {
     let info = collect_info()?;
-    send_info(&info).await?;
+    send_info(&info, &str).await?;
     Ok(())
 }
 
@@ -30,10 +30,10 @@ fn collect_info() -> Result<MotherboardInfo, Box<dyn std::error::Error>> {
     })
 }
 
-async fn send_info(info: &MotherboardInfo) -> Result<(), reqwest::Error> {
+async fn send_info(info: &MotherboardInfo, url: &str) -> Result<(), reqwest::Error> {
     let client = reqwest::Client::new();
     let res = client
-        .post("http://your-web-service-url.com/api")
+        .post(url)
         .json(&info)
         .send()
         .await?;

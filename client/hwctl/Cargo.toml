@@ -1,6 +1,6 @@
 [package]
-name = "hictl"
-description = "hilib backed CLI tool for collecting and sending hardware information to hi-api to find testing status of device models"
+name = "hwctl"
+description = "hwlib backed CLI tool for collecting and sending hardware information to hi-api to find testing status of device models"
 license = "GPL-3.0-only"
 version = "0.1.0"
 edition = "2021"
@@ -9,4 +9,4 @@ edition = "2021"
 
 [dependencies]
 tokio = { version = "1.35.1", features = ["full"] }
-hilib = { path = "../hilib", version = "0.1.0" }
+hwlib = { path = "../hwlib", version = "0.1.0" }
