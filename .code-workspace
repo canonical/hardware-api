@@ -1,0 +1,40 @@
+{
+    "folders": [
+        {
+            "name": "Server",
+            "path": "server",
+            "extensions": {
+                "recommendations": [
+                    "ms-python.python"
+                ]
+            },
+            "settings": {
+                "python.pythonPath": "server/.venv/bin/python"
+            }
+        },
+        {
+            "name": "hwctl",
+            "path": "client/hwctl",
+            "extensions": {
+                "recommendations": [
+                    "matklad.rust-analyzer"
+                ]
+            },
+            "settings": {
+                "rust-analyzer.linkedProjects": ["client/hwctl/Cargo.toml"]
+            }
+        },
+        {
+            "name": "hwlib",
+            "path": "client/hwlib",
+            "extensions": {
+                "recommendations": [
+                    "matklad.rust-analyzer"
+                ]
+            },
+            "settings": {
+                "rust-analyzer.linkedProjects": ["client/hwlib/Cargo.toml"]
+            }
+        }
+    ]
+}

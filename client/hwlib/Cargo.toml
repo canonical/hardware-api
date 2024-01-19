@@ -1,0 +1,14 @@
+[package]
+name = "hwlib"
+description = "collects and sends hardware information to hi-api to find testing status of the device model"
+license = "GPL-3.0-only"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+reqwest = { version = "0.11.23", features = ["json"] }
+serde = { version = "1.0.195", features = ["derive"] }
+smbios-lib = "0.9.1"
+tokio = "1.35.1"
