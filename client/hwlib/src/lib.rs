@@ -10,7 +10,7 @@ pub struct MotherboardInfo {
 
 pub async fn send_collected_info(url: &str) -> Result<(), Box<dyn std::error::Error>> {
     let info = collect_info()?;
-    send_info(&info, &str).await?;
+    send_info(&info, &url).await?;
     Ok(())
 }
 
