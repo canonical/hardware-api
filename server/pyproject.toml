@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "hi-api"
+name = "hwapi"
 version = "0.1.0"
 description = "API server for working with hardware information from C3"
 authors = ["Your Name <you@example.com>"]

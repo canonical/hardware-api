@@ -17,23 +17,20 @@
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
+from typing import List
+from pydantic import BaseModel
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
-from hi_api.router import router
-
-app = FastAPI(redirect_slashes=False)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=[
-        "*",
-    ],
-)
+from hwapi.data_models.enums import DeviceType
 
 
-app.include_router(router)
+class DeviceDTO(BaseModel):
+    device_type: DeviceType
+    vendor: str
+    model: str
+
+
+class SystemInfoDTO(BaseModel):
+    os_version: str
+    vendor: str
+    model: str
+    devices: List[DeviceDTO]

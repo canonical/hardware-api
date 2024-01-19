@@ -21,8 +21,8 @@
 from pydantic import BaseModel
 from fastapi import APIRouter
 
-from hi_api.data_models.models_dto import SystemInfoDTO, DeviceDTO
-from hi_api.data_models.enums import CertificationStatus, DeviceType
+from hwapi.data_models.models_dto import SystemInfoDTO, DeviceDTO
+from hwapi.data_models.enums import CertificationStatus, DeviceType
 
 
 router = APIRouter()

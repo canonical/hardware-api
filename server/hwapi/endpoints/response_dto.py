@@ -20,8 +20,8 @@
 
 from pydantic import BaseModel
 
-from hi_api.data_models.enums import CertificationStatus
-from hi_api.data_models.models_dto import DeviceDTO
+from hwapi.data_models.enums import CertificationStatus
+from hwapi.data_models.models_dto import DeviceDTO
 
 
 class CertificationResponse(BaseModel):
