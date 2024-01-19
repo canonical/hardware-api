@@ -2,26 +2,39 @@
     "folders": [
         {
             "name": "Server",
-            "path": "server"
+            "path": "server",
+            "extensions": {
+                "recommendations": [
+                    "ms-python.python"
+                ]
+            },
+            "settings": {
+                "python.pythonPath": "server/.venv/bin/python"
+            }
         },
         {
-            "name": "Client CLI",
-            "path": "client/cli"
+            "name": "hwctl",
+            "path": "client/hwctl",
+            "extensions": {
+                "recommendations": [
+                    "matklad.rust-analyzer"
+                ]
+            },
+            "settings": {
+                "rust-analyzer.linkedProjects": ["client/hwctl/Cargo.toml"]
+            }
         },
         {
-            "name": "Client Library",
-            "path": "client/lib"
+            "name": "hwlib",
+            "path": "client/hwlib",
+            "extensions": {
+                "recommendations": [
+                    "matklad.rust-analyzer"
+                ]
+            },
+            "settings": {
+                "rust-analyzer.linkedProjects": ["client/hwlib/Cargo.toml"]
+            }
         }
-    ],
-    "settings": {
-        "python.pythonPath": "server/.venv/bin/python",
-        "rust-analyzer.cargo.loadOutDirsFromCheck": true,
-        "rust-analyzer.procMacro.enable": true
-    },
-    "extensions": {
-        "recommendations": [
-            "ms-python.python",
-            "matklad.rust-analyzer"
-        ]
-    }
+    ]
 }
