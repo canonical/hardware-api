@@ -17,12 +17,20 @@
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
+from typing import List
+from pydantic import BaseModel
 
-from fastapi import APIRouter
-
-router = APIRouter()
+from hwapi.data_models.enums import DeviceType
 
 
-@router.get("/{oem_id}")
-def fetch_hardware_compatibility(oem_id: str):
-    return {"message": f"Compatibility information for OEM {oem_id}"}
+class DeviceDTO(BaseModel):
+    device_type: DeviceType
+    vendor: str
+    model: str
+
+
+class SystemInfoDTO(BaseModel):
+    os_version: str
+    vendor: str
+    model: str
+    devices: List[DeviceDTO]

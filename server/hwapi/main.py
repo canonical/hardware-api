@@ -18,17 +18,22 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
 
-from fastapi import APIRouter
-from .endpoints import certification, hardware  #, submission
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
-router = APIRouter()
-router.include_router(
-    certification.router, prefix="/v1/certification", tags=["certification"]
+from hwapi.router import router
+
+app = FastAPI(redirect_slashes=False)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=[
+        "*",
+    ],
 )
-router.include_router(hardware.router, prefix="/v1/hardware", tags=["hardware"])
-# router.include_router(submission.router, prefix="/v1/submission", tags=["submission"])
 
 
-@router.get("/")
-def root():
-    return "Hardware Information API (hi-api) server"
+app.include_router(router)
