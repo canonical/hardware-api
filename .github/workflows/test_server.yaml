@@ -1,0 +1,66 @@
+name: Test API server
+on: [push]
+# Cancel inprogress runs if new commit pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: [self-hosted, linux, large]
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - uses: Gr1N/setup-poetry@v8
+        with:
+          poetry-version: "1.6.1"
+      - run: poetry install
+      - run: poetry run black --check hwapi
+      - run: poetry run ruff hwapi
+      - run: poetry run mypy --explicit-package-bases hwapi
+
+  fetch-and-commit-openapi:
+    runs-on: [self-hosted, linux, large]
+    if: github.event_name == 'pull_request'
+    needs: [test]
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - uses: Gr1N/setup-poetry@v8
+        with:
+          poetry-version: "1.6.1"
+      - run: poetry install
+      - name: Start FastAPI application
+        run: poetry run uvicorn hwapi.main:app --port 8001 &
+        shell: bash
+
+      - name: Fetch OpenAPI YAML
+        run: curl http://localhost:8001/openapi.yaml -o openapi.yaml
+
+      - name: Commit OpenAPI schema
+        run: |
+          git config --global user.name 'GitHub Action'
+          git config --global user.email 'action@github.com'
+          git add openapi.yaml
+          if [-z "$(git status --porcelain)"]; then
+            echo "::set-output name=push::false"
+          else
+            git commit -m "Add changes" -a
+            echo "::set-output name=push::true"
+          fi
+        shell: bash
+      - name: Push schema
+        if: steps.commit.outputs.push == 'true'
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
