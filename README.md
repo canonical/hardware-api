@@ -9,6 +9,11 @@ poetry install
 poetry run uvicorn hi_api.main:app --reload
 ```
 
+## View OpenAPI schema for the server
+
+A HTML view of the OpenAPI schema matching the `main` branch is viewable at
+[canonical.github.io/hardware-api](https://canonical.github.io/hardware-api)
+
 ## Build and run the reference CLI tool (`hwctl`)
 
 ```bash
