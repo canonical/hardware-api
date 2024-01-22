@@ -26,8 +26,6 @@ jobs:
 
   compare-openapi:
     runs-on: [self-hosted, linux, large]
-    if: github.event_name == 'pull_request'
-    needs: [test]
     defaults:
       run:
         working-directory: server
