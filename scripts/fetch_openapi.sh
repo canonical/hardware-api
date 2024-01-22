@@ -2,8 +2,6 @@
 
 cd server
 
-poetry install
-
 # Start FastAPI app in the background
 poetry run uvicorn hwapi.main:app --port 8002 &
 

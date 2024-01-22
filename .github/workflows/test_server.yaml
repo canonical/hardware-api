@@ -24,7 +24,7 @@ jobs:
       - run: poetry run ruff hwapi
       - run: poetry run mypy hwapi
 
-  fetch-and-commit-openapi:
+  compare-openapi:
     runs-on: [self-hosted, linux, large]
     if: github.event_name == 'pull_request'
     needs: [test]
@@ -45,22 +45,7 @@ jobs:
         shell: bash
 
       - name: Fetch OpenAPI YAML
-        run: curl http://localhost:8001/openapi.yaml -o openapi.yaml
+        run: curl http://localhost:8001/openapi.yaml -o fetched_openapi.yaml
 
-      - name: Commit OpenAPI schema
-        run: |
-          git config --global user.name 'GitHub Action'
-          git config --global user.email 'action@github.com'
-          git add openapi.yaml
-          if [-z "$(git status --porcelain)"]; then
-            echo "::set-output name=push::false"
-          else
-            git commit -m "Add changes" -a
-            echo "::set-output name=push::true"
-          fi
-        shell: bash
-      - name: Push schema
-        if: steps.commit.outputs.push == 'true'
-        uses: ad-m/github-push-action@master
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Compare with repository's openapi.yaml
+        run: diff fetched_openapi.yaml openapi.yaml

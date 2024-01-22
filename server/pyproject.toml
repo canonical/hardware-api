@@ -18,6 +18,7 @@ black = "^23.12.1"
 ruff = "^0.1.12"
 mypy = "^1.8.0"
 types-pyyaml = "^6.0.12.12"
+pre-commit = "^3.6.0"
 
 [build-system]
 requires = ["poetry-core"]
