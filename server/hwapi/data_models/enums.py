@@ -18,20 +18,24 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
-
-from hiapi.router import router
-
-app = FastAPI(redirect_slashes=False)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+from enum import Enum
 
 
-app.include_router(router)
+class DeviceType(str, Enum):
+    AUDIO = "AUDIO"
+    BIOS = "BIOS"
+    BLUETOOTH = "BLUETOOTH"
+    BOARD = "BOARD"
+    CHASSIS = "CHASSIS"
+    CPU = "PROCESSOR"
+    DISK = "DISK"
+    GPU = "GPU"
+    NETWORK_ADAPTER = "NETWORK"
+    VIDEO = "VIDEO"
+    WIFI_ADAPTER = "WIRELESS"
+
+
+class CertificationStatus(str, Enum):
+    CERTIFIED = "Certified"
+    PARTIALLY_CERTIFIED = "Partially Certified"
+    NOT_SEEN = "Not Seen"
