@@ -15,15 +15,16 @@ Then you can access the server via this URL: http://127.0.0.1:8000
 
 ## Accessing API schema
 
-To access the HTML view for the API schema, just run the server and follow the `/#docs` endpoint.
+To access the HTML view for the API schema, just run the server and follow the [/#docs](http://127.0.0.1:8000/#docs) endpoint.
 
-For getting its JSON version, follow the `/openapi.json` endpoint. You can also retrieve the schema in the YAML format by following the `/openapi.yaml` endpoint ior just reading the `openapi.yaml` file in the repo.
+For getting its JSON version, follow the [/openapi.json](http://127.0.0.1:8000/openapi.json) endpoint. 
 
+You can retrieve the schema in the YAML format by following the [/openapi.yaml](http://127.0.0.1:8000/openapi.yaml) endpoint ior just reading the [openapi.yaml](./hwapi/openapi.yaml) file in the repo.
 
 ## Development
 
 ### Pre-commit hooks
 
-The repo contains pre-commit hook rules to update the openapi.yaml file before committing the changes. To use it, first install `pre-commit` on your system by running `pip install pre-commit`.
+The repo contains pre-commit hook rules to update the openapi.yaml file before committing the changes. To use it, first make sure `pre-commit` is installed on your system (is installed with poetry dev dependencies).
 
-Then go to the project root directory and run `pre-commit install`.
+Then go to the `server/` directory and run `poetry run pre-commit install`.
