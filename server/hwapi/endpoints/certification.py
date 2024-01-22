@@ -22,7 +22,10 @@ from fastapi import APIRouter
 
 from hwapi.data_models.models_dto import SystemInfoDTO, DeviceDTO
 from hwapi.data_models.enums import CertificationStatus, DeviceType
-from hwapi.endpoints.response_dto import CertificationResponse, PartialCertificationResponse
+from hwapi.endpoints.response_dto import (
+    CertificationResponse,
+    PartialCertificationResponse,
+)
 
 
 router = APIRouter()

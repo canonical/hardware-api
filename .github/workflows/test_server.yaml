@@ -22,7 +22,7 @@ jobs:
       - run: poetry install
       - run: poetry run black --check hwapi
       - run: poetry run ruff hwapi
-      - run: poetry run mypy --explicit-package-bases hwapi
+      - run: poetry run mypy hwapi
 
   fetch-and-commit-openapi:
     runs-on: [self-hosted, linux, large]
