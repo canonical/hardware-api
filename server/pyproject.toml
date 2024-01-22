@@ -2,7 +2,7 @@
 name = "hwapi"
 version = "0.1.0"
 description = "API server for working with hardware information from C3"
-authors = ["Your Name <you@example.com>"]
+authors = []
 readme = "README.md"
 
 [tool.poetry.dependencies]
@@ -11,11 +11,13 @@ fastapi = "^0.109.0"
 uvicorn = "^0.26.0"
 sqlalchemy = "^2.0.25"
 pydantic = "^2.5.3"
+pyyaml = "^6.0.1"
 
 [tool.poetry.group.dev.dependencies]
 black = "^23.12.1"
 ruff = "^0.1.12"
 mypy = "^1.8.0"
+types-pyyaml = "^6.0.12.12"
 
 [build-system]
 requires = ["poetry-core"]
