@@ -1,0 +1,44 @@
+name: Publish OpenAPI on GitHub Pages
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  deploy-openapi-html:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: [self-hosted, linux, large]
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20.x'
+      - run: mkdir -p dist
+      - run: npx @redocly/cli build-docs ./openapi.yaml -o ./dist/index.html
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
