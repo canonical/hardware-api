@@ -17,10 +17,40 @@
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
+
+from datetime import date
 from typing import List
 from pydantic import BaseModel
 
 from hwapi.data_models.enums import DeviceType
+
+
+class BiosDTO(BaseModel):
+    vendor: str
+    version: str
+    release_date: date
+    revision: str
+    firmware_revision: str
+
+
+class SystemDTO(BaseModel):
+    manufacturer: str
+    product_name: str
+    version: str
+    sku_number: int
+    family: str
+
+
+class BoardDTO(BaseModel):
+    manufacturer: str
+    product_name: str
+    version: str
+
+
+class ChassisDTO(BaseModel):
+    manufacturer: str
+    chassis_type: str
+    version: str
 
 
 class DeviceDTO(BaseModel):

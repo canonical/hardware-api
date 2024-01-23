@@ -21,11 +21,14 @@
 from pydantic import BaseModel
 
 from hwapi.data_models.enums import CertificationStatus
-from hwapi.data_models.models_dto import DeviceDTO
+from hwapi.data_models.models_dto import ChassisDTO, DeviceDTO, BiosDTO, BoardDTO
 
 
 class CertificationResponse(BaseModel):
     detail: CertificationStatus
+    chassis: ChassisDTO
+    bios: BiosDTO
+    board: BoardDTO
 
 
 class PartialCertificationResponse(BaseModel):

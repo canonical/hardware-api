@@ -1,11 +1,63 @@
 components:
   schemas:
+    BiosDTO:
+      properties:
+        firmware_revision:
+          title: Firmware Revision
+          type: string
+        release_date:
+          format: date
+          title: Release Date
+          type: string
+        revision:
+          title: Revision
+          type: string
+        vendor:
+          title: Vendor
+          type: string
+        version:
+          title: Version
+          type: string
+      required:
+      - vendor
+      - version
+      - release_date
+      - revision
+      - firmware_revision
+      title: BiosDTO
+      type: object
+    BoardDTO:
+      properties:
+        manufacturer:
+          title: Manufacturer
+          type: string
+        product_name:
+          title: Product Name
+          type: string
+        version:
+          title: Version
+          type: string
+      required:
+      - manufacturer
+      - product_name
+      - version
+      title: BoardDTO
+      type: object
     CertificationResponse:
       properties:
+        bios:
+          $ref: '#/components/schemas/BiosDTO'
+        board:
+          $ref: '#/components/schemas/BoardDTO'
+        chassis:
+          $ref: '#/components/schemas/ChassisDTO'
         detail:
           $ref: '#/components/schemas/CertificationStatus'
       required:
       - detail
+      - chassis
+      - bios
+      - board
       title: CertificationResponse
       type: object
     CertificationStatus:
@@ -15,6 +67,23 @@ components:
       - Not Seen
       title: CertificationStatus
       type: string
+    ChassisDTO:
+      properties:
+        chassis_type:
+          title: Chassis Type
+          type: string
+        manufacturer:
+          title: Manufacturer
+          type: string
+        version:
+          title: Version
+          type: string
+      required:
+      - manufacturer
+      - chassis_type
+      - version
+      title: ChassisDTO
+      type: object
     DeviceDTO:
       properties:
         device_type:
@@ -34,16 +103,26 @@ components:
     DeviceType:
       enum:
       - AUDIO
-      - BIOS
       - BLUETOOTH
-      - BOARD
-      - CHASSIS
-      - PROCESSOR
+      - CAPTURE
+      - CARDREADER
+      - CDROM
       - DISK
-      - GPU
+      - EFI
+      - HIDRAW
+      - KEYBOARD
+      - MOUSE
       - NETWORK
-      - VIDEO
-      - WIRELESS
+      - OTHER
+      - PRINTER
+      - CPU
+      - SOCKET
+      - TOUCHPAD
+      - TOUCHSCREEN
+      - USB
+      - GPU
+      - WIFI
+      - WWAN
       title: DeviceType
       type: string
     HTTPValidationError:
