@@ -21,7 +21,7 @@
 import yaml
 from fastapi import APIRouter, Response
 from fastapi.openapi.utils import get_openapi
-from .endpoints import certification
+from .endpoints.certification import certification
 
 router = APIRouter()
 router.include_router(
@@ -34,7 +34,7 @@ def root():
     return "Hardware Information API (hwapi) server"
 
 
-@router.get("/openapi.yaml")
+@router.get("/openapi.yaml", include_in_schema=False)
 def get_openapi_yaml():
     """OpenAPI schema in TAML format"""
     openapi_schema = get_openapi(

@@ -19,26 +19,18 @@
 
 
 from datetime import date
-from typing import List
 from pydantic import BaseModel
 
-from hwapi.data_models.enums import DeviceType
+
+# Devices
 
 
 class BiosDTO(BaseModel):
-    vendor: str
-    version: str
+    firmware_revision: str
     release_date: date
     revision: str
-    firmware_revision: str
-
-
-class SystemDTO(BaseModel):
-    manufacturer: str
-    product_name: str
+    vendor: str
     version: str
-    sku_number: int
-    family: str
 
 
 class BoardDTO(BaseModel):
@@ -48,19 +40,98 @@ class BoardDTO(BaseModel):
 
 
 class ChassisDTO(BaseModel):
-    manufacturer: str
     chassis_type: str
+    manufacturer: str
     version: str
 
 
-class DeviceDTO(BaseModel):
-    device_type: DeviceType
-    vendor: str
-    model: str
+class ProcessorDTO(BaseModel):
+    family: str
+    frequency: float
+    manufacturer: str
+    version: str
 
 
-class SystemInfoDTO(BaseModel):
-    os_version: str
-    vendor: str
+class GPUDTO(BaseModel):
+    family: str
+    manufacturer: str
+    version: str
+
+
+class NetworkAdapterDTO(BaseModel):
+    """DTO for ethernet network adapters"""
+
     model: str
-    devices: List[DeviceDTO]
+    vendor: str
+    capacity: int
+
+
+class WirelessAdapterDTO(BaseModel):
+    """DTO model for wireless network adapters"""
+
+    model: str
+    vendor: str
+
+
+class AudioDTO(BaseModel):
+    """DTO model for audio devices"""
+
+    model: str
+    vendor: str
+
+
+class VideoCaptureDTO(BaseModel):
+    """DTO model for video capture devices"""
+
+    model: str
+    vendor: str
+
+
+class CoreDevicesDTO(BaseModel):
+    """
+    DTO for core devices that includes:
+      - cpu
+      - gpu
+      - ethernet and wireless network adapters
+      - audio controllers
+      - video capture devices
+
+    All of them are marked optional since some of them may not be presented
+    in the list of seen/tested/certified devices
+    """
+
+    processor: ProcessorDTO | None
+    gpu: GPUDTO | None
+    network: list[NetworkAdapterDTO] | None
+    wireless: list[WirelessAdapterDTO] | None
+    audio: list[AudioDTO] | None
+    video: list[VideoCaptureDTO] | None
+
+
+class PCIPeripheralDTO(BaseModel):
+    pci_id: str
+    name: str
+    vendor: str
+
+
+class USBPeripheralDTO(BaseModel):
+    usb_id: str
+    name: str
+    vendor: str
+
+
+# Software
+
+
+class PackageDTO(BaseModel):
+    name: str
+    version: str
+
+
+class OSDTO(BaseModel):
+    distributor: str
+    description: str
+    version: str
+    codename: str
+    kernel: PackageDTO
+    loaded_modules: list[str]

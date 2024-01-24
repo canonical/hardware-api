@@ -23,37 +23,26 @@ from enum import Enum
 
 class SingleDeviceType(str, Enum):
     """
-    Device types that appear as one unit on a machine
+    Device types that appear as one unit on a machine (i.e. a machine cannot have
+    more than one device of such type)
     """
 
     CHASSIS = "CHASSIS"
     BIOS = "BIOS"
     BOARD = "BOARD"
-    SYSTEM = "SYSTEM"
 
 
 class DeviceType(str, Enum):
     AUDIO = "AUDIO"
     BLUETOOTH = "BLUETOOTH"
     CAPTURE = "CAPTURE"
-    CARDREADER = "CARDREADER"
-    CDROM = "CDROM"
     DISK = "DISK"
-    EFI = "EFI"
-    HIDRAW = "HIDRAW"
-    KEYBOARD = "KEYBOARD"
-    MOUSE = "MOUSE"
     NETWORK = "NETWORK"
-    OTHER = "OTHER"
-    PRINTER = "PRINTER"
-    CPU = "CPU"
-    SOCKET = "SOCKET"
-    TOUCHPAD = "TOUCHPAD"
-    TOUCHSCREEN = "TOUCHSCREEN"
+    PROCESSOR = "PROCESSOR"
     USB = "USB"
     GPU = "GPU"
-    WIFI = "WIFI"
-    WWAN = "WWAN"
+    WIRELESS = "WIRELESS"
+    OTHER = "OTHER"
 
 
 class CertificationStatus(str, Enum):

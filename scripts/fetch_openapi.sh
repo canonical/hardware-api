@@ -13,3 +13,6 @@ curl http://localhost:8002/openapi.yaml -o openapi.yaml
 
 # Kill the FastAPI server
 kill $!
+
+# Add schema to the committed files
+git add openapi.yaml
