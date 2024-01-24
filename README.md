@@ -1,4 +1,4 @@
-# Hardware Information API (hi-api)
+# Hardware Information API (hwapi)
 
 The repo contains the API server and client for retrieving hardware information.
 
@@ -6,7 +6,7 @@ The repo contains the API server and client for retrieving hardware information.
 
 ```bash
 poetry install
-poetry run uvicorn hi_api.main:app --reload
+poetry run uvicorn hwapi.main:app --reload
 ```
 
 ## View OpenAPI schema for the server
