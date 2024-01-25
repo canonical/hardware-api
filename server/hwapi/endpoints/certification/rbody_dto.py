@@ -59,7 +59,7 @@ class NotCertifiedResponse(BaseModel):
     status: Literal[CertificationStatus.NOT_SEEN]
 
 
-class PartialCertificationResponse(BaseModel):
+class RelatedCertifiedSystemExistsResponse(BaseModel):
     """
     If a system is partially certified, we return the information about components
     were tested on other systems that the machine has

@@ -19,7 +19,7 @@ To access the HTML view for the API schema, just run the server and follow the [
 
 For getting its JSON version, follow the [/openapi.json](http://127.0.0.1:8000/openapi.json) endpoint. 
 
-You can retrieve the schema in the YAML format by following the [/openapi.yaml](http://127.0.0.1:8000/openapi.yaml) endpoint ior just reading the [openapi.yaml](./hwapi/openapi.yaml) file in the repo.
+You can retrieve the schema in the YAML format by following the [/openapi.yaml](http://127.0.0.1:8000/v1/openapi.yaml) endpoint ior just reading the [openapi.yaml](./openapi.yaml) file in the repo.
 
 ## Development
 

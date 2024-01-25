@@ -289,7 +289,28 @@ components:
       - version
       title: PackageDTO
       type: object
-    PartialCertificationResponse:
+    ProcessorDTO:
+      properties:
+        family:
+          title: Family
+          type: string
+        frequency:
+          title: Frequency
+          type: number
+        manufacturer:
+          title: Manufacturer
+          type: string
+        version:
+          title: Version
+          type: string
+      required:
+      - family
+      - frequency
+      - manufacturer
+      - version
+      title: ProcessorDTO
+      type: object
+    RelatedCertifiedSystemExistsResponse:
       description: 'If a system is partially certified, we return the information
         about components
 
@@ -324,28 +345,7 @@ components:
       - status
       - board
       - core_devices
-      title: PartialCertificationResponse
-      type: object
-    ProcessorDTO:
-      properties:
-        family:
-          title: Family
-          type: string
-        frequency:
-          title: Frequency
-          type: number
-        manufacturer:
-          title: Manufacturer
-          type: string
-        version:
-          title: Version
-          type: string
-      required:
-      - family
-      - frequency
-      - manufacturer
-      - version
-      title: ProcessorDTO
+      title: RelatedCertifiedSystemExistsResponse
       type: object
     USBPeripheralDTO:
       properties:
@@ -446,7 +446,7 @@ paths:
                 anyOf:
                 - $ref: '#/components/schemas/CertifiedResponse'
                 - $ref: '#/components/schemas/NotCertifiedResponse'
-                - $ref: '#/components/schemas/PartialCertificationResponse'
+                - $ref: '#/components/schemas/RelatedCertifiedSystemExistsResponse'
                 title: Response Check Certification V1 Certification Status Post
           description: Successful Response
         '422':

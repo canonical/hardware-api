@@ -34,9 +34,9 @@ def root():
     return "Hardware Information API (hwapi) server"
 
 
-@router.get("/openapi.yaml", include_in_schema=False)
+@router.get("/v1/openapi.yaml", include_in_schema=False)
 def get_openapi_yaml():
-    """OpenAPI schema in TAML format"""
+    """OpenAPI schema in YAML format"""
     openapi_schema = get_openapi(
         title="Hardware API (hwapi)",
         version="1.0.0",

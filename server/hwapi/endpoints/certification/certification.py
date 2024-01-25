@@ -24,7 +24,7 @@ from hwapi.endpoints.certification.rbody_dto import (
     CertificationStatusRequest,
     CertifiedResponse,
     NotCertifiedResponse,
-    PartialCertificationResponse,
+    RelatedCertifiedSystemExistsResponse,
 )
 
 
@@ -34,7 +34,7 @@ router = APIRouter()
 @router.post(
     "/status",
     response_model=(
-        CertifiedResponse | NotCertifiedResponse | PartialCertificationResponse
+        CertifiedResponse | NotCertifiedResponse | RelatedCertifiedSystemExistsResponse
     ),
 )
 def check_certification(system_info: CertificationStatusRequest):

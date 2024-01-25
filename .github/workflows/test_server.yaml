@@ -42,7 +42,7 @@ jobs:
         shell: bash
 
       - name: Fetch OpenAPI YAML
-        run: curl http://localhost:8001/openapi.yaml -o fetched_openapi.yaml
+        run: curl http://localhost:8001/v1/openapi.yaml -o fetched_openapi.yaml
 
       - name: Compare with repository's openapi.yaml
         run: diff fetched_openapi.yaml openapi.yaml
