@@ -20,7 +20,7 @@
 
 from fastapi import APIRouter
 
-from hwapi.endpoints.certification.rbody_dto import (
+from hwapi.endpoints.certification.rbody_validators import (
     CertificationStatusRequest,
     CertifiedResponse,
     NotCertifiedResponse,

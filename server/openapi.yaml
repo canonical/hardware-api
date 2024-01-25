@@ -1,7 +1,7 @@
 components:
   schemas:
-    AudioDTO:
-      description: DTO model for audio devices
+    AudioValidator:
+      description: Validator model for audio devices
       properties:
         model:
           title: Model
@@ -12,9 +12,9 @@ components:
       required:
       - model
       - vendor
-      title: AudioDTO
+      title: AudioValidator
       type: object
-    BiosDTO:
+    BiosValidator:
       properties:
         firmware_revision:
           title: Firmware Revision
@@ -38,9 +38,9 @@ components:
       - revision
       - vendor
       - version
-      title: BiosDTO
+      title: BiosValidator
       type: object
-    BoardDTO:
+    BoardValidator:
       properties:
         manufacturer:
           title: Manufacturer
@@ -55,28 +55,38 @@ components:
       - manufacturer
       - product_name
       - version
-      title: BoardDTO
+      title: BoardValidator
       type: object
     CertificationStatusRequest:
       properties:
         bios:
-          $ref: '#/components/schemas/BiosDTO'
+          anyOf:
+          - $ref: '#/components/schemas/BiosValidator'
+          - type: 'null'
         board:
-          $ref: '#/components/schemas/BoardDTO'
+          anyOf:
+          - $ref: '#/components/schemas/BoardValidator'
+          - type: 'null'
         chassis:
-          $ref: '#/components/schemas/ChassisDTO'
-        core_devices:
-          $ref: '#/components/schemas/CoreDevicesDTO'
+          anyOf:
+          - $ref: '#/components/schemas/ChassisValidator'
+          - type: 'null'
+        main_devices:
+          anyOf:
+          - $ref: '#/components/schemas/MainDevicesRequest'
+          - type: 'null'
         os:
-          $ref: '#/components/schemas/OSDTO'
+          anyOf:
+          - $ref: '#/components/schemas/OSValidator'
+          - type: 'null'
         pci_peripherals:
           items:
-            $ref: '#/components/schemas/PCIPeripheralDTO'
+            $ref: '#/components/schemas/PCIPeripheralValidator'
           title: Pci Peripherals
           type: array
         usb_peripherals:
           items:
-            $ref: '#/components/schemas/USBPeripheralDTO'
+            $ref: '#/components/schemas/USBPeripheralValidator'
           title: Usb Peripherals
           type: array
       required:
@@ -84,7 +94,7 @@ components:
       - bios
       - board
       - chassis
-      - core_devices
+      - main_devices
       - pci_peripherals
       - usb_peripherals
       title: CertificationStatusRequest
@@ -96,9 +106,9 @@ components:
         used on the system under test we had in the lab to certify the machine'
       properties:
         bios:
-          $ref: '#/components/schemas/BiosDTO'
+          $ref: '#/components/schemas/BiosValidator'
         os:
-          $ref: '#/components/schemas/OSDTO'
+          $ref: '#/components/schemas/OSValidator'
         status:
           const: Certified
           title: Status
@@ -108,7 +118,7 @@ components:
       - bios
       title: CertifiedResponse
       type: object
-    ChassisDTO:
+    ChassisValidator:
       properties:
         chassis_type:
           title: Chassis Type
@@ -116,67 +126,20 @@ components:
         manufacturer:
           title: Manufacturer
           type: string
+        sku:
+          title: Sku
+          type: string
         version:
           title: Version
           type: string
       required:
       - chassis_type
       - manufacturer
+      - sku
       - version
-      title: ChassisDTO
+      title: ChassisValidator
       type: object
-    CoreDevicesDTO:
-      description: "DTO for core devices that includes:\n  - cpu\n  - gpu\n  - ethernet\
-        \ and wireless network adapters\n  - audio controllers\n  - video capture\
-        \ devices\n\nAll of them are marked optional since some of them may not be\
-        \ presented\nin the list of seen/tested/certified devices"
-      properties:
-        audio:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/AudioDTO'
-            type: array
-          - type: 'null'
-          title: Audio
-        gpu:
-          anyOf:
-          - $ref: '#/components/schemas/GPUDTO'
-          - type: 'null'
-        network:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/NetworkAdapterDTO'
-            type: array
-          - type: 'null'
-          title: Network
-        processor:
-          anyOf:
-          - $ref: '#/components/schemas/ProcessorDTO'
-          - type: 'null'
-        video:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/VideoCaptureDTO'
-            type: array
-          - type: 'null'
-          title: Video
-        wireless:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/WirelessAdapterDTO'
-            type: array
-          - type: 'null'
-          title: Wireless
-      required:
-      - processor
-      - gpu
-      - network
-      - wireless
-      - audio
-      - video
-      title: CoreDevicesDTO
-      type: object
-    GPUDTO:
+    GPUValidator:
       properties:
         family:
           title: Family
@@ -191,7 +154,7 @@ components:
       - family
       - manufacturer
       - version
-      title: GPUDTO
+      title: GPUValidator
       type: object
     HTTPValidationError:
       properties:
@@ -202,12 +165,135 @@ components:
           type: array
       title: HTTPValidationError
       type: object
-    NetworkAdapterDTO:
-      description: DTO for ethernet network adapters
+    KernelPackageValidator:
       properties:
+        name:
+          title: Name
+          type: string
+        signature:
+          title: Signature
+          type: string
+        version:
+          title: Version
+          type: string
+      required:
+      - name
+      - version
+      - signature
+      title: KernelPackageValidator
+      type: object
+    MainDevicesRequest:
+      description: Validator for the following devices that can be included into the
+        request body
+      properties:
+        audio:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/AudioValidator'
+            type: array
+          - type: 'null'
+          title: Audio
+        gpu:
+          anyOf:
+          - $ref: '#/components/schemas/GPUValidator'
+          - type: 'null'
+        network:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/NetworkAdapterValidator'
+            type: array
+          - type: 'null'
+          title: Network
+        processor:
+          $ref: '#/components/schemas/ProcessorValidator'
+        video:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/VideoCaptureValidator'
+            type: array
+          - type: 'null'
+          title: Video
+        wireless:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/WirelessAdapterValidator'
+            type: array
+          - type: 'null'
+          title: Wireless
+      required:
+      - processor
+      - gpu
+      - network
+      - wireless
+      - audio
+      - video
+      title: MainDevicesRequest
+      type: object
+    MainDevicesResponse:
+      description: 'Validator for the "main" devices that can be included into the
+        response body.
+
+        All of them are marked optional since some of them may not be presented
+
+        in the list of seen/tested/certified devices'
+      properties:
+        audio:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/AudioValidator'
+            type: array
+          - type: 'null'
+          title: Audio
+        gpu:
+          anyOf:
+          - $ref: '#/components/schemas/GPUValidator'
+          - type: 'null'
+        network:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/NetworkAdapterValidator'
+            type: array
+          - type: 'null'
+          title: Network
+        processor:
+          anyOf:
+          - $ref: '#/components/schemas/ProcessorValidator'
+          - type: 'null'
+        video:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/VideoCaptureValidator'
+            type: array
+          - type: 'null'
+          title: Video
+        wireless:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/WirelessAdapterValidator'
+            type: array
+          - type: 'null'
+          title: Wireless
+      required:
+      - processor
+      - gpu
+      - network
+      - wireless
+      - audio
+      - video
+      title: MainDevicesResponse
+      type: object
+    NetworkAdapterValidator:
+      description: Validator for ethernet network adapters
+      properties:
+        bus:
+          title: Bus
+          type: string
         capacity:
           title: Capacity
           type: integer
+        id:
+          title: Id
+          type: string
         model:
           title: Model
           type: string
@@ -215,10 +301,12 @@ components:
           title: Vendor
           type: string
       required:
+      - bus
+      - id
       - model
       - vendor
       - capacity
-      title: NetworkAdapterDTO
+      title: NetworkAdapterValidator
       type: object
     NotCertifiedResponse:
       properties:
@@ -229,7 +317,7 @@ components:
       - status
       title: NotCertifiedResponse
       type: object
-    OSDTO:
+    OSValidator:
       properties:
         codename:
           title: Codename
@@ -241,7 +329,7 @@ components:
           title: Distributor
           type: string
         kernel:
-          $ref: '#/components/schemas/PackageDTO'
+          $ref: '#/components/schemas/KernelPackageValidator'
         loaded_modules:
           items:
             type: string
@@ -257,9 +345,9 @@ components:
       - codename
       - kernel
       - loaded_modules
-      title: OSDTO
+      title: OSValidator
       type: object
-    PCIPeripheralDTO:
+    PCIPeripheralValidator:
       properties:
         name:
           title: Name
@@ -274,22 +362,9 @@ components:
       - pci_id
       - name
       - vendor
-      title: PCIPeripheralDTO
+      title: PCIPeripheralValidator
       type: object
-    PackageDTO:
-      properties:
-        name:
-          title: Name
-          type: string
-        version:
-          title: Version
-          type: string
-      required:
-      - name
-      - version
-      title: PackageDTO
-      type: object
-    ProcessorDTO:
+    ProcessorValidator:
       properties:
         family:
           title: Family
@@ -308,7 +383,7 @@ components:
       - frequency
       - manufacturer
       - version
-      title: ProcessorDTO
+      title: ProcessorValidator
       type: object
     RelatedCertifiedSystemExistsResponse:
       description: 'If a system is partially certified, we return the information
@@ -317,17 +392,19 @@ components:
         were tested on other systems that the machine has'
       properties:
         board:
-          $ref: '#/components/schemas/BoardDTO'
+          $ref: '#/components/schemas/BoardValidator'
         chassis:
           anyOf:
-          - $ref: '#/components/schemas/ChassisDTO'
+          - $ref: '#/components/schemas/ChassisValidator'
           - type: 'null'
-        core_devices:
-          $ref: '#/components/schemas/CoreDevicesDTO'
+        main_devices:
+          anyOf:
+          - $ref: '#/components/schemas/MainDevicesResponse'
+          - type: 'null'
         pci_peripherals:
           anyOf:
           - items:
-              $ref: '#/components/schemas/PCIPeripheralDTO'
+              $ref: '#/components/schemas/PCIPeripheralValidator'
             type: array
           - type: 'null'
           title: Pci Peripherals
@@ -337,17 +414,16 @@ components:
         usb_peripherals:
           anyOf:
           - items:
-              $ref: '#/components/schemas/USBPeripheralDTO'
+              $ref: '#/components/schemas/USBPeripheralValidator'
             type: array
           - type: 'null'
           title: Usb Peripherals
       required:
       - status
       - board
-      - core_devices
       title: RelatedCertifiedSystemExistsResponse
       type: object
-    USBPeripheralDTO:
+    USBPeripheralValidator:
       properties:
         name:
           title: Name
@@ -362,7 +438,7 @@ components:
       - usb_id
       - name
       - vendor
-      title: USBPeripheralDTO
+      title: USBPeripheralValidator
       type: object
     ValidationError:
       properties:
@@ -385,8 +461,8 @@ components:
       - type
       title: ValidationError
       type: object
-    VideoCaptureDTO:
-      description: DTO model for video capture devices
+    VideoCaptureValidator:
+      description: Validator model for video capture devices
       properties:
         model:
           title: Model
@@ -397,10 +473,10 @@ components:
       required:
       - model
       - vendor
-      title: VideoCaptureDTO
+      title: VideoCaptureValidator
       type: object
-    WirelessAdapterDTO:
-      description: DTO model for wireless network adapters
+    WirelessAdapterValidator:
+      description: Validator model for wireless network adapters
       properties:
         model:
           title: Model
@@ -411,7 +487,7 @@ components:
       required:
       - model
       - vendor
-      title: WirelessAdapterDTO
+      title: WirelessAdapterValidator
       type: object
 info:
   description: API server for working with hardware information from C3
