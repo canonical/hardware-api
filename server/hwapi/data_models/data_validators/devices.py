@@ -46,6 +46,7 @@ class BoardValidator(BaseModel):
 class ChassisValidator(BaseModel):
     chassis_type: str
     manufacturer: str
+    sku: str
     version: str
 
 
@@ -58,6 +59,8 @@ class GPUValidator(BaseModel):
 class NetworkAdapterValidator(BaseModel):
     """Validator for ethernet network adapters"""
 
+    bus: str
+    id: str
     model: str
     vendor: str
     capacity: int
