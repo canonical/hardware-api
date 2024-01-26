@@ -58,7 +58,15 @@ components:
       title: BoardValidator
       type: object
     CertificationStatusRequest:
+      description: Request body validator for status check endpoint
       properties:
+        audio:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/AudioValidator'
+            type: array
+          - type: 'null'
+          title: Audio
         bios:
           anyOf:
           - $ref: '#/components/schemas/BiosValidator'
@@ -71,10 +79,20 @@ components:
           anyOf:
           - $ref: '#/components/schemas/ChassisValidator'
           - type: 'null'
-        main_devices:
+        gpu:
           anyOf:
-          - $ref: '#/components/schemas/MainDevicesRequest'
+          - items:
+              $ref: '#/components/schemas/GPUValidator'
+            type: array
           - type: 'null'
+          title: Gpu
+        network:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/NetworkAdapterValidator'
+            type: array
+          - type: 'null'
+          title: Network
         os:
           anyOf:
           - $ref: '#/components/schemas/OSValidator'
@@ -84,17 +102,41 @@ components:
             $ref: '#/components/schemas/PCIPeripheralValidator'
           title: Pci Peripherals
           type: array
+        processor:
+          items:
+            $ref: '#/components/schemas/ProcessorValidator'
+          title: Processor
+          type: array
         usb_peripherals:
           items:
             $ref: '#/components/schemas/USBPeripheralValidator'
           title: Usb Peripherals
           type: array
+        video:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/VideoCaptureValidator'
+            type: array
+          - type: 'null'
+          title: Video
+        wireless:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/WirelessAdapterValidator'
+            type: array
+          - type: 'null'
+          title: Wireless
       required:
       - os
       - bios
       - board
       - chassis
-      - main_devices
+      - processor
+      - gpu
+      - audio
+      - video
+      - network
+      - wireless
       - pci_peripherals
       - usb_peripherals
       title: CertificationStatusRequest
@@ -181,106 +223,6 @@ components:
       - version
       - signature
       title: KernelPackageValidator
-      type: object
-    MainDevicesRequest:
-      description: Validator for the following devices that can be included into the
-        request body
-      properties:
-        audio:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/AudioValidator'
-            type: array
-          - type: 'null'
-          title: Audio
-        gpu:
-          anyOf:
-          - $ref: '#/components/schemas/GPUValidator'
-          - type: 'null'
-        network:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/NetworkAdapterValidator'
-            type: array
-          - type: 'null'
-          title: Network
-        processor:
-          $ref: '#/components/schemas/ProcessorValidator'
-        video:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/VideoCaptureValidator'
-            type: array
-          - type: 'null'
-          title: Video
-        wireless:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/WirelessAdapterValidator'
-            type: array
-          - type: 'null'
-          title: Wireless
-      required:
-      - processor
-      - gpu
-      - network
-      - wireless
-      - audio
-      - video
-      title: MainDevicesRequest
-      type: object
-    MainDevicesResponse:
-      description: 'Validator for the "main" devices that can be included into the
-        response body.
-
-        All of them are marked optional since some of them may not be presented
-
-        in the list of seen/tested/certified devices'
-      properties:
-        audio:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/AudioValidator'
-            type: array
-          - type: 'null'
-          title: Audio
-        gpu:
-          anyOf:
-          - $ref: '#/components/schemas/GPUValidator'
-          - type: 'null'
-        network:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/NetworkAdapterValidator'
-            type: array
-          - type: 'null'
-          title: Network
-        processor:
-          anyOf:
-          - $ref: '#/components/schemas/ProcessorValidator'
-          - type: 'null'
-        video:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/VideoCaptureValidator'
-            type: array
-          - type: 'null'
-          title: Video
-        wireless:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/WirelessAdapterValidator'
-            type: array
-          - type: 'null'
-          title: Wireless
-      required:
-      - processor
-      - gpu
-      - network
-      - wireless
-      - audio
-      - video
-      title: MainDevicesResponse
       type: object
     NetworkAdapterValidator:
       description: Validator for ethernet network adapters
@@ -391,16 +333,33 @@ components:
 
         were tested on other systems that the machine has'
       properties:
+        audio:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/AudioValidator'
+            type: array
+          - type: 'null'
+          title: Audio
         board:
           $ref: '#/components/schemas/BoardValidator'
         chassis:
           anyOf:
           - $ref: '#/components/schemas/ChassisValidator'
           - type: 'null'
-        main_devices:
+        gpu:
           anyOf:
-          - $ref: '#/components/schemas/MainDevicesResponse'
+          - items:
+              $ref: '#/components/schemas/GPUValidator'
+            type: array
           - type: 'null'
+          title: Gpu
+        network:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/NetworkAdapterValidator'
+            type: array
+          - type: 'null'
+          title: Network
         pci_peripherals:
           anyOf:
           - items:
@@ -408,6 +367,13 @@ components:
             type: array
           - type: 'null'
           title: Pci Peripherals
+        processor:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/ProcessorValidator'
+            type: array
+          - type: 'null'
+          title: Processor
         status:
           const: Partially Certified
           title: Status
@@ -418,6 +384,20 @@ components:
             type: array
           - type: 'null'
           title: Usb Peripherals
+        video:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/VideoCaptureValidator'
+            type: array
+          - type: 'null'
+          title: Video
+        wireless:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/WirelessAdapterValidator'
+            type: array
+          - type: 'null'
+          title: Wireless
       required:
       - status
       - board
@@ -507,6 +487,10 @@ paths:
       summary: Root
   /v1/certification/status:
     post:
+      description: 'Endpoint for checking certification status (whether a system is
+        certified, not seen
+
+        or some of its components have been seen on other systems)'
       operationId: check_certification_v1_certification_status_post
       requestBody:
         content:

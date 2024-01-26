@@ -39,42 +39,21 @@ from hwapi.data_models.data_validators import (
 )
 
 
-class MainDevicesRequest(BaseModel):
-    """
-    Validator for the following devices that can be included into the request body
-    """
-
-    processor: ProcessorValidator
-    gpu: GPUValidator | None
-    network: list[NetworkAdapterValidator] | None
-    wireless: list[WirelessAdapterValidator] | None
-    audio: list[AudioValidator] | None
-    video: list[VideoCaptureValidator] | None
-
-
 class CertificationStatusRequest(BaseModel):
+    """Request body validator for status check endpoint"""
+
     os: OSValidator | None
     bios: BiosValidator | None
     board: BoardValidator | None
     chassis: ChassisValidator | None
-    main_devices: MainDevicesRequest | None
-    pci_peripherals: list[PCIPeripheralValidator]
-    usb_peripherals: list[USBPeripheralValidator]
-
-
-class MainDevicesResponse(BaseModel):
-    """
-    Validator for the "main" devices that can be included into the response body.
-    All of them are marked optional since some of them may not be presented
-    in the list of seen/tested/certified devices
-    """
-
-    processor: ProcessorValidator | None
-    gpu: GPUValidator | None
-    network: list[NetworkAdapterValidator] | None
-    wireless: list[WirelessAdapterValidator] | None
+    processor: list[ProcessorValidator]
+    gpu: list[GPUValidator] | None
     audio: list[AudioValidator] | None
     video: list[VideoCaptureValidator] | None
+    network: list[NetworkAdapterValidator] | None
+    wireless: list[WirelessAdapterValidator] | None
+    pci_peripherals: list[PCIPeripheralValidator]
+    usb_peripherals: list[USBPeripheralValidator]
 
 
 class CertifiedResponse(BaseModel):
@@ -101,6 +80,11 @@ class RelatedCertifiedSystemExistsResponse(BaseModel):
     status: Literal[CertificationStatus.PARTIALLY_CERTIFIED]
     board: BoardValidator
     chassis: ChassisValidator | None = None
-    main_devices: MainDevicesResponse | None = None
+    processor: list[ProcessorValidator] | None = None
+    gpu: list[GPUValidator] | None = None
+    audio: list[AudioValidator] | None = None
+    video: list[VideoCaptureValidator] | None = None
+    network: list[NetworkAdapterValidator] | None = None
+    wireless: list[WirelessAdapterValidator] | None = None
     pci_peripherals: list[PCIPeripheralValidator] | None = None
     usb_peripherals: list[USBPeripheralValidator] | None = None

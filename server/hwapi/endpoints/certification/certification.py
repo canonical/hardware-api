@@ -38,4 +38,8 @@ router = APIRouter()
     ),
 )
 def check_certification(system_info: CertificationStatusRequest):
+    """
+    Endpoint for checking certification status (whether a system is certified, not seen
+    or some of its components have been seen on other systems)
+    """
     raise NotImplementedError("The endpoint is not implemented yet")
