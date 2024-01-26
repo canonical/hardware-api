@@ -18,16 +18,28 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
 
-from pydantic import BaseModel
+from fastapi import APIRouter
 
-from hwapi.data_models.enums import CertificationStatus
-from hwapi.data_models.models_dto import DeviceDTO
+from hwapi.endpoints.certification.rbody_validators import (
+    CertificationStatusRequest,
+    CertifiedResponse,
+    NotCertifiedResponse,
+    RelatedCertifiedSystemExistsResponse,
+)
 
 
-class CertificationResponse(BaseModel):
-    detail: CertificationStatus
+router = APIRouter()
 
 
-class PartialCertificationResponse(BaseModel):
-    detail: CertificationStatus
-    certified_components: list[DeviceDTO]
+@router.post(
+    "/status",
+    response_model=(
+        CertifiedResponse | NotCertifiedResponse | RelatedCertifiedSystemExistsResponse
+    ),
+)
+def check_certification(system_info: CertificationStatusRequest):
+    """
+    Endpoint for checking certification status (whether a system is certified, not seen
+    or some of its components have been seen on other systems)
+    """
+    raise NotImplementedError("The endpoint is not implemented yet")

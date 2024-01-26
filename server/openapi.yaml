@@ -1,24 +1,8 @@
 components:
   schemas:
-    CertificationResponse:
+    AudioValidator:
+      description: Validator model for audio devices
       properties:
-        detail:
-          $ref: '#/components/schemas/CertificationStatus'
-      required:
-      - detail
-      title: CertificationResponse
-      type: object
-    CertificationStatus:
-      enum:
-      - Certified
-      - Partially Certified
-      - Not Seen
-      title: CertificationStatus
-      type: string
-    DeviceDTO:
-      properties:
-        device_type:
-          $ref: '#/components/schemas/DeviceType'
         model:
           title: Model
           type: string
@@ -26,26 +10,194 @@ components:
           title: Vendor
           type: string
       required:
-      - device_type
-      - vendor
       - model
-      title: DeviceDTO
+      - vendor
+      title: AudioValidator
       type: object
-    DeviceType:
-      enum:
-      - AUDIO
-      - BIOS
-      - BLUETOOTH
-      - BOARD
-      - CHASSIS
-      - PROCESSOR
-      - DISK
-      - GPU
-      - NETWORK
-      - VIDEO
-      - WIRELESS
-      title: DeviceType
-      type: string
+    BiosValidator:
+      properties:
+        firmware_revision:
+          title: Firmware Revision
+          type: string
+        release_date:
+          format: date
+          title: Release Date
+          type: string
+        revision:
+          title: Revision
+          type: string
+        vendor:
+          title: Vendor
+          type: string
+        version:
+          title: Version
+          type: string
+      required:
+      - firmware_revision
+      - release_date
+      - revision
+      - vendor
+      - version
+      title: BiosValidator
+      type: object
+    BoardValidator:
+      properties:
+        manufacturer:
+          title: Manufacturer
+          type: string
+        product_name:
+          title: Product Name
+          type: string
+        version:
+          title: Version
+          type: string
+      required:
+      - manufacturer
+      - product_name
+      - version
+      title: BoardValidator
+      type: object
+    CertificationStatusRequest:
+      description: Request body validator for status check endpoint
+      properties:
+        audio:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/AudioValidator'
+            type: array
+          - type: 'null'
+          title: Audio
+        bios:
+          anyOf:
+          - $ref: '#/components/schemas/BiosValidator'
+          - type: 'null'
+        board:
+          anyOf:
+          - $ref: '#/components/schemas/BoardValidator'
+          - type: 'null'
+        chassis:
+          anyOf:
+          - $ref: '#/components/schemas/ChassisValidator'
+          - type: 'null'
+        gpu:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/GPUValidator'
+            type: array
+          - type: 'null'
+          title: Gpu
+        network:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/NetworkAdapterValidator'
+            type: array
+          - type: 'null'
+          title: Network
+        os:
+          anyOf:
+          - $ref: '#/components/schemas/OSValidator'
+          - type: 'null'
+        pci_peripherals:
+          items:
+            $ref: '#/components/schemas/PCIPeripheralValidator'
+          title: Pci Peripherals
+          type: array
+        processor:
+          items:
+            $ref: '#/components/schemas/ProcessorValidator'
+          title: Processor
+          type: array
+        usb_peripherals:
+          items:
+            $ref: '#/components/schemas/USBPeripheralValidator'
+          title: Usb Peripherals
+          type: array
+        video:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/VideoCaptureValidator'
+            type: array
+          - type: 'null'
+          title: Video
+        wireless:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/WirelessAdapterValidator'
+            type: array
+          - type: 'null'
+          title: Wireless
+      required:
+      - os
+      - bios
+      - board
+      - chassis
+      - processor
+      - gpu
+      - audio
+      - video
+      - network
+      - wireless
+      - pci_peripherals
+      - usb_peripherals
+      title: CertificationStatusRequest
+      type: object
+    CertifiedResponse:
+      description: 'If a system is certified, we return the information about OS and
+        bios
+
+        used on the system under test we had in the lab to certify the machine'
+      properties:
+        bios:
+          $ref: '#/components/schemas/BiosValidator'
+        os:
+          $ref: '#/components/schemas/OSValidator'
+        status:
+          const: Certified
+          title: Status
+      required:
+      - status
+      - os
+      - bios
+      title: CertifiedResponse
+      type: object
+    ChassisValidator:
+      properties:
+        chassis_type:
+          title: Chassis Type
+          type: string
+        manufacturer:
+          title: Manufacturer
+          type: string
+        sku:
+          title: Sku
+          type: string
+        version:
+          title: Version
+          type: string
+      required:
+      - chassis_type
+      - manufacturer
+      - sku
+      - version
+      title: ChassisValidator
+      type: object
+    GPUValidator:
+      properties:
+        family:
+          title: Family
+          type: string
+        manufacturer:
+          title: Manufacturer
+          type: string
+        version:
+          title: Version
+          type: string
+      required:
+      - family
+      - manufacturer
+      - version
+      title: GPUValidator
+      type: object
     HTTPValidationError:
       properties:
         detail:
@@ -55,42 +207,218 @@ components:
           type: array
       title: HTTPValidationError
       type: object
-    PartialCertificationResponse:
+    KernelPackageValidator:
       properties:
-        certified_components:
-          items:
-            $ref: '#/components/schemas/DeviceDTO'
-          title: Certified Components
-          type: array
-        detail:
-          $ref: '#/components/schemas/CertificationStatus'
+        name:
+          title: Name
+          type: string
+        signature:
+          title: Signature
+          type: string
+        version:
+          title: Version
+          type: string
       required:
-      - detail
-      - certified_components
-      title: PartialCertificationResponse
+      - name
+      - version
+      - signature
+      title: KernelPackageValidator
       type: object
-    SystemInfoDTO:
+    NetworkAdapterValidator:
+      description: Validator for ethernet network adapters
       properties:
-        devices:
-          items:
-            $ref: '#/components/schemas/DeviceDTO'
-          title: Devices
-          type: array
+        bus:
+          title: Bus
+          type: string
+        capacity:
+          title: Capacity
+          type: integer
+        id:
+          title: Id
+          type: string
         model:
           title: Model
-          type: string
-        os_version:
-          title: Os Version
           type: string
         vendor:
           title: Vendor
           type: string
       required:
-      - os_version
-      - vendor
+      - bus
+      - id
       - model
-      - devices
-      title: SystemInfoDTO
+      - vendor
+      - capacity
+      title: NetworkAdapterValidator
+      type: object
+    NotCertifiedResponse:
+      properties:
+        status:
+          const: Not Seen
+          title: Status
+      required:
+      - status
+      title: NotCertifiedResponse
+      type: object
+    OSValidator:
+      properties:
+        codename:
+          title: Codename
+          type: string
+        description:
+          title: Description
+          type: string
+        distributor:
+          title: Distributor
+          type: string
+        kernel:
+          $ref: '#/components/schemas/KernelPackageValidator'
+        loaded_modules:
+          items:
+            type: string
+          title: Loaded Modules
+          type: array
+        version:
+          title: Version
+          type: string
+      required:
+      - distributor
+      - description
+      - version
+      - codename
+      - kernel
+      - loaded_modules
+      title: OSValidator
+      type: object
+    PCIPeripheralValidator:
+      properties:
+        name:
+          title: Name
+          type: string
+        pci_id:
+          title: Pci Id
+          type: string
+        vendor:
+          title: Vendor
+          type: string
+      required:
+      - pci_id
+      - name
+      - vendor
+      title: PCIPeripheralValidator
+      type: object
+    ProcessorValidator:
+      properties:
+        family:
+          title: Family
+          type: string
+        frequency:
+          title: Frequency
+          type: number
+        manufacturer:
+          title: Manufacturer
+          type: string
+        version:
+          title: Version
+          type: string
+      required:
+      - family
+      - frequency
+      - manufacturer
+      - version
+      title: ProcessorValidator
+      type: object
+    RelatedCertifiedSystemExistsResponse:
+      description: 'If a system is partially certified, we return the information
+        about components
+
+        were tested on other systems that the machine has'
+      properties:
+        audio:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/AudioValidator'
+            type: array
+          - type: 'null'
+          title: Audio
+        board:
+          $ref: '#/components/schemas/BoardValidator'
+        chassis:
+          anyOf:
+          - $ref: '#/components/schemas/ChassisValidator'
+          - type: 'null'
+        gpu:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/GPUValidator'
+            type: array
+          - type: 'null'
+          title: Gpu
+        network:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/NetworkAdapterValidator'
+            type: array
+          - type: 'null'
+          title: Network
+        pci_peripherals:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/PCIPeripheralValidator'
+            type: array
+          - type: 'null'
+          title: Pci Peripherals
+        processor:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/ProcessorValidator'
+            type: array
+          - type: 'null'
+          title: Processor
+        status:
+          const: Partially Certified
+          title: Status
+        usb_peripherals:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/USBPeripheralValidator'
+            type: array
+          - type: 'null'
+          title: Usb Peripherals
+        video:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/VideoCaptureValidator'
+            type: array
+          - type: 'null'
+          title: Video
+        wireless:
+          anyOf:
+          - items:
+              $ref: '#/components/schemas/WirelessAdapterValidator'
+            type: array
+          - type: 'null'
+          title: Wireless
+      required:
+      - status
+      - board
+      title: RelatedCertifiedSystemExistsResponse
+      type: object
+    USBPeripheralValidator:
+      properties:
+        name:
+          title: Name
+          type: string
+        usb_id:
+          title: Usb Id
+          type: string
+        vendor:
+          title: Vendor
+          type: string
+      required:
+      - usb_id
+      - name
+      - vendor
+      title: USBPeripheralValidator
       type: object
     ValidationError:
       properties:
@@ -113,6 +441,34 @@ components:
       - type
       title: ValidationError
       type: object
+    VideoCaptureValidator:
+      description: Validator model for video capture devices
+      properties:
+        model:
+          title: Model
+          type: string
+        vendor:
+          title: Vendor
+          type: string
+      required:
+      - model
+      - vendor
+      title: VideoCaptureValidator
+      type: object
+    WirelessAdapterValidator:
+      description: Validator model for wireless network adapters
+      properties:
+        model:
+          title: Model
+          type: string
+        vendor:
+          title: Vendor
+          type: string
+      required:
+      - model
+      - vendor
+      title: WirelessAdapterValidator
+      type: object
 info:
   description: API server for working with hardware information from C3
   title: Hardware API (hwapi)
@@ -129,25 +485,18 @@ paths:
               schema: {}
           description: Successful Response
       summary: Root
-  /openapi.yaml:
-    get:
-      description: OpenAPI schema in TAML format
-      operationId: get_openapi_yaml_openapi_yaml_get
-      responses:
-        '200':
-          content:
-            application/json:
-              schema: {}
-          description: Successful Response
-      summary: Get Openapi Yaml
   /v1/certification/status:
     post:
+      description: 'Endpoint for checking certification status (whether a system is
+        certified, not seen
+
+        or some of its components have been seen on other systems)'
       operationId: check_certification_v1_certification_status_post
       requestBody:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/SystemInfoDTO'
+              $ref: '#/components/schemas/CertificationStatusRequest'
         required: true
       responses:
         '200':
@@ -155,8 +504,9 @@ paths:
             application/json:
               schema:
                 anyOf:
-                - $ref: '#/components/schemas/CertificationResponse'
-                - $ref: '#/components/schemas/PartialCertificationResponse'
+                - $ref: '#/components/schemas/CertifiedResponse'
+                - $ref: '#/components/schemas/NotCertifiedResponse'
+                - $ref: '#/components/schemas/RelatedCertifiedSystemExistsResponse'
                 title: Response Check Certification V1 Certification Status Post
           description: Successful Response
         '422':

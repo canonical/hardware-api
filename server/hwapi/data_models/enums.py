@@ -21,20 +21,6 @@
 from enum import Enum
 
 
-class DeviceType(str, Enum):
-    AUDIO = "AUDIO"
-    BIOS = "BIOS"
-    BLUETOOTH = "BLUETOOTH"
-    BOARD = "BOARD"
-    CHASSIS = "CHASSIS"
-    CPU = "PROCESSOR"
-    DISK = "DISK"
-    GPU = "GPU"
-    NETWORK_ADAPTER = "NETWORK"
-    VIDEO = "VIDEO"
-    WIFI_ADAPTER = "WIRELESS"
-
-
 class CertificationStatus(str, Enum):
     CERTIFIED = "Certified"
     PARTIALLY_CERTIFIED = "Partially Certified"

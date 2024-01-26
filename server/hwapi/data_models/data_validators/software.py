@@ -17,20 +17,20 @@
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
-from typing import List
+
 from pydantic import BaseModel
 
-from hwapi.data_models.enums import DeviceType
+
+class KernelPackageValidator(BaseModel):
+    name: str
+    version: str
+    signature: str
 
 
-class DeviceDTO(BaseModel):
-    device_type: DeviceType
-    vendor: str
-    model: str
-
-
-class SystemInfoDTO(BaseModel):
-    os_version: str
-    vendor: str
-    model: str
-    devices: List[DeviceDTO]
+class OSValidator(BaseModel):
+    distributor: str
+    description: str
+    version: str
+    codename: str
+    kernel: KernelPackageValidator
+    loaded_modules: list[str]
