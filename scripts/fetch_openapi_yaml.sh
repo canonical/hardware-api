@@ -9,7 +9,7 @@ poetry run uvicorn hwapi.main:app --port 8002 &
 sleep 5
 
 # Fetch OpenAPI YAML
-curl http://localhost:8002/v1/openapi.yaml -o openapi.yaml
+curl http://localhost:8002/v1/openapi.yaml -o schemas/openapi.yaml
 
 # Kill the FastAPI server
 kill $!

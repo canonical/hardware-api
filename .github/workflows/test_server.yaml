@@ -45,4 +45,4 @@ jobs:
         run: curl http://localhost:8001/v1/openapi.yaml -o fetched_openapi.yaml
 
       - name: Compare with repository's openapi.yaml
-        run: diff fetched_openapi.yaml openapi.yaml
+        run: diff fetched_openapi.yaml schemas/openapi.yaml
