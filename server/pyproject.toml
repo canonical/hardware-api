@@ -14,7 +14,7 @@ pydantic = "^2.5.3"
 pyyaml = "^6.0.1"
 
 [tool.poetry.group.dev.dependencies]
-black = "^23.12.1"
+black = "^24.0.0"
 ruff = "^0.1.12"
 mypy = "^1.8.0"
 types-pyyaml = "^6.0.12.12"
