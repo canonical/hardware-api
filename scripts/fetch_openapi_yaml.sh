@@ -15,4 +15,4 @@ curl http://localhost:8002/v1/openapi.yaml -o schemas/openapi.yaml
 kill $!
 
 # Add schema to the committed files
-git add openapi.yaml
+git add schemas/openapi.yaml

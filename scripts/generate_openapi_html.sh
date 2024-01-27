@@ -1,6 +1,8 @@
 #!/bin/bash
 
-cd server/
+cd server/schemas/
 
 # Generate HTML schema
-npx @redocly/cli build-docs ./schemas/openapi.yaml -o ./schemas/openapi.html
+npx @redocly/cli build-docs openapi.yaml -o openapi.html
+
+git add openapi.html

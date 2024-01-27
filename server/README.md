@@ -18,9 +18,9 @@ Then you can access the server via this URL: http://127.0.0.1:8000
 You can retrieve API schema in HTML, YAML, and JSON formats:
 
 - To access the HTML view for the API schema, just run the server and follow the [/#docs](http://127.0.0.1:8000/#docs) endpoint.
-- A self-contained HTML representation of the schema is also included in the repository: [openapi.html](./hwapi/schemas/openapi.html).
+- A self-contained HTML representation of the schema is also included in the repository: [openapi.html](./schemas/openapi.html).
 - Retrieve the schema in YAML from the running service by following the [/openapi.yaml](http://127.0.0.1:8000/v1/openapi.yaml) endpoint
-- A copy of the [openapi.yaml](./hwapi/schemas/openapi.yaml) is included in the repo, and it is enforced by a CI automation to be up to date.
+- A copy of the [openapi.yaml](./schemas/openapi.yaml) is included in the repo, and it is enforced by a CI automation to be up to date.
 - For getting its JSON version, follow the [/openapi.json](http://127.0.0.1:8000/openapi.json) endpoint.
 
 ## Development
