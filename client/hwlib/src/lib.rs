@@ -3,7 +3,7 @@ use models::devices;
 use models::rbody::{RelatedCertifiedSystemExistsResponse, CertificationStatusResponse};
 
 fn get_related_certified_system_exists_sample() -> RelatedCertifiedSystemExistsResponse {
-    return RelatedCertifiedSystemExistsResponse {
+    RelatedCertifiedSystemExistsResponse {
         status: "Partially Certified".to_string(),
         board: devices::BoardValidator {
             manufacturer: "Sample Manufacturer".to_string(),
@@ -61,5 +61,5 @@ fn get_related_certified_system_exists_sample() -> RelatedCertifiedSystemExistsR
 
 
 pub fn get_certification_status(_url: &str) -> CertificationStatusResponse {
-    return CertificationStatusResponse::RelatedCertifiedSystemExists(get_related_certified_system_exists_sample());
+    CertificationStatusResponse::RelatedCertifiedSystemExists(get_related_certified_system_exists_sample())
 }
