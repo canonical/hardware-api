@@ -2,17 +2,17 @@ use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct KernelPackageValidator {
-    name: String,
-    version: String,
-    signature: String,
+    pub name: String,
+    pub version: String,
+    pub signature: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct OSValidator {
-    distributor: String,
-    description: String,
-    version: String,
-    codename: String,
-    kernel: KernelPackageValidator,
-    loaded_modules: Vec<String>,
+    pub distributor: String,
+    pub description: String,
+    pub version: String,
+    pub codename: String,
+    pub kernel: KernelPackageValidator,
+    pub loaded_modules: Vec<String>,
 }

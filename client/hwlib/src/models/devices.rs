@@ -1,88 +1,88 @@
-use serde::(Serialize, Deserialize);
+use serde::{Serialize, Deserialize};
 
 
 #[derive(Serialize, Deserialize)]
 pub struct AudioValidator {
-    model: String,
-    vendor: String,
+    pub model: String,
+    pub vendor: String,
 }
 
 
 #[derive(Serialize, Deserialize)]
 pub struct BiosValidator {
-    firmware_revision: String,
-    release_date: String,
-    revision: String,
-    vendor: String,
-    version: String,
+    pub firmware_revision: String,
+    pub release_date: String,
+    pub revision: String,
+    pub vendor: String,
+    pub version: String,
 }
 
 
 #[derive(Serialize, Deserialize)]
 pub struct BoardValidator {
-    manufacturer: String,
-    product_name: String,
-    version: String
+    pub manufacturer: String,
+    pub product_name: String,
+    pub version: String
 }
 
 
 #[derive(Serialize, Deserialize)]
 pub struct ChassisValidator {
-    chassis_type: String,
-    manufacturer: String,
-    sku: String,
-    version: String,
+    pub chassis_type: String,
+    pub manufacturer: String,
+    pub sku: String,
+    pub version: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct GPUValidator {
-    family: String,
-    manufacturer: String,
-    version: String,
+    pub family: String,
+    pub manufacturer: String,
+    pub version: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct NetworkAdapterValidator {
 
-    bus: String,
-    id: String,
-    model: String,
-    vendor: String,
-    capacity: i32,
+    pub bus: String,
+    pub id: String,
+    pub model: String,
+    pub vendor: String,
+    pub capacity: i32,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct PCIPeripheralValidator {
-    pci_id: String,
-    name: String,
-    vendor: String,
+    pub pci_id: String,
+    pub name: String,
+    pub vendor: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct ProcessorValidator {
-    family: String,
-    frequency: f64,
-    manufacturer: String,
-    version: String,
+    pub family: String,
+    pub frequency: f64,
+    pub manufacturer: String,
+    pub version: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct USBPeripheralValidator {
-    usb_id: String,
-    name: String,
-    vendor: String,
+    pub usb_id: String,
+    pub name: String,
+    pub vendor: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct VideoCaptureValidator {
 
-    model: String,
-    vendor: String,
+    pub model: String,
+    pub vendor: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct WirelessAdapterValidator {
 
-    model: String,
-    vendor: String,
+    pub model: String,
+    pub vendor: String,
 }
