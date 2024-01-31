@@ -1,12 +1,10 @@
-use serde::{Serialize, Deserialize};
-
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize)]
 pub struct AudioValidator {
     pub model: String,
     pub vendor: String,
 }
-
 
 #[derive(Serialize, Deserialize)]
 pub struct BiosValidator {
@@ -17,14 +15,12 @@ pub struct BiosValidator {
     pub version: String,
 }
 
-
 #[derive(Serialize, Deserialize)]
 pub struct BoardValidator {
     pub manufacturer: String,
     pub product_name: String,
-    pub version: String
+    pub version: String,
 }
-
 
 #[derive(Serialize, Deserialize)]
 pub struct ChassisValidator {
@@ -43,7 +39,6 @@ pub struct GPUValidator {
 
 #[derive(Serialize, Deserialize)]
 pub struct NetworkAdapterValidator {
-
     pub bus: String,
     pub id: String,
     pub model: String,
@@ -75,14 +70,12 @@ pub struct USBPeripheralValidator {
 
 #[derive(Serialize, Deserialize)]
 pub struct VideoCaptureValidator {
-
     pub model: String,
     pub vendor: String,
 }
 
 #[derive(Serialize, Deserialize)]
 pub struct WirelessAdapterValidator {
-
     pub model: String,
     pub vendor: String,
 }

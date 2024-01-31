@@ -1,7 +1,6 @@
 use hwlib::get_certification_status;
 use std::env;
 use std::process::exit;
-use tokio;
 
 #[tokio::main]
 async fn main() {

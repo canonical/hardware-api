@@ -1,10 +1,13 @@
 use rand::Rng;
 mod models;
 use models::devices;
+use models::rbody::{
+    CertificationStatusResponse, CertifiedResponse, NotSeenResponse,
+    RelatedCertifiedSystemExistsResponse,
+};
 use models::software;
-use models::rbody::{RelatedCertifiedSystemExistsResponse, CertifiedResponse, NotSeenResponse, CertificationStatusResponse};
 
-fn get_certified_system_sample() -> CertifiedResponse{
+fn get_certified_system_sample() -> CertifiedResponse {
     let kernel_package = software::KernelPackageValidator {
         name: "Linux".to_string(),
         version: "5.4.0-42-generic".to_string(),
@@ -88,13 +91,16 @@ fn get_related_certified_system_exists_sample() -> RelatedCertifiedSystemExistsR
     }
 }
 
-
-pub async fn get_certification_status(_url: &str) -> Result<CertificationStatusResponse, reqwest::Error> {
+pub async fn get_certification_status(
+    _url: &str,
+) -> Result<CertificationStatusResponse, reqwest::Error> {
     let mut rng = rand::thread_rng();
     let response_type = rng.gen_range(0..3);
     let response = match response_type {
         0 => CertificationStatusResponse::Certified(get_certified_system_sample()),
-        1 => CertificationStatusResponse::RelatedCertifiedSystemExists(get_related_certified_system_exists_sample()),
+        1 => CertificationStatusResponse::RelatedCertifiedSystemExists(
+            get_related_certified_system_exists_sample(),
+        ),
         _ => CertificationStatusResponse::NotSeen(NotSeenResponse {
             status: "Not Seen".to_string(),
         }),
