@@ -6,8 +6,8 @@ use crate::models::software;
 #[derive(Serialize, Deserialize)]
 pub struct CertifiedResponse {
     pub status: String,
-    pub os: software::OSValidator,
-    pub bios: devices::BiosValidator,
+    pub os: software::OS,
+    pub bios: devices::Bios,
 }
 
 #[derive(Serialize, Deserialize)]
@@ -18,16 +18,16 @@ pub struct NotSeenResponse {
 #[derive(Serialize, Deserialize)]
 pub struct RelatedCertifiedSystemExistsResponse {
     pub status: String,
-    pub board: devices::BoardValidator,
-    pub chassis: Option<devices::ChassisValidator>,
-    pub processor: Option<Vec<devices::ProcessorValidator>>,
-    pub gpu: Option<Vec<devices::GPUValidator>>,
-    pub audio: Option<Vec<devices::AudioValidator>>,
-    pub video: Option<Vec<devices::VideoCaptureValidator>>,
-    pub network: Option<Vec<devices::NetworkAdapterValidator>>,
-    pub wireless: Option<Vec<devices::WirelessAdapterValidator>>,
-    pub pci_peripherals: Option<Vec<devices::PCIPeripheralValidator>>,
-    pub usb_peripherals: Option<Vec<devices::USBPeripheralValidator>>,
+    pub board: devices::Board,
+    pub chassis: Option<devices::Chassis>,
+    pub processor: Option<Vec<devices::Processor>>,
+    pub gpu: Option<Vec<devices::GPU>>,
+    pub audio: Option<Vec<devices::Audio>>,
+    pub video: Option<Vec<devices::VideoCapture>>,
+    pub network: Option<Vec<devices::NetworkAdapter>>,
+    pub wireless: Option<Vec<devices::WirelessAdapter>>,
+    pub pci_peripherals: Option<Vec<devices::PCIPeripheral>>,
+    pub usb_peripherals: Option<Vec<devices::USBPeripheral>>,
 }
 
 #[derive(Serialize, Deserialize)]
