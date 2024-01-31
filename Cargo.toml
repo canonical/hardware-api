@@ -1,8 +1,8 @@
 [workspace]
 
 members = [
-    "hwctl",
-    "hwlib"
+    "client/hwctl",
+    "client/hwlib"
 ]
 
 resolver = "2"

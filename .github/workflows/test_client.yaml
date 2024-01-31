@@ -8,9 +8,6 @@ concurrency:
 jobs:
   linting:
     runs-on: [self-hosted, linux, large]
-    defaults:
-      run:
-        working-directory: client
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
