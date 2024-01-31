@@ -1,6 +1,35 @@
+use rand::Rng;
 mod models;
 use models::devices;
-use models::rbody::{RelatedCertifiedSystemExistsResponse, CertificationStatusResponse};
+use models::software;
+use models::rbody::{RelatedCertifiedSystemExistsResponse, CertifiedResponse, NotSeenResponse, CertificationStatusResponse};
+
+fn get_certified_system_sample() -> CertifiedResponse{
+    let kernel_package = software::KernelPackageValidator {
+        name: "Linux".to_string(),
+        version: "5.4.0-42-generic".to_string(),
+        signature: "Sample Signature".to_string(),
+    };
+
+    CertifiedResponse {
+        status: "Certified".to_string(),
+        os: software::OSValidator {
+            distributor: "Ubuntu".to_string(),
+            description: "Ubuntu 20.04.1 LTS".to_string(),
+            version: "20.04".to_string(),
+            codename: "focal".to_string(),
+            kernel: kernel_package,
+            loaded_modules: vec!["module1".to_string(), "module2".to_string()],
+        },
+        bios: devices::BiosValidator {
+            firmware_revision: "1.0".to_string(),
+            release_date: "2020-01-01".to_string(),
+            revision: "rev1".to_string(),
+            vendor: "BIOSVendor".to_string(),
+            version: "v1.0".to_string(),
+        },
+    }
+}
 
 fn get_related_certified_system_exists_sample() -> RelatedCertifiedSystemExistsResponse {
     RelatedCertifiedSystemExistsResponse {
@@ -60,6 +89,15 @@ fn get_related_certified_system_exists_sample() -> RelatedCertifiedSystemExistsR
 }
 
 
-pub fn get_certification_status(_url: &str) -> CertificationStatusResponse {
-    CertificationStatusResponse::RelatedCertifiedSystemExists(get_related_certified_system_exists_sample())
+pub async fn get_certification_status(_url: &str) -> Result<CertificationStatusResponse, reqwest::Error> {
+    let mut rng = rand::thread_rng();
+    let response_type = rng.gen_range(0..3);
+    let response = match response_type {
+        0 => CertificationStatusResponse::Certified(get_certified_system_sample()),
+        1 => CertificationStatusResponse::RelatedCertifiedSystemExists(get_related_certified_system_exists_sample()),
+        _ => CertificationStatusResponse::NotSeen(NotSeenResponse {
+            status: "Not Seen".to_string(),
+        }),
+    };
+    Ok(response)
 }

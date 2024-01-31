@@ -11,7 +11,7 @@ pub struct CertifiedResponse {
 }
 
 #[derive(Serialize, Deserialize)]
-pub struct NotCertifiedResponse {
+pub struct NotSeenResponse {
     pub status: String,
 }
 
@@ -33,6 +33,6 @@ pub struct RelatedCertifiedSystemExistsResponse {
 #[derive(Serialize, Deserialize)]
 pub enum CertificationStatusResponse {
     Certified(CertifiedResponse),
-    NotCertified(NotCertifiedResponse),
+    NotSeen(NotSeenResponse),
     RelatedCertifiedSystemExists(RelatedCertifiedSystemExistsResponse),
 }
