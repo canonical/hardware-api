@@ -30,10 +30,7 @@ $ cargo run
 This is the output you should get running the commands above:
 
 ```bash
-   Compiling hwlib v0.1.0 (/home/nadzeya/Work/Canonical/hiapi/client/hwlib)
-   Compiling hwctl v0.1.0 (/home/nadzeya/Work/Canonical/hiapi/client/hwctl)
     Finished dev [unoptimized + debuginfo] target(s) in 2.00s
-     Running `/home/nadzeya/Work/Canonical/hiapi/target/debug/hwctl`
 Certified(
     CertifiedResponse {
         status: "Certified",
@@ -66,7 +63,7 @@ Certified(
 
 ## Use Python bindings
 
-The `hwctl` lib can be used in Python code as well. We're using [pyo3](https://github.com/PyO3/pyo3) lib for creating Python bindings, so to use them, youi need to have [maturin](https://github.com/PyO3/maturin) on your system installed. It requires virtual environment to be configured to work with it:
+The `hwctl` lib can be used in Python code as well. We're using [pyo3](https://github.com/PyO3/pyo3) lib for creating Python bindings, so to use them, you need to have [maturin](https://github.com/PyO3/maturin) on your system installed. It requires virtual environment to be configured to work with it:
 
 ```bash
 $ virtualenv venv
