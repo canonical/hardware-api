@@ -1,4 +1,5 @@
 mod models;
+pub mod py_bindings;
 use models::devices;
 use models::rbody::{
     CertificationStatusResponse, CertifiedResponse, NotSeenResponse,
