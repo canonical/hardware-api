@@ -1,0 +1,26 @@
+name: Test client lib and CLI tool
+on: [push]
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+
+jobs:
+  linting:
+    runs-on: [self-hosted, linux, large]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libssl-dev
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - run: cargo check
+      - run: rustup component add rustfmt
+      - run: cargo fmt --all -- --check
+      - run: rustup component add clippy
+      - run: cargo clippy --all-features --verbose

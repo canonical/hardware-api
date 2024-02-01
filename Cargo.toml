@@ -4,3 +4,5 @@ members = [
     "client/hwctl",
     "client/hwlib"
 ]
+
+resolver = "2"
