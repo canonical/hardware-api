@@ -1,4 +1,3 @@
-use rand::Rng;
 mod models;
 use models::devices;
 use models::rbody::{
@@ -80,12 +79,12 @@ fn get_related_certified_system_exists_sample() -> RelatedCertifiedSystemExistsR
         }]),
         pci_peripherals: Some(vec![devices::PCIPeripheral {
             name: "Sample Name".to_string(),
-            pci_id: "Sample ID".to_string(),
+            pci_id: "0000:0000".to_string(),
             vendor: "Sample Vendor".to_string(),
         }]),
         usb_peripherals: Some(vec![devices::USBPeripheral {
             name: "Sample Name".to_string(),
-            usb_id: "Sample ID".to_string(),
+            usb_id: "0000:0000".to_string(),
             vendor: "Sample Vendor".to_string(),
         }]),
     }
@@ -94,13 +93,16 @@ fn get_related_certified_system_exists_sample() -> RelatedCertifiedSystemExistsR
 pub async fn get_certification_status(
     _url: &str,
 ) -> Result<CertificationStatusResponse, reqwest::Error> {
-    let mut rng = rand::thread_rng();
-    let response_type = rng.gen_range(0..3);
+    let response_type = std::env::var("CERTIFICATION_STATUS")
+        .unwrap_or_else(|_| "0".to_string())
+        .parse::<i32>()
+        .unwrap_or(0);
+
     let response = match response_type {
-        0 => CertificationStatusResponse::Certified(get_certified_system_sample()),
         1 => CertificationStatusResponse::RelatedCertifiedSystemExists(
             get_related_certified_system_exists_sample(),
         ),
+        2 => CertificationStatusResponse::Certified(get_certified_system_sample()),
         _ => CertificationStatusResponse::NotSeen(NotSeenResponse {
             status: "Not Seen".to_string(),
         }),
