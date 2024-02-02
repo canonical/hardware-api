@@ -1,6 +1,5 @@
 #!/bin/bash
 
-
 # Run only if server code has been modified
 if git diff --cached --name-only | grep --quiet "server"
 then

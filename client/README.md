@@ -83,7 +83,7 @@ Now you can use the lib in your Python code:
 ```python
 >>> import hwlib
 >>> hwlib.get_certification_status("https://example.com")
-'{"NotSeen":{"status":"Not Seen"}}'
+{'NotSeen':{'status':'Not Seen'}}
 >>> import os
 >>> os.environ["CERTIFICATION_STATUS"] = "2"
 >>> hwlib.get_certification_status("https://example.com")
