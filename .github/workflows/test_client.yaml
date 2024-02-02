@@ -32,7 +32,7 @@ jobs:
     needs: lint-and-test
     steps:
       - uses: actions/checkout@v4
-      - name: Install dependencies
+      - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y pkg-config libssl-dev
@@ -42,13 +42,21 @@ jobs:
           toolchain: stable
           override: true
       - uses: actions/setup-python@v5
-      - run: pip install black pytest maturin virtualenv
-      - name: Check tests style with black
-        run: black --check client/hwlib/pytests/
-      - name: Prepare the Rust lib with Python bindings
+        with:
+          python-version: "3.10"
+      - name: Create virtual environment
+        run: python -m venv venv
+      - name: Install Python dependencies
         run: |
-          virtualenv venv
+          ./venv/bin/pip install black pytest maturin virtualenv
+      - name: Check tests style with black
+        run: ./venv/bin/black --check client/hwlib/pytests/
+      - name: Build the Rust lib with Python bindings
+        run: |
           source venv/bin/activate
           cd client/hwlib/
           maturin develop
-      - run: pytest pytests/
+      - name: Run pytest
+        run: |
+          cd client/hwlib/
+          ../../venv/bin/pytest pytests/
