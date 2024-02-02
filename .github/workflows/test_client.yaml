@@ -6,7 +6,7 @@ concurrency:
 
 
 jobs:
-  linting:
+  lint-and-test:
     runs-on: [self-hosted, linux, large]
     steps:
       - uses: actions/checkout@v4
@@ -24,3 +24,5 @@ jobs:
       - run: cargo fmt --all -- --check
       - run: rustup component add clippy
       - run: cargo clippy --all-features --verbose
+      - name: Run cargo test
+        run: cargo test -- --test-threads=1
