@@ -1,8 +1,12 @@
 #!/bin/bash
 
-cd server/schemas/
+# Run only if server code has been modified
+if git diff --cached --name-only | grep --quiet "server"
+then
+    cd server/schemas/
 
-# Generate HTML schema
-npx @redocly/cli build-docs openapi.yaml -o openapi.html
+    # Generate HTML schema
+    npx @redocly/cli build-docs openapi.yaml -o openapi.html
 
-git add openapi.html
+    git add openapi.html
+fi
