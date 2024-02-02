@@ -35,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y pkg-config libssl-dev
+          sudo apt-get install -y pkg-config libssl-dev python3-venv
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -46,5 +46,9 @@ jobs:
       - name: Check tests style with black
         run: black --check client/hwlib/pytests/
       - name: Prepare the Rust lib with Python bindings
-        run: cd client/hwlib && maturin develop
+        run: |
+          virtualenv venv
+          source venv/bin/activate
+          cd client/hwlib/
+          maturin develop
       - run: pytest pytests/
