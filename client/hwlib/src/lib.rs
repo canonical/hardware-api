@@ -1,4 +1,4 @@
-mod models;
+pub mod models;
 pub mod py_bindings;
 use models::devices;
 use models::rbody::{

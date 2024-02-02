@@ -10,7 +10,7 @@ The client contains of two modules:
 
 For now, the library contains the function to return a sample certification status. It depends on the environment variable `CERTIFICATION_STATUS` and accepts the following values:
 
-* `0`: The system has not been seen (default behaviour).
+* `0`: The system has not been seen (default behaviour even if the env variable is not defined).
 * `1`: The system is partially certified (we haven't seen this specific system, but some of its hardware components have been tested on other systems).
 * `2`: This system has been certified (but probably for other Ubuntu release).
 
