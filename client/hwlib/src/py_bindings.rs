@@ -1,20 +1,16 @@
 use crate::get_certification_status as native_get_certification_status;
 use once_cell::sync::Lazy;
 use pyo3::prelude::*;
-use pyo3::types::PyDict;
-use pyo3::PyResult;
+
 use pyo3::wrap_pyfunction;
+use pyo3::PyResult;
 use tokio::runtime::Runtime;
 
-static RT: Lazy<Runtime> = Lazy::new(|| {
-    Runtime::new().expect("Failed to create Tokio runtime")
-});
+static RT: Lazy<Runtime> = Lazy::new(|| Runtime::new().expect("Failed to create Tokio runtime"));
 
 #[pyfunction]
 fn get_certification_status(py: Python, url: String) -> PyResult<PyObject> {
-    let response = RT.block_on(async {
-        native_get_certification_status(&url).await
-    });
+    let response = RT.block_on(async { native_get_certification_status(&url).await });
 
     match response {
         Ok(response_struct) => {
@@ -30,10 +26,11 @@ fn get_certification_status(py: Python, url: String) -> PyResult<PyObject> {
             let json_object: PyObject = json_module.call_method1("loads", (json,))?.into();
 
             Ok(json_object)
-        },
-        Err(e) => Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(
-            format!("Request failed: {}", e),
-        )),
+        }
+        Err(e) => Err(PyErr::new::<pyo3::exceptions::PyRuntimeError, _>(format!(
+            "Request failed: {}",
+            e
+        ))),
     }
 }
 
