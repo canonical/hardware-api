@@ -13,6 +13,7 @@ reqwest = { version = "0.11.24", features = ["json"] }
 serde = { version = "1.0.196", features = ["derive"] }
 smbios-lib = "0.9.1"
 tokio = { version = "1.36.0", features = ["full", "test-util"] }
-pyo3 = { version = "0.14", features = ["extension-module"] }
 serde_json = "1.0.113"
 once_cell = "1.19.0"
+pyo3 = { version = "0.20", features = ["extension-module"] }
+pyo3-asyncio = { version = "0.20.0", features = ["tokio-runtime"] }
