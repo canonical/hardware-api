@@ -39,3 +39,11 @@ Now you can use the lib in your Python code:
 >>> asyncio.run(check_certification_status("https://example.com"))
 {'Certified': {'status': 'Certified', 'os': {'distributor': 'Ubuntu', 'description': 'Ubuntu 20.04.1 LTS', 'version': '20.04', 'codename': 'focal', 'kernel': {'name': 'Linux', 'version': '5.4.0-42-generic', 'signature': 'Sample Signature'}, 'loaded_modules': ['module1', 'module2']}, 'bios': {'firmware_revision': '1.0', 'release_date': '2020-01-01', 'revision': 'rev1', 'vendor': 'BIOSVendor', 'version': 'v1.0'}}}
 ```
+
+
+## Run Tests
+
+Since we're using python bindings, this library contains tests for both Rust and Python code. To execute them, run the following commands in the `hwlib/` directory:
+
+* Run Rust tests: `$ cargo test`.
+* For Python tests, you need to have `tox` on your system installed: `pip install tox`. Then, you can run Python tests with tox `$ tox`.
