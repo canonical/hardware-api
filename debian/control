@@ -1,0 +1,47 @@
+Source: rust-hilib
+Section: rust
+Priority: optional
+Build-Depends: debhelper (>= 12),
+ dh-cargo (>= 25),
+ cargo:native <!nocheck>,
+ rustc:native <!nocheck>,
+ libstd-rust-dev <!nocheck>,
+ librust-dmidecode-rs-0.2+default-dev (>= 0.2.2-~~) <!nocheck>,
+ librust-reqwest-0.11+default-dev (>= 0.11.23-~~) <!nocheck>,
+ librust-reqwest-0.11+json-dev (>= 0.11.23-~~) <!nocheck>,
+ librust-serde-1+default-dev (>= 1.0.195-~~) <!nocheck>,
+ librust-serde-1+derive-dev (>= 1.0.195-~~) <!nocheck>,
+ librust-smbios-lib-0.9+default-dev (>= 0.9.1-~~) <!nocheck>,
+ librust-tokio-1+default-dev (>= 1.35.1-~~) <!nocheck>
+Maintainer: Debian Rust Maintainers <pkg-rust-maintainers@alioth-lists.debian.net>
+Standards-Version: 4.6.1
+Vcs-Git: https://salsa.debian.org/rust-team/debcargo-conf.git [src/hilib]
+Vcs-Browser: https://salsa.debian.org/rust-team/debcargo-conf/tree/master/src/hilib
+X-Cargo-Crate: hilib
+Rules-Requires-Root: no
+
+# FIXME (packages."(name)".section) debcargo auto-generated summary for librust-hilib-dev is very long, consider overriding
+
+Package: librust-hilib-dev
+Architecture: any
+Multi-Arch: same
+Depends:
+ ${misc:Depends},
+ librust-dmidecode-rs-0.2+default-dev (>= 0.2.2-~~),
+ librust-reqwest-0.11+default-dev (>= 0.11.23-~~),
+ librust-reqwest-0.11+json-dev (>= 0.11.23-~~),
+ librust-serde-1+default-dev (>= 1.0.195-~~),
+ librust-serde-1+derive-dev (>= 1.0.195-~~),
+ librust-smbios-lib-0.9+default-dev (>= 0.9.1-~~),
+ librust-tokio-1+default-dev (>= 1.35.1-~~)
+Provides:
+ librust-hilib+default-dev (= ${binary:Version}),
+ librust-hilib-0-dev (= ${binary:Version}),
+ librust-hilib-0+default-dev (= ${binary:Version}),
+ librust-hilib-0.1-dev (= ${binary:Version}),
+ librust-hilib-0.1+default-dev (= ${binary:Version}),
+ librust-hilib-0.1.0-dev (= ${binary:Version}),
+ librust-hilib-0.1.0+default-dev (= ${binary:Version})
+Description: Collects and sends hardware information to hi-api to find testing status of the device model - Rust source code
+ This package contains the source for the Rust hilib crate, packaged by debcargo
+ for use with cargo and dh-cargo.
