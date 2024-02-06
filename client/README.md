@@ -45,5 +45,5 @@ Now you can use the lib in your Python code:
 
 Since we're using python bindings, this library contains tests for both Rust and Python code. To execute them, run the following commands in the `hwlib/` directory:
 
-* Run Rust tests: `$ cargo test`.
-* For Python tests, you need to have `tox` on your system installed: `pip install tox`. Then, you can run Python tests with tox `$ tox`.
+* Run Rust tests: `$ cargo test -- --test-threads=1`
+* For Python tests, you need to have `tox` on your system installed: `pip install tox`. Then, you can run Python tests with tox `$ tox`
