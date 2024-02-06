@@ -1,4 +1,4 @@
-Source: rust-hilib
+Source: hwlib
 Section: rust
 Priority: optional
 Build-Depends: debhelper (>= 12),
@@ -15,14 +15,14 @@ Build-Depends: debhelper (>= 12),
  librust-tokio-1+default-dev (>= 1.35.1-~~) <!nocheck>
 Maintainer: Debian Rust Maintainers <pkg-rust-maintainers@alioth-lists.debian.net>
 Standards-Version: 4.6.1
-Vcs-Git: https://salsa.debian.org/rust-team/debcargo-conf.git [src/hilib]
-Vcs-Browser: https://salsa.debian.org/rust-team/debcargo-conf/tree/master/src/hilib
-X-Cargo-Crate: hilib
+Vcs-Git: https://github.com/canonical/hardware-api.git [client/hwlib/src]
+Vcs-Browser: https://github.com/canonical/hardware-api/tree/main/client/hwlib/src
+# X-Cargo-Crate: hilib
 Rules-Requires-Root: no
 
-# FIXME (packages."(name)".section) debcargo auto-generated summary for librust-hilib-dev is very long, consider overriding
+# FIXME (packages."(name)".section) debcargo auto-generated summary for hwlib-dev is very long, consider overriding
 
-Package: librust-hilib-dev
+Package: hwlib-dev
 Architecture: any
 Multi-Arch: same
 Depends:
@@ -35,13 +35,13 @@ Depends:
  librust-smbios-lib-0.9+default-dev (>= 0.9.1-~~),
  librust-tokio-1+default-dev (>= 1.35.1-~~)
 Provides:
- librust-hilib+default-dev (= ${binary:Version}),
- librust-hilib-0-dev (= ${binary:Version}),
- librust-hilib-0+default-dev (= ${binary:Version}),
- librust-hilib-0.1-dev (= ${binary:Version}),
- librust-hilib-0.1+default-dev (= ${binary:Version}),
- librust-hilib-0.1.0-dev (= ${binary:Version}),
- librust-hilib-0.1.0+default-dev (= ${binary:Version})
-Description: Collects and sends hardware information to hi-api to find testing status of the device model - Rust source code
- This package contains the source for the Rust hilib crate, packaged by debcargo
+ hwlib+default-dev (= ${binary:Version}),
+ hwlib-0-dev (= ${binary:Version}),
+ hwlib-0+default-dev (= ${binary:Version}),
+ hwlib-0.1-dev (= ${binary:Version}),
+ hwlib-0.1+default-dev (= ${binary:Version}),
+ hwlib-0.1.0-dev (= ${binary:Version}),
+ hwlib-0.1.0+default-dev (= ${binary:Version})
+Description: Collects and sends hardware information to hardware-api to find testing status of the device model - Rust source code
+ This package contains the source for the Rust hwlib crate, packaged by debcargo
  for use with cargo and dh-cargo.
