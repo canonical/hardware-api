@@ -1,19 +1,22 @@
-Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: hilib
-Upstream-Contact: FIXME (overlay) UNKNOWN-AUTHORS
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: hwlib
+Source: https://github.com/canonical/hardware-api/tree/main/client/hwlib
 
 Files: *
-Copyright: FIXME (overlay) UNKNOWN-AUTHORS FIXME (overlay) UNKNOWN-YEARS
-License: GPL-3.0-only
-Comment:
- FIXME (overlay): Since upstream copyright years are not available in
- Cargo.toml, they were extracted from the upstream Git repository. This may not
- be correct information so you should review and fix this before uploading to
- the archive.
+Copyright: Copyright 2024 Canonical Ltd.
+License: GPL-3
+ This program is free software: you can redistribute it and/or modify
+ it under the terms of the GNU General Public License version 3,
+ as published by the Free Software Foundation.
+ .
+ This program is distributed in the hope that it will be useful,
+ but WITHOUT ANY WARRANTY; without even the implied warranty of
+ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ GNU General Public License for more details.
+ .
+ You should have received a copy of the GNU General Public License
+ along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ .
+ On Debian-based systems the full text of the GPL, version 3, can be found at
+ /usr/share/common-licenses/GPL-3.
 
-Files: debian/*
-Copyright: 2024 Debian Rust Maintainers <pkg-rust-maintainers@alioth-lists.debian.net>
-License: GPL-3.0-only
-
-License: GPL-3.0-only
- FIXME (overlay): Unrecognized crate license, please find the full license text in the rest of the crate source code and copy-paste it here
