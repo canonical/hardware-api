@@ -4,6 +4,7 @@
 *.log
 debhelper-build-stamp
 target
+hwlib/debian/hwlib/
 cargo_home
 .cargo-checksum.json
 __pycache__/

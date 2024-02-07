@@ -2,20 +2,13 @@ Source: hwlib
 Section: rust
 Priority: optional
 Build-Depends: debhelper (>= 12),
- dh-cargo (>= 25),
- cargo:native,
- rustc:native,
- libstd-rust-dev,
- pipx,
- librust-dmidecode-rs-0.2+default-dev (>= 0.2.2-~~),
- librust-reqwest-0.11+default-dev (>= 0.11.23-~~),
- librust-reqwest-0.11+json-dev (>= 0.11.23-~~),
- librust-serde-1+default-dev (>= 1.0.195-~~),
- librust-serde-1+derive-dev (>= 1.0.195-~~),
- librust-smbios-lib-0.9+default-dev (>= 0.9.1-~~),
- librust-tokio-1+default-dev (>= 1.35.1-~~),
- librust-once-cell-1-dev (>= 1.18.0-~~),
- librust-pyo3-dev (>= 0.19.0-3-~~)
+               cargo, 
+               rustc, 
+               python3, 
+               python3-setuptools, 
+               python3-wheel,
+               libssl-dev,
+               pkg-config
 Maintainer: Debian Rust Maintainers <pkg-rust-maintainers@alioth-lists.debian.net>
 Standards-Version: 4.6.1
 Vcs-Git: https://github.com/canonical/hardware-api.git [client/hwlib/src]
@@ -28,17 +21,7 @@ Rules-Requires-Root: no
 Package: hwlib-dev
 Architecture: any
 Multi-Arch: same
-Depends:
- ${misc:Depends},
- librust-dmidecode-rs-0.2+default-dev (>= 0.2.2-~~),
- librust-reqwest-0.11+default-dev (>= 0.11.23-~~),
- librust-reqwest-0.11+json-dev (>= 0.11.23-~~),
- librust-serde-1+default-dev (>= 1.0.195-~~),
- librust-serde-1+derive-dev (>= 1.0.195-~~),
- librust-smbios-lib-0.9+default-dev (>= 0.9.1-~~),
- librust-tokio-1+default-dev (>= 1.35.1-~~),
- librust-once-cell-1-dev (>= 1.18.0-~~),
- librust-pyo3-dev (0.19.0-3)
+Depends: ${shlibs:Depends}, ${misc:Depends}, ${python3:Depends}
 Provides:
  hwlib+default-dev (= ${binary:Version}),
  hwlib-0-dev (= ${binary:Version}),
