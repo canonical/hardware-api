@@ -1,6 +1,8 @@
 *.tar.*
 *.dsc
 *.build
+*.log
+debhelper-build-stamp
 target
 cargo_home
 .cargo-checksum.json
