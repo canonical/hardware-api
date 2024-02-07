@@ -3,16 +3,17 @@ Section: rust
 Priority: optional
 Build-Depends: debhelper (>= 12),
  dh-cargo (>= 25),
- cargo:native <!nocheck>,
- rustc:native <!nocheck>,
- libstd-rust-dev <!nocheck>,
- librust-dmidecode-rs-0.2+default-dev (>= 0.2.2-~~) <!nocheck>,
- librust-reqwest-0.11+default-dev (>= 0.11.23-~~) <!nocheck>,
- librust-reqwest-0.11+json-dev (>= 0.11.23-~~) <!nocheck>,
- librust-serde-1+default-dev (>= 1.0.195-~~) <!nocheck>,
- librust-serde-1+derive-dev (>= 1.0.195-~~) <!nocheck>,
- librust-smbios-lib-0.9+default-dev (>= 0.9.1-~~) <!nocheck>,
- librust-tokio-1+default-dev (>= 1.35.1-~~) <!nocheck>
+ cargo:native,
+ rustc:native,
+ libstd-rust-dev,
+ librust-dmidecode-rs-0.2+default-dev (>= 0.2.2-~~),
+ librust-reqwest-0.11+default-dev (>= 0.11.23-~~),
+ librust-reqwest-0.11+json-dev (>= 0.11.23-~~),
+ librust-serde-1+default-dev (>= 1.0.195-~~),
+ librust-serde-1+derive-dev (>= 1.0.195-~~),
+ librust-smbios-lib-0.9+default-dev (>= 0.9.1-~~),
+ librust-tokio-1+default-dev (>= 1.35.1-~~),
+ librust-once-cell-1-dev (>= 1.18.0-~~)
 Maintainer: Debian Rust Maintainers <pkg-rust-maintainers@alioth-lists.debian.net>
 Standards-Version: 4.6.1
 Vcs-Git: https://github.com/canonical/hardware-api.git [client/hwlib/src]
@@ -33,7 +34,8 @@ Depends:
  librust-serde-1+default-dev (>= 1.0.195-~~),
  librust-serde-1+derive-dev (>= 1.0.195-~~),
  librust-smbios-lib-0.9+default-dev (>= 0.9.1-~~),
- librust-tokio-1+default-dev (>= 1.35.1-~~)
+ librust-tokio-1+default-dev (>= 1.35.1-~~),
+ librust-once-cell-1-dev (>= 1.18.0-~~)
 Provides:
  hwlib+default-dev (= ${binary:Version}),
  hwlib-0-dev (= ${binary:Version}),

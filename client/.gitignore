@@ -2,5 +2,6 @@
 *.dsc
 *.build
 target
+cargo_home
 .cargo-checksum.json
 __pycache__/
