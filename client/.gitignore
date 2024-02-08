@@ -8,3 +8,12 @@ hwlib/debian/hwlib/
 cargo_home
 .cargo-checksum.json
 __pycache__/
+
+# debian/ source files to ignore
+.debhelper/
+*/debian/files
+*/debian/hwlib-dev.substvars
+*/debian/hwlib-dev
+*.deb
+*.buildinfo
+*.changes
