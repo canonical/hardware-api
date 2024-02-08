@@ -9,7 +9,7 @@ Build-Depends: debhelper (>= 12),
                python3-wheel,
                libssl-dev,
                pkg-config
-Maintainer: Debian Rust Maintainers <pkg-rust-maintainers@alioth-lists.debian.net>
+Maintainer: Canonical Hardware Certification <canonical-hw-cert@lists.launchpad.net> 
 Standards-Version: 4.6.1
 Vcs-Git: https://github.com/canonical/hardware-api.git [client/hwlib/src]
 Vcs-Browser: https://github.com/canonical/hardware-api/tree/main/client/hwlib/src

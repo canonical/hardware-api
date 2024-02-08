@@ -15,5 +15,6 @@ __pycache__/
 */debian/hwlib-dev.substvars
 */debian/hwlib-dev
 *.deb
+*.ddeb
 *.buildinfo
 *.changes
