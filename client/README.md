@@ -1,3 +1,4 @@
+
 # `hwlib` library and `hwctl` CLI tool
 
 The client contains of two modules:
@@ -42,3 +43,38 @@ Since we're using python bindings, this library contains tests for both Rust and
 
 * Run Rust tests: `$ cargo test -- --test-threads=1`
 * For Python tests, you need to have `tox` on your system installed: `pip install tox`. Then, you can run Python tests with tox `$ tox`
+
+
+## Build Deb Package
+
+This section describes how to pack `hwlib` as a debian package. First, make sure that you have `devscripts` and `dput` installed on your system.
+
+Before creating an archive, make sure you don't have any files and directories like `target/` in the `client/hwlib` directory:
+
+```bash
+$ cd client/hwlib/
+$ git clean -dffx
+``` 
+
+Then we need to create the `.whl` file for the `hwlib` locally since `maturin` python library is required for building the package but is not available as a debian package, for now. To do it, run the following commands in the pre-created virtual environment. Also, it requires at least Ubuntu 23.10 version of your system.
+
+```bash
+(venv)$ maturin build --release -b pyo3 -i /path/to/venv/bin/python3
+```
+
+After that, you may probably need to update the `debian/changelog` and specify the `hwlib` version there. Make sure that the version is unique, otherwise it'll be rejected. It should be similar to the following (make sure to replace X.Y.Z with the correct package version and N with the sequence number if needed):
+
+```
+hwlib (X.Y.Z~devN) mantic; urgency=medium
+
+  * Team upload.
+  * Package hwlib X.Y.Z~devN
+```
+
+After that, create the archive and publish the package
+
+```bash
+$ tar czvf ../hwlib_<version>.orig.tar.gz --exclude debian .
+$ debuild -S -sa -k<your_gpg_key_short_ID>
+$ dput ppa:<ppa_name> ../hwlib_<version>.orig.tar.gz
+```
