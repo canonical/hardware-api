@@ -18,13 +18,12 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
 
-import pytest
 from hwlib import get_certification_status
 
 
-@pytest.mark.asyncio
-async def test_get_certification_status():
-    """Verify that we can use the library in the python code asynchronously."""
+def test_get_certification_status():
+    """Verify that we can use the library in the python code"""
     url = "http://example.com"
-    result = await get_certification_status(url)
+
+    result = get_certification_status(url)
     assert isinstance(result, dict)

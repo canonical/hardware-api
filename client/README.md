@@ -27,16 +27,11 @@ Now you can use the lib in your Python code:
 
 ```python
 >>> import hwlib
->>> import asyncio
->>> async def check_certification_status(url):
-...     result = await hwlib.get_certification_status(url)
-...     print(result)
-...
->>> asyncio.run(check_certification_status("https://example.com"))
+>>> hwlib.get_certification_status("https://example.com")
 {'NotSeen':{'status':'Not Seen'}}
 >>> import os
 >>> os.environ["CERTIFICATION_STATUS"] = "2"
->>> asyncio.run(check_certification_status("https://example.com"))
+>>> hwlib.get_certification_status("https://example.com")
 {'Certified': {'status': 'Certified', 'os': {'distributor': 'Ubuntu', 'description': 'Ubuntu 20.04.1 LTS', 'version': '20.04', 'codename': 'focal', 'kernel': {'name': 'Linux', 'version': '5.4.0-42-generic', 'signature': 'Sample Signature'}, 'loaded_modules': ['module1', 'module2']}, 'bios': {'firmware_revision': '1.0', 'release_date': '2020-01-01', 'revision': 'rev1', 'vendor': 'BIOSVendor', 'version': 'v1.0'}}}
 ```
 

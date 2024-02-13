@@ -14,7 +14,9 @@ __pycache__/
 */debian/files
 */debian/hwlib-dev.substvars
 */debian/hwlib-dev
+*/debian/cargo_registry
 *.deb
 *.ddeb
 *.buildinfo
 *.changes
+*.ppa.upload
