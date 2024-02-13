@@ -1,4 +1,3 @@
-
 # `hwlib` library and `hwctl` CLI tool
 
 The client contains of two modules:
@@ -56,7 +55,7 @@ $ cd client/hwlib/
 $ git clean -dffx
 ``` 
 
-Then we need to create the `.whl` file for the `hwlib` locally since `maturin` python library is required for building the package but is not available as a debian package, for now. To do it, run the following commands in the pre-created virtual environment. Also, it requires at least Ubuntu 23.10 version of your system.
+Then we need to create the `.whl` file for the `hwlib` locally, since `maturin` python library is not available as a debian package and we cannot include this step to the [rules](./debian/rules) file. To do it, run the following commands in the pre-created virtual environment. And since we're building for the mantic release, it needs to be run on Ubuntu 23.10.
 
 ```bash
 (venv)$ maturin build --release -b pyo3 -i /path/to/venv/bin/python3
@@ -69,9 +68,11 @@ hwlib (X.Y.Z~devN) mantic; urgency=medium
 
   * Team upload.
   * Package hwlib X.Y.Z~devN
+
+  # other changes there...
 ```
 
-After that, create the archive and publish the package
+After that, create the archive and publish the package:
 
 ```bash
 $ tar czvf ../hwlib_<version>.orig.tar.gz --exclude debian .
