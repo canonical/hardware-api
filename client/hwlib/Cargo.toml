@@ -11,7 +11,7 @@ maintainer = "Canonical Hardware Certification <canonical-hw-cert@lists.launchpa
 copyright = "Copyright 2024 Canonical Ltd."
 
 [dependencies]
-reqwest = { version = "=0.11.18", features = ["json"] }
+reqwest = { version = "=0.11.24", features = ["json"] }
 serde = { version = "=1.0.171", features = ["derive"] }
 tokio = { version = "=1.29.1", features = ["full", "test-util"] }
 serde_json = "=1.0.103"
