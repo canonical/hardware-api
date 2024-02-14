@@ -27,16 +27,11 @@ Now you can use the lib in your Python code:
 
 ```python
 >>> import hwlib
->>> import asyncio
->>> async def check_certification_status(url):
-...     result = await hwlib.get_certification_status(url)
-...     print(result)
-...
->>> asyncio.run(check_certification_status("https://example.com"))
+>>> hwlib.get_certification_status("https://example.com")
 {'NotSeen':{'status':'Not Seen'}}
 >>> import os
 >>> os.environ["CERTIFICATION_STATUS"] = "2"
->>> asyncio.run(check_certification_status("https://example.com"))
+>>> hwlib.get_certification_status("https://example.com")
 {'Certified': {'status': 'Certified', 'os': {'distributor': 'Ubuntu', 'description': 'Ubuntu 20.04.1 LTS', 'version': '20.04', 'codename': 'focal', 'kernel': {'name': 'Linux', 'version': '5.4.0-42-generic', 'signature': 'Sample Signature'}, 'loaded_modules': ['module1', 'module2']}, 'bios': {'firmware_revision': '1.0', 'release_date': '2020-01-01', 'revision': 'rev1', 'vendor': 'BIOSVendor', 'version': 'v1.0'}}}
 ```
 
@@ -47,3 +42,40 @@ Since we're using python bindings, this library contains tests for both Rust and
 
 * Run Rust tests: `$ cargo test -- --test-threads=1`
 * For Python tests, you need to have `tox` on your system installed: `pip install tox`. Then, you can run Python tests with tox `$ tox`
+
+
+## Build Deb Package
+
+This section describes how to pack `hwlib` as a debian package. First, make sure that you have `devscripts` and `dput` installed on your system.
+
+Before creating an archive, make sure you don't have any files and directories like `target/` in the `client/hwlib` directory:
+
+```bash
+$ cd client/hwlib/
+$ git clean -dffx
+``` 
+
+Then we need to create the `.whl` file for the `hwlib` locally, since `maturin` python library is not available as a debian package and we cannot include this step to the [rules](./debian/rules) file. To do it, run the following commands in the pre-created virtual environment. And since we're building for the mantic release, it needs to be run on Ubuntu 23.10.
+
+```bash
+(venv)$ maturin build --release -b pyo3 -i /path/to/venv/bin/python3
+```
+
+After that, you may probably need to update the `debian/changelog` and specify the `hwlib` version there. Make sure that the version is unique, otherwise it'll be rejected. It should be similar to the following (make sure to replace X.Y.Z with the correct package version and N with the sequence number if needed):
+
+```
+hwlib (X.Y.Z~devN) mantic; urgency=medium
+
+  * Team upload.
+  * Package hwlib X.Y.Z~devN
+
+  # other changes there...
+```
+
+After that, create the archive and publish the package:
+
+```bash
+$ tar czvf ../hwlib_<version>.orig.tar.gz --exclude debian .
+$ debuild -S -sa -k<your_gpg_key_short_ID>
+$ dput ppa:<ppa_name> ../hwlib_<version>.orig.tar.gz
+```

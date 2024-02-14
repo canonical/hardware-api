@@ -1,2 +1,22 @@
+*.tar.*
+*.dsc
+*.build
+*.log
+debhelper-build-stamp
 target
+hwlib/debian/hwlib/
+cargo_home
+.cargo-checksum.json
 __pycache__/
+
+# debian/ source files to ignore
+.debhelper/
+*/debian/files
+*/debian/hwlib-dev.substvars
+*/debian/hwlib-dev
+*/debian/cargo_registry
+*.deb
+*.ddeb
+*.buildinfo
+*.changes
+*.ppa.upload
