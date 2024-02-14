@@ -2,7 +2,7 @@
 name = "hwlib"
 description = "collects and sends hardware information to hwapi to find testing status of the device model"
 license = "GPL-3.0-only"
-version = "0.1.0"
+version = "0.0.1"
 edition = "2021"
 authors = []
 
