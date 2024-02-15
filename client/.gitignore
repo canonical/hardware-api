@@ -20,3 +20,4 @@ __pycache__/
 *.buildinfo
 *.changes
 *.ppa.upload
+hwlib/*.whl
