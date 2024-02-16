@@ -19,6 +19,7 @@ Build-Depends: debhelper (>= 12),
                librust-reqwest-0+default-dev,
                librust-once-cell-1+default-dev
 Maintainer: Canonical Hardware Certification <canonical-hw-cert@lists.launchpad.net> 
+Uploaders: Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 Standards-Version: 4.6.1
 Vcs-Git: https://github.com/canonical/hardware-api.git [client/hwlib/src]
 Vcs-Browser: https://github.com/canonical/hardware-api/tree/main/client/hwlib/src

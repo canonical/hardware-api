@@ -52,30 +52,30 @@ Before creating an archive, make sure you don't have any files and directories l
 
 ```bash
 $ cd client/hwlib/
-$ git clean -dffx
-``` 
+:client/hwlib/$ git clean -dffx
+```
 
 Then we need to create the `.whl` file for the `hwlib` locally, since `maturin` python library is not available as a debian package and we cannot include this step to the [rules](./debian/rules) file. To do it, run the following commands in the pre-created virtual environment. And since we're building for the mantic release, it needs to be run on Ubuntu 23.10.
 
 ```bash
-(venv)$ maturin build --release -b pyo3 -i /path/to/venv/bin/python3
+(venv) :client/hwlib$ pip install maturin
+(venv) :client/hwlib$ maturin build --release -b pyo3 -i /path/to/venv/bin/python3
 ```
 
-After that, you may probably need to update the `debian/changelog` and specify the `hwlib` version there. Make sure that the version is unique, otherwise it'll be rejected. It should be similar to the following (make sure to replace X.Y.Z with the correct package version and N with the sequence number if needed):
+After that, you may probably need to update the package version. Make sure that the version is unique, otherwise it'll be rejected. To do this, run the following commands:
 
-```
-hwlib (X.Y.Z~devN) mantic; urgency=medium
-
-  * Team upload.
-  * Package hwlib X.Y.Z~devN
-
-  # other changes there...
+```bash
+# Version string should have the format X.Y.Z and optionally you can
+# specify "~devN" suffix. Examples: 1.0.0, 1.2.3~dev1
+:client/hwlib$ export VERSION=X.Y.Z[~devN]
+:client/hwlib$ python3 ../../scripts/update_package_version.py $VERSION <your.email>@canonical.com
+:client/hwlib$ cargo update
 ```
 
 After that, create the archive and publish the package:
 
 ```bash
-$ tar czvf ../hwlib_<version>.orig.tar.gz --exclude debian .
-$ debuild -S -sa -k<your_gpg_key_short_ID>
-$ dput ppa:<ppa_name> ../hwlib_<version>.orig.tar.gz
+:client/hwlib$ tar czvf ../hwlib_$VERSION.orig.tar.gz --exclude debian .
+:client/hwlib$ debuild -S -sa -k<your_gpg_key_short_ID>
+:client/hwlib$ dput ppa:<ppa_name> ../hwlib_$VERSION.orig.tar.gz
 ```
