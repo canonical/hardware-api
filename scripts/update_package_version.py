@@ -14,32 +14,24 @@ def update_cargo_toml_version(file_path, new_version):
     with open(file_path, "r", encoding="utf-8") as toml_file:
         cargo_data = toml.load(toml_file)
 
-    cargo_data["package"]["version"] = new_version
+    # Cargo doesn't accept ~ after patch version number
+    cargo_data["package"]["version"] = new_version.split("~")[0]
 
     with open(file_path, "w", encoding="utf-8") as toml_file:
         toml.dump(cargo_data, toml_file)
 
 
-def update_debian_tests_control_version(file_path, new_version, package_name):
-    """Update debian/tests/control file"""
-    with open(file_path, "r", encoding="utf-8") as control_file:
-        content = control_file.read()
-
-    updated_content = re.sub(
-        rf"{package_name} \d+\.\d+\.\d+", f"{package_name} {new_version}", content
-    )
-
-    with open(file_path, "w", encoding="utf-8") as control_file:
-        control_file.write(updated_content)
-
-
 def update_debian_changelog(file_path, package_name, new_version, email, distribution):
     """Update the debian/changelog file"""
-    date = datetime.datetime.now(datetime.timezone.utc).strftime("%a, %d %b %Y %H:%M:%S %Z")
+    date = datetime.datetime.now(datetime.timezone.utc).strftime(
+        "%a, %d %b %Y %H:%M:%S %z"
+    )
+    # Convert name.surname@example.com to "Name Surname"
+    full_name = " ".join(list(map(str.capitalize, email.split("@")[0].split("."))))
     entry = (
         f"{package_name} ({new_version}) {distribution}; urgency=medium\n\n  "
-        f"* Team upload.\n  * Package {package_name} {new_version}\n\n -- "
-        f"{email}  {date}\n\n"
+        f"* Team upload.\n  * Package {package_name} {new_version}\n\n"
+        f" -- {full_name} <{email}>  {date}\n\n"
     )
 
     with open(file_path, "r", encoding="utf-8") as control_file:
@@ -59,7 +51,9 @@ def valid_version(version):
     """A new version must be like X.Y.Z or X.Y.Z~devN"""
     if re.match(r"^\d+\.\d+\.\d+(~dev\d+)?$", version):
         return version
-    raise argparse.ArgumentTypeError("A new version must be in format X.Y.Z or X.Y.Z~devN")
+    raise argparse.ArgumentTypeError(
+        "A new version must be in format X.Y.Z or X.Y.Z~devN"
+    )
 
 
 def main():
@@ -82,12 +76,6 @@ def main():
         type=valid_file_path,
     )
     parser.add_argument(
-        "--tests-control-file",
-        default="debian/tests/control",
-        help='Path to the debian tests control file. Default is "debian/tests/control".',
-        type=valid_file_path,
-    )
-    parser.add_argument(
         "--changelog-file",
         default="debian/changelog",
         help='Path to the debian changelog file. Default is "debian/changelog".',
@@ -101,9 +89,6 @@ def main():
 
     # Update versions in files
     update_cargo_toml_version(args.cargo_file, args.new_version)
-    update_debian_tests_control_version(
-        args.tests_control_file, args.new_version, args.package_name
-    )
     update_debian_changelog(
         args.changelog_file,
         args.package_name,
