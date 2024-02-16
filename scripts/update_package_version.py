@@ -20,29 +20,6 @@ def update_cargo_toml_version(file_path, new_version):
         toml.dump(cargo_data, toml_file)
 
 
-def update_debian_control_version(file_path, new_version):
-    """Update debian/control file to replace old version numbers with new_version."""
-    with open(file_path, "r", encoding="utf-8") as control_file:
-        content = control_file.read()
-
-    major, minor, patch = new_version.split(".")
-
-    patterns = {
-        r"hwlib-\d+-dev": f"hwlib-{major}-dev",
-        r"hwlib-\d+\+\w+-dev": f"hwlib-{major}+default-dev",
-        r"hwlib-\d\.\d+-dev": f"hwlib-{major}.{minor}-dev",
-        r"hwlib-\d\.\d+\+\w+-dev": f"hwlib-{major}.{minor}+default-dev",
-        r"hwlib-\d\.\d\.\d+-dev": f"hwlib-{major}.{minor}.{patch}-dev",
-        r"hwlib-\d\.\d\.\d+\+\w+-dev": f"hwlib-{major}.{minor}.{patch}+default-dev",
-    }
-
-    for old_pattern, new_replacement in patterns.items():
-        content = re.sub(old_pattern, new_replacement, content)
-
-    with open(file_path, "w", encoding="utf-8") as control_file:
-        control_file.write(content)
-
-
 def update_debian_tests_control_version(file_path, new_version, package_name):
     """Update debian/tests/control file"""
     with open(file_path, "r", encoding="utf-8") as control_file:
@@ -105,12 +82,6 @@ def main():
         type=valid_file_path,
     )
     parser.add_argument(
-        "--control-file",
-        default="debian/control",
-        help='Path to the debian control file. Default is "debian/control".',
-        type=valid_file_path,
-    )
-    parser.add_argument(
         "--tests-control-file",
         default="debian/tests/control",
         help='Path to the debian tests control file. Default is "debian/tests/control".',
@@ -130,7 +101,6 @@ def main():
 
     # Update versions in files
     update_cargo_toml_version(args.cargo_file, args.new_version)
-    update_debian_control_version(args.control_file, args.new_version)
     update_debian_tests_control_version(
         args.tests_control_file, args.new_version, args.package_name
     )

@@ -4,11 +4,11 @@ Depends: dh-cargo (>= 18), @
 Restrictions: allow-stderr, skip-not-installable
 
 Test-Command: /usr/share/cargo/bin/cargo-auto-test hwlib 0.0.1 --all-targets
-Features: test-name=hwlib-dev:default
+Features: test-name=hwlib:default
 Depends: dh-cargo (>= 18), @
 Restrictions: allow-stderr, skip-not-installable
 
 Test-Command: /usr/share/cargo/bin/cargo-auto-test hwlib 0.0.1 --all-targets --no-default-features
-Features: test-name=hwlib-dev:
+Features: test-name=hwlib:
 Depends: dh-cargo (>= 18), @
 Restrictions: allow-stderr, skip-not-installable

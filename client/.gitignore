@@ -12,8 +12,8 @@ __pycache__/
 # debian/ source files to ignore
 .debhelper/
 */debian/files
-*/debian/hwlib-dev.substvars
-*/debian/hwlib-dev
+*/debian/hwlib.substvars
+*/debian/hwlib
 */debian/cargo_registry
 *.deb
 *.ddeb
