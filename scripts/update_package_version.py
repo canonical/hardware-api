@@ -35,7 +35,7 @@ def update_debian_tests_control_version(file_path, new_version, package_name):
 
 def update_debian_changelog(file_path, package_name, new_version, email, distribution):
     """Update the debian/changelog file"""
-    date = datetime.datetime.now().strftime("%a, %d %b %Y %H:%M:%S %z")
+    date = datetime.datetime.now(datetime.timezone.utc).strftime("%a, %d %b %Y %H:%M:%S %Z")
     entry = (
         f"{package_name} ({new_version}) {distribution}; urgency=medium\n\n  "
         f"* Team upload.\n  * Package {package_name} {new_version}\n\n -- "
@@ -59,7 +59,7 @@ def valid_version(version):
     """A new version must be like X.Y.Z or X.Y.Z~devN"""
     if re.match(r"^\d+\.\d+\.\d+(~dev\d+)?$", version):
         return version
-    raise argparse.ArgumentTypeError("A new version must be like X.Y.Z or X.Y.Z~devN")
+    raise argparse.ArgumentTypeError("A new version must be in format X.Y.Z or X.Y.Z~devN")
 
 
 def main():
