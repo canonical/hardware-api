@@ -3,6 +3,8 @@ on:
   push:
     branches:
       - main
+    paths:
+      - server/**
   workflow_dispatch:
 
 permissions:

@@ -1,5 +1,13 @@
 name: Test client lib and CLI tool
-on: [push]
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - client/**
+  pull_request:
+    branches: [ main ]
+    paths:
+      - client/**
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true

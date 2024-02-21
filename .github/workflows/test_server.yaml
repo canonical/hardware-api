@@ -1,5 +1,13 @@
 name: Test API server
-on: [push]
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - server/**
+  pull_request:
+    branches: [ main ]
+    paths:
+      - server/**
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
