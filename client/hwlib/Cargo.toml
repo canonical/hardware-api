@@ -27,7 +27,7 @@ version = "=1.29.1"
 features = [ "full", "test-util",]
 
 [dependencies.pyo3]
-version = "=0.19.0"
+version = "=0.20.3"
 features = [ "extension-module",]
 
 [package.metadata.deb]
