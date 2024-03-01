@@ -1,6 +1,6 @@
 name: hwctl
 base: core22
-version: '0.1' # 
+version: '0.1' # rewritten with the help of `adopt-info` below
 adopt-info: hwctl
 summary: Hardware API client
 description: Canonical Certified Hardware API client
