@@ -2,12 +2,12 @@
 
 The repo contains the API server and client for retrieving hardware information.
 
-
 ## Prerequisites for Deploying Locally
 
-* `poetry` vesion 1.6.1 or later for servier deployment (https://python-poetry.org/docs/)
-* `rust` and `cargo` for client deployment (https://www.rust-lang.org/tools/install)
-
+- `poetry` vesion 1.6.1 or later for servier deployment
+  (https://python-poetry.org/docs/)
+- `rust` and `cargo` for client deployment
+  (https://www.rust-lang.org/tools/install)
 
 ## Running API Server
 
@@ -20,33 +20,40 @@ $ poetry run uvicorn hwapi.main:app --reload
 
 Then you can access the server via this URL: http://127.0.0.1:8000
 
-For information regarding accessing the API schema, read [server README](./server/README.md)
-
+For information regarding accessing the API schema, read
+[server README](./server/README.md)
 
 ## Accessing API schema
 
 You can retrieve API schema in HTML, YAML, and JSON formats:
 
-- To access the HTML view for the API schema, just run the server and follow the [/#docs](http://127.0.0.1:8000/#docs) endpoint.
-- A self-contained HTML representation of the schema is also included in the repository: [openapi.html](./server/schemas/openapi.html).
-- Retrieve the schema in YAML from the running service by following the [/openapi.yaml](http://127.0.0.1:8000/v1/openapi.yaml) endpoint
-- A copy of the [openapi.yaml](./server/schemas/openapi.yaml) is included in the repo, and it is enforced by a CI automation to be up to date.
-- For getting its JSON version, follow the [/openapi.json](http://127.0.0.1:8000/openapi.json) endpoint.
-
+- To access the HTML view for the API schema, just run the server and follow the
+  [/#docs](http://127.0.0.1:8000/#docs) endpoint.
+- A self-contained HTML representation of the schema is also included in the
+  repository: [openapi.html](./server/schemas/openapi.html).
+- Retrieve the schema in YAML from the running service by following the
+  [/openapi.yaml](http://127.0.0.1:8000/v1/openapi.yaml) endpoint
+- A copy of the [openapi.yaml](./server/schemas/openapi.yaml) is included in the
+  repo, and it is enforced by a CI automation to be up to date.
+- For getting its JSON version, follow the
+  [/openapi.json](http://127.0.0.1:8000/openapi.json) endpoint.
 
 ## Build the library (`hwlib`)
 
-For now, the library contains the function to return a sample certification status. It depends on the environment variable `CERTIFICATION_STATUS` and accepts the following values:
+For now, the library contains the function to return a sample certification
+status. It depends on the environment variable `CERTIFICATION_STATUS` and
+accepts the following values:
 
-* `0`: The system has not been seen (default behaviour even if the env variable is not defined).
-* `1`: The system is partially certified (we haven't seen this specific system, but some of its hardware components have been tested on other systems).
-* `2`: This system has been certified (but probably for other Ubuntu release).
+- `0`: The system has not been seen (default behaviour even if the env variable
+  is not defined).
+- `1`: The system is partially certified (we haven't seen this specific system,
+  but some of its hardware components have been tested on other systems).
+- `2`: This system has been certified (but probably for other Ubuntu release).
 
 ```bash
 $ cd client/hwlib
 $ cargo build
 ```
-
 
 ## Build and Run the Reference CLI Tool (`hwctl`)
 
@@ -87,4 +94,14 @@ Certified(
         },
     },
 )
+```
+
+## Building `hwctl` snap
+
+To build and install `hwctl` as a snap locally, do the following after
+[installing snapcraft and a build provider for it](https://snapcraft.io/docs/snapcraft-setup):
+
+```bash
+snapcraft --bind-ssh # --verbose
+sudo snap install ./hwctl_[version].snap --dangerous
 ```
