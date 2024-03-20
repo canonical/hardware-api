@@ -11,9 +11,7 @@ def create_table():
     conn = sqlite3.connect(db_path)
     c = conn.cursor()
 
-    c.execute(
-        "CREATE TABLE IF NOT EXISTS devices (id INTEGER PRIMARY KEY, name TEXT)"
-    )
+    c.execute("CREATE TABLE IF NOT EXISTS devices (id INTEGER PRIMARY KEY, name TEXT)")
     c.execute(
         """
         INSERT INTO devices (name) VALUES
