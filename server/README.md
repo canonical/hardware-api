@@ -10,7 +10,7 @@ $ poetry install
 $ poetry run uvicorn hwapi.main:app --reload
 ```
 
-Then you can access the server via this URL: http://127.0.0.1:8000
+Then you can access the server via this URL: http://127.0.0.1:8080
 
 
 ## Pre-commit hooks

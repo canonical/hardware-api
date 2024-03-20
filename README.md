@@ -5,20 +5,31 @@ The repo contains the API server and client for retrieving hardware information.
 
 ## Prerequisites for Deploying Locally
 
-* `poetry` vesion 1.6.1 or later for servier deployment (https://python-poetry.org/docs/)
-* `rust` and `cargo` for client deployment (https://www.rust-lang.org/tools/install)
+* Install [docker](https://docs.docker.com/engine/install/ubuntu/) and [setup permissions](https://docs.docker.com/engine/install/linux-postinstall/) for server deployment
+* Install `rust` and `cargo` for client deployment (https://www.rust-lang.org/tools/install)
 
 
-## Running API Server
+## Running API Server With Docker
 
-Go to the `server/` directory in the project and run the following commands:
+Go to the `server/` directory in the project. The following command builds the hwapi server:
 
 ```bash
-$ poetry install
-$ poetry run uvicorn hwapi.main:app --reload
+$ docker build -t hwapi .
 ```
 
-Then you can access the server via this URL: http://127.0.0.1:8000
+Then, stand up the hwapi server:
+
+```bash
+$ docker run -p 8080:8080 hwapi
+```
+
+If you want to reload the application automatically when you change the source code, you can mount the current directory on the host to the app directory inside the container:
+
+```bash
+$ docker run -p 8080:8080 -v $(pwd)/hwapi:/home/app/hwapi hwapi
+```
+
+Then you can access the server via this URL: http://127.0.0.1:8080
 
 For information regarding accessing the API schema, read [server README](./server/README.md)
 
@@ -27,11 +38,11 @@ For information regarding accessing the API schema, read [server README](./serve
 
 You can retrieve API schema in HTML, YAML, and JSON formats:
 
-- To access the HTML view for the API schema, just run the server and follow the [/#docs](http://127.0.0.1:8000/#docs) endpoint.
+- To access the HTML view for the API schema, just run the server and follow the [/#docs](http://127.0.0.1:8080/#docs) endpoint.
 - A self-contained HTML representation of the schema is also included in the repository: [openapi.html](./server/schemas/openapi.html).
-- Retrieve the schema in YAML from the running service by following the [/openapi.yaml](http://127.0.0.1:8000/v1/openapi.yaml) endpoint
+- Retrieve the schema in YAML from the running service by following the [/openapi.yaml](http://127.0.0.1:8080/v1/openapi.yaml) endpoint
 - A copy of the [openapi.yaml](./server/schemas/openapi.yaml) is included in the repo, and it is enforced by a CI automation to be up to date.
-- For getting its JSON version, follow the [/openapi.json](http://127.0.0.1:8000/openapi.json) endpoint.
+- For getting its JSON version, follow the [/openapi.json](http://127.0.0.1:8080/openapi.json) endpoint.
 
 
 ## Build the library (`hwlib`)
