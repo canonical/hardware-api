@@ -31,26 +31,12 @@ class CharmCharm(ops.CharmBase):
         self.framework.observe(self.on.config_changed, self._on_config_changed)
 
     def _on_hardware_api_pebble_ready(self, event: ops.PebbleReadyEvent):
-        """Define and start a workload using the Pebble API.
-
-        Change this example to suit your needs. You'll need to specify the right entrypoint and
-        environment configuration for your specific workload.
-
-        Learn more about interacting with Pebble at at https://juju.is/docs/sdk/pebble.
-        """
         container = event.workload
         container.add_layer("hardware_api", self._pebble_layer, combine=True)
         container.replan()
         self.unit.status = ops.ActiveStatus()
 
     def _on_config_changed(self, event: ops.ConfigChangedEvent):
-        """Handle changed configuration.
-
-        Change this example to suit your needs. If you don't need to handle config, you can remove
-        this method.
-
-        Learn more about config at https://juju.is/docs/sdk/config
-        """
         log_level = self.model.config["log-level"].lower()
 
         if log_level in VALID_LOG_LEVELS:
@@ -68,7 +54,6 @@ class CharmCharm(ops.CharmBase):
 
     @property
     def _pebble_layer(self) -> ops.pebble.LayerDict:
-        """Return a dictionary representing a Pebble layer."""
         return {
             "summary": "httpbin layer",
             "description": "pebble config layer for hardware_api",
