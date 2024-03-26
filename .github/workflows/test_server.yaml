@@ -27,9 +27,10 @@ jobs:
         with:
           poetry-version: "1.6.1"
       - run: poetry install
-      - run: poetry run black --check hwapi
-      - run: poetry run ruff hwapi
-      - run: poetry run mypy hwapi
+      - run: poetry run black --check hwapi scripts
+      - run: poetry run ruff hwapi scripts
+      - run: poetry run mypy hwapi scripts
+
 
   compare-openapi:
     runs-on: [self-hosted, linux, large, jammy, x64]

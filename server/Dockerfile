@@ -12,8 +12,8 @@ RUN pip3 install poetry && \
 
 COPY . .
 
-ENV DB_PATH /home/app/data/hwapi.db
-RUN python data/init_db.py
+ENV DB_URL "sqlite:///home/app/data/hwapi.db"
+RUN python scripts/init_db.py
 
 VOLUME ["/app/data"]
 
