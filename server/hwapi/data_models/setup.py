@@ -25,7 +25,7 @@ from sqlalchemy.orm import sessionmaker
 from .models import Base
 
 
-DB_URL = os.getenv("DB_URL", "sqlite://hwapi.db")
+DB_URL = os.getenv("DB_URL", "sqlite://")
 
 engine = create_engine(DB_URL, echo=True)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

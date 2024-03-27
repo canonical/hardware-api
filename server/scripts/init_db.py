@@ -72,18 +72,18 @@ def create_certificates(session):
     if machine1 and machine2 and release_focal and release_jammy:
         certificate1 = models.Certificate(
             hardware=machine1,
-            created_at=datetime.datetime.now(),
+            created_at=datetime.now(),
             release=release_focal,
             name="Certificate for Machine 1 with Focal",
-            completed=datetime.datetime.now() + datetime.timedelta(days=10),
+            completed=datetime.now() + timedelta(days=10),
         )
 
         certificate2 = models.Certificate(
             hardware=machine2,
-            created_at=datetime.datetime.now(),
+            created_at=datetime.now(),
             release=release_jammy,
             name="Certificate for Machine 2 with Jammy",
-            completed=datetime.datetime.now() + datetime.timedelta(days=10),
+            completed=datetime.now() + timedelta(days=10),
         )
 
         session.add(certificate1)
