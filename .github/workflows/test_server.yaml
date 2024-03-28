@@ -28,7 +28,7 @@ jobs:
           poetry-version: "1.6.1"
       - run: poetry install
       - run: poetry run black --check hwapi scripts
-      - run: poetry run ruff hwapi scripts
+      - run: poetry run ruff check hwapi scripts
       - run: poetry run mypy hwapi scripts
 
 

@@ -42,18 +42,20 @@ from hwapi.data_models.data_validators import (
 class CertificationStatusRequest(BaseModel):
     """Request body validator for status check endpoint"""
 
-    os: OSValidator | None
-    bios: BiosValidator | None
-    board: BoardValidator | None
-    chassis: ChassisValidator | None
-    processor: list[ProcessorValidator]
-    gpu: list[GPUValidator] | None
-    audio: list[AudioValidator] | None
-    video: list[VideoCaptureValidator] | None
-    network: list[NetworkAdapterValidator] | None
-    wireless: list[WirelessAdapterValidator] | None
-    pci_peripherals: list[PCIPeripheralValidator]
-    usb_peripherals: list[USBPeripheralValidator]
+    vendor: str
+    model: str
+    os: OSValidator | None = None
+    bios: BiosValidator | None = None
+    board: BoardValidator | None = None
+    chassis: ChassisValidator | None = None
+    processor: list[ProcessorValidator] = []
+    gpu: list[GPUValidator] | None = None
+    audio: list[AudioValidator] | None = None
+    video: list[VideoCaptureValidator] | None = None
+    network: list[NetworkAdapterValidator] | None = None
+    wireless: list[WirelessAdapterValidator] | None = None
+    pci_peripherals: list[PCIPeripheralValidator] = []
+    usb_peripherals: list[USBPeripheralValidator] = []
 
 
 class CertifiedResponse(BaseModel):

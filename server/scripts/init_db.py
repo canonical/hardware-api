@@ -51,6 +51,8 @@ releases = [
 
 
 def create_certificates(session):
+    models.Base.metadata.bind = engine
+    models.Base.metadata.create_all(engine)
     machine1 = (
         session.query(models.Machine).filter_by(canonical_id=machines[0][0]).first()
     )

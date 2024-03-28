@@ -27,11 +27,9 @@ from .models import Base
 
 DB_URL = os.getenv("DB_URL", "sqlite://")
 
-engine = create_engine(DB_URL, echo=True)
+engine = create_engine(DB_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-Base.metadata.bind = engine
-Base.metadata.create_all(engine)
 
 def get_db():
     db = SessionLocal()
