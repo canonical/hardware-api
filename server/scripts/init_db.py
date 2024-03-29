@@ -51,8 +51,6 @@ releases = [
 
 
 def create_certificates(session):
-    models.Base.metadata.bind = engine
-    models.Base.metadata.create_all(engine)
     machine1 = (
         session.query(models.Machine).filter_by(canonical_id=machines[0][0]).first()
     )
@@ -91,9 +89,14 @@ def create_certificates(session):
         session.add(certificate1)
         session.add(certificate2)
         session.commit()
+        return certificate1, certificate2
+
+    return None, None
 
 
 if __name__ == "__main__":
+    models.Base.metadata.bind = engine
+    models.Base.metadata.create_all(engine)
     session = Session(bind=engine)
 
     for vendor_name in vendors:
@@ -136,6 +139,30 @@ if __name__ == "__main__":
         session.add(release)
     session.commit()
 
-    create_certificates(session)
+    kernel = models.Kernel(
+        name="Linux", version="5.4.0-42-generic", signature="0000000"
+    )
+    bios = models.Bios(
+        firmware_version="1.0.0",
+        release_date=datetime.now() - timedelta(days=365),
+        revision="A01",
+        vendor=vendor,
+        version="1.0.2",
+    )
+
+    session.add(kernel)
+    session.add(bios)
+    session.commit()
+    cert1, cert2 = create_certificates(session)
+
+    report1 = models.Report(
+        created_at=datetime.now(), kernel=kernel, bios=bios, certificate=cert1
+    )
+    report2 = models.Report(
+        created_at=datetime.now(), kernel=kernel, bios=bios, certificate=cert2
+    )
+    session.add(report1)
+    session.add(report2)
+    session.commit()
 
     print("Database initialized.")

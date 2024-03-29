@@ -86,3 +86,34 @@ class Release(Base):
     parent_id = Column(Integer, ForeignKey("releases.id"), nullable=True)
     parent = relationship("Release", remote_side=[id])
     url_template = Column(String(255), nullable=True)
+
+
+class Kernel(Base):
+    __tablename__ = "kernels"
+    id = Column(Integer, primary_key=True)
+    name = Column(String, nullable=False)
+    version = Column(String, nullable=False)
+    signature = Column(String, nullable=False)
+
+
+class Bios(Base):
+    __tablename__ = "bios"
+    id = Column(Integer, primary_key=True)
+    firmware_version = Column(String, nullable=False)
+    release_date = Column(Date, nullable=False)
+    revision = Column(String, nullable=False)
+    vendor_id = Column(Integer, ForeignKey("vendors.id"), nullable=False)
+    version = Column(String, nullable=False)
+    vendor = relationship("Vendor")
+
+
+class Report(Base):
+    __tablename__ = "reports"
+    id = Column(Integer, primary_key=True)
+    created_at = Column(DateTime, nullable=False)
+    kernel_id = Column(Integer, ForeignKey("kernels.id"), nullable=False)
+    bios_id = Column(Integer, ForeignKey("bios.id"), nullable=False)
+    kernel = relationship("Kernel")
+    bios = relationship("Bios")
+    certificate_id = Column(Integer, ForeignKey("certificates.id"), nullable=False)
+    certificate = relationship("Certificate")
