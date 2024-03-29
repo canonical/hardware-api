@@ -17,7 +17,7 @@ Go to the `server/` directory in the project. The following command builds the h
 $ docker build -t hwapi .
 ```
 
-Then, stand up the hwapi server:
+If you don't have any db initialised (in the `server/data/hwapi.db` location), the command above will also initialise a DB with sample data. To, stand up the hwapi server, run the following command:
 
 ```bash
 $ docker run -p 8080:8080 hwapi
@@ -30,8 +30,6 @@ $ docker run -p 8080:8080 -v $(pwd)/hwapi:/home/app/hwapi hwapi
 ```
 
 Then you can access the server via this URL: http://127.0.0.1:8080
-
-For information regarding accessing the API schema, read [server README](./server/README.md)
 
 
 ## Accessing API schema
