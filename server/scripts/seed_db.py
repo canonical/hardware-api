@@ -71,7 +71,7 @@ def create_certificates(session):
 
     if machine1 and machine2 and release_focal and release_jammy:
         certificate1 = models.Certificate(
-            hardware=machine1,
+            machine=machine1,
             created_at=datetime.now(),
             release=release_focal,
             name="Certificate for Machine 1 with Focal",
@@ -79,7 +79,7 @@ def create_certificates(session):
         )
 
         certificate2 = models.Certificate(
-            hardware=machine2,
+            machine=machine2,
             created_at=datetime.now(),
             release=release_jammy,
             name="Certificate for Machine 2 with Jammy",
@@ -95,12 +95,11 @@ def create_certificates(session):
 
 
 if __name__ == "__main__":
-    models.Base.metadata.bind = engine
     models.Base.metadata.create_all(engine)
     session = Session(bind=engine)
 
     for vendor_name in vendors:
-        vendor = models.Vendor(name=vendor_name)
+        vendor: models.Vendor | None = models.Vendor(name=vendor_name)
         session.add(vendor)
     session.commit()
 
@@ -110,7 +109,9 @@ if __name__ == "__main__":
             .filter(models.Vendor.name == vendor_name)
             .first()
         )
-        platform = models.Platform(name=platform_name, vendor=vendor)
+        platform: models.Platform | None = models.Platform(
+            name=platform_name, vendor=vendor
+        )
         session.add(platform)
     session.commit()
 
@@ -120,7 +121,9 @@ if __name__ == "__main__":
             .filter(models.Platform.name == platform_name)
             .first()
         )
-        configuration = models.Configuration(name=configuration_name, platform=platform)
+        configuration: models.Configuration | None = models.Configuration(
+            name=configuration_name, platform=platform
+        )
         session.add(configuration)
     session.commit()
 

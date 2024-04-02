@@ -19,6 +19,7 @@
 """The algorithms for determining certification status"""
 
 
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from hwapi.endpoints.certification.rbody_validators import (
@@ -41,7 +42,8 @@ def is_certified(system_info: CertificationStatusRequest, db: Session):
     platform = (
         db.query(models.Platform)
         .filter(
-            models.Platform.name == system_info.model,
+            # Check that system model contains platform name
+            func.instr(system_info.model, models.Platform.name) > 0,
             models.Platform.vendor_id == vendor.id,
         )
         .first()
@@ -52,6 +54,8 @@ def is_certified(system_info: CertificationStatusRequest, db: Session):
     configurations = (
         db.query(models.Configuration)
         .filter(
+            # Check that system model contains configuration name
+            func.instr(system_info.model, models.Configuration.name) > 0,
             models.Configuration.platform_id == platform.id,
         )
         .all()
@@ -71,7 +75,7 @@ def is_certified(system_info: CertificationStatusRequest, db: Session):
             certificates = (
                 db.query(models.Certificate)
                 .join(models.Release)
-                .filter(models.Certificate.hardware_id == machine.id)
+                .filter(models.Certificate.machine_id == machine.id)
                 .order_by(models.Release.release_date.desc())
                 .all()
             )
@@ -83,11 +87,16 @@ def is_certified(system_info: CertificationStatusRequest, db: Session):
                     latest_certificate = certificate
                     latest_release_date = certificate.release.release_date
 
+    if latest_certificate is None:
+        return False, None
+
     report = (
         db.query(models.Report)
         .filter(models.Report.certificate_id == latest_certificate.id)
         .first()
     )
+    if report is None:
+        return False, None
     kernel = report.kernel
     bios = report.bios
 

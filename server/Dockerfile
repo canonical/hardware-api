@@ -16,7 +16,7 @@ ENV DB_URL "sqlite:////home/app/data/hwapi.db"
 # Don't populate existing DB with dummy data
 RUN if ! [ -f data/hwapi.db ]; then \
     mkdir -p data; \
-    python scripts/init_db.py; \
+    python scripts/seed_db.py; \
     fi
 
 VOLUME ["/app/data"]
