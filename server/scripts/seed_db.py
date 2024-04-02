@@ -95,7 +95,6 @@ def create_certificates(session):
 
 
 if __name__ == "__main__":
-    models.Base.metadata.create_all(engine)
     session = Session(bind=engine)
 
     for vendor_name in vendors:

@@ -1,0 +1,48 @@
+version: "3.8"
+services:
+  hwapi-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: ./scripts/dev-docker-entrypoint.sh
+    working_dir: /home/app
+    volumes:
+      - .:/home/app
+      - ./data:/home/app/data
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_URL=sqlite:////home/app/data/hwapi.db
+
+  hwapi-test:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: >
+      bash -c '
+        python scripts/seed_db.py
+        black --check hwapi/ scripts/
+        ruff check hwapi/ scripts/
+        mypy hwapi/ scripts/
+        pytest'
+    working_dir: /home/app
+    volumes:
+      - .:/home/app
+      - ./data:/home/app/data
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_URL=sqlite:////home/app/data/test-hwapi.db
+
+  hwapi:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    working_dir: /home/app
+    volumes:
+      - .:/home/app
+      - ./data:/home/app/data
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_URL=sqlite:////home/app/data/hwapi.db

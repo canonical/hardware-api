@@ -17,26 +17,14 @@
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
-import os
 
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
+import pytest
 
-from .models import Base
-
-DB_URL = os.getenv("DB_URL", "sqlite://")
-engine = create_engine(DB_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
-
-DB_PATH = DB_URL.replace("sqlite:///", "")
-if DB_PATH and not os.path.exists(DB_PATH):
-    # Create tables with no data if DB path doesn't exist
-    Base.metadata.create_all(engine)
+from fastapi.testclient import TestClient
+from hwapi.main import app
 
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+@pytest.fixture(scope="function")
+def test_client() -> TestClient:
+    """Create a test http client"""
+    return TestClient(app)

@@ -19,6 +19,8 @@ ruff = "^0.3.0"
 mypy = "^1.8.0"
 types-pyyaml = "^6.0.12.12"
 pre-commit = "^3.6.0"
+pytest = "^8.1.1"
+httpx = "^0.27.0"
 
 [build-system]
 requires = ["poetry-core"]

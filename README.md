@@ -14,23 +14,12 @@ The repo contains the API server and client for retrieving hardware information.
 Go to the `server/` directory in the project. The following command builds the hwapi server:
 
 ```bash
-$ docker build -t hwapi .
+:server$ docker-compose up --attach-dependencies --build hwapi-dev
 ```
 
-If you don't have any db initialised (in the `server/data/hwapi.db` location), the command above will also initialise a DB with sample data. To, stand up the hwapi server, run the following command:
+If you don't have any db initialised (in the `server/data/hwapi.db` location), the command above will also initialise a DB with sample data.
 
-```bash
-$ docker run -p 8080:8080 hwapi
-```
-
-If you want to reload the application automatically when you change the source code, you can mount the current directory on the host to the app directory inside the container:
-
-```bash
-$ docker run -p 8080:8080 -v $(pwd)/hwapi:/home/app/hwapi hwapi
-```
-
-Then you can access the server via this URL: http://127.0.0.1:8080
-
+Now you can access the server via this URL: http://127.0.0.1:8080
 
 ## Accessing API schema
 
@@ -53,7 +42,7 @@ For now, the library contains the function to return a sample certification stat
 
 ```bash
 $ cd client/hwlib
-$ cargo build
+:client/hwlib$ cargo build
 ```
 
 
@@ -62,7 +51,7 @@ $ cargo build
 ```bash
 $ export CERTIFICATION_STATUS=2
 $ cd client/hwctl
-$ cargo run
+:client/hwlib$ cargo run
 ```
 
 This is the output you should get running the commands above:
