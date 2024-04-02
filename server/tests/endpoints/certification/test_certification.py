@@ -24,10 +24,10 @@ from fastapi.testclient import TestClient
 
 def test_certified_status(test_client: TestClient):
     # Patch the db session or the specific query method used in your endpoint
-    response = test_client.post("/v1/certification/status", json={
-        "vendor": "Dell",
-        "model": "ChengMing 3980 (i3-9100)"
-    })
+    response = test_client.post(
+        "/v1/certification/status",
+        json={"vendor": "Dell", "model": "ChengMing 3980 (i3-9100)"},
+    )
 
     assert response.status_code == 200
     expected_response = {
@@ -40,16 +40,18 @@ def test_certified_status(test_client: TestClient):
             "kernel": {
                 "name": "Linux",
                 "version": "5.4.0-42-generic",
-                "signature": "0000000"
+                "signature": "0000000",
             },
-            "loaded_modules": []
+            "loaded_modules": [],
         },
         "bios": {
             "firmware_revision": "1.0.0",
-            "release_date": (datetime.now().date() - timedelta(days=365)).strftime("%Y-%m-%d"),
+            "release_date": (datetime.now().date() - timedelta(days=365)).strftime(
+                "%Y-%m-%d"
+            ),
             "revision": "A01",
             "vendor": "Lenovo",
-            "version": "1.0.2"
-        }
+            "version": "1.0.2",
+        },
     }
     assert response.json() == expected_response

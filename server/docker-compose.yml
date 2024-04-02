@@ -21,9 +21,9 @@ services:
     command: >
       bash -c '
         python scripts/seed_db.py
-        black --check hwapi/ scripts/
-        ruff check hwapi/ scripts/
-        mypy hwapi/ scripts/
+        black --check hwapi/ scripts/ tests/
+        ruff check hwapi/ scripts/ tests/
+        mypy hwapi/ scripts/ tests/
         pytest'
     working_dir: /home/app
     volumes:
