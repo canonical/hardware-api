@@ -23,7 +23,6 @@ from fastapi.testclient import TestClient
 
 
 def test_certified_status(test_client: TestClient):
-    # Patch the db session or the specific query method used in your endpoint
     response = test_client.post(
         "/v1/certification/status",
         json={"vendor": "Dell", "model": "ChengMing 3980 (i3-9100)"},
@@ -55,3 +54,16 @@ def test_certified_status(test_client: TestClient):
         },
     }
     assert response.json() == expected_response
+
+
+def test_vendor_model_not_found(test_client: TestClient):
+    """
+    If we cannot find such vendor and model in the DB, we should return Not Seen response
+    """
+    response = test_client.post(
+        "/v1/certification/status",
+        json={"vendor": "Unexsting vendor", "model": "Some model"},
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "Not Seen"}
