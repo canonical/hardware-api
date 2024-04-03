@@ -18,7 +18,9 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
 
-from sqlalchemy import func
+import re
+
+
 from sqlalchemy.orm import Session
 
 from hwapi.data_models import models
@@ -26,28 +28,27 @@ from hwapi.data_models import models
 
 def get_configs_by_vendor_and_model(
     db: Session, vendor_name: str, model: str
-) -> models.Configuration | None:
+) -> list[models.Configuration] | None:
     """
-    Get configurations for a platform which name is a substring for a "model"
-    and that belongs to a vendor with the vendor_name
+    Get configurations for a platform which name (without data in parenthesis) is a
+    substring of a model and that belongs to a vendor with the vendor_name
     """
     vendor = db.query(models.Vendor).filter(models.Vendor.name == vendor_name).first()
     if not vendor:
         return None
 
-    platform = (
-        db.query(models.Platform)
-        .filter(
-            # Check that system model contains platform name
-            func.instr(model, models.Platform.name) > 0,
-            models.Platform.vendor_id == vendor.id,
-        )
-        .first()
-    )
-    if not platform:
-        return None
+    filtered_platform = None
 
-    return platform.configurations
+    for platform in vendor.platforms:
+        # Ignore data in parenthesis
+        match = re.match(r"^(.*?)[\s]*\(?.*", platform.name)
+        if not match:
+            return None
+        platform_name = match.group(1).strip()
+        if platform_name in model:
+            filtered_platform = platform
+
+    return filtered_platform.configurations if filtered_platform else None
 
 
 def get_latest_certificate_for_configs(
