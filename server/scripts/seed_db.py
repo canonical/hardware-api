@@ -26,121 +26,116 @@ from hwapi.data_models import models
 from hwapi.data_models.setup import engine
 
 
-vendors = ["Dell", "Lenovo"]
-platforms = [("ChengMing 3980", vendors[0]), ("P3 Tower", vendors[1])]
-configurations = [("i3-9100", platforms[0][0]), ("i9-13900K", platforms[1][0])]
-machines = [
-    ("201811-26620", configurations[0][0]),
-    ("202308-31972", configurations[1][0]),
-]
-
-releases = [
-    {
-        "codename": "focal",
-        "release": "20.04",
-        "release_date": datetime.now().date(),
-        "supported_until": datetime.now().date() + timedelta(days=365),
-    },
-    {
-        "codename": "jammy",
-        "release": "22.04",
-        "release_date": datetime.now().date() - timedelta(days=365),
-        "supported_until": datetime.now().date() + timedelta(days=365 * 2),
-    },
-]
-
-
-def create_certificates(session):
-    machine1 = (
-        session.query(models.Machine).filter_by(canonical_id=machines[0][0]).first()
-    )
-    machine2 = (
-        session.query(models.Machine).filter_by(canonical_id=machines[1][0]).first()
-    )
-
-    release_focal = (
-        session.query(models.Release)
-        .filter_by(codename=releases[0]["codename"])
-        .first()
-    )
-    release_jammy = (
-        session.query(models.Release)
-        .filter_by(codename=releases[1]["codename"])
-        .first()
-    )
-
-    if machine1 and machine2 and release_focal and release_jammy:
-        certificate1 = models.Certificate(
-            machine=machine1,
-            created_at=datetime.now(),
-            release=release_focal,
-            name="Certificate for Machine 1 with Focal",
-            completed=datetime.now() + timedelta(days=10),
-        )
-
-        certificate2 = models.Certificate(
-            machine=machine2,
-            created_at=datetime.now(),
-            release=release_jammy,
-            name="Certificate for Machine 2 with Jammy",
-            completed=datetime.now() + timedelta(days=10),
-        )
-
-        session.add(certificate1)
-        session.add(certificate2)
-        session.commit()
-        return certificate1, certificate2
-
-    return None, None
-
-
-if __name__ == "__main__":
-    session = Session(bind=engine)
-
+def create_vendors(session: Session) -> list[models.Vendor]:
+    vendors = ["Dell", "Lenovo"]
+    created_vendors = []
     for vendor_name in vendors:
-        vendor: models.Vendor | None = models.Vendor(name=vendor_name)
+        vendor: models.Vendor = models.Vendor(name=vendor_name)
         session.add(vendor)
+        created_vendors.append(vendor)
     session.commit()
+    return created_vendors
 
-    for platform_name, vendor_name in platforms:
-        vendor = (
-            session.query(models.Vendor)
-            .filter(models.Vendor.name == vendor_name)
-            .first()
-        )
-        platform: models.Platform | None = models.Platform(
-            name=platform_name, vendor=vendor
-        )
+
+def create_platforms(
+    session: Session, vendors: list[models.Vendor]
+) -> list[models.Platform]:
+    if len(vendors) < 2:
+        raise ValueError("Too few vendors. Specify at least 2")
+    platforms = [("ChengMing 3980", vendors[0]), ("P3 Tower", vendors[1])]
+    created_platforms = []
+    for platform_name, vendor in platforms:
+        platform = models.Platform(name=platform_name, vendor=vendor)
         session.add(platform)
+        created_platforms.append(platform)
     session.commit()
+    return created_platforms
 
-    for configuration_name, platform_name in configurations:
-        platform = (
-            session.query(models.Platform)
-            .filter(models.Platform.name == platform_name)
-            .first()
-        )
-        configuration: models.Configuration | None = models.Configuration(
-            name=configuration_name, platform=platform
-        )
+
+def create_configurations(
+    session: Session, platforms: list[models.Platform]
+) -> list[models.Configuration]:
+    if len(platforms) < 2:
+        raise ValueError("Too few platforms. Specify at least 2")
+    configurations = [("i3-9100", platforms[0]), ("i9-13900K", platforms[1])]
+    created_configurations = []
+    for configuration_name, platform in configurations:
+        configuration = models.Configuration(name=configuration_name, platform=platform)
         session.add(configuration)
+        created_configurations.append(configuration)
     session.commit()
+    return created_configurations
 
-    for canonical_id, configuration_name in machines:
-        configuration = (
-            session.query(models.Configuration)
-            .filter(models.Configuration.name == configuration_name)
-            .first()
-        )
+
+def create_machines(
+    session: Session, configurations: list[models.Configuration]
+) -> list[models.Machine]:
+    if len(configurations) < 2:
+        raise ValueError("Too few configurations. Specify at least 2")
+    machines = [
+        ("201811-26620", configurations[0]),
+        ("202308-31972", configurations[1]),
+    ]
+    created_machines = []
+    for canonical_id, configuration in machines:
         machine = models.Machine(canonical_id=canonical_id, configuration=configuration)
         session.add(machine)
+        created_machines.append(machine)
     session.commit()
+    return created_machines
 
+
+def create_releases(session: Session) -> list[models.Release]:
+    releases = [
+        {
+            "codename": "focal",
+            "release": "20.04",
+            "release_date": datetime.now().date(),
+            "supported_until": datetime.now().date() + timedelta(days=365),
+        },
+        {
+            "codename": "jammy",
+            "release": "22.04",
+            "release_date": datetime.now().date() - timedelta(days=365),
+            "supported_until": datetime.now().date() + timedelta(days=365 * 2),
+        },
+    ]
+    created_releases = []
     for release_data in releases:
         release = models.Release(**release_data)
         session.add(release)
+        created_releases.append(release)
     session.commit()
+    return created_releases
 
+
+def create_certificates(
+    session: Session, machines: list[models.Machine], releases: list[models.Release]
+) -> list[models.Certificate]:
+    if len(machines) < 2:
+        raise ValueError("Too few machines. Specify at least 2")
+    if len(releases) < 2:
+        raise ValueError("Too few releases. Specify at least 2")
+
+    certificates = ((machines[0], releases[0]), (machines[1], releases[1]))
+    created_certificates = []
+    for machine, release in certificates:
+        certificate = models.Certificate(
+            machine=machine,
+            created_at=datetime.now(),
+            release=releases[0],
+            name=f"Certificate for {machine.canonical_id} with {release.codename}",
+            completed=datetime.now() + timedelta(days=10),
+        )
+        session.add(certificate)
+        created_certificates.append(certificate)
+    session.commit()
+    return created_certificates
+
+
+def create_reports(
+    session: Session, vendor: models.Vendor, certificates: list[models.Certificate]
+) -> list[models.Report]:
     kernel = models.Kernel(
         name="Linux", version="5.4.0-42-generic", signature="0000000"
     )
@@ -151,20 +146,28 @@ if __name__ == "__main__":
         vendor=vendor,
         version="1.0.2",
     )
-
     session.add(kernel)
     session.add(bios)
     session.commit()
-    cert1, cert2 = create_certificates(session)
 
-    report1 = models.Report(
-        created_at=datetime.now(), kernel=kernel, bios=bios, certificate=cert1
-    )
-    report2 = models.Report(
-        created_at=datetime.now(), kernel=kernel, bios=bios, certificate=cert2
-    )
-    session.add(report1)
-    session.add(report2)
+    created_reports = []
+    for certificate in certificates:
+        report = models.Report(
+            created_at=datetime.now(), kernel=kernel, bios=bios, certificate=certificate
+        )
+        session.add(report)
+        created_reports.append(report)
     session.commit()
+    return created_reports
 
+
+if __name__ == "__main__":
+    session = Session(bind=engine)
+    vendors = create_vendors(session)
+    platforms = create_platforms(session, vendors)
+    configurations = create_configurations(session, platforms)
+    machines = create_machines(session, configurations)
+    releases = create_releases(session)
+    certificates = create_certificates(session, machines, releases)
+    create_reports(session, vendors[1], certificates)
     print("Database initialized.")

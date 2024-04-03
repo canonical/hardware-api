@@ -24,7 +24,7 @@ services:
         black --check hwapi/ scripts/ tests/
         ruff check hwapi/ scripts/ tests/ --no-cache
         mypy hwapi/ scripts/ tests/
-        pytest'
+        pytest tests/ -vv'
     working_dir: /home/app
     tmpfs:
       - /home/app/data

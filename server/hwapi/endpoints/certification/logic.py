@@ -19,84 +19,31 @@
 """The algorithms for determining certification status"""
 
 
-from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from hwapi.endpoints.certification.rbody_validators import (
     CertificationStatusRequest,
     CertifiedResponse,
 )
-from hwapi.data_models import models
-from hwapi.data_models import data_validators
+from hwapi.data_models import data_validators, repository
 from hwapi.data_models.enums import CertificationStatus
 
 
 def is_certified(system_info: CertificationStatusRequest, db: Session):
     """Logic for checking whether system is Certified"""
-    vendor = (
-        db.query(models.Vendor).filter(models.Vendor.name == system_info.vendor).first()
+    configurations = repository.get_configs_by_vendor_and_model(
+        db, system_info.vendor, system_info.model
     )
-    if not vendor:
+    if configurations is None:
         return False, None
 
-    platform = (
-        db.query(models.Platform)
-        .filter(
-            # Check that system model contains platform name
-            func.instr(system_info.model, models.Platform.name) > 0,
-            models.Platform.vendor_id == vendor.id,
-        )
-        .first()
+    latest_certificate = repository.get_latest_certificate_for_configs(
+        db, configurations
     )
-    if not platform:
-        return False, None
-
-    configurations = (
-        db.query(models.Configuration)
-        .filter(
-            # Check that system model contains configuration name
-            func.instr(system_info.model, models.Configuration.name) > 0,
-            models.Configuration.platform_id == platform.id,
-        )
-        .all()
-    )
-    if not configurations:
-        return False, None
-
-    latest_certificate = None
-    latest_release_date = None
-    for configuration in configurations:
-        machines = (
-            db.query(models.Machine)
-            .filter(models.Machine.configuration_id == configuration.id)
-            .all()
-        )
-        for machine in machines:
-            certificates = (
-                db.query(models.Certificate)
-                .join(models.Release)
-                .filter(models.Certificate.machine_id == machine.id)
-                .order_by(models.Release.release_date.desc())
-                .all()
-            )
-            for certificate in certificates:
-                if (
-                    not latest_certificate
-                    or certificate.release.release_date > latest_release_date
-                ):
-                    latest_certificate = certificate
-                    latest_release_date = certificate.release.release_date
-
     if latest_certificate is None:
         return False, None
 
-    report = (
-        db.query(models.Report)
-        .filter(models.Report.certificate_id == latest_certificate.id)
-        .first()
-    )
-    if report is None:
-        return False, None
+    report = latest_certificate.reports[0]
     kernel = report.kernel
     bios = report.bios
 
