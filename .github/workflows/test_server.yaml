@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   test:
-    runs-on: [self-hosted, linux, large]
+    runs-on: [self-hosted, linux, large, jammy, x64]
     defaults:
       run:
         working-directory: server
@@ -32,7 +32,7 @@ jobs:
       - run: poetry run mypy hwapi
 
   compare-openapi:
-    runs-on: [self-hosted, linux, large]
+    runs-on: [self-hosted, linux, large, jammy, x64]
     defaults:
       run:
         working-directory: server
