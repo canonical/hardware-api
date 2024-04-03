@@ -12,4 +12,4 @@ RUN pip3 install poetry && \
 
 COPY . .
 
-CMD ["uvicorn", "hwapi.main:app", "--host", "0.0.0.0", "--port", "8080", "--reload"]
+CMD ["uvicorn", "hwapi.main:app", "--host", "0.0.0.0", "--port", "8080"]
