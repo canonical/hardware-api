@@ -18,9 +18,6 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
 
-import re
-
-
 from sqlalchemy.orm import Session
 
 from hwapi.data_models import models
@@ -41,10 +38,15 @@ def get_configs_by_vendor_and_model(
 
     for platform in vendor.platforms:
         # Ignore data in parenthesis
-        match = re.match(r"^(.*?)[\s]*\(?.*", platform.name)
-        if not match:
-            return None
-        platform_name = match.group(1).strip()
+        platform_name = platform.name
+        parenth_idx = platform_name.find("(")
+        if parenth_idx != -1:
+            # Ignore also whitespace before the "("
+            platform_name = (
+                platform_name[: parenth_idx - 1]
+                if platform_name[parenth_idx - 1] == " "
+                else platform_name[:parenth_idx]
+            )
         if platform_name in model:
             filtered_platform = platform
 
