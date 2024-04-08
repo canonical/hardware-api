@@ -16,15 +16,72 @@
 #
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
+#        Omar Selo <omar.selo@canonical.com
 
-
+from os import environ
 import pytest
 
 from fastapi.testclient import TestClient
+from sqlalchemy import Engine, create_engine
+from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy_utils import (  # type: ignore
+    create_database,
+    drop_database,
+)
+
+from hwapi.data_models.setup import get_db
+from hwapi.data_models.models import Base
 from hwapi.main import app
+from tests.data_generator import DataGenerator
+
+
+@pytest.fixture(scope="session")
+def db_url():
+    """
+    Retrieves the database url from the environment variable TEST_DB_URL
+    or creates a new database and returns the url
+    """
+    db_url = environ.get("TEST_DB_URL")
+    if db_url:
+        yield db_url
+    else:
+        db_url = "sqlite://"
+        create_database(db_url)
+
+        yield db_url
+
+        drop_database(db_url)
+
+
+@pytest.fixture(scope="session")
+def db_engine(db_url: str):
+    engine = create_engine(db_url, connect_args={"check_same_thread": False})
+    Base.metadata.create_all(engine)
+    yield engine
+    engine.dispose()
 
 
 @pytest.fixture(scope="function")
-def test_client() -> TestClient:
+def db_session(db_engine: Engine):
+    connection = db_engine.connect()
+    # Start transaction and not commit it to rollback automatically
+    transaction = connection.begin()
+    session = sessionmaker(autocommit=False, autoflush=False, bind=connection)()
+
+    yield session
+
+    session.close()
+    transaction.close()
+    connection.close()
+
+
+@pytest.fixture(scope="function")
+def test_client(db_session: Session) -> TestClient:
     """Create a test http client"""
+    app.dependency_overrides[get_db] = lambda: db_session
     return TestClient(app)
+
+
+@pytest.fixture
+def generator(db_session: Session) -> DataGenerator:
+    return DataGenerator(db_session)

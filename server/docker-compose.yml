@@ -20,7 +20,6 @@ services:
       dockerfile: Dockerfile
     command: >
       bash -c '
-        python scripts/seed_db.py &&
         black --check hwapi/ scripts/ tests/ &&
         ruff check hwapi/ scripts/ tests/ --no-cache &&
         mypy hwapi/ scripts/ tests/ &&
@@ -31,7 +30,7 @@ services:
     ports:
       - "8080:8080"
     environment:
-      - DB_URL=sqlite:////home/app/data/test-hwapi.db
+      - TEST_DB_URL=sqlite:////home/app/data/test-hwapi.db
 
   hwapi:
     build:

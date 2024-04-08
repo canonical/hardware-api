@@ -17,40 +17,53 @@
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
-
-from datetime import timedelta, datetime
 from fastapi.testclient import TestClient
 
+from hwapi.data_models.enums import CertificationStatus
+from tests.data_generator import DataGenerator
 
-def test_certified_status(test_client: TestClient):
+
+def test_certified_status(generator: DataGenerator, test_client: TestClient):
+    """
+    We should get Certified response if a machine with the specified vendor name (exact
+    match) and platform name (the value without data in parenthesis must be a substring
+    of a model)
+    """
+    vendor = generator.gen_vendor()
+    platform = generator.gen_platform(vendor, name="Precision 3690 (ik12)")
+    configuration = generator.gen_configuration(platform)
+    machine = generator.gen_machine(configuration)
+    certificate = generator.gen_certificate(machine, generator.gen_release())
+    report = generator.gen_report(
+        certificate, generator.gen_kernel(), generator.gen_bios(vendor)
+    )
+
     response = test_client.post(
         "/v1/certification/status",
-        json={"vendor": "Dell", "model": "ChengMing 3980 (i3-9100)"},
+        json={"vendor": vendor.name, "model": "Precision 3690 aaaa"},
     )
 
     assert response.status_code == 200
     expected_response = {
-        "status": "Certified",
+        "status": CertificationStatus.CERTIFIED.value,
         "os": {
             "distributor": "Canonical Ltd.",
             "description": "",
-            "version": "20.04",
-            "codename": "focal",
+            "version": certificate.release.release,
+            "codename": certificate.release.codename,
             "kernel": {
-                "name": "Linux",
-                "version": "5.4.0-42-generic",
-                "signature": "0000000",
+                "name": report.kernel.name,
+                "version": report.kernel.version,
+                "signature": report.kernel.signature,
             },
             "loaded_modules": [],
         },
         "bios": {
-            "firmware_revision": "1.0.0",
-            "release_date": (datetime.now().date() - timedelta(days=365)).strftime(
-                "%Y-%m-%d"
-            ),
-            "revision": "A01",
-            "vendor": "Lenovo",
-            "version": "1.0.2",
+            "firmware_revision": report.bios.firmware_version,
+            "release_date": (report.bios.release_date).strftime("%Y-%m-%d"),
+            "revision": report.bios.revision,
+            "vendor": report.bios.vendor.name,
+            "version": report.bios.version,
         },
     }
     assert response.json() == expected_response
