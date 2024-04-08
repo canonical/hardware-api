@@ -44,7 +44,7 @@ class Platform(Base):
     __tablename__ = "platform"
     name: Mapped[str] = mapped_column(unique=True, nullable=False)
     # Relationships
-    vendor_id: Mapped[int] = mapped_column(ForeignKey("vendor.id"))
+    vendor_id: Mapped[int] = mapped_column(ForeignKey("vendor.id"), index=True)
     vendor: Mapped[Vendor] = relationship(back_populates="platforms")
     configurations: Mapped[list["Configuration"]] = relationship(
         back_populates="platform"
@@ -55,7 +55,7 @@ class Configuration(Base):
     __tablename__ = "configuration"
     name: Mapped[str] = mapped_column(unique=True, nullable=False)
     # Relationships
-    platform_id: Mapped[int] = mapped_column(ForeignKey("platform.id"))
+    platform_id: Mapped[int] = mapped_column(ForeignKey("platform.id"), index=True)
     platform: Mapped[Platform] = relationship(back_populates="configurations")
     machines: Mapped[list["Machine"]] = relationship(back_populates="configuration")
 
@@ -64,7 +64,9 @@ class Machine(Base):
     __tablename__ = "machine"
     canonical_id: Mapped[str] = mapped_column(unique=True, nullable=False)
     # Relationships
-    configuration_id: Mapped[int] = mapped_column(ForeignKey("configuration.id"))
+    configuration_id: Mapped[int] = mapped_column(
+        ForeignKey("configuration.id"), index=True
+    )
     configuration: Mapped[Configuration] = relationship(back_populates="machines")
     certificates: Mapped[list["Certificate"]] = relationship(back_populates="machine")
 
@@ -75,9 +77,13 @@ class Certificate(Base):
     name: Mapped[str] = mapped_column(String(80), nullable=True)
     completed: Mapped[datetime] = mapped_column(nullable=True)
     # Relationships
-    machine_id: Mapped[int] = mapped_column(ForeignKey("machine.id"), nullable=False)
+    machine_id: Mapped[int] = mapped_column(
+        ForeignKey("machine.id"), index=True, nullable=False
+    )
     machine: Mapped[Machine] = relationship(back_populates="certificates")
-    release_id: Mapped[int] = mapped_column(ForeignKey("release.id"), nullable=True)
+    release_id: Mapped[int] = mapped_column(
+        ForeignKey("release.id"), index=True, nullable=True
+    )
     release: Mapped["Release"] = relationship(back_populates="certificates")
     reports: Mapped[list["Report"]] = relationship(back_populates="certificate")
 
@@ -91,7 +97,9 @@ class Release(Base):
     supported_until: Mapped[date] = mapped_column(nullable=True)
     i_version: Mapped[int] = mapped_column(nullable=True)
     # Relationships
-    parent_id: Mapped[int] = mapped_column(ForeignKey("release.id"), nullable=True)
+    parent_id: Mapped[int] = mapped_column(
+        ForeignKey("release.id"), index=True, nullable=True
+    )
     parent: Mapped["Release"] = relationship(
         back_populates="children", remote_side=[id]
     )
@@ -115,7 +123,9 @@ class Bios(Base):
     revision: Mapped[str] = mapped_column(nullable=False)
     version: Mapped[str] = mapped_column(nullable=False)
     # Relationships
-    vendor_id: Mapped[int] = mapped_column(ForeignKey("vendor.id"), nullable=False)
+    vendor_id: Mapped[int] = mapped_column(
+        ForeignKey("vendor.id"), index=True, nullable=False
+    )
     vendor: Mapped[Vendor] = relationship(back_populates="bioses")
     reports: Mapped[list["Report"]] = relationship(back_populates="bios")
 
@@ -124,11 +134,15 @@ class Report(Base):
     __tablename__ = "report"
     created_at: Mapped[datetime] = mapped_column(nullable=False)
     # Relationships
-    kernel_id: Mapped[int] = mapped_column(ForeignKey("kernel.id"), nullable=False)
+    kernel_id: Mapped[int] = mapped_column(
+        ForeignKey("kernel.id"), index=True, nullable=False
+    )
     kernel: Mapped[Kernel] = relationship(back_populates="reports")
-    bios_id: Mapped[int] = mapped_column(ForeignKey("bios.id"), nullable=False)
+    bios_id: Mapped[int] = mapped_column(
+        ForeignKey("bios.id"), index=True, nullable=False
+    )
     bios: Mapped[Bios] = relationship(back_populates="reports")
     certificate_id: Mapped[int] = mapped_column(
-        ForeignKey("certificate.id"), nullable=False
+        ForeignKey("certificate.id"), index=True, nullable=False
     )
     certificate: Mapped[Certificate] = relationship(back_populates="reports")
