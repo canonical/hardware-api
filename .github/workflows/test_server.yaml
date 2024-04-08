@@ -19,17 +19,31 @@ jobs:
       run:
         working-directory: server
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - name: Checkout repo & submodules
+        uses: actions/checkout@v4
         with:
-          python-version: "3.10"
-      - uses: Gr1N/setup-poetry@12c727a3dcf8c1a548d8d041c9d5ef5cebb3ba2e
+          submodules: "true"
+      - name: Set up docker buildx
+        uses: docker/setup-buildx-action@v3
         with:
-          poetry-version: "1.6.1"
-      - run: poetry install
-      - run: poetry run black --check hwapi
-      - run: poetry run ruff hwapi
-      - run: poetry run mypy hwapi
+          config-inline: |
+            [registry."docker.io"]
+              mirrors = ["https://github-runner-dockerhub-cache.canonical.com:5000"]
+      - name: Install docker-compose
+        run: |
+          COMPOSE_URL="https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)"
+          echo "Downloading docker-compose from $COMPOSE_URL"
+          sudo curl -L  -L $COMPOSE_URL -o /usr/local/bin/docker-compose
+          sudo chmod +x /usr/local/bin/docker-compose
+          echo `docker-compose --version`
+      - name: Set dockerhub registry mirror at /etc/docker/daemon.json
+        run: |
+          echo '{"registry-mirrors": ["https://github-runner-dockerhub-cache.canonical.com:5000"]}' | sudo tee /etc/docker/daemon.json
+      - name: Restart dockerd
+        run: sudo systemctl restart docker
+      - name: Run tests with docker-compose
+        run: |
+          docker-compose up --attach-dependencies --abort-on-container-exit hwapi-test
 
   compare-openapi:
     runs-on: [self-hosted, linux, large, jammy, x64]

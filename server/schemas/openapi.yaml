@@ -86,6 +86,9 @@ components:
             type: array
           - type: 'null'
           title: Gpu
+        model:
+          title: Model
+          type: string
         network:
           anyOf:
           - items:
@@ -98,20 +101,26 @@ components:
           - $ref: '#/components/schemas/OSValidator'
           - type: 'null'
         pci_peripherals:
+          default: []
           items:
             $ref: '#/components/schemas/PCIPeripheralValidator'
           title: Pci Peripherals
           type: array
         processor:
+          default: []
           items:
             $ref: '#/components/schemas/ProcessorValidator'
           title: Processor
           type: array
         usb_peripherals:
+          default: []
           items:
             $ref: '#/components/schemas/USBPeripheralValidator'
           title: Usb Peripherals
           type: array
+        vendor:
+          title: Vendor
+          type: string
         video:
           anyOf:
           - items:
@@ -127,18 +136,8 @@ components:
           - type: 'null'
           title: Wireless
       required:
-      - os
-      - bios
-      - board
-      - chassis
-      - processor
-      - gpu
-      - audio
-      - video
-      - network
-      - wireless
-      - pci_peripherals
-      - usb_peripherals
+      - vendor
+      - model
       title: CertificationStatusRequest
       type: object
     CertifiedResponse:
