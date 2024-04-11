@@ -79,3 +79,14 @@ def get_latest_certificate_for_configs(
     if latest_certificate is None or not latest_certificate.reports:
         return None
     return latest_certificate
+
+
+def get_or_create(db: Session, model, **kwargs):
+    instance = db.query(model).filter_by(**kwargs).first()
+    if instance:
+        return instance
+    else:
+        instance = model(**kwargs)
+        db.add(instance)
+        db.commit()
+        return instance
