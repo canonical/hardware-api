@@ -16,12 +16,20 @@
 #
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
+"""The endpoints for importing data from C3"""
+
+from fastapi import APIRouter, Depends
+
+from hwapi.data_models.setup import get_db
+from hwapi.external.c3.api import C3Api
 
 
-import os
+router = APIRouter()
 
 
-C3_URL = os.environ.get("C3_URL", "https://certification.canonical.com")
-TOKEN_URL = f"{C3_URL}/oauth2/token"
-LIMIT_OFFSET = "?pagination=limitoffset&limit=0"
-CERTIFIED_CONFIGURATIONS_URL = f"{C3_URL}/api/v2/publiccertificates/"
+@router.post("/import-certs", include_in_schema=False)
+def import_certs(db_session=Depends(get_db)):
+    """Import certificates and related data from C3"""
+    c3_api = C3Api(db=db_session)
+    c3_api.fetch_certified_configurations()
+    return {"status": "OK"}

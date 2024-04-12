@@ -66,7 +66,7 @@ class CertifiedResponse(BaseModel):
 
     status: Literal[CertificationStatus.CERTIFIED]
     os: OSValidator
-    bios: BiosValidator
+    bios: BiosValidator | None
 
 
 class NotCertifiedResponse(BaseModel):

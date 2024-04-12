@@ -22,9 +22,9 @@ from pydantic import BaseModel
 
 
 class KernelPackageValidator(BaseModel):
-    name: str
+    name: str | None
     version: str
-    signature: str
+    signature: str | None
 
 
 class OSValidator(BaseModel):

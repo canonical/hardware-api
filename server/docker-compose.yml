@@ -13,7 +13,7 @@ services:
       - "8080:8080"
     environment:
       - DB_URL=sqlite:////home/app/data/hwapi-dev.db
-      - C3_URL=http://localhost:8001
+      - C3_URL=http://172.17.0.1:8001
 
   hwapi-test:
     build:

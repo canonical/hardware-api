@@ -60,11 +60,14 @@ def is_certified(system_info: CertificationStatusRequest, db: Session):
                 ),
                 loaded_modules=[],
             ),
-            bios=data_validators.BiosValidator(
-                firmware_revision=bios.firmware_version,
-                release_date=bios.release_date,
-                revision=bios.revision,
-                vendor=bios.vendor.name,
-                version=bios.version,
+            bios=(
+                data_validators.BiosValidator(
+                    release_date=bios.release_date,
+                    revision=bios.revision,
+                    vendor=bios.vendor.name,
+                    version=bios.version,
+                )
+                if bios
+                else None
             ),
         )

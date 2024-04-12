@@ -153,7 +153,7 @@ def create_reports(
     created_reports = []
     for certificate in certificates:
         report = models.Report(
-            created_at=datetime.now(), kernel=kernel, bios=bios, certificate=certificate
+            architecture="amd64", kernel=kernel, bios=bios, certificate=certificate
         )
         session.add(report)
         created_reports.append(report)

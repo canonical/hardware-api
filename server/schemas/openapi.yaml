@@ -16,16 +16,17 @@ components:
       type: object
     BiosValidator:
       properties:
-        firmware_revision:
-          title: Firmware Revision
-          type: string
         release_date:
-          format: date
+          anyOf:
+          - format: date
+            type: string
+          - type: 'null'
           title: Release Date
-          type: string
         revision:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Revision
-          type: string
         vendor:
           title: Vendor
           type: string
@@ -33,7 +34,6 @@ components:
           title: Version
           type: string
       required:
-      - firmware_revision
       - release_date
       - revision
       - vendor
@@ -147,7 +147,9 @@ components:
         used on the system under test we had in the lab to certify the machine'
       properties:
         bios:
-          $ref: '#/components/schemas/BiosValidator'
+          anyOf:
+          - $ref: '#/components/schemas/BiosValidator'
+          - type: 'null'
         os:
           $ref: '#/components/schemas/OSValidator'
         status:
@@ -209,11 +211,15 @@ components:
     KernelPackageValidator:
       properties:
         name:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Name
-          type: string
         signature:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Signature
-          type: string
         version:
           title: Version
           type: string

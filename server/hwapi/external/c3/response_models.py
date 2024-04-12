@@ -17,16 +17,36 @@
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
-from datetime import datetime
+from datetime import datetime, date
 
 from pydantic import BaseModel
 
 
-class CertifiedConfiguration(BaseModel):
+class Release(BaseModel):
+    codename: str
+    release: str
+    release_date: date
+    supported_until: date
+    i_version: int
+
+
+class Bios(BaseModel):
+    name: str
+    vendor: str
+    version: str
+    firmware_type: str
+
+
+class PublicCertificate(BaseModel):
     canonical_id: str
-    make: str
-    model: str
-    level: str
-    category: str
+    vendor: str
+    platform: str
+    configuration: str
+    created_at: datetime
     completed: datetime
-    resourse_uri: datetime
+    name: str
+    release: Release
+    architecture: str
+    kernel_version: str | None
+    bios: Bios | None
+    firmware_revision: str | None
