@@ -83,14 +83,34 @@ class C3Api:
                     )
                 bios = None
                 if public_cert.bios is not None:
+                    bios_vendor = (
+                        self.db.query(models.Vendor)
+                        .filter_by(name=public_cert.bios.vendor)
+                        .first()
+                    )
+                    # Remove Inc/Inc. from vendor name to avoid duplicate vendors
+                    if bios_vendor is None and (
+                        public_cert.bios.vendor.endswith("Inc")
+                        or public_cert.bios.vendor.endswith("Inc.")
+                    ):
+                        bios_vendor_name = public_cert.bios.vendor[
+                            : public_cert.bios.vendor.rfind("Inc") - 1
+                        ]
+                        bios_vendor = (
+                            self.db.query(models.Vendor)
+                            .filter_by(name=bios_vendor_name)
+                            .first()
+                        )
+                    if bios_vendor is None:
+                        bios_vendor = get_or_create(
+                            self.db, models.Vendor, name=public_cert.bios.vendor
+                        )
                     bios = get_or_create(
                         self.db,
                         models.Bios,
                         revision=public_cert.firmware_revision,
                         version=public_cert.bios.version,
-                        vendor=get_or_create(
-                            self.db, models.Vendor, name=public_cert.bios.vendor
-                        ),
+                        vendor=bios_vendor,
                     )
                 release = get_or_create(
                     self.db,
