@@ -154,7 +154,10 @@ components:
           $ref: '#/components/schemas/OSValidator'
         status:
           const: Certified
+          enum:
+          - Certified
           title: Status
+          type: string
       required:
       - status
       - os
@@ -259,7 +262,10 @@ components:
       properties:
         status:
           const: Not Seen
+          enum:
+          - Not Seen
           title: Status
+          type: string
       required:
       - status
       title: NotCertifiedResponse
@@ -268,9 +274,6 @@ components:
       properties:
         codename:
           title: Codename
-          type: string
-        description:
-          title: Description
           type: string
         distributor:
           title: Distributor
@@ -287,7 +290,6 @@ components:
           type: string
       required:
       - distributor
-      - description
       - version
       - codename
       - kernel
@@ -381,7 +383,10 @@ components:
           title: Processor
         status:
           const: Partially Certified
+          enum:
+          - Partially Certified
           title: Status
+          type: string
         usb_peripherals:
           anyOf:
           - items:

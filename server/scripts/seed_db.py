@@ -140,7 +140,6 @@ def create_reports(
         name="Linux", version="5.4.0-42-generic", signature="0000000"
     )
     bios = models.Bios(
-        firmware_version="1.0.0",
         release_date=datetime.now() - timedelta(days=365),
         revision="A01",
         vendor=vendor,

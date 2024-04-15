@@ -48,7 +48,6 @@ def test_certified_status(generator: DataGenerator, test_client: TestClient):
         "status": CertificationStatus.CERTIFIED.value,
         "os": {
             "distributor": "Canonical Ltd.",
-            "description": "",
             "version": certificate.release.release,
             "codename": certificate.release.codename,
             "kernel": {

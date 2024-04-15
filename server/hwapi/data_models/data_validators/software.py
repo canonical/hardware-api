@@ -29,7 +29,6 @@ class KernelPackageValidator(BaseModel):
 
 class OSValidator(BaseModel):
     distributor: str
-    description: str
     version: str
     codename: str
     kernel: KernelPackageValidator

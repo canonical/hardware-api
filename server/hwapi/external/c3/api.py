@@ -21,12 +21,16 @@
 
 import os
 import requests
+import logging
 
 from sqlalchemy.orm import Session
 
 from hwapi.data_models import models
 from hwapi.data_models.repository import get_or_create
 from hwapi.external.c3 import response_models, urls
+
+
+logger = logging.getLogger(__name__)
 
 
 class C3Api:
@@ -49,70 +53,77 @@ class C3Api:
             return
         objects = response.json()["results"]
         for obj in objects:
-            public_cert = response_models.PublicCertificate(**obj)
-            vendor = get_or_create(self.db, models.Vendor, name=public_cert.vendor)
-            platform = get_or_create(
-                self.db,
-                models.Platform,
-                name=public_cert.platform,
-                vendor_id=vendor.id,
-            )
-            configuration = get_or_create(
-                self.db,
-                models.Configuration,
-                name=public_cert.configuration,
-                platform_id=platform.id,
-            )
-            machine = get_or_create(
-                self.db,
-                models.Machine,
-                canonical_id=public_cert.canonical_id,
-                configuration_id=configuration.id,
-            )
-            kernel = None
-            if public_cert.kernel_version:
-                kernel = get_or_create(
+            try:
+                public_cert = response_models.PublicCertificate(**obj)
+                vendor = get_or_create(self.db, models.Vendor, name=public_cert.vendor)
+                platform = get_or_create(
                     self.db,
-                    models.Kernel,
-                    version=public_cert.kernel_version,
+                    models.Platform,
+                    name=public_cert.platform,
+                    vendor_id=vendor.id,
                 )
-            bios = None
-            if public_cert.bios is not None:
-                bios = get_or_create(
+                configuration = get_or_create(
                     self.db,
-                    models.Bios,
-                    revision=public_cert.firmware_revision,
-                    version=public_cert.bios.version,
-                    vendor=get_or_create(
-                        self.db, models.Vendor, name=public_cert.bios.vendor
-                    ),
+                    models.Configuration,
+                    name=public_cert.configuration,
+                    platform_id=platform.id,
                 )
-            release = get_or_create(
-                self.db,
-                models.Release,
-                codename=public_cert.release.codename,
-                release=public_cert.release.release,
-                release_date=public_cert.release.release_date,
-                i_version=public_cert.release.i_version,
-                supported_until=public_cert.release.supported_until,
-            )
-            certificate = get_or_create(
-                self.db,
-                models.Certificate,
-                name=public_cert.name,
-                completed=public_cert.completed,
-                created_at=public_cert.created_at,
-                machine=machine,
-                release=release,
-            )
-            get_or_create(
-                self.db,
-                models.Report,
-                architecture=public_cert.architecture,
-                kernel=kernel,
-                bios=bios,
-                certificate=certificate,
-            )
+                machine = get_or_create(
+                    self.db,
+                    models.Machine,
+                    canonical_id=public_cert.canonical_id,
+                    configuration_id=configuration.id,
+                )
+                kernel = None
+                if public_cert.kernel_version:
+                    kernel = get_or_create(
+                        self.db,
+                        models.Kernel,
+                        version=public_cert.kernel_version,
+                    )
+                bios = None
+                if public_cert.bios is not None:
+                    bios = get_or_create(
+                        self.db,
+                        models.Bios,
+                        revision=public_cert.firmware_revision,
+                        version=public_cert.bios.version,
+                        vendor=get_or_create(
+                            self.db, models.Vendor, name=public_cert.bios.vendor
+                        ),
+                    )
+                release = get_or_create(
+                    self.db,
+                    models.Release,
+                    codename=public_cert.release.codename,
+                    release=public_cert.release.release,
+                    release_date=public_cert.release.release_date,
+                    i_version=public_cert.release.i_version,
+                    supported_until=public_cert.release.supported_until,
+                )
+                certificate = get_or_create(
+                    self.db,
+                    models.Certificate,
+                    name=public_cert.name,
+                    completed=public_cert.completed,
+                    created_at=public_cert.created_at,
+                    machine=machine,
+                    release=release,
+                )
+                get_or_create(
+                    self.db,
+                    models.Report,
+                    architecture=public_cert.architecture,
+                    kernel=kernel,
+                    bios=bios,
+                    certificate=certificate,
+                )
+            except Exception:
+                logging.error(
+                    "Got an error while importing certificates", exc_info=True
+                )
+                self.db.rollback()
+                continue
 
     def _authenticate_and_send(self, request: requests.Request) -> requests.Response:
         prepared_request = request.prepare()

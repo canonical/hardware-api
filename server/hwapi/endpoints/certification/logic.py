@@ -18,7 +18,6 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 """The algorithms for determining certification status"""
 
-
 from sqlalchemy.orm import Session
 
 from hwapi.endpoints.certification.rbody_validators import (
@@ -52,7 +51,6 @@ def is_certified(system_info: CertificationStatusRequest, db: Session):
             status=CertificationStatus.CERTIFIED,
             os=data_validators.OSValidator(
                 distributor="Canonical Ltd.",
-                description="",
                 version=latest_certificate.release.release,
                 codename=latest_certificate.release.codename,
                 kernel=data_validators.KernelPackageValidator(

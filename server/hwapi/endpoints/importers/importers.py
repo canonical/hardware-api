@@ -22,12 +22,16 @@ from fastapi import APIRouter, Depends
 
 from hwapi.data_models.setup import get_db
 from hwapi.external.c3.api import C3Api
-
+from hwapi.endpoints.decorators import only_internal_hosts
 
 router = APIRouter()
 
 
-@router.post("/import-certs", include_in_schema=False)
+@router.post(
+    "/import-certs",
+    include_in_schema=False,
+    dependencies=[Depends(only_internal_hosts)],
+)
 def import_certs(db_session=Depends(get_db)):
     """Import certificates and related data from C3"""
     c3_api = C3Api(db=db_session)
