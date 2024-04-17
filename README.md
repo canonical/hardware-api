@@ -6,7 +6,7 @@ The repo contains the API server and client for retrieving hardware information.
 
 - Install [docker](https://docs.docker.com/engine/install/ubuntu/) and
   [setup permissions](https://docs.docker.com/engine/install/linux-postinstall/)
-  for server deployment <<<<<<< HEAD
+  for server deployment
 - Install `rust` and `cargo` for client deployment
   (https://www.rust-lang.org/tools/install)
 
