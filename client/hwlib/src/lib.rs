@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Written by:
- *        Matias Piipari <matias.piipari@canonical.com>
+ *        Canonical Ltd <matias.piipari@canonical.com>
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
