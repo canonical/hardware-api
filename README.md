@@ -6,7 +6,7 @@ The repo contains the API server and client for retrieving hardware information.
 
 - Install [docker](https://docs.docker.com/engine/install/ubuntu/) and
   [setup permissions](https://docs.docker.com/engine/install/linux-postinstall/)
-  for server deployment
+  for server deployment <<<<<<< HEAD
 - Install `rust` and `cargo` for client deployment
   (https://www.rust-lang.org/tools/install)
 
@@ -59,9 +59,9 @@ $ cd client/hwlib
 ## Build and Run the Reference CLI Tool (`hwctl`)
 
 ```bash
-$ export CERTIFICATION_STATUS=2
-$ cd client/hwctl
-:client/hwlib$ cargo run
+export CERTIFICATION_STATUS=2
+cd client/hwctl
+cargo run
 ```
 
 This is the output you should get running the commands above:
