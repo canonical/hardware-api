@@ -16,12 +16,11 @@
 #
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
-
+"""Store C3 API URLs"""
 
 import os
 
 
 C3_URL = os.environ.get("C3_URL", "https://certification.canonical.com")
-TOKEN_URL = f"{C3_URL}/oauth2/token"
 LIMIT_OFFSET = "?pagination=limitoffset&limit=0"
-CERTIFIED_CONFIGURATIONS_URL = f"{C3_URL}/api/v2/publiccertificates/"
+CERTIFIED_CONFIGURATIONS_URL = f"{C3_URL}/api/v2/public-certificates/"

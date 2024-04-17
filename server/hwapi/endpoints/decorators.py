@@ -36,7 +36,7 @@ def only_internal_hosts(request: Request):
         return True
     if client_host not in internal_hosts.split(","):
         logger.warning(
-            "Got a request to a private endpoint from forbidden host %s", client_host
+            "Got a request to a private endpoint from forbidden host '%s'", client_host
         )
         raise HTTPException(status_code=403, detail="Access forbidden")
     return True

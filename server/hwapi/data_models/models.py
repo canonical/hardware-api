@@ -115,7 +115,7 @@ class Kernel(Base):
 class Bios(Base):
     __tablename__ = "bios"
     release_date: Mapped[date] = mapped_column(nullable=True)
-    revision: Mapped[str] = mapped_column(nullable=True)
+    revision: Mapped[str] = mapped_column(nullable=False)
     version: Mapped[str] = mapped_column(nullable=False)
     # Relationships
     vendor_id: Mapped[int] = mapped_column(
@@ -127,7 +127,7 @@ class Bios(Base):
 
 class Report(Base):
     __tablename__ = "report"
-    architecture: Mapped[str] = mapped_column(nullable=False)
+    architecture: Mapped[str] = mapped_column(nullable=True)
     # Relationships
     kernel_id: Mapped[int] = mapped_column(
         ForeignKey("kernel.id"), index=True, nullable=True

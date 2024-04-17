@@ -18,7 +18,10 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 """The endpoints for importing data from C3"""
 
+from requests.exceptions import HTTPError
+
 from fastapi import APIRouter, Depends
+from fastapi import HTTPException
 
 from hwapi.data_models.setup import get_db
 from hwapi.external.c3.api import C3Api
@@ -35,5 +38,11 @@ router = APIRouter()
 def import_certs(db_session=Depends(get_db)):
     """Import certificates and related data from C3"""
     c3_api = C3Api(db=db_session)
-    c3_api.fetch_certified_configurations()
+    try:
+        c3_api.fetch_certified_configurations()
+    except HTTPError as exc:
+        raise HTTPException(
+            status_code=exc.response.status_code,
+            detail=f"Got a {exc.response.status_code} error code from an upstream server",
+        )
     return {"status": "OK"}

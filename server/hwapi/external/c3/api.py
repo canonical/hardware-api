@@ -19,7 +19,6 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 """The module for working with C3 API"""
 
-import os
 import requests
 import logging
 
@@ -34,13 +33,10 @@ logger = logging.getLogger(__name__)
 
 
 class C3Api:
-    # Store the token as class attribute so we can reuse it in multiple class instances
-    _bearer_token = ""
+    """Class to work with C3 RESTAPI"""
 
     def __init__(self, db: Session):
         self.db = db
-        self._client_id = os.environ.get("C3_CLIENT_ID", "")
-        self._client_secret = os.environ.get("C3_CLIENT_SECRET", "")
 
     def fetch_certified_configurations(self):
         """
@@ -49,8 +45,7 @@ class C3Api:
         response = requests.get(
             urls.CERTIFIED_CONFIGURATIONS_URL + urls.LIMIT_OFFSET, timeout=120
         )
-        if not response.ok:
-            return
+        response.raise_for_status()
         objects = response.json()["results"]
         for obj in objects:
             try:
@@ -109,7 +104,11 @@ class C3Api:
                         self.db,
                         models.Bios,
                         revision=public_cert.firmware_revision,
-                        version=public_cert.bios.version,
+                        version=(
+                            public_cert.bios.version
+                            if public_cert.bios.version
+                            else public_cert.bios.name
+                        ),
                         vendor=bios_vendor,
                     )
                 release = get_or_create(
@@ -144,24 +143,3 @@ class C3Api:
                 )
                 self.db.rollback()
                 continue
-
-    def _authenticate_and_send(self, request: requests.Request) -> requests.Response:
-        prepared_request = request.prepare()
-        prepared_request.headers["Authorization"] = f"Bearer {C3Api._bearer_token}"
-        session = requests.session()
-        response = session.send(prepared_request)
-        if response.status_code in (401, 403):
-            self._authenticate()
-            prepared_request.headers["Authorization"] = f"Bearer {C3Api._bearer_token}"
-            response = session.send(prepared_request)
-        return response
-
-    def _authenticate(self) -> None:
-        response = requests.post(
-            urls.TOKEN_URL,
-            auth=(self._client_id, self._client_secret),
-            data={"grant_type": "client_credentials", "scope": "read"},
-        )
-
-        if response.ok:
-            C3Api._bearer_token = response.json().get("access_token", "")
