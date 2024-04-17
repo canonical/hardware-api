@@ -4,7 +4,7 @@ version: '0.1' # rewritten with the help of `adopt-info` below
 adopt-info: hwctl
 summary: Hardware API client
 description: Canonical Certified Hardware API client
-  
+
 grade: stable
 confinement: strict
 
@@ -30,6 +30,6 @@ parts:
     override-pull: |
       craftctl default
       # uncomment once there are tags that correspond to version
-      # last_committed_tag="$(git describe --tags --abbrev=0)"
-      # last_committed_tag_ver="$(echo ${last_committed_tag} | sed 's/v//')"
-      # craftctl set version="$(git describe --tags | sed 's/v//')"
+      last_committed_tag="$(git describe --tags --abbrev=0)"
+      last_committed_tag_ver="$(echo ${last_committed_tag} | sed 's/v//')"
+      craftctl set version="$(git describe --tags | sed 's/v//')"
