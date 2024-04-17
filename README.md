@@ -86,3 +86,13 @@ Certified(
     },
 )
 ```
+
+## Building `hwctl` snap
+
+To build and install `hwctl` as a snap locally, do the following after
+[installing snapcraft and a build provider for it](https://snapcraft.io/docs/snapcraft-setup):
+
+```bash
+snapcraft --bind-ssh # --verbose
+sudo snap install ./hwctl_[version].snap --dangerous
+```
