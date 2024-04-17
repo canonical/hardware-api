@@ -82,11 +82,10 @@ def get_latest_certificate_for_configs(
 
 
 def get_or_create(db: Session, model, **kwargs):
+    """Check if the object with the specified parameters exists. If not, create it"""
     instance = db.query(model).filter_by(**kwargs).first()
-    if instance:
-        return instance
-    else:
+    if not instance:
         instance = model(**kwargs)
         db.add(instance)
         db.commit()
-        return instance
+    return instance
