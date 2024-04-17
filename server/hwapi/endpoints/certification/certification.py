@@ -16,9 +16,11 @@
 #
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
+"""The endpoints for working with certification status"""
 
 
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from sqlalchemy.orm import Session
 
 from hwapi.endpoints.certification.rbody_validators import (
     CertificationStatusRequest,
@@ -26,6 +28,10 @@ from hwapi.endpoints.certification.rbody_validators import (
     NotCertifiedResponse,
     RelatedCertifiedSystemExistsResponse,
 )
+from hwapi.data_models.enums import CertificationStatus
+from hwapi.data_models.setup import get_db
+
+from .logic import is_certified
 
 
 router = APIRouter()
@@ -37,9 +43,14 @@ router = APIRouter()
         CertifiedResponse | NotCertifiedResponse | RelatedCertifiedSystemExistsResponse
     ),
 )
-def check_certification(system_info: CertificationStatusRequest):
+def check_certification(
+    system_info: CertificationStatusRequest, db: Session = Depends(get_db)
+):
     """
     Endpoint for checking certification status (whether a system is certified, not seen
     or some of its components have been seen on other systems)
     """
-    raise NotImplementedError("The endpoint is not implemented yet")
+    certified, data = is_certified(system_info, db)
+    if certified:
+        return data
+    return NotCertifiedResponse(status=CertificationStatus.NOT_SEEN)

@@ -17,21 +17,26 @@
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
+import os
 
-from fastapi import FastAPI
-from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-from hwapi.router import router
+from .models import Base
 
-app = FastAPI(redirect_slashes=False)
+DB_URL = os.getenv("DB_URL", "sqlite://")
+engine = create_engine(DB_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
+DB_PATH = DB_URL.replace("sqlite:///", "")
+if DB_PATH and not os.path.exists(DB_PATH):
+    # Create tables with no data if DB path doesn't exist
+    Base.metadata.create_all(engine)
 
 
-app.include_router(router)
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()

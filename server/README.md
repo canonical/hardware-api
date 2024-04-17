@@ -1,19 +1,16 @@
 # hwapi server
 
 
-## Development Installation
+## Running Tests with docker-compose
 
-This package just requires `poetry` to be installed on your system, so all the dependencies are managed by it. Go to the `server/` directory in the project and run the following commands:
+To run tests inside a Docker container (again, using `--build` when iterating on source code changes, to force the image to be rebuilt):
 
 ```bash
-$ poetry install
-$ poetry run uvicorn hwapi.main:app --reload
+docker-compose up --attach-dependencies --force-recreate --abort-on-container-exit --build hwapi-test
 ```
 
-Then you can access the server via this URL: http://127.0.0.1:8000
 
-
-## Pre-commit hooks
+## Pre-commit Hooks
 
 The repo contains pre-commit hook rules to update the openapi.yaml file before committing the changes. To use it, first make sure `pre-commit` is installed on your system (is installed with poetry dev dependencies).
 

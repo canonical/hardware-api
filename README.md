@@ -4,24 +4,27 @@ The repo contains the API server and client for retrieving hardware information.
 
 ## Prerequisites for Deploying Locally
 
-- `poetry` vesion 1.6.1 or later for servier deployment
+- `poetry` vesion 1.6.1 or later for server deployment
   (https://python-poetry.org/docs/)
 - `rust` and `cargo` for client deployment
   (https://www.rust-lang.org/tools/install)
+* Install [docker](https://docs.docker.com/engine/install/ubuntu/) and [setup permissions](https://docs.docker.com/engine/install/linux-postinstall/) for server deployment
+* Install `rust` and `cargo` for client deployment (https://www.rust-lang.org/tools/install)
 
-## Running API Server
+## Running API Server With Docker
 
-Go to the `server/` directory in the project and run the following commands:
+Go to the `server/` directory in the project. The following command builds the hwapi server:
 
 ```bash
-$ poetry install
-$ poetry run uvicorn hwapi.main:app --reload
+:server$ docker-compose up --attach-dependencies --build hwapi-dev
 ```
 
-Then you can access the server via this URL: http://127.0.0.1:8000
+If you don't have any db initialised (in the `server/data/hwapi.db` location), the command above will also initialise a DB with sample data.
 
-For information regarding accessing the API schema, read
-[server README](./server/README.md)
+Now you can access the server via this URL: http://127.0.0.1:8080
+
+For information regarding accessing the API schema, please read the 
+[server README](./server/README.md).
 
 ## Accessing API schema
 
@@ -52,7 +55,7 @@ accepts the following values:
 
 ```bash
 $ cd client/hwlib
-$ cargo build
+:client/hwlib$ cargo build
 ```
 
 ## Build and Run the Reference CLI Tool (`hwctl`)
@@ -60,7 +63,7 @@ $ cargo build
 ```bash
 $ export CERTIFICATION_STATUS=2
 $ cd client/hwctl
-$ cargo run
+:client/hwlib$ cargo run
 ```
 
 This is the output you should get running the commands above:
