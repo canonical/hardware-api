@@ -19,7 +19,7 @@ hwapi server:
 docker-compose up --attach-dependencies --build hwapi-dev
 ```
 
-If you don't have any db initialised (in the `server/data/hwapi.db` location),
+If you don't have any db initialised (in the `server/data/hwapi-dev.db` location),
 the command above will also initialise a DB with sample data.
 
 Now you can access the server via this URL: http://127.0.0.1:8080
