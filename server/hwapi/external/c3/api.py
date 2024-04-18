@@ -42,6 +42,7 @@ class C3Api:
         """
         Retrieve certified configurations from C3 and create corresponding models
         """
+        logger.info(f"Importing certificates from {urls.C3_URL}")
         response = requests.get(
             urls.CERTIFIED_CONFIGURATIONS_URL + urls.LIMIT_OFFSET, timeout=120
         )

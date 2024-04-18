@@ -46,7 +46,7 @@ class PublicCertificate(BaseModel):
     completed: datetime
     name: str
     release: Release
-    architecture: str
+    architecture: str | None
     kernel_version: str | None
     bios: Bios | None
     firmware_revision: str | None
