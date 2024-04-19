@@ -10,21 +10,30 @@ The repo contains the API server and client for retrieving hardware information.
 - Install `rust` and `cargo` for client deployment
   (https://www.rust-lang.org/tools/install)
 
-## Running API Server With Docker
+## Running API Development Server Instance With Docker
 
 Go to the `server/` directory in the project. The following command builds the
-hwapi server:
+hwapi server, and during the build time it imports the data from C3 staging server:
 
 ```bash
 docker-compose up --attach-dependencies --build hwapi-dev
 ```
+
+You can also customise the build arguments by specifying the following environment values:
+
+* `SCRIPT_NAME` (default `import_from_c3.py`): Specify the script from the
+  `server/scripts/` directory to use for populating the DB. If you don't want to import
+  the data from C3, you can use `seed_db.py` script, which doesn't require access to C3
+* `C3_URL` (default `https://certification.staging.canonical.com`): If you want to
+  use production data or the data from your local C3 instance, you can change this variable
+
 
 If you don't have any db initialised (in the `server/data/hwapi-dev.db` location),
 the command above will also initialise a DB with sample data.
 
 Now you can access the server via this URL: http://127.0.0.1:8080
 
-## Accessing API schema
+## Accessing API Schema
 
 You can retrieve API schema in HTML, YAML, and JSON formats:
 
@@ -39,7 +48,7 @@ You can retrieve API schema in HTML, YAML, and JSON formats:
 - For getting its JSON version, follow the
   [/openapi.json](http://127.0.0.1:8080/openapi.json) endpoint.
 
-## Build the library (`hwlib`)
+## Build The Library (`hwlib`)
 
 For now, the library contains the function to return a sample certification
 status. It depends on the environment variable `CERTIFICATION_STATUS` and
@@ -52,8 +61,8 @@ accepts the following values:
 - `2`: This system has been certified (but probably for other Ubuntu release).
 
 ```bash
-$ cd client/hwlib
-:client/hwlib$ cargo build
+cd client/hwlib
+cargo build
 ```
 
 ## Build and Run the Reference CLI Tool (`hwctl`)
@@ -97,7 +106,7 @@ Certified(
 )
 ```
 
-## Building `hwctl` snap
+## Building `hwctl` Snap
 
 To build and install `hwctl` as a snap locally, do the following after
 [installing snapcraft and a build provider for it](https://snapcraft.io/docs/snapcraft-setup):

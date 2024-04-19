@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright 2024 Canonical Ltd.
 # All rights reserved.
 #
@@ -16,33 +17,29 @@
 #
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
-"""The endpoints for importing data from C3"""
+"""Import data from C3"""
 
+import logging
 from requests.exceptions import HTTPError
 
-from fastapi import APIRouter, Depends
-from fastapi import HTTPException
+from sqlalchemy.orm import Session
 
-from hwapi.data_models.setup import get_db
+from hwapi.data_models.setup import engine
 from hwapi.external.c3.api import C3Api
-from hwapi.endpoints.decorators import only_internal_hosts
-
-router = APIRouter()
 
 
-@router.post(
-    "/import-certs",
-    include_in_schema=False,
-    dependencies=[Depends(only_internal_hosts)],
-)
-def import_certs(db_session=Depends(get_db)):
-    """Import certificates and related data from C3"""
-    c3_api = C3Api(db=db_session)
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
+
+
+if __name__ == "__main__":
+    session = Session(bind=engine)
+    c3_api = C3Api(db=session)
+    logger.info("Importing data from C3")
     try:
         c3_api.fetch_certified_configurations()
     except HTTPError as exc:
-        raise HTTPException(
-            status_code=exc.response.status_code,
-            detail=f"Got a {exc.response.status_code} error code from an upstream server",
+        logger.error(
+            "Got a %d error code from an upstream server", exc.response.status_code
         )
-    return {"status": "OK"}
+        raise

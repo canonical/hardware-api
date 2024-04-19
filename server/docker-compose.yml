@@ -4,22 +4,25 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    command: ./scripts/dev-docker-entrypoint.sh
+      args:
+        SCRIPT_NAME: ${SCRIPT_NAME:-import_from_c3.py}
+        DB_URL: sqlite:////home/app/hwapi.db
+        C3_URL: ${C3_URL:-https://certification.staging.canonical.com}
+    command: uvicorn hwapi.main:app --host 0.0.0.0 --port 8080 --reload
     working_dir: /home/app
     volumes:
-      - .:/home/app
-      - ./data:/home/app/data
+      - ./hwapi:/home/app/hwapi
     ports:
       - "8080:8080"
-    environment:
-      - DB_URL=sqlite:////home/app/data/hwapi-dev.db
-      - C3_URL=https://certification.staging.canonical.com
-      - INTERNAL_HOSTS=*
 
   hwapi-test:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        SCRIPT_NAME:
+        C3_URL: https://c3_url
+        DB_URL: sqlite:////home/app/test.db
     command: >
       bash -c '
         black --check hwapi/ scripts/ tests/ &&
@@ -27,23 +30,16 @@ services:
         mypy hwapi/ scripts/ tests/ &&
         pytest tests/ -vv'
     working_dir: /home/app
-    tmpfs:
-      - /home/app/data
     ports:
       - "8080:8080"
-    environment:
-      - TEST_DB_URL=sqlite:////home/app/data/test-hwapi.db
-      - INTERNAL_HOSTS=testclient
 
   hwapi:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        DB_URL: sqlite:////home/app/hwapi.db
+        C3_URL: https://certification.canonical.com
     working_dir: /home/app
-    volumes:
-      - ./data:/home/app/data
     ports:
       - "8080:8080"
-    environment:
-      - DB_URL=sqlite:////home/app/data/hwapi.db
-      - C3_URL=https://certification.canonical.com

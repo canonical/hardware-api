@@ -19,11 +19,17 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 """Populate SQLite DB with dummy data"""
 
-
 from datetime import datetime, timedelta
+import logging
+
 from sqlalchemy.orm import Session
+
 from hwapi.data_models import models
 from hwapi.data_models.setup import engine
+
+
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
 def create_vendors(session: Session) -> list[models.Vendor]:
@@ -169,4 +175,4 @@ if __name__ == "__main__":
     releases = create_releases(session)
     certificates = create_certificates(session, machines, releases)
     create_reports(session, vendors[1], certificates)
-    print("Database initialized.")
+    logger.info("Database initialized.")

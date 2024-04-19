@@ -41,7 +41,7 @@ def db_url():
     Retrieves the database url from the environment variable TEST_DB_URL
     or creates a new database and returns the url
     """
-    db_url = environ.get("TEST_DB_URL")
+    db_url = environ.get("DB_URL")
     if db_url:
         yield db_url
     else:

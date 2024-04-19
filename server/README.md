@@ -1,24 +1,5 @@
 # hwapi server
 
-
-## Importing Data from C3
-
-By default, all the importers endpoints fetch the data from https://certification.canonical.com but you can specify a different C3 host by defining the `C3_URL` environment value. Also, in docker-compose development environment, we're using the staging server.
-
-Also, all the importers endpoints accept connections only from the hosts specified in the `INTERNAL_HOSTS` environemnt variable (the hosts shall be specific using "," separator), for example:
-
-```bash
-$ export INTERNAL_HOSTS=192.168.0.1,10.0.0.1,127.0.0.1,::1
-```
-
-To allow connections from all hosts, specify `*` as a value. The default value is `127.0.0.1,::1`.
-
-To import the hardware, releases, and certificates objects from C3, you can call the `v1/importers/import-certs` endpoint:
-
-```bash
-$ curl http://127.0.0.1:8080/v1/importers/import-certs -X POST
-```
-
 ## Running Tests with docker-compose
 
 To run tests inside a Docker container (again, using `--build` when iterating on source code changes, to force the image to be rebuilt):

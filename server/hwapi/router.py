@@ -22,14 +22,12 @@ import yaml
 from fastapi import APIRouter, Response
 from fastapi.openapi.utils import get_openapi
 from .endpoints.certification import certification
-from .endpoints.importers import importers
 
 
 router = APIRouter()
 router.include_router(
     certification.router, prefix="/v1/certification", tags=["certification"]
 )
-router.include_router(importers.router, prefix="/v1/importers", tags=["importers"])
 
 
 @router.get("/")

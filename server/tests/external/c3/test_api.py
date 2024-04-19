@@ -17,20 +17,20 @@
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
-import os
 from fastapi.testclient import TestClient
 from requests_mock import Mocker
 from sqlalchemy.orm import Session
 
 from hwapi.data_models import models
+from hwapi.external.c3 import api as c3_api
 
 
-def test_successful_import(
+def test_successful_fetch_certficates(
     db_session: Session, requests_mock: Mocker, test_client: TestClient
 ):
     """Test that certificates and hardware data are imported correctly"""
     requests_mock.get(
-        "https://certification.canonical.com/api/v2/public-certificates/",
+        "https://c3_url/api/v2/public-certificates/",
         json={
             "count": 1,
             "next": None,
@@ -65,10 +65,8 @@ def test_successful_import(
         },
     )
 
-    response = test_client.post("/v1/importers/import-certs")
-
-    assert response.status_code == 200
-    assert response.json() == {"status": "OK"}
+    c3api = c3_api.C3Api(db=db_session)
+    c3api.fetch_certified_configurations()
 
     # Verify vendors
     assert db_session.query(models.Vendor).count() == 1
@@ -137,7 +135,7 @@ def test_import_with_missing_kernel_bios(
 ):
     """Test handling of missing kernel or BIOS data."""
     requests_mock.get(
-        "https://certification.canonical.com/api/v2/public-certificates/",
+        "https://c3_url/api/v2/public-certificates/",
         json={
             "count": 1,
             "next": None,
@@ -161,47 +159,13 @@ def test_import_with_missing_kernel_bios(
                     "architecture": "amd64",
                     "kernel_version": None,
                     "bios": None,
+                    "firmware_revision": None,
                 }
             ],
         },
     )
 
-    response = test_client.post("/v1/importers/import-certs")
-    assert response.status_code == 200
+    c3api = c3_api.C3Api(db=db_session)
+    c3api.fetch_certified_configurations()
     assert db_session.query(models.Kernel).count() == 0
     assert db_session.query(models.Bios).count() == 0
-
-
-def test_access_restriction(db_session: Session, test_client: TestClient):
-    """Test that only internal hosts can access this endpoint."""
-    orig_internal_hosts = os.environ.get("INTERNAL_HOSTS", "")
-    # Modify the internal hosts variable to exclude testclient
-    os.environ["INTERNAL_HOSTS"] = "10.0.0.1"
-
-    response = test_client.post("/v1/importers/import-certs")
-    assert response.status_code == 403
-
-    # Clean up after test
-    os.environ["INTERNAL_HOSTS"] = orig_internal_hosts
-
-
-def test_c3_api_error_handling(
-    db_session: Session, requests_mock: Mocker, test_client: TestClient
-):
-    """Test API error handling (like receiving a 500 or 404 from C3)"""
-    requests_mock.get(
-        "https://certification.canonical.com/api/v2/public-certificates/",
-        status_code=500,
-    )
-
-    response = test_client.post("/v1/importers/import-certs")
-    assert response.status_code == 500
-    assert "error code from an upstream server" in response.json().get("detail")
-
-    requests_mock.get(
-        "https://certification.canonical.com/api/v2/public-certificates/",
-        status_code=404,
-    )
-    response = test_client.post("/v1/importers/import-certs")
-    assert response.status_code == 404
-    assert "error code from an upstream server" in response.json().get("detail")

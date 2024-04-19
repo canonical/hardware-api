@@ -23,6 +23,7 @@ import requests
 import logging
 
 from sqlalchemy.orm import Session
+from sqlalchemy.exc import IntegrityError
 
 from hwapi.data_models import models
 from hwapi.data_models.repository import get_or_create
@@ -42,12 +43,13 @@ class C3Api:
         """
         Retrieve certified configurations from C3 and create corresponding models
         """
-        logger.info(f"Importing certificates from {urls.C3_URL}")
+        logger.info(f"Importing certificates and machines from {urls.C3_URL}")
         response = requests.get(
             urls.CERTIFIED_CONFIGURATIONS_URL + urls.LIMIT_OFFSET, timeout=120
         )
         response.raise_for_status()
         objects = response.json()["results"]
+        print(objects)
         for obj in objects:
             try:
                 public_cert = response_models.PublicCertificate(**obj)
@@ -81,7 +83,7 @@ class C3Api:
                 if public_cert.bios is not None:
                     bios_vendor = (
                         self.db.query(models.Vendor)
-                        .filter_by(name=public_cert.bios.vendor)
+                        .filter(models.Vendor.name.ilike(public_cert.bios.vendor))
                         .first()
                     )
                     # Remove Inc/Inc. from vendor name to avoid duplicate vendors
@@ -89,12 +91,16 @@ class C3Api:
                         public_cert.bios.vendor.endswith("Inc")
                         or public_cert.bios.vendor.endswith("Inc.")
                     ):
-                        bios_vendor_name = public_cert.bios.vendor[
-                            : public_cert.bios.vendor.rfind("Inc") - 1
-                        ]
+                        bios_vendor_name = (
+                            public_cert.bios.vendor[
+                                : public_cert.bios.vendor.rfind("Inc")
+                            ]
+                            .replace(",", "")
+                            .strip()
+                        )
                         bios_vendor = (
                             self.db.query(models.Vendor)
-                            .filter_by(name=bios_vendor_name)
+                            .filter(models.Vendor.name.ilike(bios_vendor_name))
                             .first()
                         )
                     if bios_vendor is None:
@@ -138,7 +144,7 @@ class C3Api:
                     bios=bios,
                     certificate=certificate,
                 )
-            except Exception:
+            except IntegrityError:
                 logging.error(
                     "Got an error while importing certificates", exc_info=True
                 )
