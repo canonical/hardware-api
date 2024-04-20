@@ -1,6 +1,6 @@
 name: hwctl
 base: core22
-version: '0.1' # rewritten with the help of `adopt-info` below
+version: "0.1" # rewritten with the help of `adopt-info` below
 adopt-info: hwctl
 summary: Hardware API client
 description: Canonical Certified Hardware API client
@@ -22,7 +22,7 @@ apps:
 parts:
   hwctl:
     plugin: rust
-    source: git@github.com:canonical/hardware-api.git
+    source: https://github.com/canonical/hardware-api.git
     source-type: git
     build-packages:
       - pkg-config
