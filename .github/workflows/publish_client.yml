@@ -56,7 +56,7 @@ jobs:
         name: Upload the snap as artifact
         with:
           name: hwctl-${{ matrix.arch }}
-          path: *.snap
+          path: "*.snap"
       - uses: Wandalen/wretry.action@a163f62ae554a8f3cbe27b23db15b60c0ae2e93c # v1.3.0
         name: Upload the snap to the store
         timeout-minutes: 600 # 10hours
