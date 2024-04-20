@@ -43,7 +43,7 @@ jobs:
           attempt_limit: 5
           with: |
             snapcraft-channel: 7.x/stable
-            snapcraft-args: --build-for ${{ matrix.arch }} --launchpad-accept-public-upload --build-id $SNAPCRAFT_BUILDER_ID
+            snapcraft-args: remote-build --build-for ${{ matrix.arch }} --launchpad-accept-public-upload --build-id $SNAPCRAFT_BUILDER_ID
       - uses: actions/upload-artifact@v3
         name: Upload logs on failure
         if: failure()
