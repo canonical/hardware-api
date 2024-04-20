@@ -1,0 +1,71 @@
+name: hwctl snap build
+
+on:
+  workflow_dispatch:
+  workflow_call:
+  push:
+    branches: ["main", "publish-snap"]
+    paths:
+      - "client/**"
+      - ".github/workflows/publish_client.yml"
+
+jobs:
+  snap:
+    strategy:
+      matrix:
+        arch: [amd64]
+    runs-on: [self-hosted, linux, jammy, large]
+    env:
+      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAPCRAFT7_CREDS }}
+      # snapcraft remote-build will create a repository with the name decided by the --build-id arg
+      # URL to this repo echoed below to help debug builds (does not change if the workflow is re-run)
+      SNAPCRAFT_BUILDER_ID: hwctl-${{ matrix.arch }}-${{ github.run_id }}
+    name: hwctl-${{ matrix.arch }}
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-tags: true
+      - name: Add LP credentials
+        run: |
+          mkdir -p ~/.local/share/snapcraft/provider/launchpad/
+          echo '${{ secrets.LP_CREDS }}' > ~/.local/share/snapcraft/provider/launchpad/credentials
+          git config --global user.email "robot@lists.canonical.com"
+          git config --global user.name "Certification bot"
+      - name: Print Launchpad build repository
+        run: |
+          echo "Building at: https://git.launchpad.net/~ce-certification-qa/+snap/$SNAPCRAFT_BUILDER_ID"
+      - uses: Wandalen/wretry.action@a163f62ae554a8f3cbe27b23db15b60c0ae2e93c # v1.3.0
+        name: Build the snap
+        timeout-minutes: 600
+        with:
+          action: Hook25/action-build@707dce252c4f367b6c1afe61ed577f7413cf7912
+          attempt_delay: 600000
+          attempt_limit: 5
+          with: |
+            snapcraft-channel: 7.x/stable
+            snapcraft-args: remote-build --build-for ${{ matrix.arch }} --launchpad-accept-public-upload --build-id $SNAPCRAFT_BUILDER_ID
+      - uses: actions/upload-artifact@v3
+        name: Upload logs on failure
+        if: failure()
+        with:
+          name: snapcraft-log-series${{ matrix.arch }}
+          path: |
+            /home/runner/.cache/snapcraft/log/
+            /home/runner/.local/state/snapcraft/log/
+      - uses: actions/upload-artifact@v3
+        name: Upload the snap as artifact
+        with:
+          name: hwctl-${{ matrix.arch }}
+          path: *.snap
+      - uses: Wandalen/wretry.action@a163f62ae554a8f3cbe27b23db15b60c0ae2e93c # v1.3.0
+        name: Upload the snap to the store
+        timeout-minutes: 600 # 10hours
+        with:
+          attempt_delay: 600000 # 10min
+          attempt_limit: 10
+          command: |
+            for snap in *.snap ; \
+            do \
+              echo "Uploading $snap..." ; \
+              snapcraft upload $snap --release edge ; \
+            done
