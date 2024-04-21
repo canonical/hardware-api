@@ -50,6 +50,7 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
   build-and-push-charm:
     runs-on: [self-hosted, linux, xlarge, jammy, x64]
     needs: build-and-push-image
@@ -61,6 +62,7 @@ jobs:
       - name: Upload charm to charmhub
         uses: canonical/charming-actions/upload-charm@2.4.0
         with:
-          charm-path: "server/charm"
+          charm-path: "./server/charm"
           credentials: "${{ secrets.CHARMHUB_TOKEN }}"
           github-token: "${{ secrets.GITHUB_TOKEN }}"
+          upload-image: "true"
