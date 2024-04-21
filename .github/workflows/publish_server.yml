@@ -1,6 +1,6 @@
 on:
   push:
-    branches: ["main"]
+    branches: ["main", "charm-publishing"]
     paths:
       - "server/**"
       - ".github/workflows/publish_server.yml"
@@ -61,6 +61,6 @@ jobs:
       - name: Upload charm to charmhub
         uses: canonical/charming-actions/upload-charm@2.4.0
         with:
-          charm-path: "backend/charm"
+          charm-path: "server/charm"
           credentials: "${{ secrets.CHARMHUB_TOKEN }}"
           github-token: "${{ secrets.GITHUB_TOKEN }}"
