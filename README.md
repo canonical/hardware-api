@@ -28,6 +28,8 @@ Now you can access the server via this URL: http://127.0.0.1:8080
 
 You can retrieve API schema in HTML, YAML, and JSON formats:
 
+- The current version of the OpenAPI schema is browseable at
+  [canonical.github.io/hardware-api](https://canonical.github.io/hardware-api).
 - To access the HTML view for the API schema, just run the server and follow the
   [/#docs](http://127.0.0.1:8080/#docs) endpoint.
 - A self-contained HTML representation of the schema is also included in the
