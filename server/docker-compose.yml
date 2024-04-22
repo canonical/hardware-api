@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        SCRIPT_NAME: ${SCRIPT_NAME:-import_from_c3.py}
+        DATA_LOADING_SCRIPT_FILE: ${DATA_LOADING_SCRIPT_FILE:-import_from_c3.py}
         DB_URL: sqlite:////home/app/hwapi.db
         C3_URL: ${C3_URL:-https://certification.staging.canonical.com}
     command: uvicorn hwapi.main:app --host 0.0.0.0 --port 8080 --reload
@@ -20,7 +20,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        SCRIPT_NAME:
+        DATA_LOADING_SCRIPT_FILE:
         C3_URL: https://c3_url
         DB_URL: sqlite:////home/app/test.db
     command: >

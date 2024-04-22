@@ -17,7 +17,7 @@ ENV DB_URL=$DB_URL
 ARG C3_URL
 ENV C3_URL=$C3_URL
 
-ARG SCRIPT_NAME=import_from_c3.py
-RUN if [ -n "$SCRIPT_NAME" ]; then python scripts/$SCRIPT_NAME; fi
+ARG DATA_LOADING_SCRIPT_FILE=import_from_c3.py
+RUN if [ -n "$DATA_LOADING_SCRIPT_FILE" ]; then python scripts/$DATA_LOADING_SCRIPT_FILE; fi
 
 CMD ["uvicorn", "hwapi.main:app", "--host", "0.0.0.0", "--port", "8080"]

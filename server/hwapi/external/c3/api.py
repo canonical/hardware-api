@@ -38,17 +38,18 @@ class C3Api:
     def __init__(self, db: Session):
         self.db = db
 
-    def fetch_certified_configurations(self):
+    def load_certified_configurations(self):
         """
         Retrieve certified configurations from C3 and create corresponding models
         """
-        logger.info(f"Importing certificates and machines from {urls.C3_URL}")
+        logger.info(
+            f"Importing certified configurations and machines from {urls.C3_URL}"
+        )
         response = requests.get(
             urls.CERTIFIED_CONFIGURATIONS_URL + urls.LIMIT_OFFSET, timeout=120
         )
         response.raise_for_status()
         objects = response.json()["results"]
-        print(objects)
         for obj in objects:
             try:
                 public_cert = response_models.PublicCertificate(**obj)
@@ -147,5 +148,4 @@ class C3Api:
                 logging.error(
                     "Got an error while importing certificates", exc_info=True
                 )
-                self.db.rollback()
                 continue

@@ -37,7 +37,7 @@ if __name__ == "__main__":
     c3_api = C3Api(db=session)
     logger.info("Importing data from C3")
     try:
-        c3_api.fetch_certified_configurations()
+        c3_api.load_certified_configurations()
     except HTTPError as exc:
         logger.error(
             "Got a %d error code from an upstream server", exc.response.status_code

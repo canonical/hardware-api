@@ -21,7 +21,7 @@ docker-compose up --attach-dependencies --build hwapi-dev
 
 You can also customise the build arguments by specifying the following environment values:
 
-* `SCRIPT_NAME` (default `import_from_c3.py`): Specify the script from the
+* `DATA_LOADING_SCRIPT_FILE` (default `import_from_c3.py`): Specify the script from the
   `server/scripts/` directory to use for populating the DB. If you don't want to import
   the data from C3, you can use `seed_db.py` script, which doesn't require access to C3
 * `C3_URL` (default `https://certification.staging.canonical.com`): If you want to
