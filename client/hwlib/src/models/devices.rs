@@ -28,9 +28,10 @@ pub struct Audio {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Bios {
-    pub firmware_revision: String,
+    pub firmware_revision_major: Option<u8>,
+    pub firmware_revision_minor: Option<u8>,
     pub release_date: String,
-    pub revision: String,
+    pub revision: Option<String>,
     pub vendor: String,
     pub version: String,
 }
@@ -39,15 +40,24 @@ pub struct Bios {
 pub struct Board {
     pub manufacturer: String,
     pub product_name: String,
-    pub version: String,
+    pub version: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Chassis {
-    pub chassis_type: String,
+    pub chassis_type: Option<u8>,
     pub manufacturer: String,
     pub sku: String,
     pub version: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct System {
+    pub product_name: String,
+    pub manufacturer: String,
+    pub sku: String,
+    pub version: String,
+    pub family: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -75,11 +85,16 @@ pub struct PCIPeripheral {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct Processor {
+pub struct ProcessorResponse {
     pub family: String,
-    pub frequency: f64,
     pub manufacturer: String,
     pub version: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct ProcessorRequest {
+    pub id: Option<[u8; 8]>,
+    pub family: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
