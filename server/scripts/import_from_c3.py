@@ -25,7 +25,7 @@ from requests.exceptions import HTTPError
 from sqlalchemy.orm import Session
 
 from hwapi.data_models.setup import engine
-from hwapi.external.c3.api import C3Api
+from hwapi.external.c3.client import C3Client
 
 
 logger = logging.getLogger(__name__)
@@ -34,12 +34,13 @@ logging.basicConfig(level=logging.INFO)
 
 if __name__ == "__main__":
     session = Session(bind=engine)
-    c3_api = C3Api(db=session)
+    c3_client = C3Client(db=session)
     logger.info("Importing data from C3")
     try:
-        c3_api.load_certified_configurations()
+        c3_client.load_certified_configurations()
     except HTTPError as exc:
         logger.error(
-            "Got a %d error code from an upstream server", exc.response.status_code
+            "The %d error code was received from an upstream server",
+            exc.response.status_code,
         )
         raise

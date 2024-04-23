@@ -32,7 +32,7 @@ from hwapi.external.c3 import response_models, urls
 logger = logging.getLogger(__name__)
 
 
-class C3Api:
+class C3Client:
     """Class to work with C3 RESTAPI"""
 
     def __init__(self, db: Session):

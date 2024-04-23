@@ -22,7 +22,7 @@ from requests_mock import Mocker
 from sqlalchemy.orm import Session
 
 from hwapi.data_models import models
-from hwapi.external.c3 import api as c3_api
+from hwapi.external.c3 import client as c3_client
 
 
 def test_successful_fetch_certficates(
@@ -65,8 +65,8 @@ def test_successful_fetch_certficates(
         },
     )
 
-    c3api = c3_api.C3Api(db=db_session)
-    c3api.load_certified_configurations()
+    c3client = c3_client.C3Client(db=db_session)
+    c3client.load_certified_configurations()
 
     # Verify vendors
     assert db_session.query(models.Vendor).count() == 1
@@ -165,7 +165,7 @@ def test_import_with_missing_kernel_bios(
         },
     )
 
-    c3api = c3_api.C3Api(db=db_session)
-    c3api.load_certified_configurations()
+    c3client = c3_client.C3Client(db=db_session)
+    c3client.load_certified_configurations()
     assert db_session.query(models.Kernel).count() == 0
     assert db_session.query(models.Bios).count() == 0
