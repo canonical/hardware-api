@@ -51,101 +51,104 @@ class C3Client:
         response.raise_for_status()
         objects = response.json()["results"]
         for obj in objects:
+            public_cert = response_models.PublicCertificate(**obj)
             try:
-                public_cert = response_models.PublicCertificate(**obj)
-                vendor = get_or_create(self.db, models.Vendor, name=public_cert.vendor)
-                platform = get_or_create(
-                    self.db,
-                    models.Platform,
-                    name=public_cert.platform,
-                    vendor_id=vendor.id,
-                )
-                configuration = get_or_create(
-                    self.db,
-                    models.Configuration,
-                    name=public_cert.configuration,
-                    platform_id=platform.id,
-                )
-                machine = get_or_create(
-                    self.db,
-                    models.Machine,
-                    canonical_id=public_cert.canonical_id,
-                    configuration_id=configuration.id,
-                )
-                kernel = None
-                if public_cert.kernel_version:
-                    kernel = get_or_create(
-                        self.db,
-                        models.Kernel,
-                        version=public_cert.kernel_version,
-                    )
-                bios = None
-                if public_cert.bios is not None:
-                    bios_vendor = (
-                        self.db.query(models.Vendor)
-                        .filter(models.Vendor.name.ilike(public_cert.bios.vendor))
-                        .first()
-                    )
-                    # Remove Inc/Inc. from vendor name to avoid duplicate vendors
-                    if bios_vendor is None and (
-                        public_cert.bios.vendor.endswith("Inc")
-                        or public_cert.bios.vendor.endswith("Inc.")
-                    ):
-                        bios_vendor_name = (
-                            public_cert.bios.vendor[
-                                : public_cert.bios.vendor.rfind("Inc")
-                            ]
-                            .replace(",", "")
-                            .strip()
-                        )
-                        bios_vendor = (
-                            self.db.query(models.Vendor)
-                            .filter(models.Vendor.name.ilike(bios_vendor_name))
-                            .first()
-                        )
-                    if bios_vendor is None:
-                        bios_vendor = get_or_create(
-                            self.db, models.Vendor, name=public_cert.bios.vendor
-                        )
-                    bios = get_or_create(
-                        self.db,
-                        models.Bios,
-                        firmware_revision=public_cert.firmware_revision,
-                        version=(
-                            public_cert.bios.version
-                            if public_cert.bios.version
-                            else public_cert.bios.name
-                        ),
-                        vendor=bios_vendor,
-                    )
-                release = get_or_create(
-                    self.db,
-                    models.Release,
-                    codename=public_cert.release.codename,
-                    release=public_cert.release.release,
-                    release_date=public_cert.release.release_date,
-                    i_version=public_cert.release.i_version,
-                    supported_until=public_cert.release.supported_until,
-                )
-                certificate = get_or_create(
-                    self.db,
-                    models.Certificate,
-                    name=public_cert.name,
-                    completed=public_cert.completed,
-                    created_at=public_cert.created_at,
-                    machine=machine,
-                    release=release,
-                )
-                get_or_create(
-                    self.db,
-                    models.Report,
-                    architecture=public_cert.architecture,
-                    kernel=kernel,
-                    bios=bios,
-                    certificate=certificate,
-                )
+                self._load_certified_configurations_from_response(public_cert)
             except IntegrityError:
                 logging.error(
                     "An error occurred while importing certificates", exc_info=True
                 )
                 continue
+
+    def _load_certified_configurations_from_response(
+        self, response: response_models.PublicCertificate
+    ):
+        vendor = get_or_create(self.db, models.Vendor, name=response.vendor)
+        platform = get_or_create(
+            self.db,
+            models.Platform,
+            name=response.platform,
+            vendor_id=vendor.id,
+        )
+        configuration = get_or_create(
+            self.db,
+            models.Configuration,
+            name=response.configuration,
+            platform_id=platform.id,
+        )
+        machine = get_or_create(
+            self.db,
+            models.Machine,
+            canonical_id=response.canonical_id,
+            configuration_id=configuration.id,
+        )
+        kernel = None
+        if response.kernel_version:
+            kernel = get_or_create(
+                self.db,
+                models.Kernel,
+                version=response.kernel_version,
+            )
+        bios = None
+        if response.bios is not None:
+            bios_vendor = (
+                self.db.query(models.Vendor)
+                .filter(models.Vendor.name.ilike(response.bios.vendor))
+                .first()
+            )
+            # Remove Inc/Inc. from vendor name to avoid duplicate vendors
+            if bios_vendor is None and (
+                response.bios.vendor.endswith("Inc")
+                or response.bios.vendor.endswith("Inc.")
+            ):
+                bios_vendor_name = (
+                    response.bios.vendor[: response.bios.vendor.rfind("Inc")]
+                    .replace(",", "")
+                    .strip()
+                )
+                bios_vendor = (
+                    self.db.query(models.Vendor)
+                    .filter(models.Vendor.name.ilike(bios_vendor_name))
+                    .first()
+                )
+            if bios_vendor is None:
+                bios_vendor = get_or_create(
+                    self.db, models.Vendor, name=response.bios.vendor
+                )
+            bios = get_or_create(
+                self.db,
+                models.Bios,
+                firmware_revision=response.firmware_revision,
+                version=(
+                    response.bios.version
+                    if response.bios.version
+                    else response.bios.name
+                ),
+                vendor=bios_vendor,
+            )
+        release = get_or_create(
+            self.db,
+            models.Release,
+            codename=response.release.codename,
+            release=response.release.release,
+            release_date=response.release.release_date,
+            i_version=response.release.i_version,
+            supported_until=response.release.supported_until,
+        )
+        certificate = get_or_create(
+            self.db,
+            models.Certificate,
+            name=response.name,
+            completed=response.completed,
+            created_at=response.created_at,
+            machine=machine,
+            release=release,
+        )
+        get_or_create(
+            self.db,
+            models.Report,
+            architecture=response.architecture,
+            kernel=kernel,
+            bios=bios,
+            certificate=certificate,
+        )
