@@ -58,6 +58,7 @@ def test_certified_status(generator: DataGenerator, test_client: TestClient):
             "loaded_modules": [],
         },
         "bios": {
+            "firmware_revision": None,
             "release_date": (report.bios.release_date).strftime("%Y-%m-%d"),
             "revision": report.bios.revision,
             "vendor": report.bios.vendor.name,

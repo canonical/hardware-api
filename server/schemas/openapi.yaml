@@ -16,6 +16,11 @@ components:
       type: object
     BiosValidator:
       properties:
+        firmware_revision:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Firmware Revision
         release_date:
           anyOf:
           - format: date
@@ -34,10 +39,11 @@ components:
           title: Version
           type: string
       required:
-      - release_date
-      - revision
       - vendor
       - version
+      - revision
+      - firmware_revision
+      - release_date
       title: BiosValidator
       type: object
     BoardValidator:

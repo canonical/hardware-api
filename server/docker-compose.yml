@@ -5,13 +5,13 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        DATA_LOADING_SCRIPT_FILE: ${DATA_LOADING_SCRIPT_FILE:-import_from_c3.py}
-        DB_URL: sqlite:////home/app/hwapi.db
+        IMPORT_TOOL_PATH: ${IMPORT_TOOL_PATH:-./scripts/import_from_c3.py}
+        DB_URL: ${DB_URL:-sqlite:////home/code/hwapi.db}
         C3_URL: ${C3_URL:-https://certification.staging.canonical.com}
     command: uvicorn hwapi.main:app --host 0.0.0.0 --port 8080 --reload
-    working_dir: /home/app
+    working_dir: /home/code
     volumes:
-      - ./hwapi:/home/app/hwapi
+      - ./hwapi:/home/code/hwapi
     ports:
       - "8080:8080"
 
@@ -20,16 +20,16 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        DATA_LOADING_SCRIPT_FILE:
+        IMPORT_TOOL_PATH: ""
         C3_URL: https://c3_url
-        DB_URL: sqlite:////home/app/test.db
+        DB_URL: sqlite:////home/code/test.db
     command: >
       bash -c '
         black --check hwapi/ scripts/ tests/ &&
         ruff check hwapi/ scripts/ tests/ --no-cache &&
         mypy hwapi/ scripts/ tests/ &&
         pytest tests/ -vv'
-    working_dir: /home/app
+    working_dir: /home/code
     ports:
       - "8080:8080"
 
@@ -38,8 +38,9 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        DB_URL: sqlite:////home/app/hwapi.db
+        IMPORT_TOOL_PATH: ./scripts/import_from_c3.py
+        DB_URL: sqlite:////home/code/hwapi.db
         C3_URL: https://certification.canonical.com
-    working_dir: /home/app
+    working_dir: /home/code
     ports:
       - "8080:8080"

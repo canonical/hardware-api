@@ -110,7 +110,7 @@ class C3Api:
                     bios = get_or_create(
                         self.db,
                         models.Bios,
-                        revision=public_cert.firmware_revision,
+                        firmware_revision=public_cert.firmware_revision,
                         version=(
                             public_cert.bios.version
                             if public_cert.bios.version

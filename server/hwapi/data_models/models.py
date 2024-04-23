@@ -115,6 +115,7 @@ class Kernel(Base):
 class Bios(Base):
     __tablename__ = "bios"
     release_date: Mapped[date] = mapped_column(nullable=True)
+    firmware_revision: Mapped[str] = mapped_column(nullable=True)
     revision: Mapped[str] = mapped_column(nullable=True)
     version: Mapped[str] = mapped_column(nullable=False)
     # Relationships

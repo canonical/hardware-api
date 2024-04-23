@@ -1,8 +1,9 @@
+
 # Hardware Information API (hwapi)
 
 The repo contains the API server and client for retrieving hardware information.
 
-## Prerequisites for Deploying Locally
+## Prerequisites for deploying locally
 
 - Install [docker](https://docs.docker.com/engine/install/ubuntu/) and
   [setup permissions](https://docs.docker.com/engine/install/linux-postinstall/)
@@ -10,27 +11,68 @@ The repo contains the API server and client for retrieving hardware information.
 - Install `rust` and `cargo` for client deployment
   (https://www.rust-lang.org/tools/install)
 
-## Running API Development Server Instance With Docker
+Also, to run the server locally, make sure that another application doesn't use the port `8080`.
 
-Go to the `server/` directory in the project. The following command builds the
-hwapi server, and during the build time it imports the data from C3 staging server:
+## Running API development server instance with Docker
+
+Go to the `server/` directory in the project. Since the server needs the data from the DB to work with,
+there are several options regarding how you can stand up the environment.
+
+### Using pre-populated database
+
+You can use this option if you already have the SQLite DB file and want to use it. Make sure that the DB
+is located under the `./server/` directory.
+
+You can stand up the environment by running the following commands:
+
+```bash
+# Assuming that the path to the DB file path is ./hwapi.db
+docker-compose build --build-arg IMPORT_TOOL_PATH="" --build-arg DB_URL=sqlite:///./hwapi.db hwapi-dev
+docker-compose up --attach-dependencies hwapi-dev
+```
+
+### Seed the database from the script
+
+This approach doesn't require internet access and populates your DB with dummy data using the
+`scripts/seed_db.py` script.
+
+```bash
+export IMPORT_TOOL_PATH=./scripts/seed_db.py
+docker-compose up --attach-dependencies --build hwapi-dev
+```
+
+To verify that it works, you can make the following request from the host
+(you should receive the Certified response):
+
+```bash
+curl http://0.0.0.0:8080/v1/certification/status -X POST -H "Content-Type: application/json" \
+-d '{"vendor": "Dell", "model": "ChengMing 3980"}' -s | python3 -m json.tool
+```
+
+### Load the data from C3
+
+This approach populates the DB with the data from C3 (staging instance by default). To build and run the
+container, execute the following command:
 
 ```bash
 docker-compose up --attach-dependencies --build hwapi-dev
 ```
 
-You can also customise the build arguments by specifying the following environment values:
+To verify that it works, make the following request from the host (you should receive the Certified response):
 
-* `DATA_LOADING_SCRIPT_FILE` (default `import_from_c3.py`): Specify the script from the
-  `server/scripts/` directory to use for populating the DB. If you don't want to import
-  the data from C3, you can use `seed_db.py` script, which doesn't require access to C3
-* `C3_URL` (default `https://certification.staging.canonical.com`): If you want to
-  use production data or the data from your local C3 instance, you can change this variable
+```bash
+curl http://0.0.0.0:8080/v1/certification/status -X POST -H "Content-Type: application/json" \
+-d '{"vendor": "HP", "model": "Z8 G4 Workstation"}' -s | python3 -m json.tool
+```
 
-After standing up the container, you should be able to access the server via 
-this URL: http://127.0.0.1:8080
+Alternatively, you can specify another C3 host (like production or the local one) by specifying the `C3_URL`:
 
-## Accessing API Schema
+```bash
+export C3_URL=http://your.c3.instance  # e.g https://certification.canonical.com
+docker-compose up --attach-dependencies --build hwapi-dev
+```
+
+## Accessing API schema
 
 You can retrieve API schema in HTML, YAML, and JSON formats:
 
@@ -47,7 +89,7 @@ You can retrieve API schema in HTML, YAML, and JSON formats:
 - For getting its JSON version, follow the
   [/openapi.json](http://127.0.0.1:8080/openapi.json) endpoint.
 
-## Build The Library (`hwlib`)
+## Build the library (`hwlib`)
 
 For now, the library contains the function to return a sample certification
 status. It depends on the environment variable `CERTIFICATION_STATUS` and
@@ -64,7 +106,7 @@ cd client/hwlib
 cargo build
 ```
 
-## Build and Run the Reference CLI Tool (`hwctl`)
+## Build and run the reference CLI tool (`hwctl`)
 
 ```bash
 export CERTIFICATION_STATUS=2
@@ -105,12 +147,12 @@ Certified(
 )
 ```
 
-## Building `hwctl` Snap
+## Building `hwctl` snap
 
 To build and install `hwctl` as a snap locally, do the following after
 [installing snapcraft and a build provider for it](https://snapcraft.io/docs/snapcraft-setup):
 
 ```bash
-snapcraft --bind-ssh # --verbose
+snapcraft --bind-ssh  # --verbose
 sudo snap install ./hwctl_[version].snap --dangerous
 ```

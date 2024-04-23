@@ -62,6 +62,7 @@ def is_certified(system_info: CertificationStatusRequest, db: Session):
                 data_validators.BiosValidator(
                     release_date=bios.release_date,
                     revision=bios.revision,
+                    firmware_revision=bios.firmware_revision,
                     vendor=bios.vendor.name,
                     version=bios.version,
                 )
