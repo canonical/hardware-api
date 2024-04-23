@@ -18,10 +18,29 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
+use std::alloc::System;
+
 use serde::{Deserialize, Serialize};
 
 use crate::models::devices;
 use crate::models::software;
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CertificationStatusRequest {
+    pub audio: Option<Vec<devices::Audio>>,
+    pub bios: Option<devices::Bios>,
+    pub board: Option<devices::Board>,
+    pub chassis: Option<devices::Chassis>,
+    pub gpu: Option<Vec<devices::GPU>>,
+    pub system: Option<devices::System>,
+    pub network: Option<Vec<devices::NetworkAdapter>>,
+    pub os: Option<software::OS>,
+    pub pci_peripherals: Option<Vec<devices::PCIPeripheral>>,
+    pub processor: Option<Vec<devices::ProcessorRequest>>,
+    pub usb_peripherals: Option<Vec<devices::USBPeripheral>>,
+    pub video: Option<Vec<devices::VideoCapture>>,
+    pub wireless: Option<Vec<devices::WirelessAdapter>>,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CertifiedResponse {
@@ -40,7 +59,7 @@ pub struct RelatedCertifiedSystemExistsResponse {
     pub status: String,
     pub board: devices::Board,
     pub chassis: Option<devices::Chassis>,
-    pub processor: Option<Vec<devices::Processor>>,
+    pub processor: Option<Vec<devices::ProcessorResponse>>,
     pub gpu: Option<Vec<devices::GPU>>,
     pub audio: Option<Vec<devices::Audio>>,
     pub video: Option<Vec<devices::VideoCapture>>,

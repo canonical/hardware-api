@@ -10,7 +10,7 @@ services:
       - .:/home/app
       - ./data:/home/app/data
     ports:
-      - "8080:8080"
+      - "8081:8080"
     environment:
       - DB_URL=sqlite:////home/app/data/hwapi-dev.db
 
