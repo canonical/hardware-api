@@ -38,8 +38,8 @@ from tests.data_generator import DataGenerator
 @pytest.fixture(scope="session")
 def db_url():
     """
-    Retrieves the database url from the environment variable TEST_DB_URL
-    or creates a new database and returns the url
+    Retrieves the database url from the environment variable DB_URL or creates a new
+    database and returns the url
     """
     db_url = environ.get("DB_URL")
     if db_url:

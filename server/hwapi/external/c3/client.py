@@ -33,7 +33,7 @@ logger = logging.getLogger(__name__)
 
 
 class C3Client:
-    """Class to work with C3 RESTAPI"""
+    """Class v2 API client"""
 
     def __init__(self, db: Session):
         self.db = db
@@ -43,7 +43,7 @@ class C3Client:
         Retrieve certified configurations from C3 and create corresponding models
         """
         logger.info(
-            f"Importing certified configurations and machines from {urls.C3_URL}"
+            "Importing certified configurations and machines from %s", urls.C3_URL
         )
         response = requests.get(
             urls.CERTIFIED_CONFIGURATIONS_URL + urls.LIMIT_OFFSET, timeout=120
@@ -146,6 +146,6 @@ class C3Client:
                 )
             except IntegrityError:
                 logging.error(
-                    "Got an error while importing certificates", exc_info=True
+                    "An error occurred while importing certificates", exc_info=True
                 )
                 continue
