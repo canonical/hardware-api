@@ -26,7 +26,7 @@ is located under the `./server/` directory.
 You can stand up the environment by running the following commands:
 
 ```bash
-# Assuming that the path to the DB file path is ./hwapi.db
+# Assuming that the path to the DB file is ./hwapi.db
 docker-compose build --build-arg IMPORT_TOOL_PATH="" --build-arg DB_URL=sqlite:///./hwapi.db hwapi-dev
 docker-compose up --attach-dependencies hwapi-dev
 ```
