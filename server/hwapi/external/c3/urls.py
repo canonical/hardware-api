@@ -16,20 +16,11 @@
 #
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
+"""Store C3 API URLs"""
+
+import os
 
 
-from pydantic import BaseModel
-
-
-class KernelPackageValidator(BaseModel):
-    name: str | None
-    version: str
-    signature: str | None
-
-
-class OSValidator(BaseModel):
-    distributor: str
-    version: str
-    codename: str
-    kernel: KernelPackageValidator
-    loaded_modules: list[str]
+C3_URL = os.environ.get("C3_URL", "https://certification.canonical.com")
+LIMIT_OFFSET = "?pagination=limitoffset&limit=0"
+CERTIFIED_CONFIGURATIONS_URL = f"{C3_URL}/api/v2/public-certificates/"

@@ -104,13 +104,11 @@ class DataGenerator:
     def gen_bios(
         self,
         vendor: models.Vendor,
-        firmware_version: str = "1.0.0",
         release_date: date = datetime.now() - timedelta(days=365),
         revision: str = "A01",
         version: str = "1.0.2",
     ) -> models.Bios:
         bios = models.Bios(
-            firmware_version=firmware_version,
             release_date=release_date,
             revision=revision,
             vendor=vendor,
@@ -124,7 +122,7 @@ class DataGenerator:
         self, certificate: models.Certificate, kernel: models.Kernel, bios: models.Bios
     ) -> models.Report:
         report = models.Report(
-            created_at=datetime.now(), kernel=kernel, bios=bios, certificate=certificate
+            architecture="amd64", kernel=kernel, bios=bios, certificate=certificate
         )
         self.db_session.add(report)
         self.db_session.commit()

@@ -17,19 +17,36 @@
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
+from datetime import datetime, date
 
 from pydantic import BaseModel
 
 
-class KernelPackageValidator(BaseModel):
-    name: str | None
-    version: str
-    signature: str | None
-
-
-class OSValidator(BaseModel):
-    distributor: str
-    version: str
+class Release(BaseModel):
     codename: str
-    kernel: KernelPackageValidator
-    loaded_modules: list[str]
+    release: str
+    release_date: date
+    supported_until: date
+    i_version: int
+
+
+class Bios(BaseModel):
+    name: str
+    vendor: str
+    version: str
+    firmware_type: str
+
+
+class PublicCertificate(BaseModel):
+    canonical_id: str
+    vendor: str
+    platform: str
+    configuration: str
+    created_at: datetime
+    completed: datetime
+    name: str
+    release: Release
+    architecture: str | None
+    kernel_version: str | None
+    bios: Bios | None
+    firmware_revision: str | None

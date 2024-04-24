@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 # Copyright 2024 Canonical Ltd.
 # All rights reserved.
 #
@@ -16,20 +17,30 @@
 #
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
+"""Import data from C3"""
+
+import logging
+from requests.exceptions import HTTPError
+
+from sqlalchemy.orm import Session
+
+from hwapi.data_models.setup import engine
+from hwapi.external.c3.client import C3Client
 
 
-from pydantic import BaseModel
+logger = logging.getLogger(__name__)
+logging.basicConfig(level=logging.INFO)
 
 
-class KernelPackageValidator(BaseModel):
-    name: str | None
-    version: str
-    signature: str | None
-
-
-class OSValidator(BaseModel):
-    distributor: str
-    version: str
-    codename: str
-    kernel: KernelPackageValidator
-    loaded_modules: list[str]
+if __name__ == "__main__":
+    session = Session(bind=engine)
+    c3_client = C3Client(db=session)
+    logger.info("Importing data from C3")
+    try:
+        c3_client.load_certified_configurations()
+    except HTTPError as exc:
+        logger.error(
+            "The %d error code was received from an upstream server",
+            exc.response.status_code,
+        )
+        raise
