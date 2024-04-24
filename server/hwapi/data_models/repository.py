@@ -41,12 +41,7 @@ def get_configs_by_vendor_and_model(
         platform_name = platform.name
         parenth_idx = platform_name.find("(")
         if parenth_idx != -1:
-            # Ignore also whitespace before the "("
-            platform_name = (
-                platform_name[: parenth_idx - 1]
-                if platform_name[parenth_idx - 1] == " "
-                else platform_name[:parenth_idx]
-            )
+            platform_name = platform_name[:parenth_idx].strip()
         if platform_name in model:
             filtered_platform = platform
 
@@ -79,3 +74,13 @@ def get_latest_certificate_for_configs(
     if latest_certificate is None or not latest_certificate.reports:
         return None
     return latest_certificate
+
+
+def get_or_create(db: Session, model, **kwargs):
+    """Check if the object with the specified parameters exists. If not, create it"""
+    instance = db.query(model).filter_by(**kwargs).first()
+    if not instance:
+        instance = model(**kwargs)
+        db.add(instance)
+        db.commit()
+    return instance

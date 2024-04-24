@@ -20,7 +20,7 @@
 
 from datetime import date, datetime
 
-from sqlalchemy import ForeignKey, String
+from sqlalchemy import ForeignKey, String, UniqueConstraint
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.orm import relationship
 
@@ -42,7 +42,7 @@ class Vendor(Base):
 
 class Platform(Base):
     __tablename__ = "platform"
-    name: Mapped[str] = mapped_column(unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(nullable=False)
     # Relationships
     vendor_id: Mapped[int] = mapped_column(ForeignKey("vendor.id"), index=True)
     vendor: Mapped[Vendor] = relationship(back_populates="platforms")
@@ -50,14 +50,18 @@ class Platform(Base):
         back_populates="platform"
     )
 
+    __table_args__ = (UniqueConstraint("name", "vendor_id"),)
+
 
 class Configuration(Base):
     __tablename__ = "configuration"
-    name: Mapped[str] = mapped_column(unique=True, nullable=False)
+    name: Mapped[str] = mapped_column(nullable=False)
     # Relationships
     platform_id: Mapped[int] = mapped_column(ForeignKey("platform.id"), index=True)
     platform: Mapped[Platform] = relationship(back_populates="configurations")
     machines: Mapped[list["Machine"]] = relationship(back_populates="configuration")
+
+    __table_args__ = (UniqueConstraint("name", "platform_id"),)
 
 
 class Machine(Base):
@@ -74,7 +78,7 @@ class Machine(Base):
 class Certificate(Base):
     __tablename__ = "certificate"
     created_at: Mapped[datetime] = mapped_column(nullable=False)
-    name: Mapped[str] = mapped_column(String(80), nullable=True)
+    name: Mapped[str] = mapped_column(String(80), unique=True, nullable=True)
     completed: Mapped[datetime] = mapped_column(nullable=True)
     # Relationships
     machine_id: Mapped[int] = mapped_column(
@@ -90,37 +94,29 @@ class Certificate(Base):
 
 class Release(Base):
     __tablename__ = "release"
-    id: Mapped[int] = mapped_column(primary_key=True, autoincrement=True)
     codename: Mapped[str] = mapped_column(String(64), nullable=False)
     release: Mapped[str] = mapped_column(String(64), nullable=False)
     release_date: Mapped[date] = mapped_column(nullable=True)
     supported_until: Mapped[date] = mapped_column(nullable=True)
     i_version: Mapped[int] = mapped_column(nullable=True)
     # Relationships
-    parent_id: Mapped[int] = mapped_column(
-        ForeignKey("release.id"), index=True, nullable=True
-    )
-    parent: Mapped["Release"] = relationship(
-        back_populates="children", remote_side=[id]
-    )
-    children: Mapped[list["Release"]] = relationship(back_populates="parent")
     certificates: Mapped[list["Certificate"]] = relationship(back_populates="release")
 
 
 class Kernel(Base):
     __tablename__ = "kernel"
-    name: Mapped[str] = mapped_column(nullable=False)
+    name: Mapped[str] = mapped_column(nullable=True)
     version: Mapped[str] = mapped_column(nullable=False)
-    signature: Mapped[str] = mapped_column(nullable=False)
+    signature: Mapped[str] = mapped_column(nullable=True)
     # Relationships
     reports: Mapped[list["Report"]] = relationship(back_populates="kernel")
 
 
 class Bios(Base):
     __tablename__ = "bios"
-    firmware_version: Mapped[str] = mapped_column(nullable=False)
-    release_date: Mapped[date] = mapped_column(nullable=False)
-    revision: Mapped[str] = mapped_column(nullable=False)
+    release_date: Mapped[date] = mapped_column(nullable=True)
+    firmware_revision: Mapped[str] = mapped_column(nullable=True)
+    revision: Mapped[str] = mapped_column(nullable=True)
     version: Mapped[str] = mapped_column(nullable=False)
     # Relationships
     vendor_id: Mapped[int] = mapped_column(
@@ -132,14 +128,14 @@ class Bios(Base):
 
 class Report(Base):
     __tablename__ = "report"
-    created_at: Mapped[datetime] = mapped_column(nullable=False)
+    architecture: Mapped[str] = mapped_column(nullable=True)
     # Relationships
     kernel_id: Mapped[int] = mapped_column(
-        ForeignKey("kernel.id"), index=True, nullable=False
+        ForeignKey("kernel.id"), index=True, nullable=True
     )
     kernel: Mapped[Kernel] = relationship(back_populates="reports")
     bios_id: Mapped[int] = mapped_column(
-        ForeignKey("bios.id"), index=True, nullable=False
+        ForeignKey("bios.id"), index=True, nullable=True
     )
     bios: Mapped[Bios] = relationship(back_populates="reports")
     certificate_id: Mapped[int] = mapped_column(

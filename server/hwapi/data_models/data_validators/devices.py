@@ -30,11 +30,11 @@ class AudioValidator(BaseModel):
 
 
 class BiosValidator(BaseModel):
-    firmware_revision: str
-    release_date: date
-    revision: str
     vendor: str
     version: str
+    revision: str | None
+    firmware_revision: str | None
+    release_date: date | None
 
 
 class BoardValidator(BaseModel):
