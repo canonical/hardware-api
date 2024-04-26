@@ -77,5 +77,5 @@ After that, create the archive and publish the package:
 ```bash
 :client/hwlib$ tar czvf ../hwlib_$VERSION.orig.tar.gz --exclude debian .
 :client/hwlib$ debuild -S -sa -k<your_gpg_key_short_ID>
-:client/hwlib$ dput ppa:<ppa_name> ../hwlib_$VERSION.orig.tar.gz
+:client/hwlib$ dput ppa:<ppa_name> ../hwlib_${VERSION}_source.changes
 ```
