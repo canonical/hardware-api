@@ -3,6 +3,7 @@
 
 import re
 import os.path
+import textwrap
 from pathlib import Path
 import datetime
 import argparse
@@ -28,14 +29,17 @@ def update_debian_changelog(file_path, package_name, new_version, email, distrib
     )
     # Convert name.surname@example.com to "Name Surname"
     full_name = " ".join(list(map(str.capitalize, email.split("@")[0].split("."))))
-    entry = textwrap.dedent(f"""
+    entry = textwrap.dedent(
+        f"""
       {package_name} ({new_version}) {distribution}; urgency=medium
-     
-      * Team upload.\n  * Package {package_name} {new_version}
-     
-      -- {full_name} <{email}>  {date}
-    
-    """).lstrip()
+
+        * Team upload.
+        * Package {package_name} {new_version}
+
+       -- {full_name} <{email}>  {date}
+
+    """
+    ).lstrip()
 
     with open(file_path, "r", encoding="utf-8") as control_file:
         content = control_file.read()
