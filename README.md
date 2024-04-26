@@ -118,33 +118,31 @@ This is the output you should get running the commands above:
 
 ```bash
     Finished dev [unoptimized + debuginfo] target(s) in 2.00s
-Certified(
-    CertifiedResponse {
-        status: "Certified",
-        os: OS {
-            distributor: "Ubuntu",
-            description: "Ubuntu 20.04.1 LTS",
-            version: "20.04",
-            codename: "focal",
-            kernel: KernelPackage {
-                name: "Linux",
-                version: "5.4.0-42-generic",
-                signature: "Sample Signature",
-            },
-            loaded_modules: [
-                "module1",
-                "module2",
-            ],
-        },
-        bios: Bios {
-            firmware_revision: "1.0",
-            release_date: "2020-01-01",
-            revision: "rev1",
-            vendor: "BIOSVendor",
-            version: "v1.0",
-        },
+Object {
+    "bios": Object {
+        "firmware_revision": String("1.0"),
+        "release_date": String("2020-01-01"),
+        "revision": String("rev1"),
+        "vendor": String("BIOSVendor"),
+        "version": String("v1.0"),
     },
-)
+    "os": Object {
+        "codename": String("focal"),
+        "description": String("Ubuntu 20.04.1 LTS"),
+        "distributor": String("Ubuntu"),
+        "kernel": Object {
+            "name": String("Linux"),
+            "signature": String("Sample Signature"),
+            "version": String("5.4.0-42-generic"),
+        },
+        "loaded_modules": Array [
+            String("module1"),
+            String("module2"),
+        ],
+        "version": String("20.04"),
+    },
+    "status": String("Certified"),
+}
 ```
 
 ## Building `hwctl` snap
