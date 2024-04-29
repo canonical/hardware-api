@@ -20,7 +20,10 @@
 
 import requests
 import logging
+from typing import Callable, Type
+from pydantic import BaseModel
 
+from sqlite3 import IntegrityError as SQLite3IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
@@ -45,20 +48,43 @@ class C3Client:
         logger.info(
             "Importing certified configurations and machines from %s", urls.C3_URL
         )
-        response = requests.get(
-            urls.CERTIFIED_CONFIGURATIONS_URL + urls.LIMIT_OFFSET, timeout=120
+        url = urls.PUBLIC_CERTIFICATES_URL + urls.get_limit_offset()
+        self._import_from_c3(
+            url,
+            self._load_certified_configurations_from_response,
+            response_models.PublicCertificate,
         )
-        response.raise_for_status()
-        objects = response.json()["results"]
-        for obj in objects:
-            public_cert = response_models.PublicCertificate(**obj)
-            try:
-                self._load_certified_configurations_from_response(public_cert)
-            except IntegrityError:
-                logging.error(
-                    "An error occurred while importing certificates", exc_info=True
-                )
-                continue
+
+    def load_devices(self):
+        """
+        Retrieve information about devices attached to certified machines
+        """
+        LIMIT = 500
+        logger.info("Importing devices from %s", urls.C3_URL)
+        url = urls.PUBLIC_DEVICES_URL + urls.get_limit_offset(LIMIT)
+        self._import_from_c3(
+            url,
+            self._load_device_instances_from_response,
+            response_models.PublicDeviceInstance,
+        )
+
+    def _import_from_c3(self, url: str, local_method: Callable, r_model: Type[BaseModel]):
+        next_url = url
+        while next_url is not None:
+            logging.info(f"Retrieving {next_url}")
+            response = requests.get(next_url, timeout=90)
+            response.raise_for_status()
+            next_url = response.json()["next"]
+            objects = response.json()["results"]
+            for obj in objects:
+                device_insance = r_model(**obj)
+                try:
+                    local_method(device_insance)
+                except (IntegrityError, SQLite3IntegrityError):
+                    logging.error(
+                        "An error occurred while importing data from C3", exc_info=True
+                    )
+                    continue
 
     def _load_certified_configurations_from_response(
         self, response: response_models.PublicCertificate
@@ -152,3 +178,55 @@ class C3Client:
             bios=bios,
             certificate=certificate,
         )
+
+    def _load_device_instances_from_response(
+        self, device_instance: response_models.PublicDeviceInstance
+    ):
+        machine = (
+            self.db.query(models.Machine)
+            .filter_by(canonical_id=device_instance.machine_canonical_id)
+            .first()
+        )
+        if machine is None:
+            raise ValueError(
+                f"Machine with canonical ID {device_instance.machine_canonical_id}"
+                " does not exist"
+            )
+        certificate = (
+            self.db.query(models.Certificate)
+            .filter_by(name=device_instance.certificate_name, machine_id=machine.id)
+            .first()
+        )
+        if certificate is None:
+            raise ValueError(
+                f"Certificate with name {device_instance.certificate_name} does not"
+                " exist"
+            )
+
+        device_data = device_instance.device
+        vendor = get_or_create(self.db, models.Vendor, name=device_data.vendor)
+        device = models.Device(
+            identifier=device_data.identifier,
+            name=device_data.name,
+            subproduct_name=device_data.subproduct_name,
+            vendor_id=vendor.id,
+            device_type=device_data.device_type,
+            bus=device_data.bus.value,
+            version=device_data.version,
+            subsystem=device_data.subsystem,
+            category=device_data.category.value,
+            codename=device_data.codename,
+        )
+        self.db.add(device)
+        self.db.commit()
+
+        report = (
+            self.db.query(models.Report)
+            .filter_by(certificate_id=certificate.id)
+            .first()
+        )
+        if not report:
+            report = models.Report(certificate_id=certificate.id)
+            self.db.add(report)
+        report.devices.append(device)
+        self.db.commit()

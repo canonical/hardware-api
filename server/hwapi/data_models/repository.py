@@ -18,6 +18,7 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
 
+from typing import Type
 from sqlalchemy.orm import Session
 
 from hwapi.data_models import models
@@ -76,7 +77,7 @@ def get_latest_certificate_for_configs(
     return latest_certificate
 
 
-def get_or_create(db: Session, model, **kwargs):
+def get_or_create(db: Session, model: Type[models.Base], **kwargs):
     """Check if the object with the specified parameters exists. If not, create it"""
     instance = db.query(model).filter_by(**kwargs).first()
     if not instance:

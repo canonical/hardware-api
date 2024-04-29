@@ -20,9 +20,19 @@
 
 from datetime import date, datetime
 
-from sqlalchemy import ForeignKey, String, UniqueConstraint
+from sqlalchemy import (
+    ForeignKey,
+    String,
+    UniqueConstraint,
+    Table,
+    Column,
+    Integer,
+    Enum,
+)
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 from sqlalchemy.orm import relationship
+
+from .enums import BusType, DeviceCategory
 
 
 class Base(DeclarativeBase):
@@ -38,6 +48,7 @@ class Vendor(Base):
     # Relationships
     platforms: Mapped[list["Platform"]] = relationship(back_populates="vendor")
     bioses: Mapped[list["Bios"]] = relationship(back_populates="vendor")
+    devices: Mapped[list["Device"]] = relationship(back_populates="vendor")
 
 
 class Platform(Base):
@@ -66,7 +77,7 @@ class Configuration(Base):
 
 class Machine(Base):
     __tablename__ = "machine"
-    canonical_id: Mapped[str] = mapped_column(unique=True, nullable=False)
+    canonical_id: Mapped[str] = mapped_column(unique=True, nullable=False, index=True)
     # Relationships
     configuration_id: Mapped[int] = mapped_column(
         ForeignKey("configuration.id"), index=True
@@ -77,8 +88,10 @@ class Machine(Base):
 
 class Certificate(Base):
     __tablename__ = "certificate"
+    name: Mapped[str] = mapped_column(
+        String(80), unique=True, nullable=False, index=True
+    )
     created_at: Mapped[datetime] = mapped_column(nullable=False)
-    name: Mapped[str] = mapped_column(String(80), unique=True, nullable=True)
     completed: Mapped[datetime] = mapped_column(nullable=True)
     # Relationships
     machine_id: Mapped[int] = mapped_column(
@@ -126,6 +139,14 @@ class Bios(Base):
     reports: Mapped[list["Report"]] = relationship(back_populates="bios")
 
 
+device_report_association = Table(
+    "device_report_association",
+    Base.metadata,
+    Column("device_id", Integer, ForeignKey("device.id"), primary_key=True),
+    Column("report_id", Integer, ForeignKey("report.id"), primary_key=True),
+)
+
+
 class Report(Base):
     __tablename__ = "report"
     architecture: Mapped[str] = mapped_column(nullable=True)
@@ -142,3 +163,25 @@ class Report(Base):
         ForeignKey("certificate.id"), index=True, nullable=False
     )
     certificate: Mapped[Certificate] = relationship(back_populates="reports")
+    devices = relationship(
+        "Device", secondary=device_report_association, back_populates="reports"
+    )
+
+
+class Device(Base):
+    __tablename__ = "device"
+    identifier: Mapped[str] = mapped_column(nullable=False)
+    name: Mapped[str] = mapped_column(nullable=False)
+    subproduct_name: Mapped[str] = mapped_column(nullable=True)
+    device_type: Mapped[str] = mapped_column(nullable=True)
+    bus: Mapped[str] = mapped_column(Enum(BusType), nullable=False)
+    version: Mapped[str] = mapped_column(String(10), nullable=True)
+    subsystem: Mapped[str] = mapped_column(nullable=True)
+    category: Mapped[str] = mapped_column(Enum(DeviceCategory), nullable=False)
+    codename: Mapped[str] = mapped_column(String(40), nullable=False)
+    # Relationships
+    vendor_id: Mapped[int] = mapped_column(ForeignKey("vendor.id"), index=True)
+    vendor = relationship("Vendor", back_populates="devices")
+    reports = relationship(
+        "Report", secondary=device_report_association, back_populates="devices"
+    )

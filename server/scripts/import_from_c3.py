@@ -38,6 +38,7 @@ if __name__ == "__main__":
     logger.info("Importing data from C3")
     try:
         c3_client.load_certified_configurations()
+        c3_client.load_devices()
     except HTTPError as exc:
         logger.error(
             "The %d error code was received from an upstream server",
