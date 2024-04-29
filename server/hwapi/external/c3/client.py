@@ -27,7 +27,7 @@ from sqlite3 import IntegrityError as SQLite3IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
-from hwapi.data_models import models
+from hwapi.data_models import models, enums
 from hwapi.data_models.repository import get_or_create
 from hwapi.external.c3 import response_models, urls
 
@@ -214,7 +214,11 @@ class C3Client:
             bus=device_data.bus.value,
             version=device_data.version,
             subsystem=device_data.subsystem,
-            category=device_data.category.value,
+            category=(
+                device_data.category.value
+                if device_data.category is not None
+                else enums.DeviceCategory.OTHER
+            ),
             codename=device_data.codename,
         )
         self.db.add(device)

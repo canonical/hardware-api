@@ -47,7 +47,7 @@ class Device(BaseModel):
     identifier: str
     subsystem: str | None
     version: str | None
-    category: DeviceCategory
+    category: DeviceCategory | None
     codename: str | None
 
 
