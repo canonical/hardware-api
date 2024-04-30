@@ -59,7 +59,7 @@ class C3Client:
         """
         Retrieve information about devices attached to certified machines
         """
-        LIMIT = 500
+        LIMIT = 1000
         logger.info("Importing devices from %s", urls.C3_URL)
         url = urls.PUBLIC_DEVICES_URL + urls.get_limit_offset(LIMIT)
         self._import_from_c3(
@@ -68,7 +68,9 @@ class C3Client:
             response_models.PublicDeviceInstance,
         )
 
-    def _import_from_c3(self, url: str, local_method: Callable, r_model: Type[BaseModel]):
+    def _import_from_c3(
+        self, url: str, local_method: Callable, r_model: Type[BaseModel]
+    ):
         next_url = url
         while next_url is not None:
             logging.info(f"Retrieving {next_url}")
@@ -89,20 +91,20 @@ class C3Client:
     def _load_certified_configurations_from_response(
         self, response: response_models.PublicCertificate
     ):
-        vendor = get_or_create(self.db, models.Vendor, name=response.vendor)
-        platform = get_or_create(
+        vendor, _ = get_or_create(self.db, models.Vendor, name=response.vendor)
+        platform, _ = get_or_create(
             self.db,
             models.Platform,
             name=response.platform,
             vendor_id=vendor.id,
         )
-        configuration = get_or_create(
+        configuration, _ = get_or_create(
             self.db,
             models.Configuration,
             name=response.configuration,
             platform_id=platform.id,
         )
-        machine = get_or_create(
+        machine, _ = get_or_create(
             self.db,
             models.Machine,
             canonical_id=response.canonical_id,
@@ -110,7 +112,7 @@ class C3Client:
         )
         kernel = None
         if response.kernel_version:
-            kernel = get_or_create(
+            kernel, _ = get_or_create(
                 self.db,
                 models.Kernel,
                 version=response.kernel_version,
@@ -138,10 +140,10 @@ class C3Client:
                     .first()
                 )
             if bios_vendor is None:
-                bios_vendor = get_or_create(
+                bios_vendor, _ = get_or_create(
                     self.db, models.Vendor, name=response.bios.vendor
                 )
-            bios = get_or_create(
+            bios, _ = get_or_create(
                 self.db,
                 models.Bios,
                 firmware_revision=response.firmware_revision,
@@ -152,7 +154,7 @@ class C3Client:
                 ),
                 vendor=bios_vendor,
             )
-        release = get_or_create(
+        release, _ = get_or_create(
             self.db,
             models.Release,
             codename=response.release.codename,
@@ -161,7 +163,7 @@ class C3Client:
             i_version=response.release.i_version,
             supported_until=response.release.supported_until,
         )
-        certificate = get_or_create(
+        certificate, _ = get_or_create(
             self.db,
             models.Certificate,
             name=response.name,
@@ -204,33 +206,37 @@ class C3Client:
             )
 
         device_data = device_instance.device
-        vendor = get_or_create(self.db, models.Vendor, name=device_data.vendor)
-        device = models.Device(
-            identifier=device_data.identifier,
+        vendor, _ = get_or_create(self.db, models.Vendor, name=device_data.vendor)
+        device, created = get_or_create(
+            self.db,
+            models.Device,
+            defaults={
+                "subproduct_name": device_data.subproduct_name,
+                "device_type": device_data.device_type,
+                "codename": device_data.codename,
+                "identifier": device_data.identifier,
+            },
             name=device_data.name,
-            subproduct_name=device_data.subproduct_name,
-            vendor_id=vendor.id,
-            device_type=device_data.device_type,
-            bus=device_data.bus.value,
             version=device_data.version,
+            vendor_id=vendor.id,
             subsystem=device_data.subsystem,
+            bus=device_data.bus.value,
             category=(
-                device_data.category.value
+                device_data.category
                 if device_data.category is not None
                 else enums.DeviceCategory.OTHER
-            ),
-            codename=device_data.codename,
+            ).value,
         )
-        self.db.add(device)
-        self.db.commit()
+        logger.info(
+            "Device: %s, %s. Created: %r",
+            device_data.name,
+            device_data.identifier,
+            created,
+        )
 
-        report = (
-            self.db.query(models.Report)
-            .filter_by(certificate_id=certificate.id)
-            .first()
+        report, created = get_or_create(
+            self.db, models.Report, certificate_id=certificate.id
         )
-        if not report:
-            report = models.Report(certificate_id=certificate.id)
-            self.db.add(report)
-        report.devices.append(device)
-        self.db.commit()
+        if created or device not in report.devices:
+            report.devices.append(device)
+            self.db.commit()

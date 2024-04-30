@@ -18,7 +18,7 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
 
-from typing import Type
+from typing import Type, Any
 from sqlalchemy.orm import Session
 
 from hwapi.data_models import models
@@ -77,11 +77,33 @@ def get_latest_certificate_for_configs(
     return latest_certificate
 
 
-def get_or_create(db: Session, model: Type[models.Base], **kwargs):
-    """Check if the object with the specified parameters exists. If not, create it"""
+def get_or_create(
+    db: Session,
+    model: Type[models.Base],
+    defaults: dict[str, Any] | None = None,
+    **kwargs
+):
+    """
+    Retrieves an object from the database based on the provided kwargs. If it doesn't
+    exist, it creates the object using both the kwargs and any additional default
+    attributes provided.
+
+    :param db: Database session
+    :param model: SQLAlchemy Model class
+    :param defaults: Dictionary of default values to initialise the model
+    :param kwargs: Keyword arguments corresponding to the model's attributes used for
+                   lookup and creation
+    :return: A tuple of (instance, created), where `created` is a boolean indicating
+             whether the instance was created in this call
+    """
     instance = db.query(model).filter_by(**kwargs).first()
-    if not instance:
-        instance = model(**kwargs)
-        db.add(instance)
-        db.commit()
-    return instance
+    if instance:
+        return instance, False
+
+    if defaults is not None:
+        kwargs.update(defaults)
+
+    instance = model(**kwargs)
+    db.add(instance)
+    db.commit()
+    return instance, True

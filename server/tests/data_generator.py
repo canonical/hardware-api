@@ -77,13 +77,14 @@ class DataGenerator:
         return created_release
 
     def gen_certificate(
-        self, machine: models.Machine, release: models.Release
+        self, machine: models.Machine, release: models.Release, name: str | None = None
     ) -> models.Certificate:
         certificate = models.Certificate(
             machine=machine,
             created_at=datetime.now(),
             release=release,
-            name=f"Certificate for {machine.canonical_id} with {release.codename}",
+            name=name
+            or f"Certificate for {machine.canonical_id} with {release.codename}",
             completed=datetime.now() + timedelta(days=10),
         )
         self.db_session.add(certificate)
