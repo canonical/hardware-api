@@ -28,11 +28,11 @@ Now you can use the lib in your Python code:
 ```python
 >>> import hwlib
 >>> hwlib.get_certification_status("https://example.com")
-{'NotSeen':{'status':'Not Seen'}}
+{'status':'Not Seen'}
 >>> import os
 >>> os.environ["CERTIFICATION_STATUS"] = "2"
 >>> hwlib.get_certification_status("https://example.com")
-{'Certified': {'status': 'Certified', 'os': {'distributor': 'Ubuntu', 'description': 'Ubuntu 20.04.1 LTS', 'version': '20.04', 'codename': 'focal', 'kernel': {'name': 'Linux', 'version': '5.4.0-42-generic', 'signature': 'Sample Signature'}, 'loaded_modules': ['module1', 'module2']}, 'bios': {'firmware_revision': '1.0', 'release_date': '2020-01-01', 'revision': 'rev1', 'vendor': 'BIOSVendor', 'version': 'v1.0'}}}
+{'bios': {'firmware_revision': '1.0', 'release_date': '2020-01-01', 'revision': 'rev1', 'vendor': 'BIOSVendor', 'version': 'v1.0'}, 'os': {'codename': 'focal', 'description': 'Ubuntu 20.04.1 LTS', 'distributor': 'Ubuntu', 'kernel': {'name': 'Linux', 'signature': 'Sample Signature', 'version': '5.4.0-42-generic'}, 'loaded_modules': ['module1', 'module2'], 'version': '20.04'}, 'status': 'Certified'}
 ```
 
 
@@ -77,5 +77,5 @@ After that, create the archive and publish the package:
 ```bash
 :client/hwlib$ tar czvf ../hwlib_$VERSION.orig.tar.gz --exclude debian .
 :client/hwlib$ debuild -S -sa -k<your_gpg_key_short_ID>
-:client/hwlib$ dput ppa:<ppa_name> ../hwlib_$VERSION.orig.tar.gz
+:client/hwlib$ dput ppa:<ppa_name> ../hwlib_${VERSION}_source.changes
 ```

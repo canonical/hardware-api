@@ -22,10 +22,7 @@
 pub mod models;
 pub mod py_bindings;
 use models::devices;
-use models::rbody::{
-    CertificationStatusResponse, CertifiedResponse, NotSeenResponse,
-    RelatedCertifiedSystemExistsResponse,
-};
+use models::rbody::{CertifiedResponse, RelatedCertifiedSystemExistsResponse};
 use models::software;
 
 fn get_certified_system_sample() -> CertifiedResponse {
@@ -112,22 +109,17 @@ fn get_related_certified_system_exists_sample() -> RelatedCertifiedSystemExistsR
     }
 }
 
-pub async fn get_certification_status(
-    _url: &str,
-) -> Result<CertificationStatusResponse, reqwest::Error> {
+pub async fn get_certification_status(_url: &str) -> Result<serde_json::Value, reqwest::Error> {
     let response_type = std::env::var("CERTIFICATION_STATUS")
         .unwrap_or_else(|_| "0".to_string())
         .parse::<i32>()
         .unwrap_or(0);
 
     let response = match response_type {
-        1 => CertificationStatusResponse::RelatedCertifiedSystemExists(
-            get_related_certified_system_exists_sample(),
-        ),
-        2 => CertificationStatusResponse::Certified(get_certified_system_sample()),
-        _ => CertificationStatusResponse::NotSeen(NotSeenResponse {
-            status: "Not Seen".to_string(),
-        }),
+        1 => serde_json::json!(get_related_certified_system_exists_sample()),
+        2 => serde_json::json!(get_certified_system_sample()),
+        _ => serde_json::json!({"status": "Not Seen"}),
     };
+
     Ok(response)
 }
