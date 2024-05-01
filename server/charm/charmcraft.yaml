@@ -1,5 +1,3 @@
-name: hardware-api
-type: charm
 summary: The Canonical Hardware API helps you determine if a given hardware platform is Ubuntu Certified.
 
 description: |
