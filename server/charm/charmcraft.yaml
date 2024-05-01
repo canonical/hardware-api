@@ -24,9 +24,3 @@ config:
         Acceptable values are: "info", "debug", "warning", "error" and "critical"
       default: "info"
       type: string
-
-resources:
-  hardware-api-image:
-    type: oci-image
-    description: OCI image for hardware-api
-    upstream-source: canonical/hardware-api
