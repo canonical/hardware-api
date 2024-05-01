@@ -1,6 +1,6 @@
 on:
   push:
-    branches: ["main", "charm-publishing"]
+    branches: ["main"]
     paths:
       - "server/**"
       - ".github/workflows/publish_server.yml"
