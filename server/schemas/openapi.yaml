@@ -17,15 +17,21 @@ components:
     BiosValidator:
       properties:
         firmware_revision:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Firmware Revision
-          type: string
         release_date:
-          format: date
+          anyOf:
+          - format: date
+            type: string
+          - type: 'null'
           title: Release Date
-          type: string
         revision:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Revision
-          type: string
         vendor:
           title: Vendor
           type: string
@@ -33,11 +39,11 @@ components:
           title: Version
           type: string
       required:
-      - firmware_revision
-      - release_date
-      - revision
       - vendor
       - version
+      - revision
+      - firmware_revision
+      - release_date
       title: BiosValidator
       type: object
     BoardValidator:
@@ -147,12 +153,17 @@ components:
         used on the system under test we had in the lab to certify the machine'
       properties:
         bios:
-          $ref: '#/components/schemas/BiosValidator'
+          anyOf:
+          - $ref: '#/components/schemas/BiosValidator'
+          - type: 'null'
         os:
           $ref: '#/components/schemas/OSValidator'
         status:
           const: Certified
+          enum:
+          - Certified
           title: Status
+          type: string
       required:
       - status
       - os
@@ -209,11 +220,15 @@ components:
     KernelPackageValidator:
       properties:
         name:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Name
-          type: string
         signature:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Signature
-          type: string
         version:
           title: Version
           type: string
@@ -253,7 +268,10 @@ components:
       properties:
         status:
           const: Not Seen
+          enum:
+          - Not Seen
           title: Status
+          type: string
       required:
       - status
       title: NotCertifiedResponse
@@ -262,9 +280,6 @@ components:
       properties:
         codename:
           title: Codename
-          type: string
-        description:
-          title: Description
           type: string
         distributor:
           title: Distributor
@@ -281,7 +296,6 @@ components:
           type: string
       required:
       - distributor
-      - description
       - version
       - codename
       - kernel
@@ -375,7 +389,10 @@ components:
           title: Processor
         status:
           const: Partially Certified
+          enum:
+          - Partially Certified
           title: Status
+          type: string
         usb_peripherals:
           anyOf:
           - items:
