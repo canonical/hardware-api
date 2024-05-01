@@ -1,0 +1,21 @@
+name: hardware-api
+display-name: Hardware API Server
+summary: The Canonical Hardware API helps you determine if a given hardware platform is Ubuntu Certified.
+
+description: |
+  Canonical Hardware API Server is a RESTful API server that provides access to
+  hardware information for a given machine, in particular helping you determine if a given hardware platform is Ubuntu Certified,
+  matches partially to a Certified system, or is not Certified.
+
+  For more information, see https://github.com/canonical/hardware-api
+  For schema, see https://canonical.github.io/hardware-api
+
+containers:
+  hardware-api:
+    resource: hardware-api-image
+
+resources:
+  hardware-api-image:
+    type: oci-image
+    description: OCI image for hardware-api
+    upstream-source: ghcr.io/canonical/hardware-api/hwapi:main

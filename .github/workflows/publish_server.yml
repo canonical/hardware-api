@@ -2,8 +2,8 @@ on:
   push:
     branches: ["main"]
     paths:
-      - 'server/**'
-      - '.github/workflows/publish_server.yml'
+      - "server/**"
+      - ".github/workflows/publish_server.yml"
 
 env:
   REGISTRY: ghcr.io
@@ -50,3 +50,19 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+
+  build-and-push-charm:
+    runs-on: [self-hosted, linux, xlarge, jammy, x64]
+    needs: build-and-push-image
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Upload charm to charmhub
+        uses: canonical/charming-actions/upload-charm@2.4.0
+        with:
+          charm-path: "server/charm"
+          credentials: "${{ secrets.CHARMHUB_TOKEN }}"
+          github-token: "${{ secrets.GITHUB_TOKEN }}"
+          upload-image: "true"
