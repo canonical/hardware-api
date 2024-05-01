@@ -1,6 +1,6 @@
 name: hardware-api
+display-name: Hardware API Server
 type: charm
-title: Hardware API Server
 summary: The Canonical Hardware API helps you determine if a given hardware platform is Ubuntu Certified.
 
 description: |
@@ -10,10 +10,6 @@ description: |
 
   For more information, see https://github.com/canonical/hardware-api
   For schema, see https://canonical.github.io/hardware-api
-
-containers:
-  hardware-api:
-    resource: hardware-api-image
 
 resources:
   hardware-api-image:
