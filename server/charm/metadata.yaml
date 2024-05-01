@@ -18,4 +18,4 @@ resources:
   hardware-api-image:
     type: oci-image
     description: OCI image for hardware-api
-    upstream-source: canonical/hardware-api
+    upstream-source: ghcr.io/canonical/hardware-api/hwapi
