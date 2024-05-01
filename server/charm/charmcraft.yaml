@@ -27,10 +27,6 @@ config:
       default: "info"
       type: string
 
-containers:
-  hardware-api:
-    resource: hardware-api-image
-
 resources:
   hardware-api-image:
     type: oci-image

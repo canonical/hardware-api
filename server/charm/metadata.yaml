@@ -11,6 +11,10 @@ description: |
   For more information, see https://github.com/canonical/hardware-api
   For schema, see https://canonical.github.io/hardware-api
 
+containers:
+  hardware-api:
+    resource: hardware-api-image
+
 resources:
   hardware-api-image:
     type: oci-image
