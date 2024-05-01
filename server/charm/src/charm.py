@@ -27,12 +27,12 @@ class CharmCharm(ops.CharmBase):
 
     def __init__(self, *args):
         super().__init__(*args)
-        self.framework.observe(self.on['hardware_api'].pebble_ready, self._on_hardware_api_pebble_ready)
+        self.framework.observe(self.on['hardware-api'].pebble_ready, self._on_hardware_api_pebble_ready)
         self.framework.observe(self.on.config_changed, self._on_config_changed)
 
     def _on_hardware_api_pebble_ready(self, event: ops.PebbleReadyEvent):
         container = event.workload
-        container.add_layer("hardware_api", self._pebble_layer, combine=True)
+        container.add_layer("hardware-api", self._pebble_layer, combine=True)
         container.replan()
         self.unit.status = ops.ActiveStatus()
 
@@ -40,9 +40,9 @@ class CharmCharm(ops.CharmBase):
         log_level = self.model.config["log-level"].lower()
 
         if log_level in VALID_LOG_LEVELS:
-            container = self.unit.get_container("hardware_api")
+            container = self.unit.get_container("hardware-api")
             if container.can_connect():
-                container.add_layer("hardware_api", self._pebble_layer, combine=True)
+                container.add_layer("hardware-api", self._pebble_layer, combine=True)
                 container.replan()
                 logger.debug("Log level changed to '%s'", log_level)
                 self.unit.status = ops.ActiveStatus()
@@ -56,9 +56,9 @@ class CharmCharm(ops.CharmBase):
     def _pebble_layer(self) -> ops.pebble.LayerDict:
         return {
             "summary": "httpbin layer",
-            "description": "pebble config layer for hardware_api",
+            "description": "pebble config layer for hardware-api",
             "services": {
-                "hardware_api": {
+                "hardware-api": {
                     "override": "replace",
                     "summary": "test observer API server",
                     "command": " ".join(
