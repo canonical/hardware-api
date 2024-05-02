@@ -53,6 +53,12 @@ class CharmCharm(ops.CharmBase):
             self.unit.status = ops.BlockedStatus("invalid log level: '{log_level}'")
 
     @property
+    def _app_environment(self):
+        """Environment variables needed by the application"""
+        env = {}
+        return env
+
+    @property
     def _pebble_layer(self) -> ops.pebble.LayerDict:
         return {
             "summary": "httpbin layer",
