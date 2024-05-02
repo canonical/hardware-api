@@ -15,3 +15,11 @@ config:
         Acceptable values are: "info", "debug", "warning", "error" and "critical"
       default: "info"
       type: string
+    port:
+      default: 30000
+      description: The port to listen on for incoming HTTP requests.
+      type: int
+    hostname:
+      default: hw
+      description: External hostname for the service.
+      type: string
