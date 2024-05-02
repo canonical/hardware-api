@@ -193,11 +193,11 @@ def test_load_devices(
         machine2, generator.gen_release(), name="2404-10612"
     )
     requests_mock.get(
-        "https://c3_url/api/v2/public-device-instances/?pagination=limitoffset&limit=1000",
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
         json={
             "count": 1,
             "next": (
-                "https://c3_url/api/v2/public-device-instances/"
+                "https://c3_url/api/v2/public-devices/"
                 "?pagination=limitoffset&limit=1000&offset=1000"
             ),
             "previous": None,
@@ -224,7 +224,7 @@ def test_load_devices(
     )
     requests_mock.get(
         (
-            "https://c3_url/api/v2/public-device-instances/?pagination=limitoffset"
+            "https://c3_url/api/v2/public-devices/?pagination=limitoffset"
             "&limit=1000&offset=1000"
         ),
         json={
@@ -308,7 +308,7 @@ def test_load_devices_duplicate_names(
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-device-instances/",
+        "https://c3_url/api/v2/public-devices/",
         json={
             "count": 3,
             "next": None,

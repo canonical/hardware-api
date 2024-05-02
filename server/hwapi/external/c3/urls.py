@@ -23,7 +23,7 @@ import os
 
 C3_URL = os.environ.get("C3_URL", "https://certification.canonical.com")
 PUBLIC_CERTIFICATES_URL = f"{C3_URL}/api/v2/public-certificates/"
-PUBLIC_DEVICES_URL = f"{C3_URL}/api/v2/public-device-instances/"
+PUBLIC_DEVICES_URL = f"{C3_URL}/api/v2/public-devices/"
 
 
 def get_limit_offset(limit: int = 0) -> str:
