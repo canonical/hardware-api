@@ -13,8 +13,8 @@ https://juju.is/docs/sdk/create-a-minimal-kubernetes-charm
 """
 
 import logging
-
 import ops
+from charms.nginx_ingress_integrator.v0.nginx_route import require_nginx_route
 
 # Log messages can be retrieved using juju debug-log
 logger = logging.getLogger(__name__)
@@ -27,8 +27,17 @@ class CharmCharm(ops.CharmBase):
 
     def __init__(self, *args):
         super().__init__(*args)
+        self._setup_nginx()
         self.framework.observe(self.on['hardware-api'].pebble_ready, self._on_hardware_api_pebble_ready)
         self.framework.observe(self.on.config_changed, self._on_config_changed)
+
+    def _setup_nginx(self):
+        require_nginx_route(
+            charm=self,
+            service_hostname=self.config["hostname"],
+            service_name=self.app.name,
+            service_port=int(self.config["port"]),
+        )
 
     def _on_hardware_api_pebble_ready(self, event: ops.PebbleReadyEvent):
         container = event.workload

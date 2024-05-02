@@ -19,3 +19,7 @@ resources:
     type: oci-image
     description: OCI image for hardware-api
     upstream-source: ghcr.io/canonical/hardware-api/hwapi:main
+
+requires:
+  nginx-route:
+    interface: nginx-route
