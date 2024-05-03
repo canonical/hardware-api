@@ -4,6 +4,7 @@ on:
     paths:
       - "server/**"
       - ".github/workflows/publish_server.yml"
+  workflow_dispatch:
 
 env:
   REGISTRY: ghcr.io
