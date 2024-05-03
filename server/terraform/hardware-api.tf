@@ -1,13 +1,11 @@
 terraform {
   required_providers {
     juju = {
-      version = "~> 0.12.0"
+      version = "~> 0.10.1"
       source  = "juju/juju"
     }
   }
 }
-
-provider "juju" {}
 
 variable "environment" {
   description = "The environment to deploy to (development, staging, production)"
