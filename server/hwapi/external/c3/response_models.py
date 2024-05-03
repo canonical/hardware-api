@@ -39,8 +39,8 @@ class Bios(BaseModel):
 
 
 class Device(BaseModel):
-    name: str
-    subproduct_name: str | None
+    name: str | None = None
+    subproduct_name: str | None = None
     vendor: str
     device_type: str | None
     bus: BusType
@@ -48,7 +48,7 @@ class Device(BaseModel):
     subsystem: str | None
     version: str | None
     category: DeviceCategory | None
-    codename: str | None
+    codename: str | None = None
 
 
 class PublicCertificate(BaseModel):

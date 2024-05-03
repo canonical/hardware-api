@@ -170,13 +170,13 @@ class Report(Base):
 
 class Device(Base):
     __tablename__ = "device"
-    identifier: Mapped[str] = mapped_column(nullable=False)
-    name: Mapped[str] = mapped_column(nullable=False)
-    subproduct_name: Mapped[str] = mapped_column(nullable=True)
-    device_type: Mapped[str] = mapped_column(nullable=True)
+    identifier: Mapped[str] = mapped_column(nullable=False, index=True)
+    name: Mapped[str] = mapped_column(nullable=False, index=True)
+    subproduct_name: Mapped[str] = mapped_column(nullable=False)
+    device_type: Mapped[str] = mapped_column(nullable=False)
     bus: Mapped[str] = mapped_column(Enum(BusType), nullable=False)
-    version: Mapped[str] = mapped_column(String(10), nullable=True)
-    subsystem: Mapped[str] = mapped_column(nullable=True)
+    version: Mapped[str] = mapped_column(String(10), nullable=False)
+    subsystem: Mapped[str] = mapped_column(nullable=False)
     category: Mapped[str] = mapped_column(Enum(DeviceCategory), nullable=False)
     codename: Mapped[str] = mapped_column(String(40), nullable=False)
     # Relationships

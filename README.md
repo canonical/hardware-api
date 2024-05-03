@@ -51,8 +51,8 @@ curl http://0.0.0.0:8080/v1/certification/status -X POST -H "Content-Type: appli
 
 ### Load the data from C3
 
-This approach populates the DB with the data from C3 (staging instance by default). 
-Keep in mind that importing data from stating or production takes some time, you probably
+This approach populates the DB with the data from C3 (staging instance by default).
+Keep in mind that importing data from staging or production takes some time, you probably
 can consider importing data from your local C3 instance with sample data.
 
 To build and run the container with staging data, execute the following command:

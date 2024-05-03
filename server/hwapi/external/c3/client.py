@@ -64,13 +64,18 @@ class C3Client:
         url = urls.PUBLIC_DEVICES_URL + urls.get_limit_offset(LIMIT)
         self._import_from_c3(
             url,
-            self._load_device_instances_from_response,
+            self._load_devices_from_response,
             response_models.PublicDeviceInstance,
         )
 
-    def _import_from_c3(
-        self, url: str, local_method: Callable, r_model: Type[BaseModel]
-    ):
+    def _import_from_c3(self, url: str, loader: Callable, resp_model: Type[BaseModel]):
+        """
+        A general method to load some kind of data from the specified C3 endpoint
+
+        :param url: C3 API endpoint (full URL)
+        :param loader: the private method to use for loading data from response
+        :param resp_model: pydantic model for response objects
+        """
         next_url = url
         while next_url is not None:
             logging.info(f"Retrieving {next_url}")
@@ -79,13 +84,17 @@ class C3Client:
             next_url = response.json()["next"]
             objects = response.json()["results"]
             for obj in objects:
-                device_insance = r_model(**obj)
+                device_insance = resp_model(**obj)
                 try:
-                    local_method(device_insance)
+                    loader(device_insance)
                 except (IntegrityError, SQLite3IntegrityError):
                     logging.error(
-                        "An error occurred while importing data from C3", exc_info=True
+                        "A DB error occurred while importing data from C3",
+                        exc_info=True,
                     )
+                    continue
+                except ValueError as exc:
+                    logging.error("Value error occured: %s", str(exc))
                     continue
 
     def _load_certified_configurations_from_response(
@@ -109,6 +118,12 @@ class C3Client:
             models.Machine,
             canonical_id=response.canonical_id,
             configuration_id=configuration.id,
+        )
+        logger.info(
+            "Vendor: %s\nConfiguration: %s\nMachine: %s\n",
+            vendor.name,
+            configuration.name,
+            machine.canonical_id,
         )
         kernel = None
         if response.kernel_version:
@@ -181,7 +196,7 @@ class C3Client:
             certificate=certificate,
         )
 
-    def _load_device_instances_from_response(
+    def _load_devices_from_response(
         self, device_instance: response_models.PublicDeviceInstance
     ):
         machine = (
@@ -211,15 +226,19 @@ class C3Client:
             self.db,
             models.Device,
             defaults={
-                "subproduct_name": device_data.subproduct_name,
-                "device_type": device_data.device_type,
+                "subproduct_name": (
+                    device_data.subproduct_name if device_data.subproduct_name else ""
+                ),
+                "device_type": (
+                    device_data.device_type if device_data.device_type else ""
+                ),
                 "codename": device_data.codename,
                 "identifier": device_data.identifier,
             },
-            name=device_data.name,
-            version=device_data.version,
+            name=device_data.name if device_data.name else "",
+            version=device_data.version if device_data.version else "",
             vendor_id=vendor.id,
-            subsystem=device_data.subsystem,
+            subsystem=device_data.subsystem if device_data.subsystem else "",
             bus=device_data.bus.value,
             category=(
                 device_data.category

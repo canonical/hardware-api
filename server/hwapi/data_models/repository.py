@@ -82,7 +82,7 @@ def get_or_create(
     model: Type[models.Base],
     defaults: dict[str, Any] | None = None,
     **kwargs
-):
+) -> tuple:
     """
     Retrieves an object from the database based on the provided kwargs. If it doesn't
     exist, it creates the object using both the kwargs and any additional default
