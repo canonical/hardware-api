@@ -1,13 +1,11 @@
 terraform {
   required_providers {
     juju = {
-      version = "~> 0.12.0"
+      version = "~> 0.10.1"
       source  = "juju/juju"
     }
   }
 }
-
-provider "juju" {}
 
 variable "environment" {
   description = "The environment to deploy to (development, staging, production)"
@@ -25,13 +23,13 @@ variable "external_ingress_hostname" {
   default     = "hw.ubuntu.com"
 }
 
-resource "juju_model" "hardware-api" {
-  name = "hardware-api-${var.environment}"
+locals {
+  app_model = "hardware-api-${var.environment}"
 }
 
 resource "juju_application" "hardware-api" {
   name  = "api"
-  model = juju_model.hardware-api.name
+  model = local.app_model
 
   charm {
     name    = "hardware-api"
@@ -48,7 +46,7 @@ resource "juju_application" "hardware-api" {
 
 resource "juju_application" "ingress" {
   name  = "ingress"
-  model = juju_model.hardware-api.name
+  model = local.app_model
   trust = true
 
   charm {
@@ -63,7 +61,7 @@ resource "juju_application" "ingress" {
 
 
 resource "juju_integration" "hardware-api-ingress" {
-  model = juju_model.hardware-api.name
+  model = local.app_model
 
   application {
     name = juju_application.hardware-api.name
