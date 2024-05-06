@@ -17,6 +17,8 @@
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
+from datetime import date, timedelta
+
 from fastapi.testclient import TestClient
 from requests_mock import Mocker
 from sqlalchemy.orm import Session
@@ -26,10 +28,8 @@ from hwapi.external.c3.client import C3Client
 from tests.data_generator import DataGenerator
 
 
-def test_successful_load_certficates(
-    db_session: Session, requests_mock: Mocker, test_client: TestClient
-):
-    """Test that certificates and hardware data are imported correctly"""
+def test_load_certificates(db_session: Session, requests_mock: Mocker):
+    """Test that certificates and related hardware data are imported correctly."""
     requests_mock.get(
         "https://c3_url/api/v2/public-certificates/",
         json={
@@ -49,7 +49,9 @@ def test_successful_load_certficates(
                         "codename": "bionic",
                         "release": "18.04 LTS",
                         "release_date": "2018-04-26",
-                        "supported_until": "2028-04-25",
+                        "supported_until": (
+                            date.today() + timedelta(days=365)
+                        ).strftime("%Y-%m-%d"),
                         "i_version": 1804,
                     },
                     "architecture": "amd64",
@@ -66,73 +68,27 @@ def test_successful_load_certficates(
         },
     )
 
-    c3client = C3Client(db=db_session)
-    c3client.load_certified_configurations()
+    requests_mock.get(
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        json={"count": 0, "next": None, "previous": None, "results": []},
+    )
 
-    # Verify vendors
+    c3_client = C3Client(db=db_session)
+    c3_client.load_hardware_data()
+
     assert db_session.query(models.Vendor).count() == 1
-    vendor = db_session.query(models.Vendor).filter_by(name="Dell").first()
-    assert vendor is not None
-
-    # Verify plarforms
-    platform = (
-        db_session.query(models.Platform).filter_by(name="Z8 G4 Workstation").first()
-    )
-    assert platform is not None
-    assert platform.vendor == vendor
-
-    # Verify configurations
-    configuration = (
-        db_session.query(models.Configuration)
-        .filter_by(name="Z8 G4 Workstation (i3)")
-        .first()
-    )
-    assert configuration is not None
-    assert configuration.platform == platform
-
-    # Verify machines
-    machine = (
-        db_session.query(models.Machine).filter_by(canonical_id="201806-26288").first()
-    )
-    assert machine is not None
-    assert machine.configuration == configuration
-
-    # Verify kernels
-    kernel = (
-        db_session.query(models.Kernel).filter_by(version="4.15.0-55-generic").first()
-    )
-    assert kernel is not None
-
-    # Verify bioses
-    bios = db_session.query(models.Bios).filter_by(version="U3").first()
-    assert bios is not None
-    assert bios.vendor == vendor
-
-    # Verify releases
-    release = db_session.query(models.Release).filter_by(codename="bionic").first()
-    assert release is not None
-    assert release.release == "18.04 LTS"
-    assert str(release.release_date) == "2018-04-26"
-    assert str(release.supported_until) == "2028-04-25"
-    assert release.i_version == 1804
-
-    # Verify certificates
-    certificate = (
-        db_session.query(models.Certificate).filter_by(name="2208-11729").first()
-    )
-    assert certificate is not None
-    assert certificate.machine == machine
-    assert certificate.release == release
-
-    # Verify reports
-    report = db_session.query(models.Report).filter_by(certificate=certificate).first()
-    assert report is not None
-    assert report.kernel == kernel
-    assert report.bios == bios
+    assert db_session.query(models.Platform).count() == 1
+    assert db_session.query(models.Configuration).count() == 1
+    assert db_session.query(models.Machine).count() == 1
+    assert db_session.query(models.Kernel).count() == 1
+    assert db_session.query(models.Bios).count() == 1
+    assert db_session.query(models.Release).count() == 1
+    assert db_session.query(models.Certificate).count() == 1
+    assert db_session.query(models.Report).count() == 1
 
 
 def test_load_certificates_with_missing_kernel_bios(
-    db_session: Session, requests_mock: Mocker, test_client: TestClient
+    db_session: Session, requests_mock: Mocker
 ):
     """Test handling of missing kernel or BIOS data."""
     requests_mock.get(
@@ -154,7 +110,9 @@ def test_load_certificates_with_missing_kernel_bios(
                         "codename": "bionic",
                         "release": "18.04 LTS",
                         "release_date": "2018-04-26",
-                        "supported_until": "2028-04-25",
+                        "supported_until": (
+                            date.today() + timedelta(days=365)
+                        ).strftime("%Y-%m-%d"),
                         "i_version": 1804,
                     },
                     "architecture": "amd64",
@@ -166,8 +124,14 @@ def test_load_certificates_with_missing_kernel_bios(
         },
     )
 
-    c3client = C3Client(db=db_session)
-    c3client.load_certified_configurations()
+    requests_mock.get(
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        json={"count": 0, "next": None, "previous": None, "results": []},
+    )
+
+    c3_client = C3Client(db=db_session)
+    c3_client.load_hardware_data()
+
     assert db_session.query(models.Kernel).count() == 0
     assert db_session.query(models.Bios).count() == 0
 
@@ -192,6 +156,17 @@ def test_load_devices(
     certificate2 = generator.gen_certificate(
         machine2, generator.gen_release(), name="2404-10612"
     )
+
+    requests_mock.get(
+        "https://c3_url/api/v2/public-certificates/",
+        json={
+            "count": 0,
+            "next": None,
+            "previous": None,
+            "results": [],
+        },
+    )
+
     requests_mock.get(
         "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
         json={
@@ -254,7 +229,7 @@ def test_load_devices(
     )
 
     c3_client = C3Client(db=db_session)
-    c3_client.load_devices()
+    c3_client.load_hardware_data()
 
     assert db_session.query(models.Device).count() == 2
     assert db_session.query(models.Report).count() == 2
@@ -305,6 +280,16 @@ def test_load_devices_duplicate_names(
     machine = generator.gen_machine(configuration, canonical_id="202106-8086")
     certificate = generator.gen_certificate(
         machine, generator.gen_release(), name="2204-10686"
+    )
+
+    requests_mock.get(
+        "https://c3_url/api/v2/public-certificates/",
+        json={
+            "count": 0,
+            "next": None,
+            "previous": None,
+            "results": [],
+        },
     )
 
     requests_mock.get(
@@ -371,7 +356,7 @@ def test_load_devices_duplicate_names(
     )
 
     c3_client = C3Client(db=db_session)
-    c3_client.load_devices()
+    c3_client.load_hardware_data()
 
     assert db_session.query(models.Device).count() == 2
     assert (

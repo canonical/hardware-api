@@ -41,10 +41,9 @@ class C3Client:
     def __init__(self, db: Session):
         self.db = db
 
-    def load_certified_configurations(self):
-        """
-        Retrieve certified configurations from C3 and create corresponding models
-        """
+    def load_hardware_data(self):
+        """Orchestrator that calls the loaders in the correct order"""
+        # Load certified configurations
         logger.info(
             "Importing certified configurations and machines from %s", urls.C3_URL
         )
@@ -55,10 +54,7 @@ class C3Client:
             response_models.PublicCertificate,
         )
 
-    def load_devices(self):
-        """
-        Retrieve information about devices attached to certified machines
-        """
+        # Load devices
         LIMIT = 1000
         logger.info("Importing devices from %s", urls.C3_URL)
         url = urls.PUBLIC_DEVICES_URL + urls.get_limit_offset(LIMIT)
@@ -84,9 +80,9 @@ class C3Client:
             next_url = response.json()["next"]
             objects = response.json()["results"]
             for obj in objects:
-                device_insance = resp_model(**obj)
+                instance = resp_model(**obj)
                 try:
-                    loader(device_insance)
+                    loader(instance)
                 except (IntegrityError, SQLite3IntegrityError):
                     logging.error(
                         "A DB error occurred while importing data from C3",
