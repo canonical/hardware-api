@@ -20,11 +20,14 @@
 
 import requests
 import logging
+from typing import Callable, Type
+from pydantic import BaseModel
 
+from sqlite3 import IntegrityError as SQLite3IntegrityError
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
-from hwapi.data_models import models
+from hwapi.data_models import models, enums
 from hwapi.data_models.repository import get_or_create
 from hwapi.external.c3 import response_models, urls
 
@@ -38,53 +41,89 @@ class C3Client:
     def __init__(self, db: Session):
         self.db = db
 
-    def load_certified_configurations(self):
-        """
-        Retrieve certified configurations from C3 and create corresponding models
-        """
+    def load_hardware_data(self):
+        """Orchestrator that calls the loaders in the correct order"""
+        # Load certified configurations
         logger.info(
             "Importing certified configurations and machines from %s", urls.C3_URL
         )
-        response = requests.get(
-            urls.CERTIFIED_CONFIGURATIONS_URL + urls.LIMIT_OFFSET, timeout=120
+        url = urls.PUBLIC_CERTIFICATES_URL + urls.get_limit_offset()
+        self._import_from_c3(
+            url,
+            self._load_certified_configurations_from_response,
+            response_models.PublicCertificate,
         )
-        response.raise_for_status()
-        objects = response.json()["results"]
-        for obj in objects:
-            public_cert = response_models.PublicCertificate(**obj)
-            try:
-                self._load_certified_configurations_from_response(public_cert)
-            except IntegrityError:
-                logging.error(
-                    "An error occurred while importing certificates", exc_info=True
-                )
-                continue
+
+        # Load devices
+        LIMIT = 1000
+        logger.info("Importing devices from %s", urls.C3_URL)
+        url = urls.PUBLIC_DEVICES_URL + urls.get_limit_offset(LIMIT)
+        self._import_from_c3(
+            url,
+            self._load_devices_from_response,
+            response_models.PublicDeviceInstance,
+        )
+
+    def _import_from_c3(self, url: str, loader: Callable, resp_model: Type[BaseModel]):
+        """
+        A general method to load some kind of data from the specified C3 endpoint
+
+        :param url: C3 API endpoint (full URL)
+        :param loader: the private method to use for loading data from response
+        :param resp_model: pydantic model for response objects
+        """
+        next_url = url
+        while next_url is not None:
+            logging.info(f"Retrieving {next_url}")
+            response = requests.get(next_url, timeout=90)
+            response.raise_for_status()
+            next_url = response.json()["next"]
+            objects = response.json()["results"]
+            for obj in objects:
+                instance = resp_model(**obj)
+                try:
+                    loader(instance)
+                except (IntegrityError, SQLite3IntegrityError):
+                    logging.error(
+                        "A DB error occurred while importing data from C3",
+                        exc_info=True,
+                    )
+                    continue
+                except ValueError as exc:
+                    logging.error("Value error occured: %s", str(exc))
+                    continue
 
     def _load_certified_configurations_from_response(
         self, response: response_models.PublicCertificate
     ):
-        vendor = get_or_create(self.db, models.Vendor, name=response.vendor)
-        platform = get_or_create(
+        vendor, _ = get_or_create(self.db, models.Vendor, name=response.vendor)
+        platform, _ = get_or_create(
             self.db,
             models.Platform,
             name=response.platform,
             vendor_id=vendor.id,
         )
-        configuration = get_or_create(
+        configuration, _ = get_or_create(
             self.db,
             models.Configuration,
             name=response.configuration,
             platform_id=platform.id,
         )
-        machine = get_or_create(
+        machine, _ = get_or_create(
             self.db,
             models.Machine,
             canonical_id=response.canonical_id,
             configuration_id=configuration.id,
         )
+        logger.info(
+            "Vendor: %s\nConfiguration: %s\nMachine: %s\n",
+            vendor.name,
+            configuration.name,
+            machine.canonical_id,
+        )
         kernel = None
         if response.kernel_version:
-            kernel = get_or_create(
+            kernel, _ = get_or_create(
                 self.db,
                 models.Kernel,
                 version=response.kernel_version,
@@ -112,10 +151,10 @@ class C3Client:
                     .first()
                 )
             if bios_vendor is None:
-                bios_vendor = get_or_create(
+                bios_vendor, _ = get_or_create(
                     self.db, models.Vendor, name=response.bios.vendor
                 )
-            bios = get_or_create(
+            bios, _ = get_or_create(
                 self.db,
                 models.Bios,
                 firmware_revision=response.firmware_revision,
@@ -126,7 +165,7 @@ class C3Client:
                 ),
                 vendor=bios_vendor,
             )
-        release = get_or_create(
+        release, _ = get_or_create(
             self.db,
             models.Release,
             codename=response.release.codename,
@@ -135,7 +174,7 @@ class C3Client:
             i_version=response.release.i_version,
             supported_until=response.release.supported_until,
         )
-        certificate = get_or_create(
+        certificate, _ = get_or_create(
             self.db,
             models.Certificate,
             name=response.name,
@@ -152,3 +191,67 @@ class C3Client:
             bios=bios,
             certificate=certificate,
         )
+
+    def _load_devices_from_response(
+        self, device_instance: response_models.PublicDeviceInstance
+    ):
+        machine = (
+            self.db.query(models.Machine)
+            .filter_by(canonical_id=device_instance.machine_canonical_id)
+            .first()
+        )
+        if machine is None:
+            raise ValueError(
+                f"Machine with canonical ID {device_instance.machine_canonical_id}"
+                " does not exist"
+            )
+        certificate = (
+            self.db.query(models.Certificate)
+            .filter_by(name=device_instance.certificate_name, machine_id=machine.id)
+            .first()
+        )
+        if certificate is None:
+            raise ValueError(
+                f"Certificate with name {device_instance.certificate_name} does not"
+                " exist"
+            )
+
+        device_data = device_instance.device
+        vendor, _ = get_or_create(self.db, models.Vendor, name=device_data.vendor)
+        device, created = get_or_create(
+            self.db,
+            models.Device,
+            defaults={
+                "subproduct_name": (
+                    device_data.subproduct_name if device_data.subproduct_name else ""
+                ),
+                "device_type": (
+                    device_data.device_type if device_data.device_type else ""
+                ),
+                "codename": device_data.codename,
+                "identifier": device_data.identifier,
+            },
+            name=device_data.name if device_data.name else "",
+            version=device_data.version if device_data.version else "",
+            vendor_id=vendor.id,
+            subsystem=device_data.subsystem if device_data.subsystem else "",
+            bus=device_data.bus.value,
+            category=(
+                device_data.category
+                if device_data.category is not None
+                else enums.DeviceCategory.OTHER
+            ).value,
+        )
+        logger.info(
+            "Device: %s, %s. Created: %r",
+            device_data.name,
+            device_data.identifier,
+            created,
+        )
+
+        report, created = get_or_create(
+            self.db, models.Report, certificate_id=certificate.id
+        )
+        if created or device not in report.devices:
+            report.devices.append(device)
+            self.db.commit()

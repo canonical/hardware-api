@@ -22,5 +22,10 @@ import os
 
 
 C3_URL = os.environ.get("C3_URL", "https://certification.canonical.com")
-LIMIT_OFFSET = "?pagination=limitoffset&limit=0"
-CERTIFIED_CONFIGURATIONS_URL = f"{C3_URL}/api/v2/public-certificates/"
+PUBLIC_CERTIFICATES_URL = f"{C3_URL}/api/v2/public-certificates/"
+PUBLIC_DEVICES_URL = f"{C3_URL}/api/v2/public-devices/"
+
+
+def get_limit_offset(limit: int = 0) -> str:
+    """Return string in format '?pagination=limitoffset&limit={limit}'"""
+    return f"?pagination=limitoffset&limit={limit}"

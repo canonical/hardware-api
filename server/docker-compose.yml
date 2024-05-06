@@ -12,6 +12,7 @@ services:
     working_dir: /home/code
     volumes:
       - ./hwapi:/home/code/hwapi
+      - ./scripts:/home/code/scripts
     ports:
       - "8080:8080"
 

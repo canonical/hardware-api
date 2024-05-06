@@ -18,8 +18,9 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
 from datetime import datetime, date
-
 from pydantic import BaseModel
+
+from hwapi.data_models.enums import BusType, DeviceCategory
 
 
 class Release(BaseModel):
@@ -37,6 +38,19 @@ class Bios(BaseModel):
     firmware_type: str
 
 
+class Device(BaseModel):
+    name: str | None = None
+    subproduct_name: str | None = None
+    vendor: str
+    device_type: str | None
+    bus: BusType
+    identifier: str
+    subsystem: str | None
+    version: str | None
+    category: DeviceCategory | None
+    codename: str | None = None
+
+
 class PublicCertificate(BaseModel):
     canonical_id: str
     vendor: str
@@ -50,3 +64,10 @@ class PublicCertificate(BaseModel):
     kernel_version: str | None
     bios: Bios | None
     firmware_revision: str | None
+
+
+class PublicDeviceInstance(BaseModel):
+    machine_canonical_id: str
+    certificate_name: str
+    device: Device
+    driver_name: str
