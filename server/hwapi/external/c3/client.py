@@ -97,6 +97,8 @@ class C3Client:
                         "A DB error occurred while importing data from C3",
                         exc_info=True,
                     )
+                    # Without this the sqlalchemy.exc.PendingRollbackError exception occurs
+                    self.db.rollback()
                     continue
                 except ValueError as exc:
                     logging.error("Value error occured: %s", str(exc))

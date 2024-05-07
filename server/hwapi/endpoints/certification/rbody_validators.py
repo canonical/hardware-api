@@ -44,9 +44,10 @@ class CertificationStatusRequest(BaseModel):
 
     vendor: str
     model: str
+    architecture: str
+    board: BoardValidator
     os: OSValidator | None = None
     bios: BiosValidator | None = None
-    board: BoardValidator | None = None
     chassis: ChassisValidator | None = None
     processor: list[ProcessorValidator] = []
     gpu: list[GPUValidator] | None = None

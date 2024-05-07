@@ -66,6 +66,9 @@ components:
     CertificationStatusRequest:
       description: Request body validator for status check endpoint
       properties:
+        architecture:
+          title: Architecture
+          type: string
         audio:
           anyOf:
           - items:
@@ -78,9 +81,7 @@ components:
           - $ref: '#/components/schemas/BiosValidator'
           - type: 'null'
         board:
-          anyOf:
-          - $ref: '#/components/schemas/BoardValidator'
-          - type: 'null'
+          $ref: '#/components/schemas/BoardValidator'
         chassis:
           anyOf:
           - $ref: '#/components/schemas/ChassisValidator'
@@ -144,6 +145,8 @@ components:
       required:
       - vendor
       - model
+      - architecture
+      - board
       title: CertificationStatusRequest
       type: object
     CertifiedResponse:
@@ -194,7 +197,12 @@ components:
     GPUValidator:
       properties:
         family:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Family
+        identifier:
+          title: Identifier
           type: string
         manufacturer:
           title: Manufacturer
@@ -203,9 +211,9 @@ components:
           title: Version
           type: string
       required:
-      - family
       - manufacturer
       - version
+      - identifier
       title: GPUValidator
       type: object
     HTTPValidationError:
@@ -247,8 +255,8 @@ components:
         capacity:
           title: Capacity
           type: integer
-        id:
-          title: Id
+        identifier:
+          title: Identifier
           type: string
         model:
           title: Model
@@ -258,7 +266,7 @@ components:
           type: string
       required:
       - bus
-      - id
+      - identifier
       - model
       - vendor
       - capacity

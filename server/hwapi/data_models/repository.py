@@ -19,9 +19,13 @@
 
 
 from typing import Type, Any
+from sqlalchemy import and_, or_, true
 from sqlalchemy.orm import Session
 
 from hwapi.data_models import models
+from hwapi.data_models.enums import DeviceCategory
+from hwapi.data_models.data_validators.software import OSValidator
+from hwapi.data_models.data_validators import devices as device_validators
 
 
 def get_configs_by_vendor_and_model(
@@ -81,7 +85,7 @@ def get_or_create(
     db: Session,
     model: Type[models.Base],
     defaults: dict[str, Any] | None = None,
-    **kwargs
+    **kwargs,
 ) -> tuple:
     """
     Retrieves an object from the database based on the provided kwargs. If it doesn't
@@ -107,3 +111,134 @@ def get_or_create(
     db.add(instance)
     db.commit()
     return instance, True
+
+
+def get_machines_with_same_hardware_params(
+    db: Session,
+    arch: str,
+    board: models.Device,
+    release: models.Release | None,
+) -> list[models.Machine]:
+    """
+    Retrieve all the machines that have the given board and architecture and are
+    certified for the given release
+    """
+    return (
+        db.query(models.Machine)
+        .join(models.Certificate)
+        .join(models.Report, models.Certificate.reports)
+        .join(
+            models.device_report_association,
+            models.Report.id == models.device_report_association.c.report_id,
+        )
+        .join(
+            models.Device,
+            models.device_report_association.c.device_id == models.Device.id,
+        )
+        .filter(
+            and_(
+                models.Device.id == board.id,
+                models.Report.architecture == arch,
+                (
+                    models.Certificate.release_id == release.id
+                    if release is not None
+                    else true
+                ),
+            )
+        )
+        .distinct()
+        .all()
+    )
+
+
+def get_release_from_os(db: Session, os: OSValidator) -> models.Release:
+    """Return release object matching given OS data"""
+    release = (
+        db.query(models.Release)
+        .filter_by(release=os.version, codename=os.codename)
+        .first()
+    )
+    if release is None:
+        raise ValueError(f"No matching release found for {os.version}")
+    return release
+
+
+def clean_vendor_name(name):
+    """Remove "Inc"/"Inc." substring from vendor name and leading whitespaces"""
+    return name.replace("Inc.", "").replace("Inc", "").strip()
+
+
+def get_board_by_validator_data(
+    db: Session, board_validator: device_validators.BoardValidator
+) -> models.Device:
+    """Return device object (category==BOARD) matching given Board data"""
+    board = (
+        db.query(models.Device)
+        .join(models.Vendor)
+        .filter(
+            and_(
+                models.Vendor.name.in_(
+                    [
+                        board_validator.manufacturer,
+                        clean_vendor_name(board_validator.manufacturer),
+                    ]
+                ),
+                models.Device.name == board_validator.product_name,
+                models.Device.version == board_validator.version,
+                models.Device.category.in_(
+                    [DeviceCategory.BOARD.value, DeviceCategory.OTHER.value]
+                ),
+            )
+        )
+        .first()
+    )
+    if board is None:
+        raise ValueError(
+            f"Matching board was not found for board {board_validator.product_name}"
+        )
+    return board
+
+
+def find_matching_gpu(
+    db: Session, machine_ids: list[int], gpu_validator: device_validators.GPUValidator
+) -> models.Device | None:
+    """
+    Find a GPU device across the given list of machines that matches the parameters
+    specified in the GPUValidator
+    """
+    gpu = (
+        db.query(models.Device)
+        .join(
+            models.device_report_association,
+            models.Device.id == models.device_report_association.c.device_id,
+        )
+        .join(
+            models.Report,
+            models.device_report_association.c.report_id == models.Report.id,
+        )
+        .join(models.Certificate, models.Report.certificate_id == models.Certificate.id)
+        .filter(
+            and_(
+                models.Certificate.machine_id.in_(machine_ids),
+                models.Device.name.ilike(f"%{gpu_validator.family}%"),
+                models.Device.vendor.has(
+                    or_(
+                        models.Vendor.name == gpu_validator.manufacturer,
+                        models.Vendor.name == clean_vendor_name(gpu_validator.manufacturer)
+                    )
+                ),
+                (
+                    models.Device.version == gpu_validator.version
+                    if gpu_validator.version is not None
+                    else true
+                ),
+                models.Device.identifier == gpu_validator.identifier,
+                models.Device.category.in_(
+                    [DeviceCategory.VIDEO.value, DeviceCategory.OTHER.value]
+                ),
+            )
+        )
+        .first()
+    )
+
+    return gpu

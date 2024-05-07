@@ -51,16 +51,17 @@ class ChassisValidator(BaseModel):
 
 
 class GPUValidator(BaseModel):
-    family: str
+    family: str | None = None
     manufacturer: str
     version: str
+    identifier: str
 
 
 class NetworkAdapterValidator(BaseModel):
     """Validator for ethernet network adapters"""
 
     bus: str
-    id: str
+    identifier: str
     model: str
     vendor: str
     capacity: int
