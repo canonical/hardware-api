@@ -18,9 +18,9 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
 
-from typing import Type, Any
-from sqlalchemy import and_, or_, true
-from sqlalchemy.orm import Session
+from typing import Any
+from sqlalchemy import and_, true
+from sqlalchemy.orm import Session, Query
 
 from hwapi.data_models import models
 from hwapi.data_models.enums import DeviceCategory
@@ -83,7 +83,7 @@ def get_latest_certificate_for_configs(
 
 def get_or_create(
     db: Session,
-    model: Type[models.Base],
+    model: type[models.Base],
     defaults: dict[str, Any] | None = None,
     **kwargs,
 ) -> tuple:
@@ -116,7 +116,7 @@ def get_or_create(
 def get_machines_with_same_hardware_params(
     db: Session,
     arch: str,
-    board: models.Device,
+    board: models.Device | None,
     release: models.Release | None,
 ) -> list[models.Machine]:
     """
@@ -137,7 +137,7 @@ def get_machines_with_same_hardware_params(
         )
         .filter(
             and_(
-                models.Device.id == board.id,
+                models.Device.id == board.id if board else true,
                 models.Report.architecture == arch,
                 (
                     models.Certificate.release_id == release.id
@@ -170,7 +170,7 @@ def clean_vendor_name(name):
 
 def get_board_by_validator_data(
     db: Session, board_validator: device_validators.BoardValidator
-) -> models.Device:
+) -> models.Device | None:
     """Return device object (category==BOARD) matching given Board data"""
     board = (
         db.query(models.Device)
@@ -192,21 +192,11 @@ def get_board_by_validator_data(
         )
         .first()
     )
-    if board is None:
-        raise ValueError(
-            f"Matching board was not found for board {board_validator.product_name}"
-        )
     return board
 
 
-def find_matching_gpu(
-    db: Session, machine_ids: list[int], gpu_validator: device_validators.GPUValidator
-) -> models.Device | None:
-    """
-    Find a GPU device across the given list of machines that matches the parameters
-    specified in the GPUValidator
-    """
-    gpu = (
+def get_joined_device_query(db: Session, machine_ids: list[int]) -> Query:
+    return (
         db.query(models.Device)
         .join(
             models.device_report_association,
@@ -217,28 +207,55 @@ def find_matching_gpu(
             models.device_report_association.c.report_id == models.Report.id,
         )
         .join(models.Certificate, models.Report.certificate_id == models.Certificate.id)
-        .filter(
-            and_(
-                models.Certificate.machine_id.in_(machine_ids),
-                models.Device.name.ilike(f"%{gpu_validator.family}%"),
-                models.Device.vendor.has(
-                    or_(
-                        models.Vendor.name == gpu_validator.manufacturer,
-                        models.Vendor.name == clean_vendor_name(gpu_validator.manufacturer)
-                    )
-                ),
-                (
-                    models.Device.version == gpu_validator.version
-                    if gpu_validator.version is not None
-                    else true
-                ),
-                models.Device.identifier == gpu_validator.identifier,
-                models.Device.category.in_(
-                    [DeviceCategory.VIDEO.value, DeviceCategory.OTHER.value]
-                ),
-            )
-        )
-        .first()
+        .filter(models.Certificate.machine_id.in_(machine_ids))
     )
 
-    return gpu
+
+def find_matching_cpu(
+    db: Session,
+    devices_query: Query,
+    cpu_validator: device_validators.ProcessorValidator,
+) -> models.Device | None:
+    """
+    Find a CPU device across the given list of machines that matches the parameters
+    specified in the ProcessorValidator
+    """
+    return devices_query.filter(
+        and_(
+            models.Device.name == cpu_validator.version,
+            models.Device.category == DeviceCategory.PROCESSOR.value,
+        ),
+    ).first()
+
+
+def find_matching_gpu(
+    db: Session, devices_query: Query, gpu_validator: device_validators.GPUValidator
+) -> models.Device | None:
+    """
+    Find a GPU device across the given list of machines that matches the parameters
+    specified in the GPUValidator
+    """
+    return devices_query.filter(
+        and_(
+            models.Device.name == gpu_validator.version,
+            models.Device.identifier == gpu_validator.identifier.lower(),
+            models.Device.category.in_(
+                [DeviceCategory.VIDEO.value, DeviceCategory.OTHER.value]
+            ),
+        )
+    ).first()
+
+
+def find_matching_network_device(
+    db: Session,
+    devices_query: Query,
+    network_validator: device_validators.NetworkAdapterValidator,
+) -> models.Device | None:
+    return devices_query.filter(
+        and_(
+            models.Device.identifier == network_validator.identifier,
+            models.Device.name == network_validator.model,
+            models.Device.bus == network_validator.bus,
+            models.Device.category == DeviceCategory.NETWORK.value,
+        ),
+    ).first()

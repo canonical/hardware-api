@@ -163,12 +163,12 @@ components:
           $ref: '#/components/schemas/OSValidator'
         status:
           const: Certified
+          default: Certified
           enum:
           - Certified
           title: Status
           type: string
       required:
-      - status
       - os
       - bios
       title: CertifiedResponse
@@ -276,12 +276,11 @@ components:
       properties:
         status:
           const: Not Seen
+          default: Not Seen
           enum:
           - Not Seen
           title: Status
           type: string
-      required:
-      - status
       title: NotCertifiedResponse
       type: object
     OSValidator:
@@ -354,6 +353,9 @@ components:
 
         were tested on other systems that the machine has'
       properties:
+        architecture:
+          title: Architecture
+          type: string
         audio:
           anyOf:
           - items:
@@ -362,7 +364,9 @@ components:
           - type: 'null'
           title: Audio
         board:
-          $ref: '#/components/schemas/BoardValidator'
+          anyOf:
+          - $ref: '#/components/schemas/BoardValidator'
+          - type: 'null'
         chassis:
           anyOf:
           - $ref: '#/components/schemas/ChassisValidator'
@@ -397,6 +401,7 @@ components:
           title: Processor
         status:
           const: Partially Certified
+          default: Partially Certified
           enum:
           - Partially Certified
           title: Status
@@ -423,8 +428,7 @@ components:
           - type: 'null'
           title: Wireless
       required:
-      - status
-      - board
+      - architecture
       title: RelatedCertifiedSystemExistsResponse
       type: object
     USBPeripheralValidator:

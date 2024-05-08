@@ -65,13 +65,13 @@ class CertifiedResponse(BaseModel):
     used on the system under test we had in the lab to certify the machine
     """
 
-    status: Literal[CertificationStatus.CERTIFIED]
+    status: Literal[CertificationStatus.CERTIFIED] = CertificationStatus.CERTIFIED
     os: OSValidator
     bios: BiosValidator | None
 
 
 class NotCertifiedResponse(BaseModel):
-    status: Literal[CertificationStatus.NOT_SEEN]
+    status: Literal[CertificationStatus.NOT_SEEN] = CertificationStatus.NOT_SEEN
 
 
 class RelatedCertifiedSystemExistsResponse(BaseModel):
@@ -80,8 +80,11 @@ class RelatedCertifiedSystemExistsResponse(BaseModel):
     were tested on other systems that the machine has
     """
 
-    status: Literal[CertificationStatus.PARTIALLY_CERTIFIED]
-    board: BoardValidator
+    status: Literal[CertificationStatus.PARTIALLY_CERTIFIED] = (
+        CertificationStatus.PARTIALLY_CERTIFIED
+    )
+    architecture: str
+    board: BoardValidator | None = None
     chassis: ChassisValidator | None = None
     processor: list[ProcessorValidator] | None = None
     gpu: list[GPUValidator] | None = None

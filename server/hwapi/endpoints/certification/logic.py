@@ -26,7 +26,6 @@ from hwapi.endpoints.certification.rbody_validators import (
     RelatedCertifiedSystemExistsResponse,
 )
 from hwapi.data_models import data_validators, repository
-from hwapi.data_models.enums import CertificationStatus
 
 
 def is_certified(
@@ -50,7 +49,6 @@ def is_certified(
     bios = report.bios
 
     return True, CertifiedResponse(
-        status=CertificationStatus.CERTIFIED,
         os=data_validators.OSValidator(
             distributor="Canonical Ltd.",
             version=latest_certificate.release.release,
@@ -89,27 +87,66 @@ def is_partially_certified(
     )
     machine_ids = [machine.id for machine in machines]
 
+    devices_query = repository.get_joined_device_query(db, machine_ids)
+    cpus = []
+    if system_info.processor:
+        for cpu_info in system_info.processor:
+            cpu = repository.find_matching_cpu(db, devices_query, cpu_info)
+            if cpu is None:
+                continue
+            cpus.append(
+                data_validators.ProcessorValidator(
+                    manufacturer=cpu.vendor.name,
+                    version=cpu.name,
+                    frequency=cpu_info.frequency,
+                    family=cpu_info.family,
+                )
+            )
+
     gpus = []
     if system_info.gpu:
         for gpu_info in system_info.gpu:
-            gpu = repository.find_matching_gpu(db, machine_ids, gpu_info)
+            gpu = repository.find_matching_gpu(db, devices_query, gpu_info)
             if gpu is None:
                 continue
             gpus.append(
                 data_validators.GPUValidator(
                     manufacturer=gpu.vendor.name,
-                    version=gpu.version,
+                    version=gpu.name,
                     identifier=gpu.identifier,
                 )
             )
-    if not any([gpus]):
+    network_devices = []
+    if system_info.network:
+        for network_info in system_info.network:
+            network_device = repository.find_matching_network_device(
+                db, devices_query, network_info
+            )
+            if network_device is None:
+                continue
+            network_devices.append(
+                data_validators.NetworkAdapterValidator(
+                    bus=network_device.bus,
+                    identifier=network_device.identifier,
+                    model=network_device.name,
+                    vendor=network_device.vendor.name,
+                    capacity=network_info.capacity,
+                )
+            )
+    # If there are no matching devices of any time, return False
+    if not any([gpus, cpus, network_devices]):
         return False, None
     return True, RelatedCertifiedSystemExistsResponse(
-        status=CertificationStatus.PARTIALLY_CERTIFIED,
-        board=data_validators.BoardValidator(
-            manufacturer=board.vendor.name,
-            version=board.version,
-            product_name=board.name,
+        architecture=system_info.architecture,
+        board=(
+            data_validators.BoardValidator(
+                manufacturer=board.vendor.name,
+                version=board.version,
+                product_name=board.name,
+            )
+            if board
+            else None
         ),
         gpu=gpus,
+        processor=cpus,
     )

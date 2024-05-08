@@ -40,7 +40,16 @@ def test_certified_status(generator: DataGenerator, test_client: TestClient):
 
     response = test_client.post(
         "/v1/certification/status",
-        json={"vendor": vendor.name, "model": "Precision 3690 aaaa"},
+        json={
+            "vendor": vendor.name,
+            "model": "Precision 3690 aaaa",
+            "architecture": "amd64",
+            "board": {
+                "manufacturer": "Dell Inc.",
+                "product_name": "sample board",
+                "version": "1.1.1",
+            },
+        },
     )
 
     assert response.status_code == 200
@@ -74,7 +83,16 @@ def test_vendor_model_not_found(test_client: TestClient):
     """
     response = test_client.post(
         "/v1/certification/status",
-        json={"vendor": "Unexsting vendor", "model": "Some model"},
+        json={
+            "vendor": "Unexsting vendor",
+            "model": "Some model",
+            "architecture": "amd64",
+            "board": {
+                "manufacturer": "Dell Inc.",
+                "product_name": "sample board",
+                "version": "1.1.1",
+            },
+        },
     )
 
     assert response.status_code == 200

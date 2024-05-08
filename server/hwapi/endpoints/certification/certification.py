@@ -28,10 +28,9 @@ from hwapi.endpoints.certification.rbody_validators import (
     NotCertifiedResponse,
     RelatedCertifiedSystemExistsResponse,
 )
-from hwapi.data_models.enums import CertificationStatus
 from hwapi.data_models.setup import get_db
 
-from .logic import is_certified
+from .logic import is_certified, is_partially_certified
 
 
 router = APIRouter()
@@ -50,7 +49,11 @@ def check_certification(
     Endpoint for checking certification status (whether a system is certified, not seen
     or some of its components have been seen on other systems)
     """
+    data: CertifiedResponse | RelatedCertifiedSystemExistsResponse | None
     certified, data = is_certified(system_info, db)
     if certified:
         return data
-    return NotCertifiedResponse(status=CertificationStatus.NOT_SEEN)
+    partially_certifed, data = is_partially_certified(system_info, db)
+    if partially_certifed:
+        return data
+    return NotCertifiedResponse()
