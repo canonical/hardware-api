@@ -23,7 +23,7 @@ from sqlalchemy import and_, true
 from sqlalchemy.orm import Session, Query
 
 from hwapi.data_models import models
-from hwapi.data_models.enums import DeviceCategory
+from hwapi.data_models.enums import DeviceCategory, BusType
 from hwapi.data_models.data_validators.software import OSValidator
 from hwapi.data_models.data_validators import devices as device_validators
 
@@ -120,8 +120,8 @@ def get_machines_with_same_hardware_params(
     release: models.Release | None,
 ) -> list[models.Machine]:
     """
-    Retrieve all the machines that have the given board and architecture and are
-    certified for the given release
+    Retrieve all the machines that have the given architecture, motherboard (optionally),
+    and are certified for the given release (if specified)
     """
     return (
         db.query(models.Machine)
@@ -195,7 +195,11 @@ def get_board_by_validator_data(
     return board
 
 
-def get_joined_device_query(db: Session, machine_ids: list[int]) -> Query:
+def get_devices_by_machine_ids(db: Session, machine_ids: list[int]) -> Query:
+    """
+    Return query that contains Devices joined with Reports and Certificates for a
+    given list of machine IDs
+    """
     return (
         db.query(models.Device)
         .join(
@@ -217,8 +221,8 @@ def find_matching_cpu(
     cpu_validator: device_validators.ProcessorValidator,
 ) -> models.Device | None:
     """
-    Find a CPU device across the given list of machines that matches the parameters
-    specified in the ProcessorValidator
+    Find a CPU device across the given list of devices that matches have the same
+    model name
     """
     return devices_query.filter(
         and_(
@@ -232,8 +236,8 @@ def find_matching_gpu(
     db: Session, devices_query: Query, gpu_validator: device_validators.GPUValidator
 ) -> models.Device | None:
     """
-    Find a GPU device across the given list of machines that matches the parameters
-    specified in the GPUValidator
+    Find a GPU device across the given list of devices that have the same model name and
+    identifier
     """
     return devices_query.filter(
         and_(
@@ -251,11 +255,113 @@ def find_matching_network_device(
     devices_query: Query,
     network_validator: device_validators.NetworkAdapterValidator,
 ) -> models.Device | None:
+    """
+    Find a network wired device across the given list of devices that has the same
+    idenitifier, model name, and bus
+    """
     return devices_query.filter(
         and_(
-            models.Device.identifier == network_validator.identifier,
+            models.Device.identifier == network_validator.identifier.lower(),
             models.Device.name == network_validator.model,
             models.Device.bus == network_validator.bus,
-            models.Device.category == DeviceCategory.NETWORK.value,
+            models.Device.category.in_(
+                [DeviceCategory.NETWORK.value, DeviceCategory.OTHER.value]
+            ),
+        ),
+    ).first()
+
+
+def find_matching_wireless_device(
+    db: Session,
+    devices_query: Query,
+    wireless_validator: device_validators.WirelessAdapterValidator,
+) -> models.Device | None:
+    """
+    Find a network wireless device across the given list of devices that has the same
+    identifier and model name
+    """
+    return devices_query.filter(
+        and_(
+            models.Device.identifier == wireless_validator.identifier.lower(),
+            models.Device.name == wireless_validator.model,
+            models.Device.category.in_(
+                [DeviceCategory.WIRELESS.value, DeviceCategory.OTHER.value]
+            ),
+        ),
+    ).first()
+
+
+def find_matching_audio_device(
+    db: Session,
+    devices_query: Query,
+    audio_validator: device_validators.AudioValidator,
+) -> models.Device | None:
+    """
+    Find a network audio device across the given list of devices that has the same
+    identifier and model name
+    """
+    return devices_query.filter(
+        and_(
+            models.Device.identifier == audio_validator.identifier.lower(),
+            models.Device.name == audio_validator.model,
+            models.Device.category.in_(
+                [DeviceCategory.AUDIO.value, DeviceCategory.OTHER.value]
+            ),
+        ),
+    ).first()
+
+
+def find_matching_capture_device(
+    db: Session,
+    devices_query: Query,
+    capture_validator: device_validators.VideoCaptureValidator,
+) -> models.Device | None:
+    """
+    Find a network video capture device across the given list of devices that
+    has the same identifier and model name
+    """
+    return devices_query.filter(
+        and_(
+            models.Device.identifier == capture_validator.identifier.lower(),
+            models.Device.name == capture_validator.model,
+            models.Device.category.in_(
+                [DeviceCategory.CAPTURE.value, DeviceCategory.OTHER.value]
+            ),
+        ),
+    ).first()
+
+
+def find_matching_pci_device(
+    db: Session,
+    devices_query: Query,
+    pci_validator: device_validators.PCIPeripheralValidator,
+) -> models.Device | None:
+    """
+    Find an arbitary pci device across the given list of devices that has the same
+    PCI ID and model name
+    """
+    return devices_query.filter(
+        and_(
+            models.Device.identifier == pci_validator.pci_id.lower(),
+            models.Device.bus == BusType.pci.value,
+            models.Device.name == pci_validator.name,
+        ),
+    ).first()
+
+
+def find_matching_usb_device(
+    db: Session,
+    devices_query: Query,
+    usb_validator: device_validators.USBPeripheralValidator,
+) -> models.Device | None:
+    """
+    Find an arbitary usb device across the given list of devices that has the same
+    USB ID and model name
+    """
+    return devices_query.filter(
+        and_(
+            models.Device.identifier == usb_validator.usb_id.lower(),
+            models.Device.bus == BusType.usb.value,
+            models.Device.name == usb_validator.name,
         ),
     ).first()

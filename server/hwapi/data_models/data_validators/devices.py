@@ -27,6 +27,7 @@ class AudioValidator(BaseModel):
 
     model: str
     vendor: str
+    identifier: str
 
 
 class BiosValidator(BaseModel):
@@ -91,6 +92,7 @@ class VideoCaptureValidator(BaseModel):
 
     model: str
     vendor: str
+    identifier: str
 
 
 class WirelessAdapterValidator(BaseModel):
@@ -98,3 +100,4 @@ class WirelessAdapterValidator(BaseModel):
 
     model: str
     vendor: str
+    identifier: str

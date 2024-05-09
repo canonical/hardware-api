@@ -3,6 +3,9 @@ components:
     AudioValidator:
       description: Validator model for audio devices
       properties:
+        identifier:
+          title: Identifier
+          type: string
         model:
           title: Model
           type: string
@@ -12,6 +15,7 @@ components:
       required:
       - model
       - vendor
+      - identifier
       title: AudioValidator
       type: object
     BiosValidator:
@@ -472,6 +476,9 @@ components:
     VideoCaptureValidator:
       description: Validator model for video capture devices
       properties:
+        identifier:
+          title: Identifier
+          type: string
         model:
           title: Model
           type: string
@@ -481,11 +488,15 @@ components:
       required:
       - model
       - vendor
+      - identifier
       title: VideoCaptureValidator
       type: object
     WirelessAdapterValidator:
       description: Validator model for wireless network adapters
       properties:
+        identifier:
+          title: Identifier
+          type: string
         model:
           title: Model
           type: string
@@ -495,6 +506,7 @@ components:
       required:
       - model
       - vendor
+      - identifier
       title: WirelessAdapterValidator
       type: object
 info:
