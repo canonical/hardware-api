@@ -19,7 +19,7 @@
 
 from fastapi.testclient import TestClient
 
-from hwapi.data_models.enums import CertificationStatus
+from hwapi.data_models.enums import CertificationStatus, DeviceCategory, BusType
 from tests.data_generator import DataGenerator
 
 
@@ -97,3 +97,118 @@ def test_vendor_model_not_found(test_client: TestClient):
 
     assert response.status_code == 200
     assert response.json() == {"status": "Not Seen"}
+
+
+def test_partially_certified_status(generator: DataGenerator, test_client: TestClient):
+    """
+    If some components of the system were seen on other machines but system itself wasn't seen,
+    we should get partially certified response with the list of these devices that are present
+    on the certified system
+    """
+    dell_vendor = generator.gen_vendor()
+    platform = generator.gen_platform(dell_vendor, name="Precision 3690 (ik12)")
+    configuration = generator.gen_configuration(platform)
+    machine = generator.gen_machine(configuration)
+    certificate = generator.gen_certificate(machine, generator.gen_release())
+    report = generator.gen_report(
+        certificate,
+        generator.gen_kernel(),
+        generator.gen_bios(dell_vendor),
+        architecture="amd64",
+    )
+    processor = generator.gen_device(
+        vendor=generator.gen_vendor(name="Advanced Micro Devices [AMD]"),
+        name="AMD EPYC 3251 8-Core Processor",
+        bus=BusType.dmi,
+        category=DeviceCategory.PROCESSOR,
+        identifier="dmi:AMDEPYC32518-CoreProcessor",
+        reports=[report],
+    )
+    network_adapter = generator.gen_device(
+        vendor=generator.gen_vendor(name="Cisco Systems"),
+        name="VIC Ethernet NIC",
+        identifier="1137:0043",
+        reports=[report],
+    )
+
+    response = test_client.post(
+        "/v1/certification/status",
+        json={
+            "vendor": "Unexsting vendor",
+            "model": "Some model",
+            "architecture": report.architecture,
+            "board": {
+                "manufacturer": "Dell Inc.",
+                "product_name": "sample board",
+                "version": "1.1.1",
+            },
+            "processor": [
+                {
+                    "version": processor.name,
+                    "family": "EPYC",
+                    "frequency": 2.5,
+                    "manufacturer": f"{processor.vendor.name} Inc.",
+                }
+            ],
+            "gpu": [
+                {
+                    "manufacturer": "nVidia",
+                    "version": "GA107M [GeForce MX570]",
+                    "identifier": "10DE:25A6",
+                },
+                {
+                    "manufacturer": "Intel Corp.",
+                    "version": "1ADSF",
+                    "identifier": "8086:012b",
+                },
+            ],
+            "network": [
+                {
+                    "bus": network_adapter.bus.value,
+                    "identifier": network_adapter.identifier,
+                    "model": network_adapter.name,
+                    "vendor": "AMD",
+                    "capacity": 1000,
+                },
+                {
+                    "bus": BusType.pci.value,
+                    "identifier": "8086:1572",
+                    "model": "Ethernet Controller X710 for 10GbE SFP+",
+                    "vendor": "Intel Corp.",
+                    "capacity": 10000,
+                },
+            ],
+        },
+    )
+    assert response.status_code == 200
+    expected_response = {
+        "status": "Partially Certified",
+        "architecture": "amd64",
+        "board": None,
+        "chassis": None,
+        "processor": [
+            {
+                "family": "EPYC",
+                "frequency": 2.5,
+                "manufacturer": "Advanced Micro Devices [AMD]",
+                "version": "AMD EPYC 3251 8-Core Processor",
+            }
+        ],
+        "gpu": [],
+        "audio": [],
+        "video": [],
+        "network": [
+            {
+                "bus": "pci",
+                "identifier": "1137:0043",
+                "model": "VIC Ethernet NIC",
+                "vendor": "Cisco Systems",
+                "capacity": 1000,
+            },
+        ],
+        "wireless": [],
+        "pci_peripherals": [],
+        "usb_peripherals": [],
+    }
+
+    assert response.json() == expected_response
