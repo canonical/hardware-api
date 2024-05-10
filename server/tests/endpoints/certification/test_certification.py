@@ -164,14 +164,14 @@ def test_partially_certified_status(generator: DataGenerator, test_client: TestC
             ],
             "network": [
                 {
-                    "bus": network_adapter.bus.value,
+                    "bus": network_adapter.bus,
                     "identifier": network_adapter.identifier,
                     "model": network_adapter.name,
                     "vendor": "AMD",
                     "capacity": 1000,
                 },
                 {
-                    "bus": BusType.pci.value,
+                    "bus": BusType.pci,
                     "identifier": "8086:1572",
                     "model": "Ethernet Controller X710 for 10GbE SFP+",
                     "vendor": "Intel Corp.",
@@ -212,3 +212,34 @@ def test_partially_certified_status(generator: DataGenerator, test_client: TestC
     }
 
     assert response.json() == expected_response
+
+
+def test_partially_certified_invalid_release(
+    generator: DataGenerator, test_client: TestClient
+):
+    """
+    If OS release is an invalid ubuntu release, we should get 400 response
+    """
+    generator.gen_release()
+    response = test_client.post(
+        "/v1/certification/status",
+        json={
+            "vendor": "Unexsting vendor",
+            "model": "Some model",
+            "architecture": "amd64",
+            "board": {
+                "manufacturer": "Dell Inc.",
+                "product_name": "sample board",
+                "version": "1.1.1",
+            },
+            "os": {
+                "distributor": "Ubuntu",
+                "version": "0.0",
+                "codename": "aaaaa",
+                "kernel": {"version": "dsds", "name": None, "signature": None},
+                "loaded_modules": [],
+            },
+        },
+    )
+    assert response.status_code == 400
+    assert "No matching release found" in response.json()["detail"]

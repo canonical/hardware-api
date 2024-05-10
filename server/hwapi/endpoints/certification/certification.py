@@ -20,6 +20,7 @@
 
 
 from fastapi import APIRouter, Depends
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from hwapi.endpoints.certification.rbody_validators import (
@@ -53,7 +54,10 @@ def check_certification(
     certified, data = is_certified(system_info, db)
     if certified:
         return data
-    partially_certifed, data = is_partially_certified(system_info, db)
+    try:
+        partially_certifed, data = is_partially_certified(system_info, db)
+    except ValueError as exc:
+        return JSONResponse(status_code=400, content={"detail": str(exc)})
     if partially_certifed:
         return data
     return NotCertifiedResponse()
