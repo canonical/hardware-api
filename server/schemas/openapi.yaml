@@ -549,6 +549,12 @@ paths:
                 - $ref: '#/components/schemas/RelatedCertifiedSystemExistsResponse'
                 title: Response Check Certification V1 Certification Status Post
           description: Successful Response
+        '400':
+          content:
+            application/json:
+              example:
+                detail: No matching release found for codename 'xxx', version 'xx.yy'
+          description: Bad Request
         '422':
           content:
             application/json:

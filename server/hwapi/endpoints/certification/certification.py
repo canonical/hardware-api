@@ -42,6 +42,18 @@ router = APIRouter()
     response_model=(
         CertifiedResponse | NotCertifiedResponse | RelatedCertifiedSystemExistsResponse
     ),
+    responses={
+        400: {
+            "description": "Bad Request",
+            "content": {
+                "application/json": {
+                    "example": {
+                        "detail": "No matching release found for codename 'xxx', version 'xx.yy'"
+                    }
+                }
+            },
+        },
+    },
 )
 def check_certification(
     system_info: CertificationStatusRequest, db: Session = Depends(get_db)

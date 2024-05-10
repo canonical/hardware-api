@@ -160,7 +160,7 @@ def get_release_from_os(db: Session, os: OSValidator) -> models.Release:
     )
     if release is None:
         raise ValueError(
-            f"No matching release found for codename {os.codename}, version {os.version}"
+            f"No matching release found for codename '{os.codename}', version '{os.version}'"
         )
     return release
 
