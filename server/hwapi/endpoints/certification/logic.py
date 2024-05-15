@@ -95,7 +95,7 @@ def is_partially_certified(
         db,
         devices_query,
         system_info.processor or [],
-        repository.find_matching_cpu,
+        repository.find_matching_processor,
         data_validators.ProcessorValidator,
         lambda device, info: data_validators.ProcessorValidator(
             manufacturer=device.vendor.name,

@@ -217,19 +217,19 @@ def get_devices_by_machine_ids(db: Session, machine_ids: list[int]) -> Query:
     )
 
 
-def find_matching_cpu(
+def find_matching_processor(
     db: Session,
     devices_query: Query,
     cpu_validator: device_validators.ProcessorValidator,
 ) -> models.Device | None:
     """
-    Find a CPU device across the given list of devices that matches have the same
-    model name
+    Find a CPU device across the given list of devices that contains
+    model name.
     """
     return devices_query.filter(
         and_(
-            models.Device.name == cpu_validator.version,
-            models.Device.category == DeviceCategory.PROCESSOR.value,
+            models.Device.name.like(f"%{cpu_validator.version}%"),
+            models.Device.category == DeviceCategory.PROCESSOR,
         ),
     ).first()
 
@@ -246,7 +246,7 @@ def find_matching_gpu(
             models.Device.name == gpu_validator.version,
             models.Device.identifier == gpu_validator.identifier.lower(),
             models.Device.category.in_(
-                [DeviceCategory.VIDEO.value, DeviceCategory.OTHER.value]
+                [DeviceCategory.VIDEO.value, DeviceCategory.OTHER]
             ),
         )
     ).first()
@@ -267,7 +267,7 @@ def find_matching_network_device(
             models.Device.name == network_validator.model,
             models.Device.bus == network_validator.bus,
             models.Device.category.in_(
-                [DeviceCategory.NETWORK.value, DeviceCategory.OTHER.value]
+                [DeviceCategory.NETWORK.value, DeviceCategory.OTHER]
             ),
         ),
     ).first()
@@ -286,9 +286,7 @@ def find_matching_wireless_device(
         and_(
             models.Device.identifier == wireless_validator.identifier.lower(),
             models.Device.name == wireless_validator.model,
-            models.Device.category.in_(
-                [DeviceCategory.WIRELESS.value, DeviceCategory.OTHER.value]
-            ),
+            models.Device.category.in_([DeviceCategory.WIRELESS, DeviceCategory.OTHER]),
         ),
     ).first()
 
@@ -306,9 +304,7 @@ def find_matching_audio_device(
         and_(
             models.Device.identifier == audio_validator.identifier.lower(),
             models.Device.name == audio_validator.model,
-            models.Device.category.in_(
-                [DeviceCategory.AUDIO.value, DeviceCategory.OTHER.value]
-            ),
+            models.Device.category.in_([DeviceCategory.AUDIO, DeviceCategory.OTHER]),
         ),
     ).first()
 
@@ -326,9 +322,7 @@ def find_matching_capture_device(
         and_(
             models.Device.identifier == capture_validator.identifier.lower(),
             models.Device.name == capture_validator.model,
-            models.Device.category.in_(
-                [DeviceCategory.CAPTURE.value, DeviceCategory.OTHER.value]
-            ),
+            models.Device.category.in_([DeviceCategory.CAPTURE, DeviceCategory.OTHER]),
         ),
     ).first()
 
@@ -345,7 +339,7 @@ def find_matching_pci_device(
     return devices_query.filter(
         and_(
             models.Device.identifier == pci_validator.pci_id.lower(),
-            models.Device.bus == BusType.pci.value,
+            models.Device.bus == BusType.pci,
             models.Device.name == pci_validator.name,
         ),
     ).first()
@@ -363,7 +357,7 @@ def find_matching_usb_device(
     return devices_query.filter(
         and_(
             models.Device.identifier == usb_validator.usb_id.lower(),
-            models.Device.bus == BusType.usb.value,
+            models.Device.bus == BusType.usb,
             models.Device.name == usb_validator.name,
         ),
     ).first()
