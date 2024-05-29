@@ -28,7 +28,7 @@ services:
         black --check hwapi/ scripts/ tests/ &&
         ruff check hwapi/ scripts/ tests/ --no-cache &&
         mypy hwapi/ scripts/ tests/ &&
-        coverage run -m pytest tests/ -vv &&
+        coverage run --source "hwapi/" -m pytest tests/ -vv &&
         coverage xml -o coverage/coverage.xml'
     working_dir: /home/code
     volumes:
