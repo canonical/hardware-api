@@ -5,7 +5,7 @@
 To run tests inside a Docker container (again, using `--build` when iterating on source code changes, to force the image to be rebuilt):
 
 ```bash
-docker-compose up --attach-dependencies --force-recreate --abort-on-container-exit --build hwapi-test
+docker compose up --attach-dependencies --force-recreate --abort-on-container-exit --build hwapi-test
 ```
 
 ## Pre-commit hooks

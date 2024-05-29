@@ -29,8 +29,11 @@ services:
         black --check hwapi/ scripts/ tests/ &&
         ruff check hwapi/ scripts/ tests/ --no-cache &&
         mypy hwapi/ scripts/ tests/ &&
-        pytest tests/ -vv'
+        coverage run -m pytest tests/ -vv &&
+        coverage xml -o coverage/coverage.xml'
     working_dir: /home/code
+    volumes:
+      - ./coverage:/home/code/coverage
     ports:
       - "8080:8080"
 

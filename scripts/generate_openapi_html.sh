@@ -5,6 +5,7 @@ if git diff --cached --name-only | grep --quiet "server"
 then
     cd server/schemas/
 
+    which npx
     # Generate HTML schema
     npx @redocly/cli build-docs openapi.yaml -o openapi.html
 
