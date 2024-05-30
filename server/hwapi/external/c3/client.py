@@ -30,6 +30,7 @@ from sqlalchemy.exc import IntegrityError
 from hwapi.data_models import models, enums
 from hwapi.data_models.repository import get_or_create
 from hwapi.external.c3 import response_models, urls
+from hwapi.external.c3.helpers import progress_bar
 
 
 logger = logging.getLogger(__name__)
@@ -73,16 +74,24 @@ class C3Client:
         :param resp_model: pydantic model for response objects
         """
         next_url = url
+        counter = 0
         while next_url is not None:
-            logging.info(f"Retrieving {next_url}")
+            logging.debug(f"Retrieving {next_url}")
             response = requests.get(next_url, timeout=90)
             response.raise_for_status()
-            next_url = response.json()["next"]
-            objects = response.json()["results"]
+            response_json = response.json()
+            if counter == 0:
+                # since count is always the same, update total only the first time
+                # we retrieve the data from C3
+                total = response_json["count"]
+            next_url = response_json["next"]
+            objects = response_json["results"]
             for obj in objects:
                 instance = resp_model(**obj)
                 try:
                     loader(instance)
+                    counter += 1
+                    progress_bar(counter, total)
                 except (IntegrityError, SQLite3IntegrityError):
                     logging.error(
                         "A DB error occurred while importing data from C3",
@@ -115,7 +124,7 @@ class C3Client:
             canonical_id=response.canonical_id,
             configuration_id=configuration.id,
         )
-        logger.info(
+        logger.debug(
             "Vendor: %s\nConfiguration: %s\nMachine: %s\n",
             vendor.name,
             configuration.name,
@@ -242,7 +251,7 @@ class C3Client:
                 else enums.DeviceCategory.OTHER
             ).value,
         )
-        logger.info(
+        logger.debug(
             "Device: %s, %s. Created: %r",
             device_data.name,
             device_data.identifier,
