@@ -1,9 +1,9 @@
 FROM python:3.12
 
-WORKDIR /home/code
+WORKDIR /home/server
 EXPOSE 8080
 
-ENV PYTHONPATH=/home/code
+ENV PYTHONPATH=/home/server
 COPY poetry.lock .
 COPY pyproject.toml .
 RUN pip3 install poetry && \
@@ -13,7 +13,7 @@ RUN pip3 install poetry && \
 COPY . .
 
 ARG IMPORT_TOOL_PATH=./scripts/import_from_c3.py
-ARG DB_URL=sqlite:////home/code/hwapi.db
+ARG DB_URL=sqlite:////home/server/hwapi.db
 ENV DB_URL=$DB_URL
 ARG C3_URL=https://certification.canonical.com
 ENV C3_URL=$C3_URL
