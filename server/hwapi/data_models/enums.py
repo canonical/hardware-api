@@ -22,8 +22,9 @@ from enum import Enum
 
 class CertificationStatus(str, Enum):
     CERTIFIED = "Certified"
-    PARTIALLY_CERTIFIED = "Partially Certified"
     NOT_SEEN = "Not Seen"
+    PARTIAL_FAIL = "Partial Fail"
+    PARTIAL_SUCCESS = "Partial Success"
 
 
 class BusType(str, Enum):

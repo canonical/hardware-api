@@ -20,7 +20,6 @@
 
 
 from fastapi import APIRouter, Depends
-from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
 from hwapi.endpoints.certification.rbody_validators import (
@@ -30,6 +29,7 @@ from hwapi.endpoints.certification.rbody_validators import (
     RelatedCertifiedSystemExistsResponse,
 )
 from hwapi.data_models.setup import get_db
+from hwapi.data_models.repository import get_vendor_by_name
 
 from .logic import is_certified, is_partially_certified
 
@@ -42,18 +42,6 @@ router = APIRouter()
     response_model=(
         CertifiedResponse | NotCertifiedResponse | RelatedCertifiedSystemExistsResponse
     ),
-    responses={
-        400: {
-            "description": "Bad Request",
-            "content": {
-                "application/json": {
-                    "example": {
-                        "detail": "No matching release found for codename 'xxx', version 'xx.yy'"
-                    }
-                }
-            },
-        },
-    },
 )
 def check_certification(
     system_info: CertificationStatusRequest, db: Session = Depends(get_db)
@@ -63,13 +51,13 @@ def check_certification(
     or some of its components have been seen on other systems)
     """
     data: CertifiedResponse | RelatedCertifiedSystemExistsResponse | None
+    # If we've never seen this vendor, return Not Certified response
+    if get_vendor_by_name(db, system_info.vendor) is None:
+        return NotCertifiedResponse()
     certified, data = is_certified(system_info, db)
     if certified:
         return data
-    try:
-        partially_certifed, data = is_partially_certified(system_info, db)
-    except ValueError as exc:
-        return JSONResponse(status_code=400, content={"detail": str(exc)})
+    partially_certifed, data = is_partially_certified(system_info, db)
     if partially_certifed:
         return data
     return NotCertifiedResponse()

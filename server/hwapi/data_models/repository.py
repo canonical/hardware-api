@@ -116,8 +116,8 @@ def get_or_create(
 def get_machines_with_same_hardware_params(
     db: Session,
     arch: str,
-    board: models.Device | None,
-    release: models.Release | None,
+    board: models.Device,
+    release: models.Release | None = None,
 ) -> list[models.Machine]:
     """
     Retrieve all the machines that have the given architecture, motherboard (optionally),
@@ -151,30 +151,35 @@ def get_machines_with_same_hardware_params(
     )
 
 
-def get_release_from_os(db: Session, os: OSValidator) -> models.Release:
+def get_release_from_os(db: Session, os: OSValidator) -> models.Release | None:
     """Return release object matching given OS data"""
     release = (
         db.query(models.Release)
         .filter_by(release=os.version, codename=os.codename)
         .first()
     )
-    if release is None:
-        raise ValueError(
-            f"No matching release found for codename '{os.codename}', version '{os.version}'"
-        )
     return release
 
 
-def clean_vendor_name(name):
+def clean_vendor_name(name: str):
     """Remove "Inc"/"Inc." substring from vendor name and leading whitespaces"""
     return name.replace("Inc.", "").replace("Inc", "").strip()
+
+
+def get_vendor_by_name(db: Session, name: str) -> models.Vendor | None:
+    """Find vendor by name (cleaned-up)"""
+    return (
+        db.query(models.Vendor)
+        .filter(models.Vendor.name.ilike(f"%{clean_vendor_name(name).lower()}%"))
+        .first()
+    )
 
 
 def get_board_by_validator_data(
     db: Session, board_validator: device_validators.BoardValidator
 ) -> models.Device | None:
     """Return device object (category==BOARD) matching given Board data"""
-    board = (
+    return (
         db.query(models.Device)
         .join(models.Vendor)
         .filter(
@@ -194,7 +199,6 @@ def get_board_by_validator_data(
         )
         .first()
     )
-    return board
 
 
 def get_devices_by_machine_ids(db: Session, machine_ids: list[int]) -> Query:

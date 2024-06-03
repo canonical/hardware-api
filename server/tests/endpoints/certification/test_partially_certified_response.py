@@ -19,89 +19,11 @@
 
 from fastapi.testclient import TestClient
 
-from hwapi.data_models.enums import CertificationStatus, DeviceCategory, BusType
+from hwapi.data_models.enums import DeviceCategory, BusType
 from tests.data_generator import DataGenerator
 
 
-def test_certified_status(generator: DataGenerator, test_client: TestClient):
-    """
-    We should get Certified response if a machine with the specified vendor name (exact
-    match) and platform name (the value without data in parenthesis must be a substring
-    of a model)
-    """
-    vendor = generator.gen_vendor()
-    platform = generator.gen_platform(vendor, name="Precision 3690 (ik12)")
-    configuration = generator.gen_configuration(platform)
-    machine = generator.gen_machine(configuration)
-    certificate = generator.gen_certificate(machine, generator.gen_release())
-    report = generator.gen_report(
-        certificate, generator.gen_kernel(), generator.gen_bios(vendor)
-    )
-
-    response = test_client.post(
-        "/v1/certification/status",
-        json={
-            "vendor": vendor.name,
-            "model": "Precision 3690 aaaa",
-            "architecture": "amd64",
-            "board": {
-                "manufacturer": "Dell Inc.",
-                "product_name": "sample board",
-                "version": "1.1.1",
-            },
-        },
-    )
-
-    assert response.status_code == 200
-    expected_response = {
-        "status": CertificationStatus.CERTIFIED.value,
-        "os": {
-            "distributor": "Canonical Ltd.",
-            "version": certificate.release.release,
-            "codename": certificate.release.codename,
-            "kernel": {
-                "name": report.kernel.name,
-                "version": report.kernel.version,
-                "signature": report.kernel.signature,
-            },
-            "loaded_modules": [],
-        },
-        "bios": {
-            "firmware_revision": None,
-            "release_date": (report.bios.release_date).strftime("%Y-%m-%d"),
-            "revision": report.bios.revision,
-            "vendor": report.bios.vendor.name,
-            "version": report.bios.version,
-        },
-    }
-    assert response.json() == expected_response
-
-
-def test_vendor_model_not_found(test_client: TestClient):
-    """
-    If we cannot find such vendor and model in the DB, we should return Not Seen response
-    """
-    response = test_client.post(
-        "/v1/certification/status",
-        json={
-            "vendor": "Unexsting vendor",
-            "model": "Some model",
-            "architecture": "amd64",
-            "board": {
-                "manufacturer": "Dell Inc.",
-                "product_name": "sample board",
-                "version": "1.1.1",
-            },
-        },
-    )
-
-    assert response.status_code == 200
-    assert response.json() == {"status": "Not Seen"}
-
-
-def test_partially_certified_correct_architecture(
-    generator: DataGenerator, test_client: TestClient
-):
+def test_correct_architecture(generator: DataGenerator, test_client: TestClient):
     """
     We shall select devices only from machines that have the same achitecture even if
     a device in the request has been seen on a certified system but it has a different
@@ -146,6 +68,15 @@ def test_partially_certified_correct_architecture(
         generator.gen_bios(vendor),
         architecture="amd64",
     )
+    board = generator.gen_device(
+        vendor=generator.gen_vendor(name="Dell Inc."),
+        identifier="dmi:OFOW8W",
+        name="0F0W8W",
+        version="A00",
+        bus=BusType.dmi,
+        category=DeviceCategory.BOARD,
+        reports=[amd_report],
+    )
     network_card_on_amd = generator.gen_device(
         vendor=vendor,
         name="Network card on amd device",
@@ -157,13 +88,13 @@ def test_partially_certified_correct_architecture(
     response = test_client.post(
         "/v1/certification/status",
         json={
-            "vendor": "Unexsting vendor",
+            "vendor": vendor.name,
             "model": "Some model",
             "architecture": amd_report.architecture,
             "board": {
-                "manufacturer": "Dell Inc.",
-                "product_name": "sample board",
-                "version": "1.1.1",
+                "manufacturer": board.vendor.name,
+                "product_name": board.name,
+                "version": board.version,
             },
             "network": [
                 {
@@ -185,9 +116,13 @@ def test_partially_certified_correct_architecture(
     )
     assert response.status_code == 200
     expected_response = {
-        "status": "Partially Certified",
+        "status": "Partial Fail",
         "architecture": "amd64",
-        "board": None,
+        "board": {
+            "manufacturer": board.vendor.name,
+            "product_name": board.name,
+            "version": board.version,
+        },
         "chassis": None,
         "processor": [],
         "gpu": [],
@@ -210,9 +145,7 @@ def test_partially_certified_correct_architecture(
     assert response.json() == expected_response
 
 
-def test_partially_certified_matching_release(
-    generator: DataGenerator, test_client: TestClient
-):
+def test_matching_release(generator: DataGenerator, test_client: TestClient):
     """
     If OS release is specified, we shall return devices from the machines that
     were certified for the same OS release.
@@ -265,16 +198,27 @@ def test_partially_certified_matching_release(
         category=DeviceCategory.VIDEO,
         reports=[noble_report],
     )
+
+    board = generator.gen_device(
+        vendor=generator.gen_vendor(name="Dell Inc."),
+        identifier="dmi:OFOW8W",
+        name="0F0W8W",
+        version="A00",
+        bus=BusType.dmi,
+        category=DeviceCategory.BOARD,
+        reports=[noble_report],
+    )
+
     response = test_client.post(
         "/v1/certification/status",
         json={
-            "vendor": "Unexsting vendor",
+            "vendor": vendor.name,
             "model": "Some model",
             "architecture": noble_report.architecture,
             "board": {
-                "manufacturer": "Dell Inc.",
-                "product_name": "sample board",
-                "version": "1.1.1",
+                "manufacturer": board.vendor.name,
+                "product_name": board.name,
+                "version": board.version,
             },
             "os": {
                 "distributor": "Canonical Ltd.",
@@ -302,9 +246,13 @@ def test_partially_certified_matching_release(
     )
     assert response.status_code == 200
     expected_response = {
-        "status": "Partially Certified",
+        "status": "Partial Success",
         "architecture": "amd64",
-        "board": None,
+        "board": {
+            "manufacturer": board.vendor.name,
+            "product_name": board.name,
+            "version": board.version,
+        },
         "chassis": None,
         "processor": [],
         "gpu": [
@@ -326,35 +274,27 @@ def test_partially_certified_matching_release(
     assert response.json() == expected_response
 
 
-def test_partially_certified_invalid_release(
-    generator: DataGenerator, test_client: TestClient
-):
+def test_no_matching_board(generator: DataGenerator, test_client: TestClient):
     """
-    If OS release is an invalid ubuntu release, we should get 400 response
+    If we cannot find the same motherboard, we should return not certified response
     """
-    generator.gen_release()
+    vendor = generator.gen_vendor()
     response = test_client.post(
         "/v1/certification/status",
         json={
-            "vendor": "Unexsting vendor",
+            "vendor": vendor.name,
             "model": "Some model",
             "architecture": "amd64",
             "board": {
-                "manufacturer": "Dell Inc.",
+                "manufacturer": "unexisting vendor",
                 "product_name": "sample board",
                 "version": "1.1.1",
             },
-            "os": {
-                "distributor": "Ubuntu",
-                "version": "0.0",
-                "codename": "aaaaa",
-                "kernel": {"version": "dsds", "name": None, "signature": None},
-                "loaded_modules": [],
-            },
+            "os": None,
         },
     )
-    assert response.status_code == 400
-    assert "No matching release found" in response.json()["detail"]
+    assert response.status_code == 200
+    assert response.json() == {"status": "Not Seen"}
 
 
 def test_partially_certified_processor_match(
@@ -375,6 +315,15 @@ def test_partially_certified_processor_match(
         generator.gen_kernel(),
         generator.gen_bios(vendor),
         architecture="amd64",
+    )
+    board = generator.gen_device(
+        vendor=generator.gen_vendor(name="Dell Inc."),
+        identifier="dmi:OFOW8W",
+        name="0F0W8W",
+        version="A00",
+        bus=BusType.dmi,
+        category=DeviceCategory.BOARD,
+        reports=[report],
     )
     intel_vendor = generator.gen_vendor(name="Intel Corp.")
     processor = generator.gen_device(
@@ -397,13 +346,13 @@ def test_partially_certified_processor_match(
     response = test_client.post(
         "/v1/certification/status",
         json={
-            "vendor": "Unexsting vendor",
+            "vendor": vendor.name,
             "model": "Some model",
             "architecture": report.architecture,
             "board": {
-                "manufacturer": "Dell Inc.",
-                "product_name": "sample board",
-                "version": "1.1.1",
+                "manufacturer": board.vendor.name,
+                "product_name": board.name,
+                "version": board.version,
             },
             "os": {
                 "distributor": "Canonical Ltd.",
@@ -424,9 +373,13 @@ def test_partially_certified_processor_match(
     )
     assert response.status_code == 200
     expected_response = {
-        "status": "Partially Certified",
+        "status": "Partial Success",
         "architecture": "amd64",
-        "board": None,
+        "board": {
+            "manufacturer": board.vendor.name,
+            "product_name": board.name,
+            "version": board.version,
+        },
         "chassis": None,
         "processor": [
             {
@@ -448,9 +401,7 @@ def test_partially_certified_processor_match(
     assert response.json() == expected_response
 
 
-def test_partially_certified_gpu_match(
-    generator: DataGenerator, test_client: TestClient
-):
+def test_gpu_match(generator: DataGenerator, test_client: TestClient):
     vendor = generator.gen_vendor()
     release = generator.gen_release()
     machine = generator.gen_machine(
@@ -464,6 +415,15 @@ def test_partially_certified_gpu_match(
         generator.gen_kernel(),
         generator.gen_bios(vendor),
         architecture="amd64",
+    )
+    board = generator.gen_device(
+        vendor=generator.gen_vendor(name="Dell Inc."),
+        identifier="dmi:OFOW8W",
+        name="0F0W8W",
+        version="A00",
+        bus=BusType.dmi,
+        category=DeviceCategory.BOARD,
+        reports=[report],
     )
     nvidia_vendor = generator.gen_vendor(name="nVidia")
     gpu = generator.gen_device(
@@ -485,13 +445,13 @@ def test_partially_certified_gpu_match(
     response = test_client.post(
         "/v1/certification/status",
         json={
-            "vendor": "Unexsting vendor",
+            "vendor": vendor.name,
             "model": "Some model",
             "architecture": report.architecture,
             "board": {
-                "manufacturer": "Dell Inc.",
-                "product_name": "sample board",
-                "version": "1.1.1",
+                "manufacturer": board.vendor.name,
+                "product_name": board.name,
+                "version": board.version,
             },
             "os": {
                 "distributor": "Canonical Ltd.",
@@ -516,9 +476,13 @@ def test_partially_certified_gpu_match(
     )
     assert response.status_code == 200
     expected_response = {
-        "status": "Partially Certified",
+        "status": "Partial Success",
         "architecture": "amd64",
-        "board": None,
+        "board": {
+            "manufacturer": board.vendor.name,
+            "product_name": board.name,
+            "version": board.version,
+        },
         "chassis": None,
         "gpu": [
             {
@@ -540,9 +504,7 @@ def test_partially_certified_gpu_match(
     assert response.json() == expected_response
 
 
-def test_partially_certified_network_device_match(
-    generator: DataGenerator, test_client: TestClient
-):
+def test_network_device_match(generator: DataGenerator, test_client: TestClient):
     vendor = generator.gen_vendor()
     release = generator.gen_release()
     machine = generator.gen_machine(
@@ -556,6 +518,15 @@ def test_partially_certified_network_device_match(
         generator.gen_kernel(),
         generator.gen_bios(vendor),
         architecture="amd64",
+    )
+    board = generator.gen_device(
+        vendor=generator.gen_vendor(name="Dell Inc."),
+        identifier="dmi:OFOW8W",
+        name="0F0W8W",
+        version="A00",
+        bus=BusType.dmi,
+        category=DeviceCategory.BOARD,
+        reports=[report],
     )
     intel_vendor = generator.gen_vendor(name="Intel Corp.")
     network_correct_category = generator.gen_device(
@@ -585,13 +556,13 @@ def test_partially_certified_network_device_match(
     response = test_client.post(
         "/v1/certification/status",
         json={
-            "vendor": "Unexsting vendor",
+            "vendor": vendor.name,
             "model": "Some model",
             "architecture": report.architecture,
             "board": {
-                "manufacturer": "Dell Inc.",
-                "product_name": "sample board",
-                "version": "1.1.1",
+                "manufacturer": board.vendor.name,
+                "product_name": board.name,
+                "version": board.version,
             },
             "os": {
                 "distributor": "Canonical Ltd.",
@@ -627,9 +598,13 @@ def test_partially_certified_network_device_match(
     )
     assert response.status_code == 200
     expected_response = {
-        "status": "Partially Certified",
+        "status": "Partial Success",
         "architecture": "amd64",
-        "board": None,
+        "board": {
+            "manufacturer": board.vendor.name,
+            "product_name": board.name,
+            "version": board.version,
+        },
         "chassis": None,
         "processor": [],
         "gpu": [],

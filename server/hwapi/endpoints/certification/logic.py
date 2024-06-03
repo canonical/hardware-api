@@ -29,6 +29,7 @@ from hwapi.endpoints.certification.rbody_validators import (
 )
 from hwapi.data_models import data_validators, repository
 from hwapi.data_models.models import Device
+from hwapi.data_models.enums import CertificationStatus
 
 
 def is_certified(
@@ -85,6 +86,9 @@ def is_partially_certified(
         repository.get_release_from_os(db, system_info.os) if system_info.os else None
     )
     board = repository.get_board_by_validator_data(db, system_info.board)
+    if board is None:
+        # No match against crucial hardware identifiers like motherboard
+        return False, None
     machines = repository.get_machines_with_same_hardware_params(
         db, system_info.architecture, board, release
     )
@@ -204,6 +208,11 @@ def is_partially_certified(
         return False, None
 
     return True, RelatedCertifiedSystemExistsResponse(
+        status=(
+            CertificationStatus.PARTIAL_SUCCESS
+            if release
+            else CertificationStatus.PARTIAL_FAIL
+        ),
         architecture=system_info.architecture,
         board=(
             data_validators.BoardValidator(

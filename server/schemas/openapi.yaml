@@ -404,12 +404,16 @@ components:
           - type: 'null'
           title: Processor
         status:
-          const: Partially Certified
-          default: Partially Certified
-          enum:
-          - Partially Certified
+          anyOf:
+          - const: Partial Success
+            enum:
+            - Partial Success
+            type: string
+          - const: Partial Fail
+            enum:
+            - Partial Fail
+            type: string
           title: Status
-          type: string
         usb_peripherals:
           anyOf:
           - items:
@@ -432,6 +436,7 @@ components:
           - type: 'null'
           title: Wireless
       required:
+      - status
       - architecture
       title: RelatedCertifiedSystemExistsResponse
       type: object
@@ -549,12 +554,6 @@ paths:
                 - $ref: '#/components/schemas/RelatedCertifiedSystemExistsResponse'
                 title: Response Check Certification V1 Certification Status Post
           description: Successful Response
-        '400':
-          content:
-            application/json:
-              example:
-                detail: No matching release found for codename 'xxx', version 'xx.yy'
-          description: Bad Request
         '422':
           content:
             application/json:

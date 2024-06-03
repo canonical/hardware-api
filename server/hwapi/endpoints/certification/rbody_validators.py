@@ -80,8 +80,9 @@ class RelatedCertifiedSystemExistsResponse(BaseModel):
     were tested on other systems that the machine has
     """
 
-    status: Literal[CertificationStatus.PARTIALLY_CERTIFIED] = (
-        CertificationStatus.PARTIALLY_CERTIFIED
+    status: (
+        Literal[CertificationStatus.PARTIAL_SUCCESS]
+        | Literal[CertificationStatus.PARTIAL_FAIL]
     )
     architecture: str
     board: BoardValidator | None = None
