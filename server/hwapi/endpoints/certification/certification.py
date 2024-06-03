@@ -50,14 +50,13 @@ def check_certification(
     Endpoint for checking certification status (whether a system is certified, not seen
     or some of its components have been seen on other systems)
     """
-    data: CertifiedResponse | RelatedCertifiedSystemExistsResponse | None
     # If we've never seen this vendor, return Not Certified response
     if get_vendor_by_name(db, system_info.vendor) is None:
         return NotCertifiedResponse()
-    certified, data = is_certified(system_info, db)
-    if certified:
-        return data
-    partially_certifed, data = is_partially_certified(system_info, db)
-    if partially_certifed:
-        return data
+    certified_data = is_certified(system_info, db)
+    if certified_data is not None:
+        return certified_data
+    partially_certifed_data = is_partially_certified(system_info, db)
+    if partially_certifed_data is not None:
+        return partially_certifed_data
     return NotCertifiedResponse()

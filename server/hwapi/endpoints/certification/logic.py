@@ -34,25 +34,25 @@ from hwapi.data_models.enums import CertificationStatus
 
 def is_certified(
     system_info: CertificationStatusRequest, db: Session
-) -> tuple[bool, CertifiedResponse | None]:
+) -> CertifiedResponse | None:
     """Logic for checking whether system is Certified"""
     configurations = repository.get_configs_by_vendor_and_model(
         db, system_info.vendor, system_info.model
     )
     if configurations is None:
-        return False, None
+        return None
 
     latest_certificate = repository.get_latest_certificate_for_configs(
         db, configurations
     )
     if latest_certificate is None:
-        return False, None
+        return None
 
     report = latest_certificate.reports[0]
     kernel = report.kernel
     bios = report.bios
 
-    return True, CertifiedResponse(
+    return CertifiedResponse(
         os=data_validators.OSValidator(
             distributor="Canonical Ltd.",
             version=latest_certificate.release.release,
@@ -78,22 +78,22 @@ def is_certified(
 
 def is_partially_certified(
     system_info: CertificationStatusRequest, db: Session
-) -> tuple[bool, RelatedCertifiedSystemExistsResponse | None]:
+) -> RelatedCertifiedSystemExistsResponse | None:
     """
     Check if some components of the system were seen on other certified machines.
     """
     release = (
         repository.get_release_from_os(db, system_info.os) if system_info.os else None
     )
-    board = repository.get_board_by_validator_data(db, system_info.board)
+    board = repository.get_board(db, system_info.board)
     if board is None:
         # No match against crucial hardware identifiers like motherboard
-        return False, None
+        return None
     machines = repository.get_machines_with_same_hardware_params(
         db, system_info.architecture, board, release
     )
     machine_ids = [machine.id for machine in machines]
-    devices_query = repository.get_devices_by_machine_ids(db, machine_ids)
+    devices_query = repository.get_machines_devices_query(db, machine_ids)
 
     cpus = _get_matching_devices(
         db,
@@ -205,9 +205,9 @@ def is_partially_certified(
             usb_devices,
         ]
     ):
-        return False, None
+        return None
 
-    return True, RelatedCertifiedSystemExistsResponse(
+    return RelatedCertifiedSystemExistsResponse(
         status=(
             CertificationStatus.PARTIAL_SUCCESS
             if release
@@ -237,7 +237,7 @@ def is_partially_certified(
 def _get_matching_devices(
     db: Session,
     devices_query: Query,
-    device_validator_list: list,
+    devices_from_request: list,
     find_matching_function: Callable[[Session, Query, Any], Device | None],
     device_validator_class: type[BaseModel],
     validator_mapping: Callable[[Device, Any], Any],
@@ -254,7 +254,7 @@ def _get_matching_devices(
     :return: A list of matching device validator objects.
     """
     devices = []
-    for device_info in device_validator_list:
+    for device_info in devices_from_request:
         device = find_matching_function(db, devices_query, device_info)
         if device is None:
             continue

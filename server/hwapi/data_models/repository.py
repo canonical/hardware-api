@@ -175,7 +175,7 @@ def get_vendor_by_name(db: Session, name: str) -> models.Vendor | None:
     )
 
 
-def get_board_by_validator_data(
+def get_board(
     db: Session, board_validator: device_validators.BoardValidator
 ) -> models.Device | None:
     """Return device object (category==BOARD) matching given Board data"""
@@ -201,7 +201,7 @@ def get_board_by_validator_data(
     )
 
 
-def get_devices_by_machine_ids(db: Session, machine_ids: list[int]) -> Query:
+def get_machines_devices_query(db: Session, machine_ids: list[int]) -> Query:
     """
     Return query that contains Devices joined with Reports and Certificates for a
     given list of machine IDs
