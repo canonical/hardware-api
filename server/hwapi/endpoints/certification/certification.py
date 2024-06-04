@@ -22,16 +22,14 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
-from hwapi.endpoints.certification.rbody_validators import (
-    CertificationStatusRequest,
+from hwapi.endpoints.certification.request_validators import CertificationStatusRequest
+from hwapi.endpoints.certification.response_validators import (
     CertifiedResponse,
     NotCertifiedResponse,
     RelatedCertifiedSystemExistsResponse,
 )
 from hwapi.data_models.setup import get_db
-from hwapi.data_models.repository import get_vendor_by_name
-
-from .logic import is_certified, is_partially_certified
+from hwapi.endpoints.certification import logic
 
 
 router = APIRouter()
@@ -50,13 +48,8 @@ def check_certification(
     Endpoint for checking certification status (whether a system is certified, not seen
     or some of its components have been seen on other systems)
     """
-    # If we've never seen this vendor, return Not Certified response
-    if get_vendor_by_name(db, system_info.vendor) is None:
+    if not logic.check_machine_vendor(db, system_info.vendor):
         return NotCertifiedResponse()
-    certified_data = is_certified(system_info, db)
-    if certified_data is not None:
-        return certified_data
-    partially_certifed_data = is_partially_certified(system_info, db)
-    if partially_certifed_data is not None:
-        return partially_certifed_data
-    return NotCertifiedResponse()
+    board, bios = logic.match_against_main_componenets(db, system_info.board, system_info.bios)
+    if not all([board, bios]):
+        return NotCertifiedResponse()

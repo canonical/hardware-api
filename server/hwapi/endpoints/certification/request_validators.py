@@ -16,13 +16,10 @@
 #
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
-"""Validator models for request/response bodies"""
+"""Vaidator models for request body"""
 
-
-from typing import Literal
 from pydantic import BaseModel
 
-from hwapi.data_models.enums import CertificationStatus
 from hwapi.data_models.data_validators import (
     AudioValidator,
     BiosValidator,
@@ -46,8 +43,8 @@ class CertificationStatusRequest(BaseModel):
     model: str
     architecture: str
     board: BoardValidator
-    os: OSValidator | None = None
-    bios: BiosValidator | None = None
+    os: OSValidator
+    bios: BiosValidator
     chassis: ChassisValidator | None = None
     processor: list[ProcessorValidator] = []
     gpu: list[GPUValidator] | None = None
@@ -57,41 +54,3 @@ class CertificationStatusRequest(BaseModel):
     wireless: list[WirelessAdapterValidator] | None = None
     pci_peripherals: list[PCIPeripheralValidator] = []
     usb_peripherals: list[USBPeripheralValidator] = []
-
-
-class CertifiedResponse(BaseModel):
-    """
-    If a system is certified, we return the information about OS and bios
-    used on the system under test we had in the lab to certify the machine
-    """
-
-    status: Literal[CertificationStatus.CERTIFIED] = CertificationStatus.CERTIFIED
-    os: OSValidator
-    bios: BiosValidator | None
-
-
-class NotCertifiedResponse(BaseModel):
-    status: Literal[CertificationStatus.NOT_SEEN] = CertificationStatus.NOT_SEEN
-
-
-class RelatedCertifiedSystemExistsResponse(BaseModel):
-    """
-    If a system is partially certified, we return the information about components
-    were tested on other systems that the machine has
-    """
-
-    status: (
-        Literal[CertificationStatus.PARTIAL_SUCCESS]
-        | Literal[CertificationStatus.PARTIAL_FAIL]
-    )
-    architecture: str
-    board: BoardValidator | None = None
-    chassis: ChassisValidator | None = None
-    processor: list[ProcessorValidator] | None = None
-    gpu: list[GPUValidator] | None = None
-    audio: list[AudioValidator] | None = None
-    video: list[VideoCaptureValidator] | None = None
-    network: list[NetworkAdapterValidator] | None = None
-    wireless: list[WirelessAdapterValidator] | None = None
-    pci_peripherals: list[PCIPeripheralValidator] | None = None
-    usb_peripherals: list[USBPeripheralValidator] | None = None

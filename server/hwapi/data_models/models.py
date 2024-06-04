@@ -179,6 +179,7 @@ class Device(Base):
     subsystem: Mapped[str] = mapped_column(nullable=False)
     category: Mapped[str] = mapped_column(Enum(DeviceCategory), nullable=False)
     codename: Mapped[str] = mapped_column(String(40), nullable=False)
+    family: Mapped[str] = mapped_column(nullable=False, default="")
     # Relationships
     vendor_id: Mapped[int] = mapped_column(ForeignKey("vendor.id"), index=True)
     vendor = relationship("Vendor", back_populates="devices")
