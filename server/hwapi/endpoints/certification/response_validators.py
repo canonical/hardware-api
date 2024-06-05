@@ -32,7 +32,6 @@ from hwapi.data_models.data_validators import (
     NetworkAdapterValidator,
     OSValidator,
     PCIPeripheralValidator,
-    ProcessorValidator,
     USBPeripheralValidator,
     VideoCaptureValidator,
     WirelessAdapterValidator,
@@ -41,9 +40,10 @@ from hwapi.data_models.data_validators import (
 
 class CertifiedResponse(BaseModel):
     status: Literal[CertificationStatus.CERTIFIED] = CertificationStatus.CERTIFIED
-    bios: BiosValidator | None
+    architecture: str
+    bios: BiosValidator
     board: BoardValidator
-    images: list[OSValidator]
+    available_releases: list[OSValidator]
 
 
 class NotCertifiedResponse(BaseModel):
@@ -56,8 +56,8 @@ class RelatedCertifiedSystemExistsResponse(BaseModel):
     )
     architecture: str
     board: BoardValidator
+    bios: BiosValidator
     chassis: ChassisValidator | None = None
-    processor: list[ProcessorValidator]
     gpu: list[GPUValidator] | None = None
     audio: list[AudioValidator] | None = None
     video: list[VideoCaptureValidator] | None = None
@@ -75,4 +75,4 @@ class CertifiedImageExists(BaseModel):
     bios: BiosValidator
     board: BoardValidator
     chassis: ChassisValidator | None = None
-    images: list[OSValidator]
+    available_releases: list[OSValidator]

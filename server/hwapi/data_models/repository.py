@@ -24,65 +24,11 @@ from sqlalchemy.orm import Session, Query
 
 from hwapi.data_models import models
 from hwapi.data_models.enums import DeviceCategory, BusType
-from hwapi.data_models.data_validators.software import OSValidator
 
 
 def clean_vendor_name(name: str):
     """Remove "Inc"/"Inc." substring from vendor name and leading whitespaces"""
     return name.replace("Inc.", "").replace("Inc", "").strip()
-
-
-def get_configs_by_vendor_and_model(
-    db: Session, vendor_name: str, model: str
-) -> list[models.Configuration] | None:
-    """
-    Get configurations for a platform which name (without data in parenthesis) is a
-    substring of a model and that belongs to a vendor with the vendor_name
-    """
-    vendor = db.query(models.Vendor).filter(models.Vendor.name == vendor_name).first()
-    if not vendor:
-        return None
-
-    filtered_platform = None
-
-    for platform in vendor.platforms:
-        # Ignore data in parenthesis
-        platform_name = platform.name
-        parenth_idx = platform_name.find("(")
-        if parenth_idx != -1:
-            platform_name = platform_name[:parenth_idx].strip()
-        if platform_name in model:
-            filtered_platform = platform
-
-    return filtered_platform.configurations if filtered_platform else None
-
-
-def get_latest_certificate_for_configs(
-    db: Session, configurations: list[models.Configuration]
-) -> models.Certificate | None:
-    """For a given list of configurations, find the latest certificate"""
-    latest_certificate = None
-    latest_release_date = None
-    for configuration in configurations:
-        for machine in configuration.machines:
-            certificates = (
-                db.query(models.Certificate)
-                .join(models.Release)
-                .filter(models.Certificate.machine_id == machine.id)
-                .order_by(models.Release.release_date.desc())
-                .all()
-            )
-            for certificate in certificates:
-                if (
-                    not latest_certificate
-                    or certificate.release.release_date > latest_release_date
-                ):
-                    latest_certificate = certificate
-                    latest_release_date = certificate.release.release_date
-
-    if latest_certificate is None or not latest_certificate.reports:
-        return None
-    return latest_certificate
 
 
 def get_or_create(
@@ -117,11 +63,11 @@ def get_or_create(
     return instance, True
 
 
-def get_release_from_os(db: Session, os: OSValidator) -> models.Release | None:
+def get_release_from_os(db: Session, os_version, os_codename) -> models.Release | None:
     """Return release object matching given OS data"""
     return (
         db.query(models.Release)
-        .filter_by(release=os.version, codename=os.codename)
+        .filter_by(release=os_version, codename=os_codename)
         .first()
     )
 
@@ -191,12 +137,11 @@ def get_machines_devices_query(db: Session, machine_ids: list[int]) -> Query:
     )
 
 
-def get_machines_with_same_hardware_params(
+def get_machine_with_same_hardware_params(
     db: Session, arch: str, board: models.Device, bios: models.Bios
-) -> list[models.Machine]:
+) -> models.Machine | None:
     """
-    Retrieve all the machines that have the given architecture, motherboard (optionally),
-    and are certified for the given release (if specified)
+    Get a machines that have the given architecture, motherboard, bios
     """
     return (
         db.query(models.Machine)
@@ -218,24 +163,84 @@ def get_machines_with_same_hardware_params(
             )
         )
         .distinct()
-        .all()
+        .first()
     )
 
 
-def get_processors_by_family(
-    db: Session,
-    family: str
-) -> list[models.Device]:
+def get_machine_architecture(db: Session, machine_id: int) -> str:
     """
-    Find a CPU device across the given list of devices that contains
-    model name.
+    Retrieve the architecture from the latest certificate and the latest report for the specified machine.
+
+    :param db: SQLAlchemy Session instance.
+    :param machine_id: integer ID of the machine.
+    :return: architecture string if found, None otherwise.
     """
-    return db.query(models.Device).filter(
-        and_(
-            models.Device.family.ilike(family),
-            models.Device.category == DeviceCategory.PROCESSOR,
-        ),
-    ).distinct().all()
+    latest_report = (
+        db.query(models.Report)
+        .join(models.Certificate, models.Report.certificate_id == models.Certificate.id)
+        .join(models.Machine, models.Certificate.machine_id == models.Machine.id)
+        .filter(models.Machine.id == machine_id)
+        .order_by(models.Certificate.created_at.desc())
+        .first()
+    )
+
+    return latest_report.architecture if latest_report else ""
+
+
+def get_cpu_for_machine(db: Session, machine_id: int) -> models.Device | None:
+    """
+    Retrieve the CPU family for the given machine based on the latest report.
+
+    :param db: SQLAlchemy Session instance.
+    :param machine_id: integer ID of the machine.
+    :return: CPU family string if found, None otherwise.
+    """
+    return (
+        db.query(models.Device)
+        .join(
+            models.device_report_association,
+            models.Device.id == models.device_report_association.c.device_id,
+        )
+        .join(
+            models.Report,
+            models.device_report_association.c.report_id == models.Report.id,
+        )
+        .join(models.Certificate, models.Report.certificate_id == models.Certificate.id)
+        .filter(
+            models.Certificate.machine_id == machine_id,
+            models.Device.category == DeviceCategory.PROCESSOR.value,
+        )
+        .order_by(models.Certificate.created_at.desc())
+        .first()
+    )
+
+
+def get_releases_and_kernels_for_machine(
+    db: Session, machine_id: int
+) -> tuple[list[models.Release], list[models.Kernel]]:
+    """
+    Retrieve all distinct releases and their corresponding kernel information for which a
+    given machine has been certified.
+
+    :param db: SQLAlchemy Session instance.
+    :param machine_id: integer ID of the machine.
+    :returns: a list of tuples, each containing a Release model instance and the kernel version string.
+    """
+    result = (
+        db.query(models.Release, models.Kernel)
+        .join(models.Certificate, models.Release.id == models.Certificate.release_id)
+        .join(models.Report, models.Certificate.id == models.Report.certificate_id)
+        .join(models.Kernel, models.Report.kernel_id == models.Kernel.id)
+        .filter(models.Certificate.machine_id == machine_id)
+        .distinct()
+        .all()
+    )
+    releases = []
+    kernels = []
+    for release, kernel in result:
+        releases.append(release)
+        kernels.append(kernel)
+    return releases, kernels
 
 
 def get_matching_pci_device(

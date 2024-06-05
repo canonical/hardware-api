@@ -149,7 +149,7 @@ device_report_association = Table(
 
 class Report(Base):
     __tablename__ = "report"
-    architecture: Mapped[str] = mapped_column(nullable=True)
+    architecture: Mapped[str] = mapped_column(nullable=False)
     # Relationships
     kernel_id: Mapped[int] = mapped_column(
         ForeignKey("kernel.id"), index=True, nullable=True

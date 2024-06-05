@@ -21,18 +21,13 @@
 from pydantic import BaseModel
 
 from hwapi.data_models.data_validators import (
-    AudioValidator,
     BiosValidator,
     BoardValidator,
     ChassisValidator,
-    GPUValidator,
-    NetworkAdapterValidator,
     OSValidator,
     PCIPeripheralValidator,
     ProcessorValidator,
     USBPeripheralValidator,
-    VideoCaptureValidator,
-    WirelessAdapterValidator,
 )
 
 
@@ -46,11 +41,6 @@ class CertificationStatusRequest(BaseModel):
     os: OSValidator
     bios: BiosValidator
     chassis: ChassisValidator | None = None
-    processor: list[ProcessorValidator] = []
-    gpu: list[GPUValidator] | None = None
-    audio: list[AudioValidator] | None = None
-    video: list[VideoCaptureValidator] | None = None
-    network: list[NetworkAdapterValidator] | None = None
-    wireless: list[WirelessAdapterValidator] | None = None
+    processor: ProcessorValidator
     pci_peripherals: list[PCIPeripheralValidator] = []
     usb_peripherals: list[USBPeripheralValidator] = []

@@ -25,6 +25,7 @@ class KernelPackageValidator(BaseModel):
     name: str | None
     version: str
     signature: str | None
+    loaded_modules: list[str] = []
 
 
 class OSValidator(BaseModel):
@@ -32,4 +33,3 @@ class OSValidator(BaseModel):
     version: str
     codename: str
     kernel: KernelPackageValidator
-    loaded_modules: list[str]

@@ -197,7 +197,7 @@ class C3Client:
         get_or_create(
             self.db,
             models.Report,
-            architecture=response.architecture,
+            architecture=response.architecture or "",
             kernel=kernel,
             bios=bios,
             certificate=certificate,
