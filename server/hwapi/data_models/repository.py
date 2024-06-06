@@ -189,11 +189,11 @@ def get_machine_architecture(db: Session, machine_id: int) -> str:
 
 def get_cpu_for_machine(db: Session, machine_id: int) -> models.Device | None:
     """
-    Retrieve the CPU family for the given machine based on the latest report.
+    Retrieve the CPU codename for the given machine based on the latest report.
 
     :param db: SQLAlchemy Session instance.
     :param machine_id: integer ID of the machine.
-    :return: CPU family string if found, None otherwise.
+    :return: CPU codename string if found, None otherwise.
     """
     return (
         db.query(models.Device)

@@ -261,7 +261,10 @@ class C3Client:
         )
 
         report, created = get_or_create(
-            self.db, models.Report, certificate_id=certificate.id
+            self.db,
+            models.Report,
+            certificate_id=certificate.id,
+            defaults={"architecture": ""},
         )
         if created or device not in report.devices:
             report.devices.append(device)

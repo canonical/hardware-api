@@ -113,7 +113,7 @@ components:
       - processor
       title: CertificationStatusRequest
       type: object
-    CertifiedImageExists:
+    CertifiedImageExistsResponse:
       properties:
         architecture:
           title: Architecture
@@ -143,7 +143,7 @@ components:
       - bios
       - board
       - available_releases
-      title: CertifiedImageExists
+      title: CertifiedImageExistsResponse
       type: object
     CertifiedResponse:
       properties:
@@ -159,6 +159,10 @@ components:
           $ref: '#/components/schemas/BiosValidator'
         board:
           $ref: '#/components/schemas/BoardValidator'
+        chassis:
+          anyOf:
+          - $ref: '#/components/schemas/ChassisValidator'
+          - type: 'null'
         status:
           const: Certified
           default: Certified
@@ -195,15 +199,19 @@ components:
       title: ChassisValidator
       type: object
     DeviceStatus:
-      enum: []
+      enum:
+      - known-working
+      - known-breaking
+      - unknown
       title: DeviceStatus
+      type: string
     GPUValidator:
       properties:
-        family:
+        codename:
           anyOf:
           - type: string
           - type: 'null'
-          title: Family
+          title: Codename
         identifier:
           title: Identifier
           type: string
@@ -212,10 +220,8 @@ components:
           type: string
         status:
           anyOf:
-          - enum: []
-            title: DeviceStatus
+          - $ref: '#/components/schemas/DeviceStatus'
           - type: 'null'
-          title: Status
         version:
           title: Version
           type: string
@@ -328,10 +334,8 @@ components:
           type: string
         status:
           anyOf:
-          - enum: []
-            title: DeviceStatus
+          - $ref: '#/components/schemas/DeviceStatus'
           - type: 'null'
-          title: Status
         vendor:
           title: Vendor
           type: string
@@ -343,8 +347,8 @@ components:
       type: object
     ProcessorValidator:
       properties:
-        family:
-          title: Family
+        codename:
+          title: Codename
           type: string
         frequency:
           title: Frequency
@@ -356,7 +360,7 @@ components:
           title: Version
           type: string
       required:
-      - family
+      - codename
       - frequency
       - manufacturer
       - version
@@ -374,6 +378,11 @@ components:
             type: array
           - type: 'null'
           title: Audio
+        available_releases:
+          items:
+            $ref: '#/components/schemas/OSValidator'
+          title: Available Releases
+          type: array
         bios:
           $ref: '#/components/schemas/BiosValidator'
         board:
@@ -433,6 +442,7 @@ components:
       - architecture
       - board
       - bios
+      - available_releases
       title: RelatedCertifiedSystemExistsResponse
       type: object
     USBPeripheralValidator:
@@ -442,10 +452,8 @@ components:
           type: string
         status:
           anyOf:
-          - enum: []
-            title: DeviceStatus
+          - $ref: '#/components/schemas/DeviceStatus'
           - type: 'null'
-          title: Status
         usb_id:
           title: Usb Id
           type: string
@@ -490,10 +498,8 @@ components:
           type: string
         status:
           anyOf:
-          - enum: []
-            title: DeviceStatus
+          - $ref: '#/components/schemas/DeviceStatus'
           - type: 'null'
-          title: Status
         vendor:
           title: Vendor
           type: string
@@ -514,10 +520,8 @@ components:
           type: string
         status:
           anyOf:
-          - enum: []
-            title: DeviceStatus
+          - $ref: '#/components/schemas/DeviceStatus'
           - type: 'null'
-          title: Status
         vendor:
           title: Vendor
           type: string
@@ -565,7 +569,7 @@ paths:
                 - $ref: '#/components/schemas/CertifiedResponse'
                 - $ref: '#/components/schemas/NotCertifiedResponse'
                 - $ref: '#/components/schemas/RelatedCertifiedSystemExistsResponse'
-                - $ref: '#/components/schemas/CertifiedImageExists'
+                - $ref: '#/components/schemas/CertifiedImageExistsResponse'
                 title: Response Check Certification V1 Certification Status Post
           description: Successful Response
         '422':

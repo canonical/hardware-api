@@ -55,7 +55,7 @@ class ChassisValidator(BaseModel):
 
 class GPUValidator(BaseModel):
     status: DeviceStatus | None = None
-    family: str | None = None
+    codename: str | None = None
     manufacturer: str
     version: str
     identifier: str
@@ -79,7 +79,7 @@ class PCIPeripheralValidator(BaseModel):
 
 
 class ProcessorValidator(BaseModel):
-    family: str
+    codename: str
     frequency: float
     manufacturer: str
     version: str

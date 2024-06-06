@@ -43,6 +43,7 @@ class CertifiedResponse(BaseModel):
     architecture: str
     bios: BiosValidator
     board: BoardValidator
+    chassis: ChassisValidator | None = None
     available_releases: list[OSValidator]
 
 
@@ -65,9 +66,10 @@ class RelatedCertifiedSystemExistsResponse(BaseModel):
     wireless: list[WirelessAdapterValidator] | None = None
     pci_peripherals: list[PCIPeripheralValidator] = []
     usb_peripherals: list[USBPeripheralValidator] = []
+    available_releases: list[OSValidator]
 
 
-class CertifiedImageExists(BaseModel):
+class CertifiedImageExistsResponse(BaseModel):
     status: Literal[CertificationStatus.CERTIFIED_IMAGE_EXISTS] = (
         CertificationStatus.CERTIFIED_IMAGE_EXISTS
     )

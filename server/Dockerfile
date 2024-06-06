@@ -10,6 +10,8 @@ RUN pip3 install poetry && \
     poetry config virtualenvs.create false && \
     poetry install --no-interaction --no-ansi
 
+RUN apt update && apt install -y sqlite3
+
 COPY . .
 
 ARG IMPORT_TOOL_PATH=./scripts/import_from_c3.py

@@ -27,7 +27,10 @@ class CertificationStatus(str, Enum):
     CERTIFIED_IMAGE_EXISTS = "Certified Image Exists"
 
 
-class DeviceStatus(str, Enum): ...
+class DeviceStatus(str, Enum):
+    KNOWN_WORKING = "known-working"
+    KNOWN_BREAKING = "known-breaking"
+    UNKNOWN = "unknown"
 
 
 class BusType(str, Enum):

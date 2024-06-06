@@ -22,16 +22,16 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
+from hwapi.data_models import repository
+from hwapi.data_models.setup import get_db
+from hwapi.endpoints.certification import logic, response_builders
 from hwapi.endpoints.certification.request_validators import CertificationStatusRequest
 from hwapi.endpoints.certification.response_validators import (
     CertifiedResponse,
     NotCertifiedResponse,
     RelatedCertifiedSystemExistsResponse,
-    CertifiedImageExists,
+    CertifiedImageExistsResponse,
 )
-from hwapi.data_models import repository, data_validators
-from hwapi.data_models.setup import get_db
-
 
 router = APIRouter()
 
@@ -42,7 +42,7 @@ router = APIRouter()
         CertifiedResponse
         | NotCertifiedResponse
         | RelatedCertifiedSystemExistsResponse
-        | CertifiedImageExists
+        | CertifiedImageExistsResponse
     ),
 )
 def check_certification(
@@ -51,7 +51,7 @@ def check_certification(
     CertifiedResponse
     | NotCertifiedResponse
     | RelatedCertifiedSystemExistsResponse
-    | CertifiedImageExists
+    | CertifiedImageExistsResponse
 ):
     """
     Endpoint for checking certification status (whether a system is certified, not seen
@@ -62,101 +62,33 @@ def check_certification(
     if not vendor:
         return NotCertifiedResponse()
     # Match against board and bios
-    board = repository.get_board(
-        db,
-        system_info.board.manufacturer,
-        system_info.board.product_name,
-        system_info.board.version,
+    try:
+        board, bios = logic.validate_hardware(db, system_info.board, system_info.bios)
+        related_machine = logic.find_certified_machine(
+            db, system_info.architecture, board, bios
+        )
+    except ValueError:
+        return NotCertifiedResponse()
+    related_releases, kernels = repository.get_releases_and_kernels_for_machine(
+        db, related_machine.id
     )
-    bios = repository.get_bios(db, system_info.bios.vendor, system_info.bios.version)
-    if board is None or bios is None:
-        return NotCertifiedResponse()
-    related_machine = repository.get_machine_with_same_hardware_params(
-        db, system_info.architecture, board, bios
-    )
-    if related_machine is None:
-        return NotCertifiedResponse()
-    related_machine_cpu = repository.get_cpu_for_machine(db, related_machine.id)
-    if related_machine_cpu is None:
-        return NotCertifiedResponse()
-    # Match against CPU family
-    if related_machine_cpu.family.lower() != system_info.processor.family.lower():
-        return RelatedCertifiedSystemExistsResponse(
-            architecture=repository.get_machine_architecture(db, related_machine.id),
-            board=data_validators.BoardValidator(
-                manufacturer=board.vendor.name,
-                product_name=board.name,
-                version=board.version,
-            ),
-            bios=data_validators.BiosValidator(
-                vendor=bios.vendor.name,
-                version=bios.version,
-                revision=bios.revision,
-                firmware_revision=bios.firmware_revision,
-                release_date=bios.release_date,
-            ),
+    # Match against CPU codename
+    if not logic.check_cpu_compatibility(
+        db, related_machine, system_info.processor.codename
+    ):
+        return response_builders.build_related_certified_response(
+            db, related_machine, board, bios, related_releases, kernels
         )
     # Check OS release
     release_from_request = repository.get_release_from_os(
         db, system_info.os.version, system_info.os.codename
     )
-    related_releases, kernels = repository.get_releases_and_kernels_for_machine(
-        db, related_machine.id
-    )
     if release_from_request in related_releases:
-        return CertifiedResponse(
-            architecture=repository.get_machine_architecture(db, related_machine.id),
-            board=data_validators.BoardValidator(
-                manufacturer=board.vendor.name,
-                product_name=board.name,
-                version=board.version,
-            ),
-            bios=data_validators.BiosValidator(
-                vendor=bios.vendor.name,
-                version=bios.version,
-                revision=bios.revision,
-                firmware_revision=bios.firmware_revision,
-                release_date=bios.release_date,
-            ),
-            available_releases=[
-                data_validators.OSValidator(
-                    distributor="Ubuntu",
-                    version=os.release,
-                    codename=os.codename,
-                    kernel=data_validators.KernelPackageValidator(
-                        name=kernels[i].name,
-                        version=kernels[i].version,
-                        signature=kernels[i].signature,
-                    ),
-                )
-                for i, os in enumerate(related_releases)
-            ],
+        # If machine has been certified for the specified in the request release
+        # return Certified response
+        return response_builders.build_certified_response(
+            db, related_machine, board, bios, related_releases, kernels
         )
-    return CertifiedImageExists(
-        architecture=repository.get_machine_architecture(db, related_machine.id),
-        board=data_validators.BoardValidator(
-            manufacturer=board.vendor.name,
-            product_name=board.name,
-            version=board.version,
-        ),
-        bios=data_validators.BiosValidator(
-            vendor=bios.vendor.name,
-            version=bios.version,
-            revision=bios.revision,
-            firmware_revision=bios.firmware_revision,
-            release_date=bios.release_date,
-        ),
-        available_releases=[
-            data_validators.OSValidator(
-                distributor="Ubuntu",
-                version=os.release,
-                codename=os.codename,
-                kernel=data_validators.KernelPackageValidator(
-                    name=kernels[i].name,
-                    version=kernels[i].version,
-                    signature=kernels[i].signature,
-                ),
-            )
-            for i, os in enumerate(related_releases)
-        ],
+    return response_builders.build_certified_image_exists_response(
+        db, related_machine, board, bios, related_releases, kernels
     )
