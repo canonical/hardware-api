@@ -20,10 +20,10 @@
 
 from typing import Any
 from sqlalchemy import and_
-from sqlalchemy.orm import Session, Query
+from sqlalchemy.orm import Session
 
 from hwapi.data_models import models
-from hwapi.data_models.enums import DeviceCategory, BusType
+from hwapi.data_models.enums import DeviceCategory
 
 
 def clean_vendor_name(name: str):
@@ -63,8 +63,8 @@ def get_or_create(
     return instance, True
 
 
-def get_release_from_os(db: Session, os_version, os_codename) -> models.Release | None:
-    """Return release object matching given OS data"""
+def get_release_object(db: Session, os_version, os_codename) -> models.Release | None:
+    """Return release object matching given codename and version"""
     return (
         db.query(models.Release)
         .filter_by(release=os_version, codename=os_codename)
@@ -114,26 +114,6 @@ def get_bios(db: Session, vendor_name: str, version: str) -> models.Bios | None:
             )
         )
         .first()
-    )
-
-
-def get_machines_devices_query(db: Session, machine_ids: list[int]) -> Query:
-    """
-    Return query that contains Devices joined with Reports and Certificates for a
-    given list of machine IDs
-    """
-    return (
-        db.query(models.Device)
-        .join(
-            models.device_report_association,
-            models.Device.id == models.device_report_association.c.device_id,
-        )
-        .join(
-            models.Report,
-            models.device_report_association.c.report_id == models.Report.id,
-        )
-        .join(models.Certificate, models.Report.certificate_id == models.Certificate.id)
-        .filter(models.Certificate.machine_id.in_(machine_ids))
     )
 
 
@@ -241,37 +221,3 @@ def get_releases_and_kernels_for_machine(
         releases.append(release)
         kernels.append(kernel)
     return releases, kernels
-
-
-def get_matching_pci_device(
-    db: Session,
-    devices_query: Query,
-    identifier: str,
-) -> models.Device | None:
-    """
-    Find an arbitary pci device across the given list of devices that has the same
-    PCI ID and model name
-    """
-    return devices_query.filter(
-        and_(
-            models.Device.identifier == identifier.lower(),
-            models.Device.bus == BusType.pci,
-        ),
-    ).first()
-
-
-def get_matching_usb_device(
-    db: Session,
-    devices_query: Query,
-    identifier: str,
-) -> models.Device | None:
-    """
-    Find an arbitary usb device across the given list of devices that has the same
-    USB ID and model name
-    """
-    return devices_query.filter(
-        and_(
-            models.Device.identifier == identifier.lower(),
-            models.Device.bus == BusType.usb,
-        ),
-    ).first()

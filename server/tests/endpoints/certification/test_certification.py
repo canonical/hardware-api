@@ -300,11 +300,11 @@ def test_correct_hardware_incorrect_os(
         "status": "Certified Image Exists",
         "architecture": "amd64",
         "bios": {
-            "vendor": "Known Vendor",
-            "version": "1.0",
-            "revision": "A01",
-            "firmware_revision": None,
-            "release_date": "2023-06-07",
+            "vendor": bios.vendor.name,
+            "version": bios.version,
+            "revision": bios.revision,
+            "release_date": bios.release_date.strftime("%Y-%m-%d"),
+            "firmware_revision": bios.firmware_revision,
         },
         "board": {
             "manufacturer": "Known Vendor",
@@ -403,11 +403,11 @@ def test_all_criteria_matched(generator: DataGenerator, test_client: TestClient)
         "status": "Certified",
         "architecture": "amd64",
         "bios": {
-            "vendor": "Known Vendor",
-            "version": "1.0",
-            "revision": "A01",
-            "firmware_revision": None,
-            "release_date": "2023-06-07",
+            "vendor": bios.vendor.name,
+            "version": bios.version,
+            "revision": bios.revision,
+            "release_date": bios.release_date.strftime("%Y-%m-%d"),
+            "firmware_revision": bios.firmware_revision,
         },
         "board": {
             "manufacturer": "Known Vendor",

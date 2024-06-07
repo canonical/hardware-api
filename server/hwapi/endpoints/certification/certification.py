@@ -80,7 +80,7 @@ def check_certification(
             db, related_machine, board, bios, related_releases, kernels
         )
     # Check OS release
-    release_from_request = repository.get_release_from_os(
+    release_from_request = repository.get_release_object(
         db, system_info.os.version, system_info.os.codename
     )
     if release_from_request in related_releases:
