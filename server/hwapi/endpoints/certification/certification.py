@@ -63,7 +63,9 @@ def check_certification(
         return NotCertifiedResponse()
     # Match against board and bios
     try:
-        board, bios = logic.validate_hardware(db, system_info.board, system_info.bios)
+        board, bios = logic.find_main_hardware_components(
+            db, system_info.board, system_info.bios
+        )
         related_machine = logic.find_certified_machine(
             db, system_info.architecture, board, bios
         )

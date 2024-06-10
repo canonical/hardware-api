@@ -25,9 +25,13 @@ from hwapi.data_models import repository, models
 from hwapi.data_models.data_validators import BoardValidator, BiosValidator
 
 
-def validate_hardware(
+def find_main_hardware_components(
     db: Session, board_data: BoardValidator, bios_data: BiosValidator
 ) -> tuple[models.Device, models.Bios]:
+    """
+    A function to get "main hardware components" like board and bios. Can be extended
+    in future
+    """
     board = repository.get_board(
         db, board_data.manufacturer, board_data.product_name, board_data.version
     )
