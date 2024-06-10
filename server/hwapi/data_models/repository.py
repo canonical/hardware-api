@@ -19,14 +19,14 @@
 
 
 from typing import Any
-from sqlalchemy import and_
-from sqlalchemy.orm import Session
+from sqlalchemy import select, and_
+from sqlalchemy.orm import Session, selectinload
 
 from hwapi.data_models import models
 from hwapi.data_models.enums import DeviceCategory
 
 
-def clean_vendor_name(name: str):
+def _clean_vendor_name(name: str):
     """Remove "Inc"/"Inc." substring from vendor name and leading whitespaces"""
     return name.replace("Inc.", "").replace("Inc", "").strip()
 
@@ -50,7 +50,8 @@ def get_or_create(
     :return: A tuple of (instance, created), where `created` is a boolean indicating
              whether the instance was created in this call
     """
-    instance = db.query(model).filter_by(**kwargs).first()
+    stmt = select(model).filter_by(**kwargs)
+    instance = db.execute(stmt).scalars().first()
     if instance:
         return instance, False
 
@@ -65,30 +66,25 @@ def get_or_create(
 
 def get_release_object(db: Session, os_version, os_codename) -> models.Release | None:
     """Return release object matching given codename and version"""
-    return (
-        db.query(models.Release)
-        .filter_by(release=os_version, codename=os_codename)
-        .first()
-    )
+    stmt = select(models.Release).filter_by(release=os_version, codename=os_codename)
+    return db.execute(stmt).scalars().first()
 
 
 def get_vendor_by_name(db: Session, name: str) -> models.Vendor | None:
     """Find vendor by name (cleaned-up)"""
-    return (
-        db.query(models.Vendor)
-        .filter(models.Vendor.name.ilike(f"%{clean_vendor_name(name).lower()}%"))
-        .first()
-    )
+    clean_name = f"%{_clean_vendor_name(name).lower()}%"
+    stmt = select(models.Vendor).where(models.Vendor.name.ilike(clean_name))
+    return db.execute(stmt).scalars().first()
 
 
 def get_board(
     db: Session, vendor_name: str, product_name: str, version: str
 ) -> models.Device | None:
     """Return device object (category==BOARD) matching given board data"""
-    return (
-        db.query(models.Device)
+    stmt = (
+        select(models.Device)
         .join(models.Vendor)
-        .filter(
+        .where(
             and_(
                 models.Vendor.name.ilike(vendor_name),
                 models.Device.name.ilike(product_name),
@@ -98,23 +94,23 @@ def get_board(
                 ),
             )
         )
-        .first()
     )
+    return db.execute(stmt).scalars().first()
 
 
 def get_bios(db: Session, vendor_name: str, version: str) -> models.Bios | None:
     """Return bios object matching given bios data"""
-    return (
-        db.query(models.Bios)
+    stmt = (
+        select(models.Bios)
         .join(models.Vendor)
-        .filter(
+        .where(
             and_(
                 models.Vendor.name.ilike(vendor_name),
                 models.Bios.version.ilike(version),
             )
         )
-        .first()
     )
+    return db.execute(stmt).scalars().first()
 
 
 def get_machine_with_same_hardware_params(
@@ -123,28 +119,30 @@ def get_machine_with_same_hardware_params(
     """
     Get a machines that have the given architecture, motherboard, bios
     """
-    return (
-        db.query(models.Machine)
+    stmt = (
+        select(models.Machine)
+        .select_from(models.Machine)
         .join(models.Certificate)
         .join(models.Report, models.Certificate.reports)
-        .join(
-            models.device_report_association,
-            models.Report.id == models.device_report_association.c.report_id,
-        )
-        .join(
-            models.Device,
-            models.device_report_association.c.device_id == models.Device.id,
-        )
+        .join(models.Device, models.Report.devices)
+        .join(models.Bios, models.Report.bios)
         .filter(
             and_(
                 models.Device.id == board.id,
                 models.Report.architecture == arch,
-                models.Report.bios_id == bios.id,
+                models.Bios.id == bios.id,
             )
         )
         .distinct()
-        .first()
     )
+    return db.execute(stmt).scalars().first()
+
+
+def get_machine_by_canonical_id(
+    db: Session, canonical_id: str
+) -> models.Machine | None:
+    stmt = select(models.Machine).where(models.Machine.canonical_id == canonical_id)
+    return db.execute(stmt).scalars().first()
 
 
 def get_machine_architecture(db: Session, machine_id: int) -> str:
@@ -155,44 +153,53 @@ def get_machine_architecture(db: Session, machine_id: int) -> str:
     :param machine_id: integer ID of the machine.
     :return: architecture string if found, None otherwise.
     """
-    latest_report = (
-        db.query(models.Report)
-        .join(models.Certificate, models.Report.certificate_id == models.Certificate.id)
-        .join(models.Machine, models.Certificate.machine_id == models.Machine.id)
-        .filter(models.Machine.id == machine_id)
+    stmt = (
+        select(models.Report.architecture)
+        .join(models.Certificate)
+        .join(models.Machine)
+        .where(models.Machine.id == machine_id)
         .order_by(models.Certificate.created_at.desc())
-        .first()
     )
+    result = db.execute(stmt).scalars().first()
+    return result if result else ""
 
-    return latest_report.architecture if latest_report else ""
+
+def get_certificate_by_name(
+    db: Session, machine_id: int, cert_name: str
+) -> models.Certificate | None:
+    stmt = select(models.Certificate).where(
+        and_(
+            models.Certificate.name == cert_name,
+            models.Certificate.machine_id == machine_id,
+        )
+    )
+    return db.execute(stmt).scalars().first()
 
 
 def get_cpu_for_machine(db: Session, machine_id: int) -> models.Device | None:
     """
-    Retrieve the CPU codename for the given machine based on the latest report.
+    Retrieve the CPU for the given machine based on the latest report.
 
     :param db: SQLAlchemy Session instance.
     :param machine_id: integer ID of the machine.
-    :return: CPU codename string if found, None otherwise.
+    :return: CPU object if found, None otherwise.
     """
-    return (
-        db.query(models.Device)
-        .join(
-            models.device_report_association,
-            models.Device.id == models.device_report_association.c.device_id,
+    stmt = (
+        select(models.Device)
+        .select_from(models.Machine)
+        .join(models.Certificate, models.Machine.certificates)
+        .join(models.Report, models.Certificate.reports)
+        .join(models.Device, models.Report.devices)
+        .where(
+            and_(
+                models.Machine.id == machine_id,
+                models.Device.category == DeviceCategory.PROCESSOR,
+            )
         )
-        .join(
-            models.Report,
-            models.device_report_association.c.report_id == models.Report.id,
-        )
-        .join(models.Certificate, models.Report.certificate_id == models.Certificate.id)
-        .filter(
-            models.Certificate.machine_id == machine_id,
-            models.Device.category == DeviceCategory.PROCESSOR.value,
-        )
+        .options(selectinload(models.Device.vendor))
         .order_by(models.Certificate.created_at.desc())
-        .first()
     )
+    return db.execute(stmt).scalars().first()
 
 
 def get_releases_and_kernels_for_machine(
@@ -206,18 +213,15 @@ def get_releases_and_kernels_for_machine(
     :param machine_id: integer ID of the machine.
     :returns: a list of tuples, each containing a Release model instance and the kernel version string.
     """
-    result = (
-        db.query(models.Release, models.Kernel)
-        .join(models.Certificate, models.Release.id == models.Certificate.release_id)
-        .join(models.Report, models.Certificate.id == models.Report.certificate_id)
-        .join(models.Kernel, models.Report.kernel_id == models.Kernel.id)
-        .filter(models.Certificate.machine_id == machine_id)
+    stmt = (
+        select(models.Release, models.Kernel)
+        .join(models.Certificate)
+        .join(models.Report)
+        .join(models.Kernel)
+        .where(models.Certificate.machine_id == machine_id)
         .distinct()
-        .all()
     )
-    releases = []
-    kernels = []
-    for release, kernel in result:
-        releases.append(release)
-        kernels.append(kernel)
+    result = db.execute(stmt).all()
+    releases = [release for release, _ in result]
+    kernels = [kernel for _, kernel in result]
     return releases, kernels

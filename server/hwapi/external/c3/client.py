@@ -28,7 +28,12 @@ from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
 from hwapi.data_models import models, enums
-from hwapi.data_models.repository import get_or_create
+from hwapi.data_models.repository import (
+    get_or_create,
+    get_vendor_by_name,
+    get_machine_by_canonical_id,
+    get_certificate_by_name,
+)
 from hwapi.external.c3 import response_models, urls
 from hwapi.external.c3.helpers import progress_bar
 
@@ -141,26 +146,7 @@ class C3Client:
             )
         bios = None
         if response.bios is not None:
-            bios_vendor = (
-                self.db.query(models.Vendor)
-                .filter(models.Vendor.name.ilike(response.bios.vendor))
-                .first()
-            )
-            # Remove Inc/Inc. from vendor name to avoid duplicate vendors
-            if bios_vendor is None and (
-                response.bios.vendor.endswith("Inc")
-                or response.bios.vendor.endswith("Inc.")
-            ):
-                bios_vendor_name = (
-                    response.bios.vendor[: response.bios.vendor.rfind("Inc")]
-                    .replace(",", "")
-                    .strip()
-                )
-                bios_vendor = (
-                    self.db.query(models.Vendor)
-                    .filter(models.Vendor.name.ilike(bios_vendor_name))
-                    .first()
-                )
+            bios_vendor = get_vendor_by_name(self.db, response.bios.vendor)
             if bios_vendor is None:
                 bios_vendor, _ = get_or_create(
                     self.db, models.Vendor, name=response.bios.vendor
@@ -206,20 +192,16 @@ class C3Client:
     def _load_devices_from_response(
         self, device_instance: response_models.PublicDeviceInstance
     ):
-        machine = (
-            self.db.query(models.Machine)
-            .filter_by(canonical_id=device_instance.machine_canonical_id)
-            .first()
+        machine = get_machine_by_canonical_id(
+            self.db, device_instance.machine_canonical_id
         )
         if machine is None:
             raise ValueError(
                 f"Machine with canonical ID {device_instance.machine_canonical_id}"
                 " does not exist"
             )
-        certificate = (
-            self.db.query(models.Certificate)
-            .filter_by(name=device_instance.certificate_name, machine_id=machine.id)
-            .first()
+        certificate = get_certificate_by_name(
+            self.db, machine.id, device_instance.certificate_name
         )
         if certificate is None:
             raise ValueError(
