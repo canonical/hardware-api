@@ -27,8 +27,8 @@ You can stand up the environment by running the following commands:
 
 ```bash
 # Assuming that the path to the DB file is ./hwapi.db
-docker-compose build --build-arg IMPORT_TOOL_PATH="" --build-arg DB_URL=sqlite:///./hwapi.db hwapi-dev
-docker-compose up --attach-dependencies hwapi-dev
+docker compose build --build-arg IMPORT_TOOL_PATH="" --build-arg DB_URL=sqlite:///./hwapi.db hwapi-dev
+docker compose up --attach-dependencies hwapi-dev
 ```
 
 ### Seed the database from the script
@@ -38,7 +38,7 @@ This approach doesn't require internet access and populates your DB with dummy d
 
 ```bash
 export IMPORT_TOOL_PATH=./scripts/seed_db.py
-docker-compose up --attach-dependencies --build hwapi-dev
+docker compose up --attach-dependencies --build hwapi-dev
 ```
 
 To verify that it works, you can make the following request from the host
@@ -53,12 +53,12 @@ curl http://0.0.0.0:8080/v1/certification/status -X POST -H "Content-Type: appli
 
 This approach populates the DB with the data from C3 (staging instance by default).
 Keep in mind that importing data from staging or production takes some time, you probably
-can consider importing data from your local C3 instance with sample data.
+want to consider importing data from your local C3 instance with sample data.
 
 To build and run the container with staging data, execute the following command:
 
 ```bash
-docker-compose up --attach-dependencies --build hwapi-dev
+docker compose up --attach-dependencies --build hwapi-dev
 ```
 
 To verify that it works, make the following request from the host (you should receive the Certified response):
@@ -72,7 +72,7 @@ Alternatively, you can specify another C3 host (like production or the local one
 
 ```bash
 export C3_URL=http://your.c3.instance  # e.g https://certification.canonical.com
-docker-compose up --attach-dependencies --build hwapi-dev
+docker compose up --attach-dependencies --build hwapi-dev
 ```
 
 ## Accessing API schema

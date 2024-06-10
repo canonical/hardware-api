@@ -18,55 +18,40 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 """The algorithms for determining certification status"""
 
+
 from sqlalchemy.orm import Session
 
-from hwapi.endpoints.certification.rbody_validators import (
-    CertificationStatusRequest,
-    CertifiedResponse,
-)
-from hwapi.data_models import data_validators, repository
-from hwapi.data_models.enums import CertificationStatus
+from hwapi.data_models import repository, models
+from hwapi.data_models.data_validators import BoardValidator, BiosValidator
 
 
-def is_certified(system_info: CertificationStatusRequest, db: Session):
-    """Logic for checking whether system is Certified"""
-    configurations = repository.get_configs_by_vendor_and_model(
-        db, system_info.vendor, system_info.model
+def find_main_hardware_components(
+    db: Session, board_data: BoardValidator, bios_data: BiosValidator
+) -> tuple[models.Device, models.Bios]:
+    """
+    A function to get "main hardware components" like board and bios. Can be extended
+    in future
+    """
+    board = repository.get_board(
+        db, board_data.manufacturer, board_data.product_name, board_data.version
     )
-    if configurations is None:
-        return False, None
+    bios = repository.get_bios(db, bios_data.vendor, bios_data.version)
+    if not board or not bios:
+        raise ValueError("Hardware not certified")
+    return board, bios
 
-    latest_certificate = repository.get_latest_certificate_for_configs(
-        db, configurations
-    )
-    if latest_certificate is None:
-        return False, None
 
-    report = latest_certificate.reports[0]
-    kernel = report.kernel
-    bios = report.bios
+def find_certified_machine(
+    db: Session, arch: str, board: models.Device, bios: models.Bios
+) -> models.Machine:
+    machine = repository.get_machine_with_same_hardware_params(db, arch, board, bios)
+    if not machine:
+        raise ValueError("No certified machine matches the hardware specifications")
+    return machine
 
-    if latest_certificate:
-        return True, CertifiedResponse(
-            status=CertificationStatus.CERTIFIED,
-            os=data_validators.OSValidator(
-                distributor="Canonical Ltd.",
-                version=latest_certificate.release.release,
-                codename=latest_certificate.release.codename,
-                kernel=data_validators.KernelPackageValidator(
-                    name=kernel.name, version=kernel.version, signature=kernel.signature
-                ),
-                loaded_modules=[],
-            ),
-            bios=(
-                data_validators.BiosValidator(
-                    release_date=bios.release_date,
-                    revision=bios.revision,
-                    firmware_revision=bios.firmware_revision,
-                    vendor=bios.vendor.name,
-                    version=bios.version,
-                )
-                if bios
-                else None
-            ),
-        )
+
+def check_cpu_compatibility(
+    db: Session, machine: models.Machine, target_codename: str
+) -> bool:
+    cpu = repository.get_cpu_for_machine(db, machine.id)
+    return bool(cpu and cpu.codename.lower() == target_codename.lower())

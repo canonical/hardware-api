@@ -16,20 +16,31 @@
 #
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
-
+"""Vaidator models for request body"""
 
 from pydantic import BaseModel
 
+from hwapi.data_models.data_validators import (
+    BiosValidator,
+    BoardValidator,
+    ChassisValidator,
+    OSValidator,
+    PCIPeripheralValidator,
+    ProcessorValidator,
+    USBPeripheralValidator,
+)
 
-class KernelPackageValidator(BaseModel):
-    name: str | None
-    version: str
-    signature: str | None
-    loaded_modules: list[str] = []
 
+class CertificationStatusRequest(BaseModel):
+    """Request body validator for status check endpoint"""
 
-class OSValidator(BaseModel):
-    distributor: str
-    version: str
-    codename: str
-    kernel: KernelPackageValidator
+    vendor: str
+    model: str
+    architecture: str
+    board: BoardValidator
+    os: OSValidator
+    bios: BiosValidator
+    chassis: ChassisValidator | None = None
+    processor: ProcessorValidator
+    pci_peripherals: list[PCIPeripheralValidator] = []
+    usb_peripherals: list[USBPeripheralValidator] = []

@@ -22,8 +22,15 @@ from enum import Enum
 
 class CertificationStatus(str, Enum):
     CERTIFIED = "Certified"
-    PARTIALLY_CERTIFIED = "Partially Certified"
     NOT_SEEN = "Not Seen"
+    RELATED_CERTIFIED_SYSTEM_EXISTS = "Related Certified System Exists"
+    CERTIFIED_IMAGE_EXISTS = "Certified Image Exists"
+
+
+class DeviceStatus(str, Enum):
+    KNOWN_WORKING = "known-working"
+    KNOWN_BREAKING = "known-breaking"
+    UNKNOWN = "unknown"
 
 
 class BusType(str, Enum):

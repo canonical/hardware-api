@@ -120,11 +120,49 @@ class DataGenerator:
         return bios
 
     def gen_report(
-        self, certificate: models.Certificate, kernel: models.Kernel, bios: models.Bios
+        self,
+        certificate: models.Certificate,
+        kernel: models.Kernel,
+        bios: models.Bios,
+        architecture: str = "amd64",
     ) -> models.Report:
         report = models.Report(
-            architecture="amd64", kernel=kernel, bios=bios, certificate=certificate
+            architecture=architecture, kernel=kernel, bios=bios, certificate=certificate
         )
         self.db_session.add(report)
         self.db_session.commit()
         return report
+
+    def gen_device(
+        self,
+        vendor: models.Vendor,
+        identifier: str,
+        name: str,
+        subproduct_name: str = "",
+        device_type: str = "",
+        bus: models.BusType = models.BusType.pci,
+        version: str = "1.0",
+        subsystem: str = "",
+        category: models.DeviceCategory = models.DeviceCategory.OTHER,
+        codename: str = "",
+        reports: list[models.Report] | None = None,
+    ) -> models.Device:
+        device = models.Device(
+            vendor=vendor,
+            identifier=identifier,
+            name=name,
+            subproduct_name=subproduct_name,
+            device_type=device_type,
+            bus=bus,
+            version=version,
+            subsystem=subsystem,
+            category=category,
+            codename=codename,
+        )
+
+        if reports:
+            device.reports.extend(reports)
+
+        self.db_session.add(device)
+        self.db_session.commit()
+        return device
