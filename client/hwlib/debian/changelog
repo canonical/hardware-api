@@ -1,6 +1,5 @@
-hwlib (0.0.1) mantic; urgency=medium
+rust-hwlib (0.0.1-1) noble; urgency=medium
 
-  * Team upload.
-  * Package hwlib 0.0.1
+  * Publish the initial version of the hwlib for noble
 
- -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Tue, 06 Feb 2024 12:15:50 +0200
+ -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Tue, 11 Jun 2024 14:08:27 +0300
