@@ -1,5 +1,5 @@
-rust-hwlib (0.0.1-1) noble; urgency=medium
+rust-hwlib (0.0.1-1) focal; urgency=medium
 
-  * Publish the initial version of the hwlib for noble
+  * Publish the initial version of the hwlib for focal
 
- -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Tue, 11 Jun 2024 14:08:27 +0300
+ -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Thu, 13 Jun 2024 14:01:54 +0300
