@@ -8,6 +8,7 @@ hwlib/debian/hwlib/
 cargo_home
 .cargo-checksum.json
 __pycache__/
+vendor/
 
 # debian/ source files to ignore
 .debhelper/
