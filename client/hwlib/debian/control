@@ -10,10 +10,7 @@ Build-Depends: debhelper (>= 12),
                python3-pip,
                libssl-dev,
                pkg-config,
-               patchelf,
-               librust-serde-derive-1+default-dev,
-               librust-serde-json-1+default-dev,
-               librust-once-cell-1+default-dev
+               patchelf
 Maintainer: Canonical Hardware Certification <canonical-hw-cert@lists.launchpad.net> 
 Uploaders: Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 Standards-Version: 4.6.1

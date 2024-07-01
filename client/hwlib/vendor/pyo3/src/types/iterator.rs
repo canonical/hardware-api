@@ -1,5 +1,9 @@
-use crate::{ffi, AsPyPointer, Py, PyAny, PyErr, PyNativeType, PyResult, Python};
-use crate::{PyDowncastError, PyTryFrom};
+use crate::ffi_ptr_ext::FfiPtrExt;
+use crate::instance::Borrowed;
+use crate::py_result_ext::PyResultExt;
+use crate::{
+    ffi, AsPyPointer, Bound, PyAny, PyDowncastError, PyErr, PyNativeType, PyResult, PyTypeCheck,
+};
 
 /// A Python iterator object.
 ///
@@ -10,10 +14,10 @@ use crate::{PyDowncastError, PyTryFrom};
 ///
 /// # fn main() -> PyResult<()> {
 /// Python::with_gil(|py| -> PyResult<()> {
-///     let list = py.eval("iter([1, 2, 3, 4])", None, None)?;
+///     let list = py.eval_bound("iter([1, 2, 3, 4])", None, None)?;
 ///     let numbers: PyResult<Vec<usize>> = list
 ///         .iter()?
-///         .map(|i| i.and_then(PyAny::extract::<usize>))
+///         .map(|i| i.and_then(|i|i.extract::<usize>()))
 ///         .collect();
 ///     let sum: usize = numbers?.iter().sum();
 ///     assert_eq!(sum, 10);
@@ -27,13 +31,27 @@ pyobject_native_type_named!(PyIterator);
 pyobject_native_type_extract!(PyIterator);
 
 impl PyIterator {
-    /// Constructs a `PyIterator` from a Python iterable object.
-    ///
-    /// Equivalent to Python's built-in `iter` function.
+    /// Deprecated form of `PyIterator::from_bound_object`.
+    #[cfg_attr(
+        not(feature = "gil-refs"),
+        deprecated(
+            since = "0.21.0",
+            note = "`PyIterator::from_object` will be replaced by `PyIterator::from_bound_object` in a future PyO3 version"
+        )
+    )]
     pub fn from_object(obj: &PyAny) -> PyResult<&PyIterator> {
+        Self::from_bound_object(&obj.as_borrowed()).map(Bound::into_gil_ref)
+    }
+
+    /// Builds an iterator for an iterable Python object; the equivalent of calling `iter(obj)` in Python.
+    ///
+    /// Usually it is more convenient to write [`obj.iter()`][crate::types::any::PyAnyMethods::iter],
+    /// which is a more concise way of calling this function.
+    pub fn from_bound_object<'py>(obj: &Bound<'py, PyAny>) -> PyResult<Bound<'py, PyIterator>> {
         unsafe {
-            obj.py()
-                .from_owned_ptr_or_err(ffi::PyObject_GetIter(obj.as_ptr()))
+            ffi::PyObject_GetIter(obj.as_ptr())
+                .assume_owned_or_err(obj.py())
+                .downcast_into_unchecked()
         }
     }
 }
@@ -48,23 +66,70 @@ impl<'p> Iterator for &'p PyIterator {
     /// Further `next()` calls after an exception occurs are likely
     /// to repeatedly result in the same exception.
     fn next(&mut self) -> Option<Self::Item> {
-        let py = self.0.py();
-
-        match unsafe { py.from_owned_ptr_or_opt(ffi::PyIter_Next(self.0.as_ptr())) } {
-            Some(obj) => Some(Ok(obj)),
-            None => PyErr::take(py).map(Err),
-        }
+        self.as_borrowed()
+            .next()
+            .map(|result| result.map(Bound::into_gil_ref))
     }
 
     #[cfg(not(Py_LIMITED_API))]
     fn size_hint(&self) -> (usize, Option<usize>) {
-        let hint = unsafe { ffi::PyObject_LengthHint(self.0.as_ptr(), 0) };
+        self.as_borrowed().size_hint()
+    }
+}
+
+impl<'py> Iterator for Bound<'py, PyIterator> {
+    type Item = PyResult<Bound<'py, PyAny>>;
+
+    /// Retrieves the next item from an iterator.
+    ///
+    /// Returns `None` when the iterator is exhausted.
+    /// If an exception occurs, returns `Some(Err(..))`.
+    /// Further `next()` calls after an exception occurs are likely
+    /// to repeatedly result in the same exception.
+    #[inline]
+    fn next(&mut self) -> Option<Self::Item> {
+        Borrowed::from(&*self).next()
+    }
+
+    #[cfg(not(Py_LIMITED_API))]
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let hint = unsafe { ffi::PyObject_LengthHint(self.as_ptr(), 0) };
         (hint.max(0) as usize, None)
     }
 }
 
-// PyIter_Check does not exist in the limited API until 3.8
-impl<'v> PyTryFrom<'v> for PyIterator {
+impl<'py> Borrowed<'_, 'py, PyIterator> {
+    // TODO: this method is on Borrowed so that &'py PyIterator can use this; once that
+    // implementation is deleted this method should be moved to the `Bound<'py, PyIterator> impl
+    fn next(self) -> Option<PyResult<Bound<'py, PyAny>>> {
+        let py = self.py();
+
+        match unsafe { ffi::PyIter_Next(self.as_ptr()).assume_owned_or_opt(py) } {
+            Some(obj) => Some(Ok(obj)),
+            None => PyErr::take(py).map(Err),
+        }
+    }
+}
+
+impl<'py> IntoIterator for &Bound<'py, PyIterator> {
+    type Item = PyResult<Bound<'py, PyAny>>;
+    type IntoIter = Bound<'py, PyIterator>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.clone()
+    }
+}
+
+impl PyTypeCheck for PyIterator {
+    const NAME: &'static str = "Iterator";
+
+    fn type_check(object: &Bound<'_, PyAny>) -> bool {
+        unsafe { ffi::PyIter_Check(object.as_ptr()) != 0 }
+    }
+}
+
+#[allow(deprecated)]
+impl<'v> crate::PyTryFrom<'v> for PyIterator {
     fn try_from<V: Into<&'v PyAny>>(value: V) -> Result<&'v PyIterator, PyDowncastError<'v>> {
         let value = value.into();
         unsafe {
@@ -87,23 +152,8 @@ impl<'v> PyTryFrom<'v> for PyIterator {
     }
 }
 
-impl Py<PyIterator> {
-    /// Borrows a GIL-bound reference to the PyIterator. By binding to the GIL lifetime, this
-    /// allows the GIL-bound reference to not require `Python` for any of its methods.
-    pub fn as_ref<'py>(&'py self, _py: Python<'py>) -> &'py PyIterator {
-        let any = self.as_ptr() as *const PyAny;
-        unsafe { PyNativeType::unchecked_downcast(&*any) }
-    }
-
-    /// Similar to [`as_ref`](#method.as_ref), and also consumes this `Py` and registers the
-    /// Python object reference in PyO3's object storage. The reference count for the Python
-    /// object will not be decreased until the GIL lifetime ends.
-    pub fn into_ref(self, py: Python<'_>) -> &PyIterator {
-        unsafe { py.from_owned_ptr(self.into_ptr()) }
-    }
-}
-
 #[cfg(test)]
+#[cfg_attr(not(feature = "gil-refs"), allow(deprecated))]
 mod tests {
     use super::PyIterator;
     use crate::exceptions::PyTypeError;
@@ -206,6 +256,39 @@ def fibonacci(target):
     }
 
     #[test]
+    fn fibonacci_generator_bound() {
+        use crate::types::any::PyAnyMethods;
+        use crate::Bound;
+
+        let fibonacci_generator = r#"
+def fibonacci(target):
+    a = 1
+    b = 1
+    for _ in range(target):
+        yield a
+        a, b = b, a + b
+"#;
+
+        Python::with_gil(|py| {
+            let context = PyDict::new_bound(py);
+            py.run_bound(fibonacci_generator, None, Some(&context))
+                .unwrap();
+
+            let generator: Bound<'_, PyIterator> = py
+                .eval_bound("fibonacci(5)", None, Some(&context))
+                .unwrap()
+                .downcast_into()
+                .unwrap();
+            let mut items = vec![];
+            for actual in &generator {
+                let actual = actual.unwrap().extract::<usize>().unwrap();
+                items.push(actual);
+            }
+            assert_eq!(items, [1, 1, 2, 3, 5]);
+        });
+    }
+
+    #[test]
     fn int_not_iterable() {
         Python::with_gil(|py| {
             let x = 5.to_object(py);
@@ -223,28 +306,6 @@ def fibonacci(target):
             let iter: &PyIterator = obj.downcast(py).unwrap();
             assert!(obj.is(iter));
         });
-    }
-
-    #[test]
-    fn test_as_ref() {
-        Python::with_gil(|py| {
-            let iter: Py<PyIterator> = PyAny::iter(PyList::empty(py)).unwrap().into();
-            let mut iter_ref: &PyIterator = iter.as_ref(py);
-            assert!(iter_ref.next().is_none());
-        })
-    }
-
-    #[test]
-    fn test_into_ref() {
-        Python::with_gil(|py| {
-            let bare_iter = PyAny::iter(PyList::empty(py)).unwrap();
-            assert_eq!(bare_iter.get_refcnt(), 1);
-            let iter: Py<PyIterator> = bare_iter.into();
-            assert_eq!(bare_iter.get_refcnt(), 2);
-            let mut iter_ref = iter.into_ref(py);
-            assert!(iter_ref.next().is_none());
-            assert_eq!(iter_ref.get_refcnt(), 2);
-        })
     }
 
     #[test]

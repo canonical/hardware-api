@@ -3,7 +3,7 @@
 use pyo3::class::PyTraverseError;
 use pyo3::class::PyVisit;
 use pyo3::prelude::*;
-use pyo3::{py_run, PyCell, PyTryInto};
+use pyo3::py_run;
 use std::cell::Cell;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::Arc;
@@ -99,7 +99,7 @@ fn gc_integration() {
     let drop_called = Arc::new(AtomicBool::new(false));
 
     Python::with_gil(|py| {
-        let inst = PyCell::new(
+        let inst = Bound::new(
             py,
             GcIntegration {
                 self_ref: py.None(),
@@ -117,7 +117,7 @@ fn gc_integration() {
     });
 
     Python::with_gil(|py| {
-        py.run("import gc; gc.collect()", None, None).unwrap();
+        py.run_bound("import gc; gc.collect()", None, None).unwrap();
         assert!(drop_called.load(Ordering::Relaxed));
     });
 }
@@ -156,7 +156,7 @@ fn gc_null_traversal() {
         obj.borrow_mut(py).cycle = Some(obj.clone_ref(py));
 
         // the object doesn't have to be cleaned up, it just needs to be traversed.
-        py.run("import gc; gc.collect()", None, None).unwrap();
+        py.run_bound("import gc; gc.collect()", None, None).unwrap();
     });
 }
 
@@ -211,11 +211,11 @@ fn inheritance_with_new_methods_with_drop() {
     let drop_called2 = Arc::new(AtomicBool::new(false));
 
     Python::with_gil(|py| {
-        let _typebase = py.get_type::<BaseClassWithDrop>();
-        let typeobj = py.get_type::<SubClassWithDrop>();
+        let _typebase = py.get_type_bound::<BaseClassWithDrop>();
+        let typeobj = py.get_type_bound::<SubClassWithDrop>();
         let inst = typeobj.call((), None).unwrap();
 
-        let obj: &PyCell<SubClassWithDrop> = PyTryInto::try_into(inst).unwrap();
+        let obj = inst.downcast::<SubClassWithDrop>().unwrap();
         let mut obj_ref_mut = obj.borrow_mut();
         obj_ref_mut.data = Some(Arc::clone(&drop_called1));
         let base: &mut BaseClassWithDrop = obj_ref_mut.as_mut();
@@ -255,12 +255,12 @@ fn gc_during_borrow() {
     Python::with_gil(|py| {
         unsafe {
             // get the traverse function
-            let ty = py.get_type::<TraversableClass>().as_type_ptr();
-            let traverse = get_type_traverse(ty).unwrap();
+            let ty = py.get_type_bound::<TraversableClass>();
+            let traverse = get_type_traverse(ty.as_type_ptr()).unwrap();
 
             // create an object and check that traversing it works normally
             // when it's not borrowed
-            let cell = PyCell::new(py, TraversableClass::new()).unwrap();
+            let cell = Bound::new(py, TraversableClass::new()).unwrap();
             let obj = cell.to_object(py);
             assert!(!cell.borrow().traversed.load(Ordering::Relaxed));
             traverse(obj.as_ptr(), novisit, std::ptr::null_mut());
@@ -268,7 +268,7 @@ fn gc_during_borrow() {
 
             // create an object and check that it is not traversed if the GC
             // is invoked while it is already borrowed mutably
-            let cell2 = PyCell::new(py, TraversableClass::new()).unwrap();
+            let cell2 = Bound::new(py, TraversableClass::new()).unwrap();
             let obj2 = cell2.to_object(py);
             let guard = cell2.borrow_mut();
             assert!(!guard.traversed.load(Ordering::Relaxed));
@@ -303,8 +303,8 @@ impl PartialTraverse {
 fn traverse_partial() {
     Python::with_gil(|py| unsafe {
         // get the traverse function
-        let ty = py.get_type::<PartialTraverse>().as_type_ptr();
-        let traverse = get_type_traverse(ty).unwrap();
+        let ty = py.get_type_bound::<PartialTraverse>();
+        let traverse = get_type_traverse(ty.as_type_ptr()).unwrap();
 
         // confirm that traversing errors
         let obj = Py::new(py, PartialTraverse::new(py)).unwrap();
@@ -338,8 +338,8 @@ impl PanickyTraverse {
 fn traverse_panic() {
     Python::with_gil(|py| unsafe {
         // get the traverse function
-        let ty = py.get_type::<PanickyTraverse>().as_type_ptr();
-        let traverse = get_type_traverse(ty).unwrap();
+        let ty = py.get_type_bound::<PanickyTraverse>();
+        let traverse = get_type_traverse(ty.as_type_ptr()).unwrap();
 
         // confirm that traversing errors
         let obj = Py::new(py, PanickyTraverse::new(py)).unwrap();
@@ -361,8 +361,8 @@ impl TriesGILInTraverse {
 fn tries_gil_in_traverse() {
     Python::with_gil(|py| unsafe {
         // get the traverse function
-        let ty = py.get_type::<TriesGILInTraverse>().as_type_ptr();
-        let traverse = get_type_traverse(ty).unwrap();
+        let ty = py.get_type_bound::<TriesGILInTraverse>();
+        let traverse = get_type_traverse(ty.as_type_ptr()).unwrap();
 
         // confirm that traversing panicks
         let obj = Py::new(py, TriesGILInTraverse {}).unwrap();
@@ -398,6 +398,7 @@ impl HijackedTraverse {
     }
 }
 
+#[allow(dead_code)]
 trait Traversable {
     fn __traverse__(&self, visit: PyVisit<'_>) -> Result<(), PyTraverseError>;
 }
@@ -413,10 +414,10 @@ impl<'a> Traversable for PyRef<'a, HijackedTraverse> {
 fn traverse_cannot_be_hijacked() {
     Python::with_gil(|py| unsafe {
         // get the traverse function
-        let ty = py.get_type::<HijackedTraverse>().as_type_ptr();
-        let traverse = get_type_traverse(ty).unwrap();
+        let ty = py.get_type_bound::<HijackedTraverse>();
+        let traverse = get_type_traverse(ty.as_type_ptr()).unwrap();
 
-        let cell = PyCell::new(py, HijackedTraverse::new()).unwrap();
+        let cell = Bound::new(py, HijackedTraverse::new()).unwrap();
         let obj = cell.to_object(py);
         assert_eq!(cell.borrow().traversed_and_hijacked(), (false, false));
         traverse(obj.as_ptr(), novisit, std::ptr::null_mut());
@@ -469,7 +470,7 @@ fn drop_during_traversal_with_gil() {
     // (but not too many) collections to get `inst` actually dropped.
     for _ in 0..10 {
         Python::with_gil(|py| {
-            py.run("import gc; gc.collect()", None, None).unwrap();
+            py.run_bound("import gc; gc.collect()", None, None).unwrap();
         });
     }
     assert!(drop_called.load(Ordering::Relaxed));
@@ -502,10 +503,64 @@ fn drop_during_traversal_without_gil() {
     // (but not too many) collections to get `inst` actually dropped.
     for _ in 0..10 {
         Python::with_gil(|py| {
-            py.run("import gc; gc.collect()", None, None).unwrap();
+            py.run_bound("import gc; gc.collect()", None, None).unwrap();
         });
     }
     assert!(drop_called.load(Ordering::Relaxed));
+}
+
+#[pyclass(unsendable)]
+struct UnsendableTraversal {
+    traversed: Cell<bool>,
+}
+
+#[pymethods]
+impl UnsendableTraversal {
+    fn __clear__(&mut self) {}
+
+    #[allow(clippy::unnecessary_wraps)]
+    fn __traverse__(&self, _visit: PyVisit<'_>) -> Result<(), PyTraverseError> {
+        self.traversed.set(true);
+        Ok(())
+    }
+}
+
+#[test]
+#[cfg(not(target_arch = "wasm32"))] // We are building wasm Python with pthreads disabled
+fn unsendable_are_not_traversed_on_foreign_thread() {
+    #[derive(Clone, Copy)]
+    struct SendablePtr(*mut pyo3::ffi::PyObject);
+
+    unsafe impl Send for SendablePtr {}
+
+    Python::with_gil(|py| unsafe {
+        let ty = py.get_type_bound::<UnsendableTraversal>();
+        let traverse = get_type_traverse(ty.as_type_ptr()).unwrap();
+
+        let obj = Py::new(
+            py,
+            UnsendableTraversal {
+                traversed: Cell::new(false),
+            },
+        )
+        .unwrap();
+
+        let ptr = SendablePtr(obj.as_ptr());
+
+        std::thread::spawn(move || {
+            // traversal on foreign thread is a no-op
+            assert_eq!(traverse({ ptr }.0, novisit, std::ptr::null_mut()), 0);
+        })
+        .join()
+        .unwrap();
+
+        assert!(!obj.borrow(py).traversed.get());
+
+        // traversal on home thread still works
+        assert_eq!(traverse({ ptr }.0, novisit, std::ptr::null_mut()), 0);
+
+        assert!(obj.borrow(py).traversed.get());
+    });
 }
 
 // Manual traversal utilities

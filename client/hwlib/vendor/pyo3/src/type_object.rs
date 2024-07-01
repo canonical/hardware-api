@@ -1,10 +1,12 @@
 //! Python type object information
 
+use crate::ffi_ptr_ext::FfiPtrExt;
+use crate::types::any::PyAnyMethods;
 use crate::types::{PyAny, PyType};
-use crate::{ffi, PyNativeType, Python};
+use crate::{ffi, Bound, PyNativeType, Python};
 
 /// `T: PyLayout<U>` represents that `T` is a concrete representation of `U` in the Python heap.
-/// E.g., `PyCell` is a concrete representation of all `pyclass`es, and `ffi::PyObject`
+/// E.g., `PyClassObject` is a concrete representation of all `pyclass`es, and `ffi::PyObject`
 /// is of `PyAny`.
 ///
 /// This trait is intended to be used internally.
@@ -19,6 +21,26 @@ pub unsafe trait PyLayout<T> {}
 /// In addition, that `T` is a concrete representation of `U`.
 pub trait PySizedLayout<T>: PyLayout<T> + Sized {}
 
+/// Specifies that this type has a "GIL-bound Reference" form.
+///
+/// This is expected to be deprecated in the near future, see <https://github.com/PyO3/pyo3/issues/3382>
+///
+/// # Safety
+///
+/// - `Py<Self>::as_ref` will hand out references to `Self::AsRefTarget`.
+/// - `Self::AsRefTarget` must have the same layout as `UnsafeCell<ffi::PyAny>`.
+pub unsafe trait HasPyGilRef {
+    /// Utility type to make Py::as_ref work.
+    type AsRefTarget: PyNativeType;
+}
+
+unsafe impl<T> HasPyGilRef for T
+where
+    T: PyNativeType,
+{
+    type AsRefTarget = Self;
+}
+
 /// Python type information.
 /// All Python native types (e.g., `PyDict`) and `#[pyclass]` structs implement this trait.
 ///
@@ -32,35 +54,110 @@ pub trait PySizedLayout<T>: PyLayout<T> + Sized {}
 ///
 /// Implementations must provide an implementation for `type_object_raw` which infallibly produces a
 /// non-null pointer to the corresponding Python type object.
-pub unsafe trait PyTypeInfo: Sized {
+pub unsafe trait PyTypeInfo: Sized + HasPyGilRef {
     /// Class name.
     const NAME: &'static str;
 
     /// Module name, if any.
     const MODULE: Option<&'static str>;
 
-    /// Utility type to make Py::as_ref work.
-    type AsRefTarget: PyNativeType;
-
     /// Returns the PyTypeObject instance for this type.
     fn type_object_raw(py: Python<'_>) -> *mut ffi::PyTypeObject;
 
     /// Returns the safe abstraction over the type object.
     #[inline]
+    #[cfg_attr(
+        not(feature = "gil-refs"),
+        deprecated(
+            since = "0.21.0",
+            note = "`PyTypeInfo::type_object` will be replaced by `PyTypeInfo::type_object_bound` in a future PyO3 version"
+        )
+    )]
     fn type_object(py: Python<'_>) -> &PyType {
-        unsafe { py.from_borrowed_ptr(Self::type_object_raw(py) as _) }
+        // This isn't implemented in terms of `type_object_bound` because this just borrowed the
+        // object, for legacy reasons.
+        #[allow(deprecated)]
+        unsafe {
+            py.from_borrowed_ptr(Self::type_object_raw(py) as _)
+        }
+    }
+
+    /// Returns the safe abstraction over the type object.
+    #[inline]
+    fn type_object_bound(py: Python<'_>) -> Bound<'_, PyType> {
+        // Making the borrowed object `Bound` is necessary for soundness reasons. It's an extreme
+        // edge case, but arbitrary Python code _could_ change the __class__ of an object and cause
+        // the type object to be freed.
+        //
+        // By making `Bound` we assume ownership which is then safe against races.
+        unsafe {
+            Self::type_object_raw(py)
+                .cast::<ffi::PyObject>()
+                .assume_borrowed_unchecked(py)
+                .to_owned()
+                .downcast_into_unchecked()
+        }
     }
 
     /// Checks if `object` is an instance of this type or a subclass of this type.
     #[inline]
+    #[cfg_attr(
+        not(feature = "gil-refs"),
+        deprecated(
+            since = "0.21.0",
+            note = "`PyTypeInfo::is_type_of` will be replaced by `PyTypeInfo::is_type_of_bound` in a future PyO3 version"
+        )
+    )]
     fn is_type_of(object: &PyAny) -> bool {
+        Self::is_type_of_bound(&object.as_borrowed())
+    }
+
+    /// Checks if `object` is an instance of this type or a subclass of this type.
+    #[inline]
+    fn is_type_of_bound(object: &Bound<'_, PyAny>) -> bool {
         unsafe { ffi::PyObject_TypeCheck(object.as_ptr(), Self::type_object_raw(object.py())) != 0 }
     }
 
     /// Checks if `object` is an instance of this type.
     #[inline]
+    #[cfg_attr(
+        not(feature = "gil-refs"),
+        deprecated(
+            since = "0.21.0",
+            note = "`PyTypeInfo::is_exact_type_of` will be replaced by `PyTypeInfo::is_exact_type_of_bound` in a future PyO3 version"
+        )
+    )]
     fn is_exact_type_of(object: &PyAny) -> bool {
+        Self::is_exact_type_of_bound(&object.as_borrowed())
+    }
+
+    /// Checks if `object` is an instance of this type.
+    #[inline]
+    fn is_exact_type_of_bound(object: &Bound<'_, PyAny>) -> bool {
         unsafe { ffi::Py_TYPE(object.as_ptr()) == Self::type_object_raw(object.py()) }
+    }
+}
+
+/// Implemented by types which can be used as a concrete Python type inside `Py<T>` smart pointers.
+pub trait PyTypeCheck: HasPyGilRef {
+    /// Name of self. This is used in error messages, for example.
+    const NAME: &'static str;
+
+    /// Checks if `object` is an instance of `Self`, which may include a subtype.
+    ///
+    /// This should be equivalent to the Python expression `isinstance(object, Self)`.
+    fn type_check(object: &Bound<'_, PyAny>) -> bool;
+}
+
+impl<T> PyTypeCheck for T
+where
+    T: PyTypeInfo,
+{
+    const NAME: &'static str = <T as PyTypeInfo>::NAME;
+
+    #[inline]
+    fn type_check(object: &Bound<'_, PyAny>) -> bool {
+        T::is_type_of_bound(object)
     }
 }
 

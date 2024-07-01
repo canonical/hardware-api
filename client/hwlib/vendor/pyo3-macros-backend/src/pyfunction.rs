@@ -1,3 +1,4 @@
+use crate::utils::Ctx;
 use crate::{
     attributes::{
         self, get_pyo3_options, take_attributes, take_pyo3_options, CrateAttribute,
@@ -6,7 +7,6 @@ use crate::{
     deprecations::Deprecations,
     method::{self, CallingConvention, FnArg},
     pymethod::check_generic,
-    utils::{ensure_not_async_fn, get_pyo3_crate},
 };
 use proc_macro2::TokenStream;
 use quote::{format_ident, quote};
@@ -23,16 +23,20 @@ pub use self::signature::{FunctionSignature, SignatureAttribute};
 #[derive(Clone, Debug)]
 pub struct PyFunctionArgPyO3Attributes {
     pub from_py_with: Option<FromPyWithAttribute>,
+    pub cancel_handle: Option<attributes::kw::cancel_handle>,
 }
 
 enum PyFunctionArgPyO3Attribute {
     FromPyWith(FromPyWithAttribute),
+    CancelHandle(attributes::kw::cancel_handle),
 }
 
 impl Parse for PyFunctionArgPyO3Attribute {
     fn parse(input: ParseStream<'_>) -> Result<Self> {
         let lookahead = input.lookahead1();
-        if lookahead.peek(attributes::kw::from_py_with) {
+        if lookahead.peek(attributes::kw::cancel_handle) {
+            input.parse().map(PyFunctionArgPyO3Attribute::CancelHandle)
+        } else if lookahead.peek(attributes::kw::from_py_with) {
             input.parse().map(PyFunctionArgPyO3Attribute::FromPyWith)
         } else {
             Err(lookahead.error())
@@ -43,7 +47,10 @@ impl Parse for PyFunctionArgPyO3Attribute {
 impl PyFunctionArgPyO3Attributes {
     /// Parses #[pyo3(from_python_with = "func")]
     pub fn from_attrs(attrs: &mut Vec<syn::Attribute>) -> syn::Result<Self> {
-        let mut attributes = PyFunctionArgPyO3Attributes { from_py_with: None };
+        let mut attributes = PyFunctionArgPyO3Attributes {
+            from_py_with: None,
+            cancel_handle: None,
+        };
         take_attributes(attrs, |attr| {
             if let Some(pyo3_attrs) = get_pyo3_options(attr)? {
                 for attr in pyo3_attrs {
@@ -55,7 +62,18 @@ impl PyFunctionArgPyO3Attributes {
                             );
                             attributes.from_py_with = Some(from_py_with);
                         }
+                        PyFunctionArgPyO3Attribute::CancelHandle(cancel_handle) => {
+                            ensure_spanned!(
+                                attributes.cancel_handle.is_none(),
+                                cancel_handle.span() => "`cancel_handle` may only be specified once per argument"
+                            );
+                            attributes.cancel_handle = Some(cancel_handle);
+                        }
                     }
+                    ensure_spanned!(
+                        attributes.from_py_with.is_none() || attributes.cancel_handle.is_none(),
+                        attributes.cancel_handle.unwrap().span() => "`from_py_with` and `cancel_handle` cannot be specified together"
+                    );
                 }
                 Ok(true)
             } else {
@@ -179,8 +197,6 @@ pub fn impl_wrap_pyfunction(
     options: PyFunctionOptions,
 ) -> syn::Result<TokenStream> {
     check_generic(&func.sig)?;
-    ensure_not_async_fn(&func.sig)?;
-
     let PyFunctionOptions {
         pass_module,
         name,
@@ -188,6 +204,9 @@ pub fn impl_wrap_pyfunction(
         text_signature,
         krate,
     } = options;
+
+    let ctx = &Ctx::new(&krate);
+    let Ctx { pyo3_path } = &ctx;
 
     let python_name = name.map_or_else(|| func.sig.ident.unraw(), |name| name.value.0);
 
@@ -221,28 +240,24 @@ pub fn impl_wrap_pyfunction(
         FunctionSignature::from_arguments(arguments)?
     };
 
-    let ty = method::get_return_info(&func.sig.output);
-
     let spec = method::FnSpec {
         tp,
         name: &func.sig.ident,
         convention: CallingConvention::from_signature(&signature),
         python_name,
         signature,
-        output: ty,
         text_signature,
+        asyncness: func.sig.asyncness,
         unsafety: func.sig.unsafety,
-        deprecations: Deprecations::new(),
+        deprecations: Deprecations::new(ctx),
     };
-
-    let krate = get_pyo3_crate(&krate);
 
     let vis = &func.vis;
     let name = &func.sig.ident;
 
     let wrapper_ident = format_ident!("__pyfunction_{}", spec.name);
-    let wrapper = spec.get_wrapper_function(&wrapper_ident, None)?;
-    let methoddef = spec.get_methoddef(wrapper_ident, &spec.get_doc(&func.attrs));
+    let wrapper = spec.get_wrapper_function(&wrapper_ident, None, ctx)?;
+    let methoddef = spec.get_methoddef(wrapper_ident, &spec.get_doc(&func.attrs), ctx);
 
     let wrapped_pyfunction = quote! {
 
@@ -251,22 +266,20 @@ pub fn impl_wrap_pyfunction(
         #[doc(hidden)]
         #vis mod #name {
             pub(crate) struct MakeDef;
-            pub const DEF: #krate::impl_::pyfunction::PyMethodDef = MakeDef::DEF;
+            pub const _PYO3_DEF: #pyo3_path::impl_::pymethods::PyMethodDef = MakeDef::_PYO3_DEF;
         }
 
         // Generate the definition inside an anonymous function in the same scope as the original function -
         // this avoids complications around the fact that the generated module has a different scope
         // (and `super` doesn't always refer to the outer scope, e.g. if the `#[pyfunction] is
         // inside a function body)
-        const _: () = {
-            use #krate as _pyo3;
-            impl #name::MakeDef {
-                const DEF: #krate::impl_::pyfunction::PyMethodDef = #methoddef;
-            }
+        #[allow(unknown_lints, non_local_definitions)]
+        impl #name::MakeDef {
+            const _PYO3_DEF: #pyo3_path::impl_::pymethods::PyMethodDef = #methoddef;
+        }
 
-            #[allow(non_snake_case)]
-            #wrapper
-        };
+        #[allow(non_snake_case)]
+        #wrapper
     };
     Ok(wrapped_pyfunction)
 }

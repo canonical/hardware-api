@@ -1,4 +1,7 @@
-use crate::{ffi, PyAny, PyDowncastError, PyTryFrom, Python};
+use crate::{
+    ffi, ffi_ptr_ext::FfiPtrExt, types::any::PyAnyMethods, Borrowed, Bound, PyAny, PyTypeInfo,
+    Python,
+};
 
 /// Represents the Python `Ellipsis` object.
 #[repr(transparent)]
@@ -9,52 +12,73 @@ pyobject_native_type_extract!(PyEllipsis);
 
 impl PyEllipsis {
     /// Returns the `Ellipsis` object.
+    #[cfg_attr(
+        not(feature = "gil-refs"),
+        deprecated(
+            since = "0.21.0",
+            note = "`PyEllipsis::get` will be replaced by `PyEllipsis::get_bound` in a future PyO3 version"
+        )
+    )]
     #[inline]
     pub fn get(py: Python<'_>) -> &PyEllipsis {
-        unsafe { py.from_borrowed_ptr(ffi::Py_Ellipsis()) }
+        Self::get_bound(py).into_gil_ref()
+    }
+
+    /// Returns the `Ellipsis` object.
+    #[inline]
+    pub fn get_bound(py: Python<'_>) -> Borrowed<'_, '_, PyEllipsis> {
+        unsafe { ffi::Py_Ellipsis().assume_borrowed(py).downcast_unchecked() }
     }
 }
 
-impl<'v> PyTryFrom<'v> for PyEllipsis {
-    fn try_from<V: Into<&'v PyAny>>(value: V) -> Result<&'v Self, crate::PyDowncastError<'v>> {
-        let value: &PyAny = value.into();
-        if unsafe { ffi::Py_Ellipsis() == value.as_ptr() } {
-            return unsafe { Ok(value.downcast_unchecked()) };
-        }
-        Err(PyDowncastError::new(value, "ellipsis"))
+unsafe impl PyTypeInfo for PyEllipsis {
+    const NAME: &'static str = "ellipsis";
+
+    const MODULE: Option<&'static str> = None;
+
+    fn type_object_raw(_py: Python<'_>) -> *mut ffi::PyTypeObject {
+        unsafe { ffi::Py_TYPE(ffi::Py_Ellipsis()) }
     }
 
-    fn try_from_exact<V: Into<&'v PyAny>>(
-        value: V,
-    ) -> Result<&'v Self, crate::PyDowncastError<'v>> {
-        value.into().downcast()
+    #[inline]
+    fn is_type_of_bound(object: &Bound<'_, PyAny>) -> bool {
+        // ellipsis is not usable as a base type
+        Self::is_exact_type_of_bound(object)
     }
 
-    unsafe fn try_from_unchecked<V: Into<&'v PyAny>>(value: V) -> &'v Self {
-        let ptr = value.into() as *const _ as *const PyEllipsis;
-        &*ptr
+    #[inline]
+    fn is_exact_type_of_bound(object: &Bound<'_, PyAny>) -> bool {
+        object.is(&**Self::get_bound(object.py()))
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use crate::types::any::PyAnyMethods;
     use crate::types::{PyDict, PyEllipsis};
-    use crate::Python;
+    use crate::{PyTypeInfo, Python};
 
     #[test]
     fn test_ellipsis_is_itself() {
         Python::with_gil(|py| {
-            assert!(PyEllipsis::get(py)
-                .downcast::<PyEllipsis>()
-                .unwrap()
-                .is_ellipsis());
+            assert!(PyEllipsis::get_bound(py).is_instance_of::<PyEllipsis>());
+            assert!(PyEllipsis::get_bound(py).is_exact_instance_of::<PyEllipsis>());
+        })
+    }
+
+    #[test]
+    fn test_ellipsis_type_object_consistent() {
+        Python::with_gil(|py| {
+            assert!(PyEllipsis::get_bound(py)
+                .get_type()
+                .is(&PyEllipsis::type_object_bound(py)));
         })
     }
 
     #[test]
     fn test_dict_is_not_ellipsis() {
         Python::with_gil(|py| {
-            assert!(PyDict::new(py).downcast::<PyEllipsis>().is_err());
+            assert!(PyDict::new_bound(py).downcast::<PyEllipsis>().is_err());
         })
     }
 }

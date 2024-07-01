@@ -9,15 +9,14 @@ use syn::{
 };
 
 pub mod kw {
-    syn::custom_keyword!(args);
     syn::custom_keyword!(annotation);
     syn::custom_keyword!(attribute);
+    syn::custom_keyword!(cancel_handle);
     syn::custom_keyword!(dict);
     syn::custom_keyword!(extends);
     syn::custom_keyword!(freelist);
     syn::custom_keyword!(from_py_with);
     syn::custom_keyword!(frozen);
-    syn::custom_keyword!(gc);
     syn::custom_keyword!(get);
     syn::custom_keyword!(get_all);
     syn::custom_keyword!(item);

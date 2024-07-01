@@ -1,0 +1,59 @@
+[dependencies.compiler_builtins]
+optional = true
+version = "0.1.2"
+
+[dependencies.core]
+optional = true
+package = "rustc-std-workspace-core"
+version = "1.0.0"
+
+[dependencies.log]
+optional = true
+version = "0.4.20"
+[dev-dependencies.quickcheck]
+default-features = false
+version = "1.0.3"
+
+[features]
+alloc = []
+default = ["std"]
+libc = []
+logging = ["dep:log"]
+rustc-dep-of-std = ["core", "compiler_builtins"]
+std = ["alloc"]
+use_std = ["std"]
+
+[lib]
+bench = false
+name = "memchr"
+path = "src/lib.rs"
+
+[package]
+authors = ["Andrew Gallant <jamslam@gmail.com>", "bluss"]
+autobenches = false
+autobins = false
+autoexamples = false
+autotests = false
+description = "Provides extremely fast (uses SIMD on x86_64, aarch64 and wasm32) routines for\n1, 2 or 3 byte search and single substring search.\n"
+documentation = "https://docs.rs/memchr/"
+edition = "2021"
+exclude = ["/.github", "/benchmarks", "/fuzz", "/scripts", "/tmp"]
+homepage = "https://github.com/BurntSushi/memchr"
+keywords = ["memchr", "memmem", "substring", "find", "search"]
+license = "Unlicense OR MIT"
+name = "memchr"
+readme = "README.md"
+repository = "https://github.com/BurntSushi/memchr"
+rust-version = "1.61"
+version = "2.7.4"
+[package.metadata.docs.rs]
+rustdoc-args = ["--generate-link-to-definition"]
+[profile.bench]
+debug = 2
+
+[profile.release]
+debug = 2
+
+[profile.test]
+debug = 2
+opt-level = 3

@@ -266,7 +266,7 @@ impl RequestBuilder {
     where
         T: fmt::Display,
     {
-        let header_value = format!("Bearer {}", token);
+        let header_value = format!("Bearer {token}");
         self.header_sensitive(crate::header::AUTHORIZATION, header_value, true)
     }
 
@@ -649,6 +649,8 @@ impl TryFrom<Request> for HttpRequest<Body> {
 
 #[cfg(test)]
 mod tests {
+    #![cfg(not(feature = "rustls-tls-manual-roots-no-provider"))]
+
     use super::{Client, HttpRequest, Request, RequestBuilder, Version};
     use crate::Method;
     use serde::Serialize;

@@ -13,7 +13,7 @@
 edition = "2021"
 rust-version = "1.56"
 name = "pyo3"
-version = "0.20.2"
+version = "0.21.2"
 authors = ["PyO3 Project and Contributors <https://github.com/PyO3>"]
 exclude = [
     "/.gitignore",
@@ -44,7 +44,10 @@ license = "MIT OR Apache-2.0"
 repository = "https://github.com/pyo3/pyo3"
 
 [package.metadata.docs.rs]
-features = ["full"]
+features = [
+    "full",
+    "gil-refs",
+]
 no-default-features = true
 rustdoc-args = [
     "--cfg",
@@ -60,6 +63,11 @@ version = "1.0"
 
 [dependencies.chrono]
 version = "0.4.25"
+optional = true
+default-features = false
+
+[dependencies.chrono-tz]
+version = ">= 0.6, < 0.9"
 optional = true
 default-features = false
 
@@ -104,11 +112,14 @@ optional = true
 [dependencies.parking_lot]
 version = ">= 0.11, < 0.13"
 
+[dependencies.portable-atomic]
+version = "1.0"
+
 [dependencies.pyo3-ffi]
-version = "=0.20.2"
+version = "=0.21.2"
 
 [dependencies.pyo3-macros]
-version = "=0.20.2"
+version = "=0.21.2"
 optional = true
 
 [dependencies.rust_decimal]
@@ -134,6 +145,12 @@ version = "1.1.0"
 [dev-dependencies.chrono]
 version = "0.4.25"
 
+[dev-dependencies.chrono-tz]
+version = ">= 0.6, < 0.9"
+
+[dev-dependencies.futures]
+version = "0.3.28"
+
 [dev-dependencies.proptest]
 version = "1.0"
 features = ["std"]
@@ -155,18 +172,14 @@ version = "1.0.61"
 [dev-dependencies.trybuild]
 version = ">=1.0.70"
 
-[dev-dependencies.widestring]
-version = "0.5.1"
-
 [build-dependencies.pyo3-build-config]
-version = "=0.20.2"
+version = "=0.21.2"
 features = ["resolve-config"]
 
 [features]
 abi3 = [
     "pyo3-build-config/abi3",
     "pyo3-ffi/abi3",
-    "pyo3-macros/abi3",
 ]
 abi3-py310 = [
     "abi3-py311",
@@ -200,24 +213,36 @@ abi3-py39 = [
 ]
 auto-initialize = []
 default = ["macros"]
+experimental-async = [
+    "macros",
+    "pyo3-macros/experimental-async",
+]
+experimental-declarative-modules = [
+    "pyo3-macros/experimental-declarative-modules",
+    "macros",
+]
 experimental-inspect = []
 extension-module = ["pyo3-ffi/extension-module"]
 full = [
     "macros",
+    "anyhow",
     "chrono",
+    "chrono-tz",
+    "either",
+    "experimental-async",
+    "experimental-declarative-modules",
+    "experimental-inspect",
+    "eyre",
+    "hashbrown",
+    "indexmap",
     "num-bigint",
     "num-complex",
-    "hashbrown",
-    "smallvec",
-    "serde",
-    "indexmap",
-    "either",
-    "eyre",
-    "anyhow",
-    "experimental-inspect",
     "rust_decimal",
+    "serde",
+    "smallvec",
 ]
 generate-import-lib = ["pyo3-ffi/generate-import-lib"]
+gil-refs = []
 macros = [
     "pyo3-macros",
     "indoc",

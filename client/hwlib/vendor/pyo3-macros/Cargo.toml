@@ -12,7 +12,7 @@
 [package]
 edition = "2021"
 name = "pyo3-macros"
-version = "0.20.2"
+version = "0.21.2"
 authors = ["PyO3 Project and Contributors <https://github.com/PyO3>"]
 description = "Proc macros for PyO3 package"
 homepage = "https://github.com/pyo3/pyo3"
@@ -37,7 +37,7 @@ version = "1"
 default-features = false
 
 [dependencies.pyo3-macros-backend]
-version = "=0.20.2"
+version = "=0.21.2"
 
 [dependencies.quote]
 version = "1"
@@ -50,7 +50,8 @@ features = [
 ]
 
 [features]
-abi3 = ["pyo3-macros-backend/abi3"]
+experimental-async = ["pyo3-macros-backend/experimental-async"]
+experimental-declarative-modules = []
 multiple-pymethods = []
 
 [lints.clippy]

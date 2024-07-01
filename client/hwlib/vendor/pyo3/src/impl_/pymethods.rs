@@ -1,12 +1,21 @@
+use crate::callback::IntoPyCallbackOutput;
+use crate::exceptions::PyStopAsyncIteration;
 use crate::gil::LockGIL;
 use crate::impl_::panic::PanicTrap;
 use crate::internal_tricks::extract_c_string;
-use crate::{ffi, PyAny, PyCell, PyClass, PyObject, PyResult, PyTraverseError, PyVisit, Python};
+use crate::pycell::{PyBorrowError, PyBorrowMutError};
+use crate::pyclass::boolean_struct::False;
+use crate::types::{any::PyAnyMethods, PyModule, PyType};
+use crate::{
+    ffi, Borrowed, Bound, DowncastError, Py, PyAny, PyClass, PyClassInitializer, PyErr, PyObject,
+    PyRef, PyRefMut, PyResult, PyTraverseError, PyTypeCheck, PyVisit, Python,
+};
 use std::borrow::Cow;
 use std::ffi::CStr;
 use std::fmt;
 use std::os::raw::{c_int, c_void};
 use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::ptr::null_mut;
 
 /// Python 3.8 and up - __ipow__ has modulo argument correctly populated.
 #[cfg(Py_3_8)]
@@ -16,7 +25,7 @@ pub struct IPowModulo(*mut ffi::PyObject);
 /// Python 3.7 and older - __ipow__ does not have modulo argument correctly populated.
 #[cfg(not(Py_3_8))]
 #[repr(transparent)]
-pub struct IPowModulo(std::mem::MaybeUninit<*mut ffi::PyObject>);
+pub struct IPowModulo(#[allow(dead_code)] std::mem::MaybeUninit<*mut ffi::PyObject>);
 
 /// Helper to use as pymethod ffi definition
 #[allow(non_camel_case_types)]
@@ -29,14 +38,15 @@ pub type ipowfunc = unsafe extern "C" fn(
 impl IPowModulo {
     #[cfg(Py_3_8)]
     #[inline]
-    pub fn to_borrowed_any(self, py: Python<'_>) -> &PyAny {
-        unsafe { py.from_borrowed_ptr::<PyAny>(self.0) }
+    pub fn as_ptr(self) -> *mut ffi::PyObject {
+        self.0
     }
 
     #[cfg(not(Py_3_8))]
     #[inline]
-    pub fn to_borrowed_any(self, py: Python<'_>) -> &PyAny {
-        unsafe { py.from_borrowed_ptr::<PyAny>(ffi::Py_None()) }
+    pub fn as_ptr(self) -> *mut ffi::PyObject {
+        // Safety: returning a borrowed pointer to Python `None` singleton
+        unsafe { ffi::Py_None() }
     }
 }
 
@@ -263,8 +273,8 @@ where
     let trap = PanicTrap::new("uncaught panic inside __traverse__ handler");
 
     let py = Python::assume_gil_acquired();
-    let slf = py.from_borrowed_ptr::<PyCell<T>>(slf);
-    let borrow = slf.try_borrow();
+    let slf = Borrowed::from_ptr_unchecked(py, slf).downcast_unchecked::<T>();
+    let borrow = PyRef::try_borrow_threadsafe(&slf);
     let visit = PyVisit::from_raw(visit, arg, py);
 
     let retval = if let Ok(borrow) = borrow {
@@ -298,4 +308,275 @@ pub(crate) fn get_name(name: &'static str) -> PyResult<Cow<'static, CStr>> {
 
 pub(crate) fn get_doc(doc: &'static str) -> PyResult<Cow<'static, CStr>> {
     extract_c_string(doc, "function doc cannot contain NUL byte.")
+}
+
+// Autoref-based specialization for handling `__next__` returning `Option`
+
+pub struct IterBaseTag;
+
+impl IterBaseTag {
+    #[inline]
+    pub fn convert<Value, Target>(self, py: Python<'_>, value: Value) -> PyResult<Target>
+    where
+        Value: IntoPyCallbackOutput<Target>,
+    {
+        value.convert(py)
+    }
+}
+
+pub trait IterBaseKind {
+    #[inline]
+    fn iter_tag(&self) -> IterBaseTag {
+        IterBaseTag
+    }
+}
+
+impl<Value> IterBaseKind for &Value {}
+
+pub struct IterOptionTag;
+
+impl IterOptionTag {
+    #[inline]
+    pub fn convert<Value>(
+        self,
+        py: Python<'_>,
+        value: Option<Value>,
+    ) -> PyResult<*mut ffi::PyObject>
+    where
+        Value: IntoPyCallbackOutput<*mut ffi::PyObject>,
+    {
+        match value {
+            Some(value) => value.convert(py),
+            None => Ok(null_mut()),
+        }
+    }
+}
+
+pub trait IterOptionKind {
+    #[inline]
+    fn iter_tag(&self) -> IterOptionTag {
+        IterOptionTag
+    }
+}
+
+impl<Value> IterOptionKind for Option<Value> {}
+
+pub struct IterResultOptionTag;
+
+impl IterResultOptionTag {
+    #[inline]
+    pub fn convert<Value, Error>(
+        self,
+        py: Python<'_>,
+        value: Result<Option<Value>, Error>,
+    ) -> PyResult<*mut ffi::PyObject>
+    where
+        Value: IntoPyCallbackOutput<*mut ffi::PyObject>,
+        Error: Into<PyErr>,
+    {
+        match value {
+            Ok(Some(value)) => value.convert(py),
+            Ok(None) => Ok(null_mut()),
+            Err(err) => Err(err.into()),
+        }
+    }
+}
+
+pub trait IterResultOptionKind {
+    #[inline]
+    fn iter_tag(&self) -> IterResultOptionTag {
+        IterResultOptionTag
+    }
+}
+
+impl<Value, Error> IterResultOptionKind for Result<Option<Value>, Error> {}
+
+// Autoref-based specialization for handling `__anext__` returning `Option`
+
+pub struct AsyncIterBaseTag;
+
+impl AsyncIterBaseTag {
+    #[inline]
+    pub fn convert<Value, Target>(self, py: Python<'_>, value: Value) -> PyResult<Target>
+    where
+        Value: IntoPyCallbackOutput<Target>,
+    {
+        value.convert(py)
+    }
+}
+
+pub trait AsyncIterBaseKind {
+    #[inline]
+    fn async_iter_tag(&self) -> AsyncIterBaseTag {
+        AsyncIterBaseTag
+    }
+}
+
+impl<Value> AsyncIterBaseKind for &Value {}
+
+pub struct AsyncIterOptionTag;
+
+impl AsyncIterOptionTag {
+    #[inline]
+    pub fn convert<Value>(
+        self,
+        py: Python<'_>,
+        value: Option<Value>,
+    ) -> PyResult<*mut ffi::PyObject>
+    where
+        Value: IntoPyCallbackOutput<*mut ffi::PyObject>,
+    {
+        match value {
+            Some(value) => value.convert(py),
+            None => Err(PyStopAsyncIteration::new_err(())),
+        }
+    }
+}
+
+pub trait AsyncIterOptionKind {
+    #[inline]
+    fn async_iter_tag(&self) -> AsyncIterOptionTag {
+        AsyncIterOptionTag
+    }
+}
+
+impl<Value> AsyncIterOptionKind for Option<Value> {}
+
+pub struct AsyncIterResultOptionTag;
+
+impl AsyncIterResultOptionTag {
+    #[inline]
+    pub fn convert<Value, Error>(
+        self,
+        py: Python<'_>,
+        value: Result<Option<Value>, Error>,
+    ) -> PyResult<*mut ffi::PyObject>
+    where
+        Value: IntoPyCallbackOutput<*mut ffi::PyObject>,
+        Error: Into<PyErr>,
+    {
+        match value {
+            Ok(Some(value)) => value.convert(py),
+            Ok(None) => Err(PyStopAsyncIteration::new_err(())),
+            Err(err) => Err(err.into()),
+        }
+    }
+}
+
+pub trait AsyncIterResultOptionKind {
+    #[inline]
+    fn async_iter_tag(&self) -> AsyncIterResultOptionTag {
+        AsyncIterResultOptionTag
+    }
+}
+
+impl<Value, Error> AsyncIterResultOptionKind for Result<Option<Value>, Error> {}
+
+/// Used in `#[classmethod]` to pass the class object to the method
+/// and also in `#[pyfunction(pass_module)]`.
+///
+/// This is a wrapper to avoid implementing `From<Bound>` for GIL Refs.
+///
+/// Once the GIL Ref API is fully removed, it should be possible to simplify
+/// this to just `&'a Bound<'py, T>` and `From` implementations.
+pub struct BoundRef<'a, 'py, T>(pub &'a Bound<'py, T>);
+
+impl<'a, 'py> BoundRef<'a, 'py, PyAny> {
+    pub unsafe fn ref_from_ptr(py: Python<'py>, ptr: &'a *mut ffi::PyObject) -> Self {
+        BoundRef(Bound::ref_from_ptr(py, ptr))
+    }
+
+    pub unsafe fn ref_from_ptr_or_opt(
+        py: Python<'py>,
+        ptr: &'a *mut ffi::PyObject,
+    ) -> Option<Self> {
+        Bound::ref_from_ptr_or_opt(py, ptr).as_ref().map(BoundRef)
+    }
+
+    pub fn downcast<T: PyTypeCheck>(self) -> Result<BoundRef<'a, 'py, T>, DowncastError<'a, 'py>> {
+        self.0.downcast::<T>().map(BoundRef)
+    }
+
+    pub unsafe fn downcast_unchecked<T>(self) -> BoundRef<'a, 'py, T> {
+        BoundRef(self.0.downcast_unchecked::<T>())
+    }
+}
+
+// GIL Ref implementations for &'a T ran into trouble with orphan rules,
+// so explicit implementations are used instead for the two relevant types.
+impl<'a> From<BoundRef<'a, 'a, PyType>> for &'a PyType {
+    #[inline]
+    fn from(bound: BoundRef<'a, 'a, PyType>) -> Self {
+        bound.0.as_gil_ref()
+    }
+}
+
+impl<'a> From<BoundRef<'a, 'a, PyModule>> for &'a PyModule {
+    #[inline]
+    fn from(bound: BoundRef<'a, 'a, PyModule>) -> Self {
+        bound.0.as_gil_ref()
+    }
+}
+
+#[allow(deprecated)]
+impl<'a, 'py, T: PyClass> From<BoundRef<'a, 'py, T>> for &'a crate::PyCell<T> {
+    #[inline]
+    fn from(bound: BoundRef<'a, 'py, T>) -> Self {
+        bound.0.as_gil_ref()
+    }
+}
+
+impl<'a, 'py, T: PyClass> TryFrom<BoundRef<'a, 'py, T>> for PyRef<'py, T> {
+    type Error = PyBorrowError;
+    #[inline]
+    fn try_from(value: BoundRef<'a, 'py, T>) -> Result<Self, Self::Error> {
+        value.0.clone().into_gil_ref().try_into()
+    }
+}
+
+impl<'a, 'py, T: PyClass<Frozen = False>> TryFrom<BoundRef<'a, 'py, T>> for PyRefMut<'py, T> {
+    type Error = PyBorrowMutError;
+    #[inline]
+    fn try_from(value: BoundRef<'a, 'py, T>) -> Result<Self, Self::Error> {
+        value.0.clone().into_gil_ref().try_into()
+    }
+}
+
+impl<'a, 'py, T> From<BoundRef<'a, 'py, T>> for Bound<'py, T> {
+    #[inline]
+    fn from(bound: BoundRef<'a, 'py, T>) -> Self {
+        bound.0.clone()
+    }
+}
+
+impl<'a, 'py, T> From<BoundRef<'a, 'py, T>> for &'a Bound<'py, T> {
+    #[inline]
+    fn from(bound: BoundRef<'a, 'py, T>) -> Self {
+        bound.0
+    }
+}
+
+impl<T> From<BoundRef<'_, '_, T>> for Py<T> {
+    #[inline]
+    fn from(bound: BoundRef<'_, '_, T>) -> Self {
+        bound.0.clone().unbind()
+    }
+}
+
+impl<'py, T> std::ops::Deref for BoundRef<'_, 'py, T> {
+    type Target = Bound<'py, T>;
+    #[inline]
+    fn deref(&self) -> &Self::Target {
+        self.0
+    }
+}
+
+pub unsafe fn tp_new_impl<T: PyClass>(
+    py: Python<'_>,
+    initializer: PyClassInitializer<T>,
+    target_type: *mut ffi::PyTypeObject,
+) -> PyResult<*mut ffi::PyObject> {
+    initializer
+        .create_class_object_of_type(py, target_type)
+        .map(Bound::into_ptr)
 }

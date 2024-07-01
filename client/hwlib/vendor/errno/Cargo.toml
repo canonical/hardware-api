@@ -1,0 +1,28 @@
+[features]
+default = ["std"]
+std = ["libc/std"]
+
+[package]
+authors = ["Chris Wong <lambda.fairy@gmail.com>"]
+categories = ["no-std", "os"]
+description = "Cross-platform interface to the `errno` variable."
+documentation = "https://docs.rs/errno"
+edition = "2018"
+license = "MIT OR Apache-2.0"
+name = "errno"
+readme = "README.md"
+repository = "https://github.com/lambda-fairy/rust-errno"
+rust-version = "1.56"
+version = "0.3.9"
+[target."cfg(target_os=\"hermit\")".dependencies.libc]
+default-features = false
+version = "0.2"
+[target."cfg(target_os=\"wasi\")".dependencies.libc]
+default-features = false
+version = "0.2"
+[target."cfg(unix)".dependencies.libc]
+default-features = false
+version = "0.2"
+[target."cfg(windows)".dependencies.windows-sys]
+features = ["Win32_Foundation", "Win32_System_Diagnostics_Debug"]
+version = "0.52"

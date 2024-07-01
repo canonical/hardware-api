@@ -24,17 +24,18 @@ To summarize, there are six main parts to the PyO3 codebase.
    - [`src/instance.rs`] and [`src/types`]
 3. [`PyClass` and related functionalities.](#3-pyclass-and-related-functionalities)
    - [`src/pycell.rs`], [`src/pyclass.rs`], and more
-4. [Protocol methods like `__getitem__`.](#4-protocol-methods)
-   - [`src/class`]
-5. [Procedural macros to simplify usage for users.](#5-procedural-macros-to-simplify-usage-for-users)
-   - [`src/derive_utils.rs`], [`pyo3-macros`] and [`pyo3-macros-backend`]
-6. [`build.rs` and `pyo3-build-config`](#6-buildrs-and-pyo3-build-config)
+4. [Procedural macros to simplify usage for users.](#4-procedural-macros-to-simplify-usage-for-users)
+   - [`src/impl_`], [`pyo3-macros`] and [`pyo3-macros-backend`]
+5. [`build.rs` and `pyo3-build-config`](#5-buildrs-and-pyo3-build-config)
    - [`build.rs`](https://github.com/PyO3/pyo3/tree/main/build.rs)
    - [`pyo3-build-config`]
 
 ## 1. Low-level bindings of Python/C API
 
-[`pyo3-ffi`] contains wrappers of [Python/C API].
+[`pyo3-ffi`] contains wrappers of the [Python/C API]. This is currently done by hand rather than
+automated tooling because:
+  - it gives us best control about how to adapt C conventions to Rust, and
+  - there are many Python interpreter versions we support in a single set of files.
 
 We aim to provide straight-forward Rust wrappers resembling the file structure of
 [`cpython/Include`](https://github.com/python/cpython/tree/v3.9.2/Include).
@@ -44,12 +45,12 @@ the file contents upstream in CPython.
 The tracking issue is [#1289](https://github.com/PyO3/pyo3/issues/1289), and contribution is welcome.
 
 In the [`pyo3-ffi`] crate, there is lots of conditional compilation such as `#[cfg(Py_LIMITED_API)]`,
-`#[cfg(Py_37)]`, and `#[cfg(PyPy)]`.
+`#[cfg(Py_3_7)]`, and `#[cfg(PyPy)]`.
 `Py_LIMITED_API` corresponds to `#define Py_LIMITED_API` macro in Python/C API.
 With `Py_LIMITED_API`, we can build a Python-version-agnostic binary called an
-[abi3 wheel](https://pyo3.rs/latest/building_and_distribution.html#py_limited_apiabi3).
-`Py_37` means that the API is available from Python >= 3.7.
-There are also `Py_38`, `Py_39`, and so on.
+[abi3 wheel](https://pyo3.rs/latest/building-and-distribution.html#py_limited_apiabi3).
+`Py_3_7` means that the API is available from Python >= 3.7.
+There are also `Py_3_8`, `Py_3_9`, and so on.
 `PyPy` means that the API definition is for PyPy.
 Those flags are set in [`build.rs`](#6-buildrs-and-pyo3-build-config).
 
@@ -58,6 +59,7 @@ Those flags are set in [`build.rs`](#6-buildrs-and-pyo3-build-config).
 [`src/types`] contains bindings to [built-in types](https://docs.python.org/3/library/stdtypes.html)
 of Python, such as `dict` and `list`.
 For historical reasons, Python's `object` is called `PyAny` in PyO3 and located in [`src/types/any.rs`].
+
 Currently, `PyAny` is a straightforward wrapper of `ffi::PyObject`, defined as:
 
 ```rust
@@ -65,38 +67,16 @@ Currently, `PyAny` is a straightforward wrapper of `ffi::PyObject`, defined as:
 pub struct PyAny(UnsafeCell<ffi::PyObject>);
 ```
 
-All built-in types are defined as a C struct.
-For example, `dict` is defined as:
-
-```c
-typedef struct {
-    /* Base object */
-    PyObject ob_base;
-    /* Number of items in the dictionary */
-    Py_ssize_t ma_used;
-    /* Dictionary version */
-    uint64_t ma_version_tag;
-    PyDictKeysObject *ma_keys;
-    PyObject **ma_values;
-} PyDictObject;
-```
-
-However, we cannot access such a specific data structure with `#[cfg(Py_LIMITED_API)]` set.
-Thus, all builtin objects are implemented as opaque types by wrapping `PyAny`, e.g.,:
+Concrete Python objects are implemented by wrapping `PyAny`, e.g.,:
 
 ```rust
 #[repr(transparent)]
 pub struct PyDict(PyAny);
 ```
 
-Note that `PyAny` is not a pointer, and it is usually used as a pointer to the object in the
-Python heap, as `&PyAny`.
-This design choice can be changed
-(see the discussion in [#1056](https://github.com/PyO3/pyo3/issues/1056)).
+These types are not intended to be accessed directly, and instead are used through the `Py<T>` and `Bound<T>` smart pointers.
 
-Since we need lots of boilerplate for implementing common traits for these types
-(e.g., `AsPyPointer`, `AsRef<PyAny>`, and `Debug`), we have some macros in
-[`src/types/mod.rs`].
+We have some macros in [`src/types/mod.rs`] which make it easier to implement APIs for concrete Python types.
 
 ## 3. `PyClass` and related functionalities
 
@@ -104,26 +84,16 @@ Since we need lots of boilerplate for implementing common traits for these types
 traits to make `#[pyclass]` work.
 Also, [`src/pyclass_init.rs`] and [`src/impl_/pyclass.rs`] have related functionalities.
 
-To realize object-oriented programming in C, all Python objects must have the following two fields
-at the beginning.
-
-```rust
-#[repr(C)]
-pub struct PyObject {
-    pub ob_refcnt: usize,
-    pub ob_type: *mut PyTypeObject,
-    ...
-}
-```
-
-Thanks to this guarantee, casting `*mut A` to `*mut PyObject` is valid if `A` is a Python object.
+To realize object-oriented programming in C, all Python objects have `ob_base: PyObject` as their
+first field in their structure definition. Thanks to this guarantee, casting `*mut A` to `*mut PyObject`
+is valid if `A` is a Python object.
 
 To ensure this guarantee, we have a wrapper struct `PyCell<T>` in [`src/pycell.rs`] which is roughly:
 
 ```rust
 #[repr(C)]
 pub struct PyCell<T: PyClass> {
-    object: crate::ffi::PyObject,
+    ob_base: crate::ffi::PyObject,
     inner: T,
 }
 ```
@@ -142,7 +112,7 @@ In Python, all objects have their types, and types are also objects of `type`.
 For example, you can see `type({})` shows `dict` and `type(type({}))` shows `type` in Python REPL.
 `T: PyTypeInfo` implies that `T` has a corresponding type object.
 
-## 4. Protocol methods
+### Protocol methods
 
 Python has some built-in special methods called dunder methods, such as `__iter__`.
 They are called "slots" in the [abstract objects layer](https://docs.python.org/3/c-api/abstract.html) in
@@ -151,15 +121,15 @@ We provide a way to implement those protocols similarly, by recognizing special
 names in `#[pymethods]`, with a few new ones for slots that can not be
 implemented in Python, such as GC support.
 
-## 5. Procedural macros to simplify usage for users.
+## 4. Procedural macros to simplify usage for users.
 
 [`pyo3-macros`] provides five proc-macro APIs: `pymodule`, `pyfunction`, `pyclass`,
 `pymethods`, and `#[derive(FromPyObject)]`.
 [`pyo3-macros-backend`] has the actual implementations of these APIs.
-[`src/derive_utils.rs`] contains some utilities used in code generated by these proc-macros,
+[`src/impl_`] contains `#[doc(hidden)]` functionality used in code generated by these proc-macros,
 such as parsing function arguments.
 
-## 6. `build.rs` and `pyo3-build-config`
+## 5. `build.rs` and `pyo3-build-config`
 
 PyO3 supports a wide range of OSes, interpreters and use cases. The correct environment must be
 detected at build time in order to set up relevant conditional compilation correctly. This logic
@@ -218,7 +188,7 @@ Some of the functionality of `pyo3-build-config`:
 
 <!-- Files -->
 
-[`src/derive_utils.rs`]: https://github.com/PyO3/pyo3/blob/main/src/derive_utils.rs
+[`src/impl_`]: https://github.com/PyO3/pyo3/blob/main/src/impl_
 [`src/instance.rs`]: https://github.com/PyO3/pyo3/tree/main/src/instance.rs
 [`src/pycell.rs`]: https://github.com/PyO3/pyo3/tree/main/src/pycell.rs
 [`src/pyclass.rs`]: https://github.com/PyO3/pyo3/tree/main/src/pyclass.rs
