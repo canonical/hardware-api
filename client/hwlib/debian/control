@@ -10,7 +10,8 @@ Build-Depends: debhelper (>= 12),
                python3-pip,
                libssl-dev,
                pkg-config,
-               patchelf
+               patchelf,
+               build-essential
 Maintainer: Canonical Hardware Certification <canonical-hw-cert@lists.launchpad.net> 
 Uploaders: Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 Standards-Version: 4.6.1
