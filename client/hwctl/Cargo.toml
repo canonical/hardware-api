@@ -5,6 +5,11 @@ license = "GPL-3.0-only"
 version = "0.1.0"
 edition = "2021"
 
+[package.metadata.vendor-filter]
+platforms = ["*-unknown-linux-gnu"]
+tier = "2"
+all-features = false
+
 [target.'cfg(target_os = "linux")'.dependencies]
 tokio = { version = "1.38.0", features = ["full"], default-features = false }
 hwlib = { path = "../hwlib", version = "0.1.0" }

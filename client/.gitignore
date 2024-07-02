@@ -6,6 +6,7 @@ debhelper-build-stamp
 target
 hwlib/debian/hwlib/
 cargo_home
+vendor/
 __pycache__/
 
 # debian/ source files to ignore
