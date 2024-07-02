@@ -23,7 +23,7 @@ once_cell = "1.19.0"
 reqwest = { version = "0.12.0", features = [ "json",] }
 serde = { version = "1.0.104", features = [ "derive",] }
 tokio = { version = "1.38.0", features = [ "full", "test-util",], default-features = false }
-pyo3 = { version = "0.21.2", features = [ "extension-module",] }
+pyo3 = { version = "0.22.0", features = [ "extension-module",] }
 
 [package.metadata.deb]
 maintainer = "Canonical Hardware Certification <canonical-hw-cert@lists.launchpad.net>"
