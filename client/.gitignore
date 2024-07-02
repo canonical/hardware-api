@@ -6,6 +6,7 @@ debhelper-build-stamp
 target
 hwlib/debian/hwlib/
 cargo_home
+.cargo-checksum.json
 vendor/
 __pycache__/
 
