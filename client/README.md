@@ -5,8 +5,40 @@ The client contains of two modules:
 * [`hwlib`](./hwlib): Rust library for communicating with the API server
 * [`hwctl`](./hwctl): CLI tool (written in Rust) that provides a user with the CLI tool for the `hwlib`
 
+## Build package in offline mode with vendored dependencies
 
-## Use Python Bindings
+To build the package using the vendored dependencies and then run it in offline mode,
+execute the following commands:
+
+```bash
+cd client/hwlib
+# By default, the vendored dependencies are stored under the ./vendor/ directory
+./debian/vendor-rust.sh
+```
+
+Then, modify your `~/.cargo/config.toml` (or `~/.cargo/config` if you use an older cargo
+version) to use the vendored dependencies. Don't forget to specify the correct path:
+
+```toml
+[source.crates-io]
+replace-with = "vendored-sources"
+
+[source.vendored-sources]
+directory = "/path/to/hardware-api/client/hwlib/vendor"
+```
+
+Currently, there is no way to change these settings it per project, so cargo will you
+these vendored dependencies for all your Rust projects. You can remove these lines
+after finishing the work on the `hwlib`.
+
+Now you can build the project in offline mode:
+
+```bash
+cd client/
+cargo build --offline
+```
+
+## Use Python bindings
 
 The `hwlib` lib can be used in Python code as well. We're using [pyo3](https://github.com/PyO3/pyo3) lib for creating Python bindings, so to build them, you need to have [maturin](https://github.com/PyO3/maturin) on your system installed. It requires virtual environment to be configured to work with it:
 
@@ -36,7 +68,7 @@ Now you can use the lib in your Python code:
 ```
 
 
-## Run Tests
+## Run tests
 
 Since we're using python bindings, this library contains tests for both Rust and Python code. To execute them, run the following commands in the `hwlib/` directory:
 
@@ -44,7 +76,7 @@ Since we're using python bindings, this library contains tests for both Rust and
 * For Python tests, you need to have `tox` on your system installed: `pip install tox`. Then, you can run Python tests with tox `$ tox`
 
 
-## Build Deb Package
+## Build deb package
 
 This section describes how to pack `hwlib` as a debian package. First, make sure that you have `devscripts` and `dput` installed on your system.
 
