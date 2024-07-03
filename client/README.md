@@ -87,10 +87,11 @@ $ cd client/hwlib/
 :client/hwlib/$ git clean -dffx
 ```
 
-Then we need to create the `.whl` file for the `hwlib` locally, since `maturin` python library is not available as a debian package and we cannot include this step to the [rules](./debian/rules) file. To do it, run the following commands in the pre-created virtual environment. And since we're building for the mantic release, it needs to be run on Ubuntu 23.10.
+Then we need to create the `.whl` file for the `hwlib` locally, since `maturin` python library is not available as a debian package and we cannot include this step to the [rules](./debian/rules) file. To do it, run the following commands in the pre-created virtual environment. And since we're building for the noble release, it needs to be run on Ubuntu 24.10.
 
 ```bash
-(venv) :client/hwlib$ pip install maturin
+$ sudo apt-get install -y pkg-config libssl-dev debhelper dh-cargo  # Install necessary packages
+(venv) :client/hwlib$ pip install maturin[patchelf]
 (venv) :client/hwlib$ maturin build --release -b pyo3 -i /path/to/venv/bin/python3
 ```
 
