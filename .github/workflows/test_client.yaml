@@ -4,10 +4,12 @@ on:
     branches: [ main ]
     paths:
       - client/**
+      - Cargo.*
   pull_request:
     branches: [ main ]
     paths:
       - client/**
+      - Cargo.*
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
