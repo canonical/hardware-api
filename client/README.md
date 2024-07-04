@@ -27,7 +27,7 @@ replace-with = "vendored-sources"
 directory = "/path/to/hardware-api/client/hwlib/vendor"
 ```
 
-Currently, there is no way to change these settings it per project, so cargo will you
+Currently, there is no way to change these settings per project, so cargo will use
 these vendored dependencies for all your Rust projects. You can remove these lines
 after finishing the work on the `hwlib`.
 
@@ -40,7 +40,9 @@ cargo build --offline
 
 ## Use Python bindings
 
-The `hwlib` lib can be used in Python code as well. We're using [pyo3](https://github.com/PyO3/pyo3) lib for creating Python bindings, so to build them, you need to have [maturin](https://github.com/PyO3/maturin) on your system installed. It requires virtual environment to be configured to work with it:
+The `hwlib` lib can be used in Python code as well. We're using [pyo3](https://github.com/PyO3/pyo3)
+lib for creating Python bindings, so to build them, you need to have [maturin](https://github.com/PyO3/maturin)
+on your system installed. It requires virtual environment to be configured to work with it:
 
 ```bash
 $ virtualenv venv
@@ -70,45 +72,85 @@ Now you can use the lib in your Python code:
 
 ## Run tests
 
-Since we're using python bindings, this library contains tests for both Rust and Python code. To execute them, run the following commands in the `hwlib/` directory:
+Since we're using python bindings, this library contains tests for both Rust and Python code.
+To execute them, run the following commands in the `hwlib/` directory:
 
 * Run Rust tests: `$ cargo test -- --test-threads=1`
-* For Python tests, you need to have `tox` on your system installed: `pip install tox`. Then, you can run Python tests with tox `$ tox`
+* For Python tests, you need to have `tox` on your system installed: `pip install tox`.
+Then, you can run Python tests with tox `$ tox`
 
 
 ## Build deb package
 
-This section describes how to pack `hwlib` as a debian package. First, make sure that you have `devscripts` and `dput` installed on your system.
-
-Before creating an archive, make sure you don't have any files and directories like `target/` in the `client/hwlib` directory:
+This section describes how to pack `hwlib` as a debian package. Before getting started, make sure that you have the following packages installed on your system:
 
 ```bash
-$ cd client/hwlib/
-:client/hwlib/$ git clean -dffx
+sudo apt-get install -y debhelper dh-cargo devscripts
 ```
 
-Then we need to create the `.whl` file for the `hwlib` locally, since `maturin` python library is not available as a debian package and we cannot include this step to the [rules](./debian/rules) file. To do it, run the following commands in the pre-created virtual environment. And since we're building for the noble release, it needs to be run on Ubuntu 24.10.
+### Building the rust lib
+
+First, generate update to the changelog file using the `dch` tool:
 
 ```bash
-$ sudo apt-get install -y pkg-config libssl-dev debhelper dh-cargo  # Install necessary packages
-(venv) :client/hwlib$ pip install maturin[patchelf]
-(venv) :client/hwlib$ maturin build --release -b pyo3 -i /path/to/venv/bin/python3
+cd client/hwlib
+export DEBEMAIL=your.email@canonical.com
+export DEBFULLNAME="Name Surname"
+dch -i  # increment release number
+dch -r  # create release
 ```
 
-After that, you may probably need to update the package version. Make sure that the version is unique, otherwise it'll be rejected. To do this, run the following commands:
+
+Then, build the source package:
 
 ```bash
-# Version string should have the format X.Y.Z and optionally you can
-# specify "~devN" suffix. Examples: 1.0.0, 1.2.3~dev1
-:client/hwlib$ export VERSION=X.Y.Z[~devN]
-:client/hwlib$ python3 ../../scripts/update_package_version.py $VERSION <your.email>@canonical.com
-:client/hwlib$ cargo update
+dpkg-buildpackage -S #-k=<key-to-sign> if you have more than one GPG key for the specified DEBEMAIL
 ```
 
-After that, create the archive and publish the package:
+
+### Testing your package
+
+You can test your package and build it with the [sbuild](https://wiki.debian.org/sbuild) tool.
+In this example, we do it for focal distro, but you can replace it with the desired one:
 
 ```bash
-:client/hwlib$ tar czvf ../hwlib_$VERSION.orig.tar.gz --exclude debian .
-:client/hwlib$ debuild -S -sa -k<your_gpg_key_short_ID>
-:client/hwlib$ dput ppa:<ppa_name> ../hwlib_${VERSION}_source.changes
+sudo apt install sbuild mmdebstrap uidmap
+mkdir -p ~/.cache/sbuild
+mmdebstrap --variant=buildd --components=main,restricted,universe focal /home/zyga/.cache/sbuild/focal-amd64.tar.zst
 ```
+
+For configuring `sbuild` , install `sbuild-debian-developer-setup`:
+
+```bash
+sudo apt install sbuild-debian-developer-setup
+sudo sbuild-debian-developer-setup
+newgrp sbuild
+```
+
+Update chroot:
+
+```bash
+sudo sbuild-update -udcar u
+schroot -l | grep sbuild
+```
+
+Put the following content into `~/.sbuildrc` file:
+
+```perl
+$chroot_mode = 'unshare';
+$run_autopkgtest = 0;
+$autopkgtest_root_args = '';
+$autopkgtest_opts = [ '--apt-upgrade', '--', 'unshare', '--release', '%r', '--arch', '%a' ];
+```
+
+Not you can build the binary itself:
+
+```bash
+sbuild /path/to/.dsc -d focal
+```
+
+After that, you can publish the package by rinning:
+
+```bash
+ dput ppa:<ppa_name> ../<package>_<version>_source.changes
+ ```
