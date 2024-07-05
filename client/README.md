@@ -100,6 +100,20 @@ dch -i  # increment release number
 dch -r  # create release
 ```
 
+Then you need to vendor the Rust depepndencies:
+
+```bash
+# under client/hwlib/ dir
+./debian/vendor-rust.sh
+```
+
+`dh-cargo` requires the `debian/cargo-checksum.json` file to be present in the archive. Until the package
+is not published to crates.io, we need to generate it manually:
+
+```bash
+# under client/hwlib/ dir
+./debian/generate_checksums.py
+```
 
 Then, build the source package:
 
@@ -116,7 +130,7 @@ In this example, we do it for focal distro, but you can replace it with the desi
 ```bash
 sudo apt install sbuild mmdebstrap uidmap
 mkdir -p ~/.cache/sbuild
-mmdebstrap --variant=buildd --components=main,restricted,universe focal /home/zyga/.cache/sbuild/focal-amd64.tar.zst
+mmdebstrap --variant=buildd --components=main,restricted,universe focal ~/.cache/sbuild/focal-amd64.tar.zst
 ```
 
 For configuring `sbuild` , install `sbuild-debian-developer-setup`:
