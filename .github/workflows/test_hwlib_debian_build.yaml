@@ -27,6 +27,7 @@ jobs:
       uses: actions/checkout@v4
     - name: Download dependencies
       run: |
+        set -xeu
         sudo apt update
         sudo DEBIAN_FRONTEND=noninteractive apt install -y \
           debhelper \
@@ -64,10 +65,12 @@ jobs:
         sudo sbuild-adduser $USER
         newgrp sbuild
         echo "Creating ~/.sbuildrc"
-        echo "\$chroot_mode = 'unshare';" >> ~/.sbuildrc
-        echo "\$run_autopkgtest = 0;" >> ~/.sbuildrc
-        echo "\$autopkgtest_root_args = '';" >> ~/.sbuildrc
-        echo "\$autopkgtest_opts = [ '--apt-upgrade', '--', 'unshare', '--release', '%r', '--arch', '%a' ];" >> ~/.sbuildrc
+        cat <<'EOF' >> sbuildrc
+        $chroot_mode = 'unshare';
+        $run_autopkgtest = 0;
+        $autopkgtest_root_args = '';
+        $autopkgtest_opts = [ '--apt-upgrade', '--', 'unshare', '--release', '%r', '--arch', '%a' ];
+        EOF
         sudo sbuild-update -udcar u
         schroot -l | grep sbuild
 

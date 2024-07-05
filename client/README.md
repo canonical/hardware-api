@@ -165,6 +165,6 @@ sbuild /path/to/.dsc -d focal
 
 After that, you can publish the package by rinning:
 
-```bash
+```sh
  dput ppa:<ppa_name> ../<package>_<version>_source.changes
  ```
