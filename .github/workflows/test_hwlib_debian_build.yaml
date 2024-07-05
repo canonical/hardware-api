@@ -11,6 +11,7 @@ on:
     paths:
       - client/**
       - Cargo.*
+      - ".github/workflows/test_hwlib_debian_build.yaml"
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -56,6 +57,7 @@ jobs:
     - run: dpkg-buildpackage -us -uc -S
     - name: Setup sbuild and build the package
       run: |
+        set -xeu
         mkdir -p ~/.cache/sbuild
         echo
         mmdebstrap --variant=buildd --components=main,restricted,universe focal ~/.cache/sbuild/focal-amd64.tar.zst
@@ -65,7 +67,7 @@ jobs:
         sudo sbuild-adduser $USER
         newgrp sbuild
         echo "Creating ~/.sbuildrc"
-        cat <<'EOF' >> sbuildrc
+        cat <<'EOF' >> ~/.sbuildrc
         $chroot_mode = 'unshare';
         $run_autopkgtest = 0;
         $autopkgtest_root_args = '';
