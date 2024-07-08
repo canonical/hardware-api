@@ -1,3 +1,9 @@
+rust-hwlib (0.0.1~ppa2) focal; urgency=medium
+
+  * Fix lintian errors and warnings
+
+ -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Mon, 08 Jul 2024 17:14:10 +0300
+
 rust-hwlib (0.0.1~ppa1) focal; urgency=medium
 
   * Publish the initial version of the hwlib for focal
