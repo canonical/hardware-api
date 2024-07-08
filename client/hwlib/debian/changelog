@@ -1,4 +1,4 @@
-rust-hwlib (0.0.1) focal; urgency=medium
+rust-hwlib (0.0.1~ppa1) focal; urgency=medium
 
   * Publish the initial version of the hwlib for focal
 
