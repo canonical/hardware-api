@@ -1,5 +1,5 @@
 Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: hwlib
+Upstream-Name: librust-hwlib-dev
 Source: https://github.com/canonical/hardware-api/tree/main/client/hwlib
 
 Files: *

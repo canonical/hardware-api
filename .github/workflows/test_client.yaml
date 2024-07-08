@@ -34,7 +34,13 @@ jobs:
         run: |
           cd client/hwlib/
           ./debian/vendor-rust.sh
-          echo -e '[source.crates-io]\nreplace-with = "vendored-sources"\n\n[source.vendored-sources]\ndirectory = "'"$PWD"'/vendor"' > ~/.cargo/config.toml
+          cat >>~/.cargo/config.toml << __CONFIG__
+          [source.crates-io]
+          replace-with = "vendored-sources"
+          [source.vendored-sources]
+          directory = "$PWD/vendor"
+          __CONFIG__
+          cat ~/.cargo/config.toml
       - run: cargo build --offline
       - run: cargo check
       - run: |

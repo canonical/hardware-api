@@ -1,0 +1,85 @@
+name: Build hwlib Rust package with sbuild
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - client/**
+      - Cargo.*
+      - ".github/workflows/test_hwlib_debian_build.yaml"
+  pull_request:
+    branches: [ main ]
+    paths:
+      - client/**
+      - Cargo.*
+      - ".github/workflows/test_hwlib_debian_build.yaml"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+
+jobs:
+  build:
+    runs-on: [self-hosted, linux, large, noble, x64]
+    defaults:
+      run:
+        working-directory: client/hwlib
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@v4
+    - name: Download dependencies
+      run: |
+        set -xeu
+        sudo apt update
+        sudo DEBIAN_FRONTEND=noninteractive apt install -y \
+          debhelper \
+          devscripts \
+          sbuild \
+          schroot \
+          debootstrap \
+          jq \
+          mmdebstrap \
+          uidmap \
+          sbuild-debian-developer-setup \
+          dh-cargo \
+          pkg-config \
+          libssl-dev
+    - uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+    - name: Vendor the dependencies
+      run: |
+        cargo install cargo-vendor-filterer
+        ./debian/vendor-rust.sh
+    - name: Generate checksums
+      run: ./debian/generate_checksums.py
+    - run: dpkg-buildpackage -us -uc -S
+    - name: Setup sbuild and build the package
+      run: |
+        set -xeu
+        mkdir -p ~/.cache/sbuild
+        echo
+        mmdebstrap --variant=buildd --components=main,restricted,universe focal ~/.cache/sbuild/focal-amd64.tar.zst
+
+        echo "Running sbuild-debian-developer-setup"
+        sudo sbuild-debian-developer-setup
+        sudo sbuild-adduser $USER
+        newgrp sbuild
+        echo "Creating ~/.sbuildrc"
+        cat <<'EOF' >> ~/.sbuildrc
+        $chroot_mode = 'unshare';
+        $run_autopkgtest = 0;
+        $autopkgtest_root_args = '';
+        $autopkgtest_opts = [ '--apt-upgrade', '--', 'unshare', '--release', '%r', '--arch', '%a' ];
+        EOF
+        sudo sbuild-update -udcar u
+        schroot -l | grep sbuild
+
+        PACKAGE_DSC=$(find ../ -name "*.dsc" | head -n 1)
+        if [ -z "$PACKAGE_DSC" ]; then
+          echo "No .dsc file found"
+          exit 1
+        fi
+        echo "Running sbuild for $PACKAGE_DSC"
+        sbuild $PACKAGE_DSC -d focal -v
