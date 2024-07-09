@@ -100,7 +100,7 @@ dch -i  # increment release number
 dch -r  # create release
 ```
 
-Then you need to vendor the Rust depepndencies:
+Then you need to vendor the Rust dependencies:
 
 ```bash
 # under client/hwlib/ dir
@@ -121,6 +121,7 @@ Then, build the source package:
 dpkg-buildpackage -S #-k=<key-to-sign> if you have more than one GPG key for the specified DEBEMAIL
 ```
 
+You can also `lintian --pedantic` to staticly check the files under the `debian/` dir.
 
 ### Testing your package
 

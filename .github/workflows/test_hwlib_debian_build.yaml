@@ -55,6 +55,7 @@ jobs:
     - name: Generate checksums
       run: ./debian/generate_checksums.py
     - run: dpkg-buildpackage -us -uc -S
+    - run: lintian --pedantic --verbose
     - name: Setup sbuild and build the package
       run: |
         set -xeu

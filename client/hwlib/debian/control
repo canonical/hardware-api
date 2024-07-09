@@ -6,8 +6,8 @@ Build-Depends: debhelper (>= 12),
                cargo:native,
                rustc:native,
                libssl-dev,
-               pkg-config
-Maintainer: Canonical Hardware Certification <canonical-hw-cert@lists.launchpad.net> 
+               pkgconf
+Maintainer: Canonical Hardware Certification <canonical-hw-cert@lists.launchpad.net>
 Uploaders: Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 Standards-Version: 4.6.2
 Vcs-Git: https://github.com/canonical/hardware-api.git [client/hwlib/src]

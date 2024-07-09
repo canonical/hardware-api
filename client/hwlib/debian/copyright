@@ -1,9 +1,11 @@
-Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: librust-hwlib-dev
 Source: https://github.com/canonical/hardware-api/tree/main/client/hwlib
 
 Files: *
 Copyright: Copyright 2024 Canonical Ltd.
+License: GPL-3
+
 License: GPL-3
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License version 3,
@@ -19,4 +21,3 @@ License: GPL-3
  .
  On Debian-based systems the full text of the GPL, version 3, can be found at
  /usr/share/common-licenses/GPL-3.
-
