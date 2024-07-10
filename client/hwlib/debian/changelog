@@ -1,3 +1,9 @@
+rust-hwlib (0.0.1~24.04~ppa1) noble; urgency=medium
+
+  * Backport 0.0.1~ppa1 to noble
+
+ -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Wed, 10 Jul 2024 15:35:13 +0300
+
 rust-hwlib (0.0.1~ppa1) oracular; urgency=medium
 
   * Publish the initial version of the hwlib for oracular
