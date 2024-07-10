@@ -126,12 +126,12 @@ You can also `lintian --pedantic` to staticly check the files under the `debian/
 ### Testing your package
 
 You can test your package and build it with the [sbuild](https://wiki.debian.org/sbuild) tool.
-In this example, we do it for focal distro, but you can replace it with the desired one:
+In this example, we do it for oracular distro, but you can replace it with the desired one:
 
 ```bash
 sudo apt install sbuild mmdebstrap uidmap
 mkdir -p ~/.cache/sbuild
-mmdebstrap --variant=buildd --components=main,restricted,universe focal ~/.cache/sbuild/focal-amd64.tar.zst
+mmdebstrap --variant=buildd --components=main,restricted,universe oracular ~/.cache/sbuild/oracular-amd64.tar.zst
 ```
 
 For configuring `sbuild` , install `sbuild-debian-developer-setup`:
@@ -161,7 +161,7 @@ $autopkgtest_opts = [ '--apt-upgrade', '--', 'unshare', '--release', '%r', '--ar
 Not you can build the binary itself:
 
 ```bash
-sbuild /path/to/.dsc -d focal
+sbuild /path/to/.dsc -d oracular
 ```
 
 After that, you can publish the package by rinning:
