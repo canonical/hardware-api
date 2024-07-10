@@ -1,3 +1,9 @@
+rust-hwlib (0.0.1~20.04~ppa1) focal; urgency=medium
+
+  * Backport 0.0.1~ppa1 to focal
+
+ -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Wed, 10 Jul 2024 16:31:31 +0300
+
 rust-hwlib (0.0.1~ppa1) oracular; urgency=medium
 
   * Publish the initial version of the hwlib for oracular
