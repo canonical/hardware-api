@@ -1,13 +1,13 @@
 name: Build hwlib Rust package with sbuild
 on:
   push:
-    branches: [ main ]
+    branches: [ 24.04 ]
     paths:
       - client/**
       - Cargo.*
       - ".github/workflows/test_hwlib_debian_build.yaml"
   pull_request:
-    branches: [ main ]
+    branches: [ 24.04 ]
     paths:
       - client/**
       - Cargo.*
@@ -61,7 +61,7 @@ jobs:
         set -xeu
         mkdir -p ~/.cache/sbuild
         echo
-        mmdebstrap --variant=buildd --components=main,restricted,universe oracular ~/.cache/sbuild/oracular-amd64.tar.zst
+        mmdebstrap --variant=buildd --components=main,restricted,universe noble ~/.cache/sbuild/noble-amd64.tar.zst
 
         echo "Running sbuild-debian-developer-setup"
         sudo sbuild-debian-developer-setup
@@ -83,4 +83,4 @@ jobs:
           exit 1
         fi
         echo "Running sbuild for $PACKAGE_DSC"
-        sbuild $PACKAGE_DSC -d oracular -v
+        sbuild $PACKAGE_DSC -d noble -v
