@@ -48,6 +48,7 @@ jobs:
         profile: minimal
         toolchain: stable
         override: true
+    - run: cp ../../Cargo.lock ./
     - name: Vendor the dependencies
       run: |
         cargo install cargo-vendor-filterer
