@@ -36,8 +36,8 @@ fn get_certification_status(py: Python, url: String) -> PyResult<PyObject> {
     match response {
         Ok(response_value) => {
             let json_str = response_value.to_string();
-            let json: PyObject = PyString::new(py, &json_str).into();
-            let json_module = py.import("json")?;
+            let json: PyObject = PyString::new_bound(py, &json_str).into();
+            let json_module = py.import_bound("json")?;
             let json_object: PyObject = json_module.call_method1("loads", (json,))?.into();
 
             Ok(json_object)
@@ -50,7 +50,7 @@ fn get_certification_status(py: Python, url: String) -> PyResult<PyObject> {
 }
 
 #[pymodule]
-fn hwlib(_py: Python, m: &PyModule) -> PyResult<()> {
+fn hwlib(m: &Bound<'_, PyModule>) -> PyResult<()> {
     m.add_function(wrap_pyfunction!(get_certification_status, m)?)?;
     Ok(())
 }
