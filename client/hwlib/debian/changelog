@@ -1,6 +1,5 @@
-hwlib (0.0.1) mantic; urgency=medium
+rust-hwlib (0.0.1~ppa1) oracular; urgency=medium
 
-  * Team upload.
-  * Package hwlib 0.0.1
+  * Publish the initial version of the hwlib for oracular
 
- -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Tue, 06 Feb 2024 12:15:50 +0200
+ -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Tue, 09 Jul 2024 15:10:14 +0300
