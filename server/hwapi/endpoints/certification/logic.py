@@ -35,7 +35,9 @@ def find_main_hardware_components(
     board = repository.get_board(
         db, board_data.manufacturer, board_data.product_name, board_data.version
     )
-    bios = repository.get_bios(db, bios_data.vendor, bios_data.version)
+    bios = repository.get_bios(
+        db, bios_data.vendor, bios_data.version, bios_data.firmware_revision
+    )
     if not board or not bios:
         raise ValueError("Hardware not certified")
     return board, bios

@@ -100,6 +100,13 @@ dch -i  # increment release number
 dch -r  # create release
 ```
 
+Then copy the Cargo.lock file from the project root to `client/hwlib` dir, because the MIR policy
+requires the lock file to be included to the archive
+
+```bash
+cp ../../Cargo.lock ./
+```
+
 Then you need to vendor the Rust dependencies:
 
 ```bash

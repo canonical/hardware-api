@@ -98,7 +98,9 @@ def get_board(
     return db.execute(stmt).scalars().first()
 
 
-def get_bios(db: Session, vendor_name: str, version: str) -> models.Bios | None:
+def get_bios(
+    db: Session, vendor_name: str, version: str, firmware_revision: str | None
+) -> models.Bios | None:
     """Return bios object matching given bios data"""
     stmt = (
         select(models.Bios)
@@ -107,6 +109,7 @@ def get_bios(db: Session, vendor_name: str, version: str) -> models.Bios | None:
             and_(
                 models.Vendor.name.ilike(vendor_name),
                 models.Bios.version.ilike(version),
+                models.Bios.firmware_revision == firmware_revision,
             )
         )
     )
