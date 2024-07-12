@@ -21,20 +21,23 @@
 from datetime import date
 from pydantic import BaseModel
 
+from hwapi.data_models.enums import DeviceStatus
+
 
 class AudioValidator(BaseModel):
     """Validator model for audio devices"""
 
     model: str
     vendor: str
+    identifier: str
 
 
 class BiosValidator(BaseModel):
-    firmware_revision: str
-    release_date: date
-    revision: str
     vendor: str
     version: str
+    revision: str | None
+    firmware_revision: str | None
+    release_date: date | None
 
 
 class BoardValidator(BaseModel):
@@ -51,35 +54,39 @@ class ChassisValidator(BaseModel):
 
 
 class GPUValidator(BaseModel):
-    family: str
+    status: DeviceStatus | None = None
+    codename: str | None = None
     manufacturer: str
     version: str
+    identifier: str
 
 
 class NetworkAdapterValidator(BaseModel):
     """Validator for ethernet network adapters"""
 
     bus: str
-    id: str
+    identifier: str
     model: str
     vendor: str
     capacity: int
 
 
 class PCIPeripheralValidator(BaseModel):
+    status: DeviceStatus | None = None
     pci_id: str
     name: str
     vendor: str
 
 
 class ProcessorValidator(BaseModel):
-    family: str
+    codename: str
     frequency: float
     manufacturer: str
     version: str
 
 
 class USBPeripheralValidator(BaseModel):
+    status: DeviceStatus | None = None
     usb_id: str
     name: str
     vendor: str
@@ -88,12 +95,16 @@ class USBPeripheralValidator(BaseModel):
 class VideoCaptureValidator(BaseModel):
     """Validator model for video capture devices"""
 
+    status: DeviceStatus | None = None
     model: str
     vendor: str
+    identifier: str
 
 
 class WirelessAdapterValidator(BaseModel):
     """Validator model for wireless network adapters"""
 
+    status: DeviceStatus | None = None
     model: str
     vendor: str
+    identifier: str

@@ -44,6 +44,33 @@ jobs:
       - name: Run tests with docker-compose
         run: |
           docker-compose up --attach-dependencies --abort-on-container-exit hwapi-test
+          sudo chown $USER -R coverage
+          sudo chgrp $USER -R coverage
+      - name: Upload coverage.xml as an artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: test_coverage
+          path: ./server/coverage/coverage.xml
+          if-no-files-found: error
+          retention-days: 2
+
+  report-coverage:
+    runs-on: [self-hosted, linux, large, jammy, x64]
+    if: github.event_name == 'pull_request'
+    needs: [test]
+    steps:
+      - name: Download build tests coverage report
+        uses: actions/download-artifact@v4
+        with:
+          name: test_coverage
+      - name: Report Coverage and annotate PR (if exists)
+        uses: orgoro/coverage@v3
+        with:
+            coverageFile: coverage.xml
+            token: ${{ secrets.GITHUB_TOKEN }}
+            thresholdAll: 0.70
+            thresholdNew: 0.80
+            thresholdModified: 0.0
 
   compare-openapi:
     runs-on: [self-hosted, linux, large, jammy, x64]

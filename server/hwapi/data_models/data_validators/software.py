@@ -22,15 +22,14 @@ from pydantic import BaseModel
 
 
 class KernelPackageValidator(BaseModel):
-    name: str
+    name: str | None
     version: str
-    signature: str
+    signature: str | None
+    loaded_modules: list[str] = []
 
 
 class OSValidator(BaseModel):
     distributor: str
-    description: str
     version: str
     codename: str
     kernel: KernelPackageValidator
-    loaded_modules: list[str]

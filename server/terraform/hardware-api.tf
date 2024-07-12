@@ -1,31 +1,35 @@
 terraform {
   required_providers {
     juju = {
-      version = "~> 0.11.0"
+      version = "~> 0.10.1"
       source  = "juju/juju"
     }
   }
 }
 
-provider "juju" {}
-
 variable "environment" {
   description = "The environment to deploy to (development, staging, production)"
+}
+
+variable "tls_secret_name" {
+  description = "Secret where the TLS certificate for ingress is stored"
+  type        = string
+  default     = ""
 }
 
 variable "external_ingress_hostname" {
   description = "External hostname for the ingress"
   type        = string
-  default     = "hardware-api.ubuntu.com"
+  default     = "hw.ubuntu.com"
 }
 
-resource "juju_model" "hardware-api" {
-  name = "hardware-api-${var.environment}"
+locals {
+  app_model = "hardware-api-${var.environment}"
 }
 
 resource "juju_application" "hardware-api" {
   name  = "api"
-  model = juju_model.hardware-api.name
+  model = local.app_model
 
   charm {
     name    = "hardware-api"
@@ -33,21 +37,37 @@ resource "juju_application" "hardware-api" {
   }
 
   config = {
-    hostname = var.environment == "staging" ? "hardware-api-staging.${var.external_ingress_hostname}" : "hardware-api.${var.external_ingress_hostname}"
+    hostname = var.external_ingress_hostname
     port     = var.environment == "development" ? 30000 : 443
   }
 
   units = 1
 }
 
-# resource "juju_integration" "hardware-api-ingress" {
-#   model = juju_model.hardware-api.name
-#
-#   application {
-#     name = juju_application.hardware-api.name
-#   }
-#
-#   application {
-#     name = juju_application.ingress.name
-#   }
-# }
+resource "juju_application" "ingress" {
+  name  = "ingress"
+  model = local.app_model
+  trust = true
+
+  charm {
+    name    = "nginx-ingress-integrator"
+    channel = "latest/stable"
+  }
+
+  config = {
+    tls-secret-name = var.tls_secret_name
+  }
+}
+
+
+resource "juju_integration" "hardware-api-ingress" {
+  model = local.app_model
+
+  application {
+    name = juju_application.hardware-api.name
+  }
+
+  application {
+    name = juju_application.ingress.name
+  }
+}

@@ -32,23 +32,33 @@ from hwapi.data_models.data_validators import (
     NetworkAdapterValidator,
     OSValidator,
     PCIPeripheralValidator,
-    ProcessorValidator,
     USBPeripheralValidator,
     VideoCaptureValidator,
     WirelessAdapterValidator,
 )
 
 
-class CertificationStatusRequest(BaseModel):
-    """Request body validator for status check endpoint"""
-
-    vendor: str
-    model: str
-    os: OSValidator | None = None
-    bios: BiosValidator | None = None
-    board: BoardValidator | None = None
+class CertifiedResponse(BaseModel):
+    status: Literal[CertificationStatus.CERTIFIED] = CertificationStatus.CERTIFIED
+    architecture: str
+    bios: BiosValidator
+    board: BoardValidator
     chassis: ChassisValidator | None = None
-    processor: list[ProcessorValidator] = []
+    available_releases: list[OSValidator]
+
+
+class NotCertifiedResponse(BaseModel):
+    status: Literal[CertificationStatus.NOT_SEEN] = CertificationStatus.NOT_SEEN
+
+
+class RelatedCertifiedSystemExistsResponse(BaseModel):
+    status: Literal[CertificationStatus.RELATED_CERTIFIED_SYSTEM_EXISTS] = (
+        CertificationStatus.RELATED_CERTIFIED_SYSTEM_EXISTS
+    )
+    architecture: str
+    board: BoardValidator
+    bios: BiosValidator
+    chassis: ChassisValidator | None = None
     gpu: list[GPUValidator] | None = None
     audio: list[AudioValidator] | None = None
     video: list[VideoCaptureValidator] | None = None
@@ -56,37 +66,15 @@ class CertificationStatusRequest(BaseModel):
     wireless: list[WirelessAdapterValidator] | None = None
     pci_peripherals: list[PCIPeripheralValidator] = []
     usb_peripherals: list[USBPeripheralValidator] = []
+    available_releases: list[OSValidator]
 
 
-class CertifiedResponse(BaseModel):
-    """
-    If a system is certified, we return the information about OS and bios
-    used on the system under test we had in the lab to certify the machine
-    """
-
-    status: Literal[CertificationStatus.CERTIFIED]
-    os: OSValidator
+class CertifiedImageExistsResponse(BaseModel):
+    status: Literal[CertificationStatus.CERTIFIED_IMAGE_EXISTS] = (
+        CertificationStatus.CERTIFIED_IMAGE_EXISTS
+    )
+    architecture: str
     bios: BiosValidator
-
-
-class NotCertifiedResponse(BaseModel):
-    status: Literal[CertificationStatus.NOT_SEEN]
-
-
-class RelatedCertifiedSystemExistsResponse(BaseModel):
-    """
-    If a system is partially certified, we return the information about components
-    were tested on other systems that the machine has
-    """
-
-    status: Literal[CertificationStatus.PARTIALLY_CERTIFIED]
     board: BoardValidator
     chassis: ChassisValidator | None = None
-    processor: list[ProcessorValidator] | None = None
-    gpu: list[GPUValidator] | None = None
-    audio: list[AudioValidator] | None = None
-    video: list[VideoCaptureValidator] | None = None
-    network: list[NetworkAdapterValidator] | None = None
-    wireless: list[WirelessAdapterValidator] | None = None
-    pci_peripherals: list[PCIPeripheralValidator] | None = None
-    usb_peripherals: list[USBPeripheralValidator] | None = None
+    available_releases: list[OSValidator]

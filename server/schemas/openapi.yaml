@@ -3,6 +3,9 @@ components:
     AudioValidator:
       description: Validator model for audio devices
       properties:
+        identifier:
+          title: Identifier
+          type: string
         model:
           title: Model
           type: string
@@ -12,20 +15,27 @@ components:
       required:
       - model
       - vendor
+      - identifier
       title: AudioValidator
       type: object
     BiosValidator:
       properties:
         firmware_revision:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Firmware Revision
-          type: string
         release_date:
-          format: date
+          anyOf:
+          - format: date
+            type: string
+          - type: 'null'
           title: Release Date
-          type: string
         revision:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Revision
-          type: string
         vendor:
           title: Vendor
           type: string
@@ -33,11 +43,11 @@ components:
           title: Version
           type: string
       required:
-      - firmware_revision
-      - release_date
-      - revision
       - vendor
       - version
+      - revision
+      - firmware_revision
+      - release_date
       title: BiosValidator
       type: object
     BoardValidator:
@@ -60,46 +70,22 @@ components:
     CertificationStatusRequest:
       description: Request body validator for status check endpoint
       properties:
-        audio:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/AudioValidator'
-            type: array
-          - type: 'null'
-          title: Audio
+        architecture:
+          title: Architecture
+          type: string
         bios:
-          anyOf:
-          - $ref: '#/components/schemas/BiosValidator'
-          - type: 'null'
+          $ref: '#/components/schemas/BiosValidator'
         board:
-          anyOf:
-          - $ref: '#/components/schemas/BoardValidator'
-          - type: 'null'
+          $ref: '#/components/schemas/BoardValidator'
         chassis:
           anyOf:
           - $ref: '#/components/schemas/ChassisValidator'
           - type: 'null'
-        gpu:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/GPUValidator'
-            type: array
-          - type: 'null'
-          title: Gpu
         model:
           title: Model
           type: string
-        network:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/NetworkAdapterValidator'
-            type: array
-          - type: 'null'
-          title: Network
         os:
-          anyOf:
-          - $ref: '#/components/schemas/OSValidator'
-          - type: 'null'
+          $ref: '#/components/schemas/OSValidator'
         pci_peripherals:
           default: []
           items:
@@ -107,11 +93,7 @@ components:
           title: Pci Peripherals
           type: array
         processor:
-          default: []
-          items:
-            $ref: '#/components/schemas/ProcessorValidator'
-          title: Processor
-          type: array
+          $ref: '#/components/schemas/ProcessorValidator'
         usb_peripherals:
           default: []
           items:
@@ -121,42 +103,78 @@ components:
         vendor:
           title: Vendor
           type: string
-        video:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/VideoCaptureValidator'
-            type: array
-          - type: 'null'
-          title: Video
-        wireless:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/WirelessAdapterValidator'
-            type: array
-          - type: 'null'
-          title: Wireless
       required:
       - vendor
       - model
-      title: CertificationStatusRequest
-      type: object
-    CertifiedResponse:
-      description: 'If a system is certified, we return the information about OS and
-        bios
-
-        used on the system under test we had in the lab to certify the machine'
-      properties:
-        bios:
-          $ref: '#/components/schemas/BiosValidator'
-        os:
-          $ref: '#/components/schemas/OSValidator'
-        status:
-          const: Certified
-          title: Status
-      required:
-      - status
+      - architecture
+      - board
       - os
       - bios
+      - processor
+      title: CertificationStatusRequest
+      type: object
+    CertifiedImageExistsResponse:
+      properties:
+        architecture:
+          title: Architecture
+          type: string
+        available_releases:
+          items:
+            $ref: '#/components/schemas/OSValidator'
+          title: Available Releases
+          type: array
+        bios:
+          $ref: '#/components/schemas/BiosValidator'
+        board:
+          $ref: '#/components/schemas/BoardValidator'
+        chassis:
+          anyOf:
+          - $ref: '#/components/schemas/ChassisValidator'
+          - type: 'null'
+        status:
+          const: Certified Image Exists
+          default: Certified Image Exists
+          enum:
+          - Certified Image Exists
+          title: Status
+          type: string
+      required:
+      - architecture
+      - bios
+      - board
+      - available_releases
+      title: CertifiedImageExistsResponse
+      type: object
+    CertifiedResponse:
+      properties:
+        architecture:
+          title: Architecture
+          type: string
+        available_releases:
+          items:
+            $ref: '#/components/schemas/OSValidator'
+          title: Available Releases
+          type: array
+        bios:
+          $ref: '#/components/schemas/BiosValidator'
+        board:
+          $ref: '#/components/schemas/BoardValidator'
+        chassis:
+          anyOf:
+          - $ref: '#/components/schemas/ChassisValidator'
+          - type: 'null'
+        status:
+          const: Certified
+          default: Certified
+          enum:
+          - Certified
+          title: Status
+          type: string
+      required:
+      - architecture
+      - bios
+      - board
+      - available_releases
       title: CertifiedResponse
       type: object
     ChassisValidator:
@@ -180,21 +198,37 @@ components:
       - version
       title: ChassisValidator
       type: object
+    DeviceStatus:
+      enum:
+      - known-working
+      - known-breaking
+      - unknown
+      title: DeviceStatus
+      type: string
     GPUValidator:
       properties:
-        family:
-          title: Family
+        codename:
+          anyOf:
+          - type: string
+          - type: 'null'
+          title: Codename
+        identifier:
+          title: Identifier
           type: string
         manufacturer:
           title: Manufacturer
           type: string
+        status:
+          anyOf:
+          - $ref: '#/components/schemas/DeviceStatus'
+          - type: 'null'
         version:
           title: Version
           type: string
       required:
-      - family
       - manufacturer
       - version
+      - identifier
       title: GPUValidator
       type: object
     HTTPValidationError:
@@ -208,12 +242,22 @@ components:
       type: object
     KernelPackageValidator:
       properties:
+        loaded_modules:
+          default: []
+          items:
+            type: string
+          title: Loaded Modules
+          type: array
         name:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Name
-          type: string
         signature:
+          anyOf:
+          - type: string
+          - type: 'null'
           title: Signature
-          type: string
         version:
           title: Version
           type: string
@@ -232,8 +276,8 @@ components:
         capacity:
           title: Capacity
           type: integer
-        id:
-          title: Id
+        identifier:
+          title: Identifier
           type: string
         model:
           title: Model
@@ -243,7 +287,7 @@ components:
           type: string
       required:
       - bus
-      - id
+      - identifier
       - model
       - vendor
       - capacity
@@ -253,9 +297,11 @@ components:
       properties:
         status:
           const: Not Seen
+          default: Not Seen
+          enum:
+          - Not Seen
           title: Status
-      required:
-      - status
+          type: string
       title: NotCertifiedResponse
       type: object
     OSValidator:
@@ -263,29 +309,19 @@ components:
         codename:
           title: Codename
           type: string
-        description:
-          title: Description
-          type: string
         distributor:
           title: Distributor
           type: string
         kernel:
           $ref: '#/components/schemas/KernelPackageValidator'
-        loaded_modules:
-          items:
-            type: string
-          title: Loaded Modules
-          type: array
         version:
           title: Version
           type: string
       required:
       - distributor
-      - description
       - version
       - codename
       - kernel
-      - loaded_modules
       title: OSValidator
       type: object
     PCIPeripheralValidator:
@@ -296,6 +332,10 @@ components:
         pci_id:
           title: Pci Id
           type: string
+        status:
+          anyOf:
+          - $ref: '#/components/schemas/DeviceStatus'
+          - type: 'null'
         vendor:
           title: Vendor
           type: string
@@ -307,8 +347,8 @@ components:
       type: object
     ProcessorValidator:
       properties:
-        family:
-          title: Family
+        codename:
+          title: Codename
           type: string
         frequency:
           title: Frequency
@@ -320,18 +360,17 @@ components:
           title: Version
           type: string
       required:
-      - family
+      - codename
       - frequency
       - manufacturer
       - version
       title: ProcessorValidator
       type: object
     RelatedCertifiedSystemExistsResponse:
-      description: 'If a system is partially certified, we return the information
-        about components
-
-        were tested on other systems that the machine has'
       properties:
+        architecture:
+          title: Architecture
+          type: string
         audio:
           anyOf:
           - items:
@@ -339,6 +378,13 @@ components:
             type: array
           - type: 'null'
           title: Audio
+        available_releases:
+          items:
+            $ref: '#/components/schemas/OSValidator'
+          title: Available Releases
+          type: array
+        bios:
+          $ref: '#/components/schemas/BiosValidator'
         board:
           $ref: '#/components/schemas/BoardValidator'
         chassis:
@@ -360,29 +406,24 @@ components:
           - type: 'null'
           title: Network
         pci_peripherals:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/PCIPeripheralValidator'
-            type: array
-          - type: 'null'
+          default: []
+          items:
+            $ref: '#/components/schemas/PCIPeripheralValidator'
           title: Pci Peripherals
-        processor:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/ProcessorValidator'
-            type: array
-          - type: 'null'
-          title: Processor
+          type: array
         status:
-          const: Partially Certified
+          const: Related Certified System Exists
+          default: Related Certified System Exists
+          enum:
+          - Related Certified System Exists
           title: Status
+          type: string
         usb_peripherals:
-          anyOf:
-          - items:
-              $ref: '#/components/schemas/USBPeripheralValidator'
-            type: array
-          - type: 'null'
+          default: []
+          items:
+            $ref: '#/components/schemas/USBPeripheralValidator'
           title: Usb Peripherals
+          type: array
         video:
           anyOf:
           - items:
@@ -398,8 +439,10 @@ components:
           - type: 'null'
           title: Wireless
       required:
-      - status
+      - architecture
       - board
+      - bios
+      - available_releases
       title: RelatedCertifiedSystemExistsResponse
       type: object
     USBPeripheralValidator:
@@ -407,6 +450,10 @@ components:
         name:
           title: Name
           type: string
+        status:
+          anyOf:
+          - $ref: '#/components/schemas/DeviceStatus'
+          - type: 'null'
         usb_id:
           title: Usb Id
           type: string
@@ -443,29 +490,45 @@ components:
     VideoCaptureValidator:
       description: Validator model for video capture devices
       properties:
+        identifier:
+          title: Identifier
+          type: string
         model:
           title: Model
           type: string
+        status:
+          anyOf:
+          - $ref: '#/components/schemas/DeviceStatus'
+          - type: 'null'
         vendor:
           title: Vendor
           type: string
       required:
       - model
       - vendor
+      - identifier
       title: VideoCaptureValidator
       type: object
     WirelessAdapterValidator:
       description: Validator model for wireless network adapters
       properties:
+        identifier:
+          title: Identifier
+          type: string
         model:
           title: Model
           type: string
+        status:
+          anyOf:
+          - $ref: '#/components/schemas/DeviceStatus'
+          - type: 'null'
         vendor:
           title: Vendor
           type: string
       required:
       - model
       - vendor
+      - identifier
       title: WirelessAdapterValidator
       type: object
 info:
@@ -506,6 +569,7 @@ paths:
                 - $ref: '#/components/schemas/CertifiedResponse'
                 - $ref: '#/components/schemas/NotCertifiedResponse'
                 - $ref: '#/components/schemas/RelatedCertifiedSystemExistsResponse'
+                - $ref: '#/components/schemas/CertifiedImageExistsResponse'
                 title: Response Check Certification V1 Certification Status Post
           description: Successful Response
         '422':

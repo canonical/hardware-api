@@ -1,37 +1,27 @@
-Source: hwlib
+Source: rust-hwlib
 Section: rust
 Priority: optional
 Build-Depends: debhelper (>= 12),
+               dh-cargo (>= 23),
                cargo:native,
                rustc:native,
-               python3-dev,
-               python3-setuptools,
-               python3-wheel,
-               python3-pip,
                libssl-dev,
-               pkg-config,
-               patchelf,
-               librust-serde-derive-1+default-dev,
-               librust-serde-json-1+default-dev,
-               librust-pyo3-0+default-dev,
-               librust-tokio-1+default-dev,
-               librust-tokio-util-0+default-dev,
-               librust-reqwest-0+default-dev,
-               librust-once-cell-1+default-dev
-Maintainer: Canonical Hardware Certification <canonical-hw-cert@lists.launchpad.net> 
+               pkgconf
+Maintainer: Canonical Hardware Certification <canonical-hw-cert@lists.launchpad.net>
 Uploaders: Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
-Standards-Version: 4.6.1
+Standards-Version: 4.6.2
 Vcs-Git: https://github.com/canonical/hardware-api.git [client/hwlib/src]
 Vcs-Browser: https://github.com/canonical/hardware-api/tree/main/client/hwlib/src
+Homepage: https://github.com/canonical/hardware-api
+X-Cargo-Crate: hwlib
 Rules-Requires-Root: no
 
-Package: hwlib
+Package: librust-hwlib-dev
 Architecture: any
 Multi-Arch: same
-Depends: ${shlibs:Depends}, 
-         ${misc:Depends}, 
-         ${python3:Depends}
-Provides: hwlib (= ${binary:Version}),
-Description: Collects and sends hardware information to hardware-api to find testing status of the device model - Rust source code
- This package contains the source for the Rust hwlib crate, packaged by debcargo
- for use with cargo and dh-cargo.
+Depends: ${misc:Depends},
+         ${shlibs:Depends}
+Provides: librust-hwlib-dev (= ${binary:Version})
+Description: Collects and sends hardware information to hardware-api to find testing status of the machine
+ This library is used for gathering hardware information from a device and sending it
+ to the hardware-api to determine the testing status of the device model.

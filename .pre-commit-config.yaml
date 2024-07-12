@@ -7,9 +7,3 @@ repos:
       language: script
       always_run: true
       pass_filenames: false
-    - id: openapi-generate-html
-      name: Generate OpenAPI HTML schema
-      entry: scripts/generate_openapi_html.sh
-      language: script
-      always_run: true
-      pass_filenames: false
