@@ -18,7 +18,18 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-pub mod devices;
-pub mod request_validators;
-pub mod response_validators;
-pub mod software;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CertificationStatusRequest {
+    pub architecture: String,
+    pub bios: super::devices::Bios,
+    pub board: super::devices::Board,
+    pub chassis: Option<super::devices::Chassis>,
+    pub model: String,
+    pub os: super::software::OS,
+    pub pci_peripherals: Vec<super::devices::PCIPeripheral>,
+    pub processor: super::devices::Processor,
+    pub usb_peripherals: Vec<super::devices::USBPeripheral>,
+    pub vendor: String,
+}

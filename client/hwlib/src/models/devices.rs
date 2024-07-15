@@ -22,15 +22,16 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Audio {
+    pub identifier: String,
     pub model: String,
     pub vendor: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Bios {
-    pub firmware_revision: String,
-    pub release_date: String,
-    pub revision: String,
+    pub firmware_revision: Option<String>,
+    pub release_date: Option<String>,
+    pub revision: Option<String>,
     pub vendor: String,
     pub version: String,
 }
@@ -51,32 +52,34 @@ pub struct Chassis {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-#[allow(clippy::upper_case_acronyms)]
 pub struct GPU {
-    pub family: String,
+    pub codename: Option<String>,
+    pub identifier: String,
     pub manufacturer: String,
+    pub status: Option<DeviceStatus>,
     pub version: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct NetworkAdapter {
     pub bus: String,
-    pub id: String,
+    pub capacity: i32,
+    pub identifier: String,
     pub model: String,
     pub vendor: String,
-    pub capacity: i32,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct PCIPeripheral {
     pub pci_id: String,
     pub name: String,
+    pub status: Option<DeviceStatus>,
     pub vendor: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Processor {
-    pub family: String,
+    pub codename: String,
     pub frequency: f64,
     pub manufacturer: String,
     pub version: String,
@@ -86,17 +89,29 @@ pub struct Processor {
 pub struct USBPeripheral {
     pub usb_id: String,
     pub name: String,
+    pub status: Option<DeviceStatus>,
     pub vendor: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct VideoCapture {
+    pub identifier: String,
     pub model: String,
+    pub status: Option<DeviceStatus>,
     pub vendor: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct WirelessAdapter {
+    pub identifier: String,
     pub model: String,
+    pub status: Option<DeviceStatus>,
     pub vendor: String,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+pub enum DeviceStatus {
+    KnownWorking,
+    KnownBreaking,
+    Unknown,
 }

@@ -22,17 +22,16 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct KernelPackage {
-    pub name: String,
+    pub name: Option<String>,
     pub version: String,
-    pub signature: String,
+    pub signature: Option<String>,
+    pub loaded_modules: Vec<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct OS {
-    pub distributor: String,
-    pub description: String,
-    pub version: String,
     pub codename: String,
+    pub distributor: String,
+    pub version: String,
     pub kernel: KernelPackage,
-    pub loaded_modules: Vec<String>,
 }
