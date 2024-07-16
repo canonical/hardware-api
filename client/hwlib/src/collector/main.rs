@@ -15,26 +15,16 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Written by:
- *        Canonical Ltd <matias.piipari@canonical.com>
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
+ *        Matias Piipari <matias.piipari@canonical.com>
  */
 
-pub mod models;
-pub mod collector;
-pub mod py_bindings;
 
-pub async fn get_certification_status(_url: &str) -> Result<serde_json::Value, reqwest::Error> {
-    let _ = collector::main::collect_info();
-    let response_type = std::env::var("CERTIFICATION_STATUS")
-        .unwrap_or_else(|_| "0".to_string())
-        .parse::<i32>()
-        .unwrap_or(0);
+use smbioslib;
 
-    let response = match response_type {
-        1 => serde_json::json!("1"),
-        2 => serde_json::json!("2"),
-        _ => serde_json::json!("3"),
-    };
-
-    Ok(response)
+pub fn collect_info() -> Result<(), Box<dyn std::error::Error>> {
+    let smbios_data = smbioslib::table_load_from_device()?;
+    let bios = super::hw_info::collect_bios_info(&smbios_data)?;
+    let processor = super::hw_info::collect_processor_info(&smbios_data)?;
+    Ok(())
 }

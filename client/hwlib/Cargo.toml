@@ -26,6 +26,7 @@ reqwest = { version = "0.12.0", features = [ "json",] }
 serde = { version = "~1.0.0", features = [ "derive",] }
 tokio = { version = "1.38.0", features = [ "full", "test-util",], default-features = false }
 pyo3 = { version = "0.22.0", features = [ "extension-module",] }
+smbios-lib = "0.9.1"
 
 [package.metadata.deb]
 maintainer = "Canonical Hardware Certification <canonical-hw-cert@lists.launchpad.net>"

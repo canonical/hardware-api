@@ -357,7 +357,7 @@ components:
           type: string
         frequency:
           title: Frequency
-          type: number
+          type: integer
         manufacturer:
           title: Manufacturer
           type: string

@@ -80,7 +80,7 @@ pub struct PCIPeripheral {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Processor {
     pub codename: String,
-    pub frequency: f64,
+    pub frequency: u16,
     pub manufacturer: String,
     pub version: String,
 }
