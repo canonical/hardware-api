@@ -19,12 +19,12 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
+pub mod collectors;
 pub mod models;
-pub mod collector;
 pub mod py_bindings;
 
 pub async fn get_certification_status(_url: &str) -> Result<serde_json::Value, reqwest::Error> {
-    let _ = collector::main::collect_info();
+    let _ = collectors::main::collect_info();
     let response_type = std::env::var("CERTIFICATION_STATUS")
         .unwrap_or_else(|_| "0".to_string())
         .parse::<i32>()

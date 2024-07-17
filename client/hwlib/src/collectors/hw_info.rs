@@ -23,10 +23,15 @@ use smbioslib;
 
 use crate::models::devices;
 
-pub(super) fn collect_bios_info(smbios_data: &smbioslib::SMBiosData) -> Result<devices::Bios, Box<dyn std::error::Error>> {
+pub(super) fn collect_bios_info(
+    smbios_data: &smbioslib::SMBiosData,
+) -> Result<devices::Bios, Box<dyn std::error::Error>> {
     let bios_info = &smbios_data.collect::<smbioslib::SMBiosInformation>()[0];
     let bios = devices::Bios {
-        firmware_revision: match (bios_info.system_bios_major_release(), bios_info.system_bios_minor_release()) {
+        firmware_revision: match (
+            bios_info.system_bios_major_release(),
+            bios_info.system_bios_minor_release(),
+        ) {
             (Some(major), Some(minor)) => Some(format!("{}.{}", major, minor)),
             _ => None,
         },
@@ -39,7 +44,9 @@ pub(super) fn collect_bios_info(smbios_data: &smbioslib::SMBiosData) -> Result<d
 }
 
 /// Retrieve CPU information from SMBios
-pub(super) fn collect_processor_info_smbios(smbios_data: &smbioslib::SMBiosData) -> Result<devices::Processor, Box<dyn std::error::Error>> {
+pub(super) fn collect_processor_info_smbios(
+    smbios_data: &smbioslib::SMBiosData,
+) -> Result<devices::Processor, Box<dyn std::error::Error>> {
     let processor_info = &smbios_data.collect::<smbioslib::SMBiosProcessorInformation>()[0];
     let cpu_id = super::cpuid::get_cpuid(processor_info)?;
     let processor = devices::Processor {
@@ -52,7 +59,8 @@ pub(super) fn collect_processor_info_smbios(smbios_data: &smbioslib::SMBiosData)
 }
 
 /// Retrieve CPU information from /proc/cpuinfo
-pub(super) fn collect_processor_info_cpuinfo() -> Result<devices::Processor, Box<dyn std::error::Error>> {
+pub(super) fn collect_processor_info_cpuinfo(
+) -> Result<devices::Processor, Box<dyn std::error::Error>> {
     let cpu_info = super::cpuinfo::parse_cpuinfo()?;
     let processor = devices::Processor {
         codename: String::new(),

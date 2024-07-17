@@ -23,7 +23,6 @@ use std::fs::File;
 use std::io::{self, BufRead};
 use std::str::FromStr;
 
-#[derive(Debug)]
 pub struct CpuInfo {
     pub platform: String,
     pub count: usize,
@@ -75,13 +74,25 @@ pub fn parse_cpuinfo() -> Result<CpuInfo, Box<dyn std::error::Error>> {
         count,
         cpu_type: attributes.get("vendor_id").unwrap_or(&machine).to_string(),
         model: attributes.get("model name").unwrap_or(&machine).to_string(),
-        model_number: attributes.get("cpu family").unwrap_or(&"".to_string()).to_string(),
-        model_version: attributes.get("model").unwrap_or(&"".to_string()).to_string(),
-        model_revision: attributes.get("stepping").unwrap_or(&"".to_string()).to_string(),
+        model_number: attributes
+            .get("cpu family")
+            .unwrap_or(&"".to_string())
+            .to_string(),
+        model_version: attributes
+            .get("model")
+            .unwrap_or(&"".to_string())
+            .to_string(),
+        model_revision: attributes
+            .get("stepping")
+            .unwrap_or(&"".to_string())
+            .to_string(),
         cache: parse_cache_size(attributes.get("cache size"))?,
         bogomips: parse_bogomips(attributes.get("bogomips"))?,
         speed,
-        other: attributes.get("flags").unwrap_or(&"".to_string()).to_string(),
+        other: attributes
+            .get("flags")
+            .unwrap_or(&"".to_string())
+            .to_string(),
     };
 
     Ok(cpu_info)
@@ -109,7 +120,7 @@ fn parse_cache_size(cache_size: Option<&String>) -> Result<i64, Box<dyn std::err
 
 fn parse_bogomips(bogomips: Option<&String>) -> Result<i64, Box<dyn std::error::Error>> {
     if let Some(bogo) = bogomips {
-        let bogo_str = bogo.replace(" ", "");
+        let bogo_str = bogo.replace(' ', "");
         match f64::from_str(&bogo_str) {
             Ok(bogomips) => return Ok(bogomips.round() as i64),
             Err(e) => {

@@ -17,8 +17,13 @@
 
 use smbioslib;
 
-pub(super) fn get_cpuid(proc_info: &smbioslib::SMBiosProcessorInformation) -> Result<String, Box<dyn std::error::Error>> {
-    let cpu_id = proc_info.processor_id().map(|id| format!("{:x?}", id)).ok_or("Processor ID not found")?;
+pub(super) fn get_cpuid(
+    proc_info: &smbioslib::SMBiosProcessorInformation,
+) -> Result<String, Box<dyn std::error::Error>> {
+    let cpu_id = proc_info
+        .processor_id()
+        .map(|id| format!("{:x?}", id))
+        .ok_or("Processor ID not found")?;
     Ok(cpu_id)
 }
 
@@ -62,7 +67,10 @@ fn cpuid_to_human_friendly(cpuid: &str) -> Result<String, Box<dyn std::error::Er
         ("Broadwell", vec!["0x4067", "0x306d4", "0x5066", "0x406f"]),
         ("Canon Lake", vec!["0x6066"]),
         ("Cascade Lake", vec!["0x50655", "0x50656", "0x50657"]),
-        ("Coffee Lake", vec!["0x806ea", "0x906ea", "0x906eb", "0x906ec", "0x906ed"]),
+        (
+            "Coffee Lake",
+            vec!["0x806ea", "0x906ea", "0x906eb", "0x906ec", "0x906ed"],
+        ),
         ("Comet Lake", vec!["0x806ec", "0xa065"]),
         ("Cooper Lake", vec!["0x5065a", "0x5065b"]),
         ("Emerald Rapids", vec!["0xc06f2"]),
@@ -76,13 +84,22 @@ fn cpuid_to_human_friendly(cpuid: &str) -> Result<String, Box<dyn std::error::Er
         ("Nehalem", vec!["0x106a", "0x106e5", "0x206e"]),
         ("Pineview", vec!["0x106ca"]),
         ("Penryn", vec!["0x1067a"]),
-        ("Raptor Lake", vec!["0xb0671", "0xb06f2", "0xb06f5", "0xb06a2"]),
+        (
+            "Raptor Lake",
+            vec!["0xb0671", "0xb06f2", "0xb06f5", "0xb06a2"],
+        ),
         ("Rocket Lake", vec!["0xa0671"]),
         ("Sandy Bridge", vec!["0x206a", "0x206d6", "0x206d7"]),
-        ("Sapphire Rapids", vec!["0x806f3", "0x806f6", "0x806f7", "0x806f8"]),
+        (
+            "Sapphire Rapids",
+            vec!["0x806f3", "0x806f6", "0x806f7", "0x806f8"],
+        ),
         ("Skylake", vec!["0x406e3", "0x506e3", "0x50654", "0x50652"]),
         ("Tiger Lake", vec!["0x806c1"]),
-        ("Alder Lake", vec!["0x906a4", "0x906A3", "0x90675", "0x90672"]),
+        (
+            "Alder Lake",
+            vec!["0x906a4", "0x906A3", "0x90675", "0x90672"],
+        ),
         ("Westmere", vec!["0x2065", "0x206c", "0x206f"]),
         ("Whisky Lake", vec!["0x806eb", "0x806ec"]),
     ];
