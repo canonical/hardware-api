@@ -25,6 +25,10 @@ use smbioslib;
 pub fn collect_info() -> Result<(), Box<dyn std::error::Error>> {
     let smbios_data = smbioslib::table_load_from_device()?;
     let bios = super::hw_info::collect_bios_info(&smbios_data)?;
-    let processor = super::hw_info::collect_processor_info(&smbios_data)?;
+    println!("{}", bios.version);
+    let processor = super::hw_info::collect_processor_info_smbios(&smbios_data)?;
+    println!("{}, {}, {}, {}", processor.codename, processor.frequency, processor.manufacturer, processor.version);
+    let processor2 = super::hw_info::collect_processor_info_cpuinfo()?;
+    println!("{}, {}, {}, {}", processor2.codename, processor2.frequency, processor2.manufacturer, processor2.version);
     Ok(())
 }

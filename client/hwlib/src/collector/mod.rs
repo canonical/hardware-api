@@ -21,3 +21,4 @@
 pub mod main;
 pub mod hw_info;
 mod cpuid;
+mod cpuinfo;

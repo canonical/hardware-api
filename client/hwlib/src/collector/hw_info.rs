@@ -38,21 +38,27 @@ pub(super) fn collect_bios_info(smbios_data: &smbioslib::SMBiosData) -> Result<d
     Ok(bios)
 }
 
-
-pub(super) fn collect_processor_info(smbios_data: &smbioslib::SMBiosData) -> Result<devices::Processor, Box<dyn std::error::Error>> {
+/// Retrieve CPU information from SMBios
+pub(super) fn collect_processor_info_smbios(smbios_data: &smbioslib::SMBiosData) -> Result<devices::Processor, Box<dyn std::error::Error>> {
     let processor_info = &smbios_data.collect::<smbioslib::SMBiosProcessorInformation>()[0];
-    let cpu_id = processor_info.processor_id().map(|id| format!("{:x?}", id)).ok_or("Processor ID not found")?;
-
-    let cpu_codename = super::cpuid::convert_cpu_codename(&cpu_id)?;
-
+    let cpu_id = super::cpuid::get_cpuid(processor_info)?;
     let processor = devices::Processor {
-        codename: cpu_codename,
-        frequency: match processor_info.max_speed().ok_or("Processor frequency not found")? {
-            smbioslib::ProcessorSpeed::MHz(speed) => speed,
-            smbioslib::ProcessorSpeed::Unknown => return Err("Processor frequency is unknown".into()),
-        },
+        codename: super::cpuid::convert_cpu_codename(&cpu_id)?,
+        frequency: super::cpuinfo::read_max_cpu_frequency()?,
         manufacturer: processor_info.processor_manufacturer().to_string(),
         version: processor_info.processor_version().to_string(),
+    };
+    Ok(processor)
+}
+
+/// Retrieve CPU information from /proc/cpuinfo
+pub(super) fn collect_processor_info_cpuinfo() -> Result<devices::Processor, Box<dyn std::error::Error>> {
+    let cpu_info = super::cpuinfo::parse_cpuinfo()?;
+    let processor = devices::Processor {
+        codename: String::new(),
+        frequency: super::cpuinfo::read_max_cpu_frequency()?,
+        manufacturer: cpu_info.cpu_type,
+        version: cpu_info.model,
     };
     Ok(processor)
 }

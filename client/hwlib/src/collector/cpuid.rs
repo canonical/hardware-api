@@ -15,6 +15,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+use smbioslib;
+
+pub(super) fn get_cpuid(proc_info: &smbioslib::SMBiosProcessorInformation) -> Result<String, Box<dyn std::error::Error>> {
+    let cpu_id = proc_info.processor_id().map(|id| format!("{:x?}", id)).ok_or("Processor ID not found")?;
+    Ok(cpu_id)
+}
+
 pub(super) fn convert_cpu_codename(cpu_id: &str) -> Result<String, Box<dyn std::error::Error>> {
     if cpu_id.is_empty() {
         return Ok(String::from("Unknown"));
@@ -38,8 +45,6 @@ pub(super) fn convert_cpu_codename(cpu_id: &str) -> Result<String, Box<dyn std::
         Err(_) => Ok(String::from("Unknown")),
     }
 }
-
-
 
 fn cpuid_to_human_friendly(cpuid: &str) -> Result<String, Box<dyn std::error::Error>> {
     let cpuid_map = vec![
