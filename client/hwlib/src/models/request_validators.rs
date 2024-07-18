@@ -23,7 +23,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CertificationStatusRequest {
     pub architecture: String,
-    pub bios: super::devices::Bios,
+    pub bios: Option<super::devices::Bios>,
     pub board: super::devices::Board,
     pub chassis: Option<super::devices::Chassis>,
     pub model: String,

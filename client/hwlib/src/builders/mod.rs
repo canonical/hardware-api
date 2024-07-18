@@ -18,7 +18,4 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-mod cpuid;
-mod cpuinfo;
-pub mod hardware_info;
-pub mod os_info;
+pub mod request_builders;

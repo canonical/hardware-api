@@ -27,6 +27,10 @@ serde = { version = "~1.0.0", features = [ "derive",] }
 tokio = { version = "1.38.0", features = [ "full", "test-util",], default-features = false }
 pyo3 = { version = "0.22.0", features = [ "extension-module",] }
 smbios-lib = "0.9.1"
+regex = "1.10.5"
+
+[dependencies]
+chrono = "0.4.38"
 
 [package.metadata.deb]
 maintainer = "Canonical Hardware Certification <canonical-hw-cert@lists.launchpad.net>"
