@@ -18,9 +18,8 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-
-use smbioslib;
 use chrono::NaiveDate;
+use smbioslib;
 
 use crate::models::devices;
 
@@ -77,8 +76,9 @@ pub fn collect_processor_info_cpuinfo() -> Result<devices::Processor, Box<dyn st
     Ok(processor)
 }
 
-
-pub fn collect_chassis_info(smbios_data: &smbioslib::SMBiosData) -> Result<crate::models::devices::Chassis, Box<dyn std::error::Error>> {
+pub fn collect_chassis_info(
+    smbios_data: &smbioslib::SMBiosData,
+) -> Result<crate::models::devices::Chassis, Box<dyn std::error::Error>> {
     let chassis_info = &smbios_data.collect::<smbioslib::SMBiosSystemChassisInformation>()[0];
 
     let chassis_type = chassis_info.chassis_type().ok_or("")?.to_string();
@@ -96,8 +96,9 @@ pub fn collect_chassis_info(smbios_data: &smbioslib::SMBiosData) -> Result<crate
     Ok(chassis)
 }
 
-
-pub fn collect_motherboard_info(smbios_data: &smbioslib::SMBiosData) -> Result<devices::Board, Box<dyn std::error::Error>> {
+pub fn collect_motherboard_info(
+    smbios_data: &smbioslib::SMBiosData,
+) -> Result<devices::Board, Box<dyn std::error::Error>> {
     let board_info = &smbios_data.collect::<smbioslib::SMBiosBaseboardInformation>()[0];
 
     let manufacturer = board_info.manufacturer().to_string();
@@ -113,7 +114,12 @@ pub fn collect_motherboard_info(smbios_data: &smbioslib::SMBiosData) -> Result<d
     Ok(board)
 }
 
-pub fn get_system_info(smbios_data: &smbioslib::SMBiosData) -> Result<(String, String), Box<dyn std::error::Error>> {
+pub fn get_system_info(
+    smbios_data: &smbioslib::SMBiosData,
+) -> Result<(String, String), Box<dyn std::error::Error>> {
     let system_info = &smbios_data.collect::<smbioslib::SMBiosSystemInformation>()[0];
-    Ok((system_info.product_name().to_string(), system_info.manufacturer().to_string()))
+    Ok((
+        system_info.product_name().to_string(),
+        system_info.manufacturer().to_string(),
+    ))
 }

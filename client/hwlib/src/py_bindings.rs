@@ -18,15 +18,15 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use crate::send_certification_request as native_send_certification_request;
 use crate::builders::request_builders::create_certification_status_request;
+use crate::send_certification_request as native_send_certification_request;
 use once_cell::sync::Lazy;
-use serde_json;
 use pyo3::exceptions::PyRuntimeError;
 use pyo3::prelude::*;
 use pyo3::types::PyString;
 use pyo3::wrap_pyfunction;
 use pyo3::{PyObject, PyResult, Python};
+use serde_json;
 use tokio::runtime::Runtime;
 
 static RT: Lazy<Runtime> = Lazy::new(|| Runtime::new().expect("Failed to create Tokio runtime"));
@@ -36,7 +36,8 @@ fn send_certification_request(py: Python, url: String) -> PyResult<PyObject> {
     let request_body = create_certification_status_request()
         .map_err(|e| PyRuntimeError::new_err(format!("Failed to create request: {}", e)))?;
 
-    let response = RT.block_on(async { native_send_certification_request(url, &request_body).await });
+    let response =
+        RT.block_on(async { native_send_certification_request(url, &request_body).await });
 
     match response {
         Ok(response_value) => {

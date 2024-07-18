@@ -18,9 +18,9 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
+use regex::Regex;
 use std::fs;
 use std::process::Command;
-use regex::Regex;
 
 use crate::models::software;
 
@@ -40,9 +40,8 @@ pub fn collect_os_info() -> Result<software::OS, Box<dyn std::error::Error>> {
     Ok(os_info)
 }
 
-pub fn collect_kernel_info(
-) -> Result<software::KernelPackage, Box<dyn std::error::Error>> {
-    let kernel_version = fs::read_to_string("/proc/version")?;
+pub fn collect_kernel_info() -> Result<software::KernelPackage, Box<dyn std::error::Error>> {
+    let kernel_version = fs::read_to_string(crate::constants::PROC_VERSION_FILEPATH)?;
     let kernel_version = kernel_version
         .split_whitespace()
         .nth(2)

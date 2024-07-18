@@ -23,6 +23,8 @@ use std::fs::File;
 use std::io::{self, BufRead};
 use std::str::FromStr;
 
+use crate::constants::{CPU_MAX_FREQ_FILEPATH, PROC_CPUINFO_FILEPATH};
+
 pub struct CpuInfo {
     pub platform: String,
     pub count: usize,
@@ -40,7 +42,7 @@ pub struct CpuInfo {
 /// Parse /proc/cpuinfo the same way it's done in checkbox
 /// https://github.com/canonical/checkbox/blob/a8d5e9d/checkbox-support/checkbox_support/parsers/cpuinfo.py
 pub fn parse_cpuinfo() -> Result<CpuInfo, Box<dyn std::error::Error>> {
-    let path = "/proc/cpuinfo";
+    let path = PROC_CPUINFO_FILEPATH;
     let file = File::open(path)?;
     let reader = io::BufReader::new(file);
 
@@ -101,7 +103,7 @@ pub fn parse_cpuinfo() -> Result<CpuInfo, Box<dyn std::error::Error>> {
 /// Parse CPU frequency in MHz as it's done in checkbox
 /// https://github.com/canonical/checkbox/blob/a8d5e9/providers/resource/bin/cpuinfo_resource.py#L56-L63
 pub(super) fn read_max_cpu_frequency() -> Result<u64, Box<dyn std::error::Error>> {
-    let path = "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq";
+    let path = CPU_MAX_FREQ_FILEPATH;
     let file = File::open(path)?;
     let mut reader = io::BufReader::new(file);
     let mut buffer = String::new();

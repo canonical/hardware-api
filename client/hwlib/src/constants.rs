@@ -15,30 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Written by:
- *        Canonical Ltd <matias.piipari@canonical.com>
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use std::process::exit;
-
-use hwlib::builders::request_builders::create_certification_status_request;
-use hwlib::send_certification_request;
-
-#[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let cert_status_request = create_certification_status_request()?;
-
-    let url = std::env::var("HW_API_URL").unwrap_or_else(|_| String::from("https://hw.ubuntu.com"));
-    let response = send_certification_request(url, &cert_status_request).await;
-
-    match response {
-        Ok(response) => {
-            println!("{:#?}", serde_json::json!(response));
-            exit(0);
-        }
-        Err(e) => {
-            eprintln!("ERROR: {}", e);
-            exit(1);
-        }
-    }
-}
+pub const CERT_STATUS_ENDPOINT: &str = "/v1/certification/status";
+pub const PROC_VERSION_FILEPATH: &str = "/proc/version";
+pub const PROC_CPUINFO_FILEPATH: &str = "/proc/cpuinfo";
+pub const CPU_MAX_FREQ_FILEPATH: &str = "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq";

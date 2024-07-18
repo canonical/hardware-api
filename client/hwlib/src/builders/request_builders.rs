@@ -20,10 +20,11 @@
 
 use smbioslib;
 
-use crate::models::request_validators::CertificationStatusRequest;
 use crate::collectors::{hardware_info, os_info};
+use crate::models::request_validators::CertificationStatusRequest;
 
-pub fn create_certification_status_request() -> Result<CertificationStatusRequest, Box<dyn std::error::Error>> {
+pub fn create_certification_status_request(
+) -> Result<CertificationStatusRequest, Box<dyn std::error::Error>> {
     // Try to load SMBIOS data
     let smbios_data = match smbioslib::table_load_from_device() {
         Ok(data) => Some(data),
@@ -53,11 +54,11 @@ pub fn create_certification_status_request() -> Result<CertificationStatusReques
 
     let board = match smbios_data {
         Some(ref data) => hardware_info::collect_motherboard_info(data)?,
-        None => crate::models::devices::Board{
+        None => crate::models::devices::Board {
             manufacturer: "Unknown".to_string(),
             product_name: "Unknown".to_string(),
             version: "Unknown".to_string(),
-        }
+        },
     };
 
     let architecture = std::env::consts::ARCH.to_string();

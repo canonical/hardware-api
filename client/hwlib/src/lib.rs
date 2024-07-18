@@ -19,18 +19,19 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-pub mod collectors;
-pub mod models;
 pub mod builders;
+pub mod collectors;
+mod constants;
+pub mod models;
 pub mod py_bindings;
 
 use reqwest::Client;
-use serde_json;
 
 use models::request_validators::CertificationStatusRequest;
-use models::response_validators::{CertifiedResponse, NotSeenResponse, RelatedCertifiedSystemExistsResponse, CertifiedImageExistsResponse, CertificationStatusResponse};
-
-const CERT_STATUS_ENDPOINT: &str = "/v1/certification/status";
+use models::response_validators::{
+    CertificationStatusResponse, CertifiedImageExistsResponse, CertifiedResponse, NotSeenResponse,
+    RelatedCertifiedSystemExistsResponse,
+};
 
 pub async fn send_certification_request(
     url: String,
@@ -38,16 +39,15 @@ pub async fn send_certification_request(
 ) -> Result<CertificationStatusResponse, Box<dyn std::error::Error>> {
     let client = Client::new();
     let mut server_url = url.clone();
-    server_url.push_str(&CERT_STATUS_ENDPOINT);
-    let response = client
-        .post(server_url)
-        .json(request)
-        .send()
-        .await?;
+    server_url.push_str(crate::constants::CERT_STATUS_ENDPOINT);
+    let response = client.post(server_url).json(request).send().await?;
 
     let response_text = response.text().await?;
     let response_value: serde_json::Value = serde_json::from_str(&response_text)?;
-    let parsed_response = match response_value.get("status").and_then(serde_json::Value::as_str) {
+    let parsed_response = match response_value
+        .get("status")
+        .and_then(serde_json::Value::as_str)
+    {
         Some("Certified") => {
             let certified_response: CertifiedResponse = serde_json::from_value(response_value)?;
             CertificationStatusResponse::Certified(certified_response)
