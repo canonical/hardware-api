@@ -21,6 +21,7 @@
 
 use std::process::exit;
 use tokio;
+use serde_json;
 
 use hwlib::send_certification_request;
 use hwlib::builders::request_builders::create_certification_status_request;
@@ -34,7 +35,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match response {
         Ok(response) => {
-            println!("{:#?}", response);
+            println!("{:#?}", serde_json::json!(response));
             exit(0);
         }
         Err(e) => {

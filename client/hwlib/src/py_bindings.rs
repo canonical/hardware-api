@@ -18,39 +18,44 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-// use crate::send_certification_request as native_send_certification_request;
-// use once_cell::sync::Lazy;
-// use pyo3::exceptions::PyRuntimeError;
-// use pyo3::prelude::*;
-// use pyo3::types::PyString;
-// use pyo3::wrap_pyfunction;
-// use pyo3::{PyObject, PyResult, Python};
-// use tokio::runtime::Runtime;
+use crate::send_certification_request as native_send_certification_request;
+use crate::builders::request_builders::create_certification_status_request;
+use once_cell::sync::Lazy;
+use serde_json;
+use pyo3::exceptions::PyRuntimeError;
+use pyo3::prelude::*;
+use pyo3::types::PyString;
+use pyo3::wrap_pyfunction;
+use pyo3::{PyObject, PyResult, Python};
+use tokio::runtime::Runtime;
 
-// static RT: Lazy<Runtime> = Lazy::new(|| Runtime::new().expect("Failed to create Tokio runtime"));
+static RT: Lazy<Runtime> = Lazy::new(|| Runtime::new().expect("Failed to create Tokio runtime"));
 
-// #[pyfunction]
-// fn send_certification_request(py: Python, url: String) -> PyResult<PyObject> {
-//     let response = RT.block_on(async { native_send_certification_request(&url).await });
+#[pyfunction]
+fn send_certification_request(py: Python, url: String) -> PyResult<PyObject> {
+    let request_body = create_certification_status_request()
+        .map_err(|e| PyRuntimeError::new_err(format!("Failed to create request: {}", e)))?;
 
-//     match response {
-//         Ok(response_value) => {
-//             let json_str = response_value.to_string();
-//             let json: PyObject = PyString::new_bound(py, &json_str).into();
-//             let json_module = py.import_bound("json")?;
-//             let json_object: PyObject = json_module.call_method1("loads", (json,))?.into();
+    let response = RT.block_on(async { native_send_certification_request(url, &request_body).await });
 
-//             Ok(json_object)
-//         }
-//         Err(e) => Err(PyErr::new::<PyRuntimeError, _>(format!(
-//             "Request failed: {}",
-//             e
-//         ))),
-//     }
-// }
+    match response {
+        Ok(response_value) => {
+            let json_str = serde_json::json!(response_value).to_string();
+            let json: PyObject = PyString::new_bound(py, &json_str).into();
+            let json_module = py.import_bound("json")?;
+            let json_object: PyObject = json_module.call_method1("loads", (json,))?.into();
 
-// #[pymodule]
-// fn hwlib(m: &Bound<'_, PyModule>) -> PyResult<()> {
-//     m.add_function(wrap_pyfunction!(send_certification_request, m)?)?;
-//     Ok(())
-// }
+            Ok(json_object)
+        }
+        Err(e) => Err(PyErr::new::<PyRuntimeError, _>(format!(
+            "Request failed: {}",
+            e
+        ))),
+    }
+}
+
+#[pymodule]
+fn hwlib(m: &Bound<'_, PyModule>) -> PyResult<()> {
+    m.add_function(wrap_pyfunction!(send_certification_request, m)?)?;
+    Ok(())
+}

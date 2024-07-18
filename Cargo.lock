@@ -364,6 +364,7 @@ name = "hwctl"
 version = "0.1.0"
 dependencies = [
  "hwlib",
+ "serde_json",
  "tokio",
 ]
 
