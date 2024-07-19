@@ -39,7 +39,7 @@ class CertificationStatusRequest(BaseModel):
     architecture: str
     board: BoardValidator
     os: OSValidator
-    bios: BiosValidator
+    bios: BiosValidator | None = None
     chassis: ChassisValidator | None = None
     processor: ProcessorValidator
     pci_peripherals: list[PCIPeripheralValidator] = []

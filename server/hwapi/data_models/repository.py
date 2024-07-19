@@ -117,10 +117,10 @@ def get_bios(
 
 
 def get_machine_with_same_hardware_params(
-    db: Session, arch: str, board: models.Device, bios: models.Bios
+    db: Session, arch: str, board: models.Device, bios: models.Bios | None
 ) -> models.Machine | None:
     """
-    Get a machines that have the given architecture, motherboard, bios
+    Get a machines that have the given architecture, motherboard, and optionally bios
     """
     stmt = (
         select(models.Machine)
@@ -128,17 +128,16 @@ def get_machine_with_same_hardware_params(
         .join(models.Certificate)
         .join(models.Report, models.Certificate.reports)
         .join(models.Device, models.Report.devices)
-        .join(models.Bios, models.Report.bios)
-        .filter(
-            and_(
-                models.Device.id == board.id,
-                models.Report.architecture == arch,
-                models.Bios.id == bios.id,
-            )
-        )
-        .distinct()
+        .filter(and_(models.Device.id == board.id, models.Report.architecture == arch))
     )
-    return db.execute(stmt).scalars().first()
+
+    if bios:
+        stmt = stmt.join(models.Bios, models.Report.bios_id == models.Bios.id).filter(
+            models.Bios.id == bios.id
+        )
+
+    machine = db.execute(stmt.distinct()).scalars().first()
+    return machine
 
 
 def get_machine_by_canonical_id(

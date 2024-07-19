@@ -26,8 +26,8 @@ from hwapi.data_models.data_validators import BoardValidator, BiosValidator
 
 
 def find_main_hardware_components(
-    db: Session, board_data: BoardValidator, bios_data: BiosValidator
-) -> tuple[models.Device, models.Bios]:
+    db: Session, board_data: BoardValidator, bios_data: BiosValidator | None
+) -> tuple[models.Device, models.Bios | None]:
     """
     A function to get "main hardware components" like board and bios. Can be extended
     in future
@@ -35,16 +35,20 @@ def find_main_hardware_components(
     board = repository.get_board(
         db, board_data.manufacturer, board_data.product_name, board_data.version
     )
-    bios = repository.get_bios(
-        db, bios_data.vendor, bios_data.version, bios_data.firmware_revision
-    )
-    if not board or not bios:
+    if not board:
         raise ValueError("Hardware not certified")
-    return board, bios
+    if bios_data:
+        bios = repository.get_bios(
+            db, bios_data.vendor, bios_data.version, bios_data.firmware_revision
+        )
+        if not bios:
+            raise ValueError("Hardware not certified")
+        return board, bios
+    return board, None
 
 
 def find_certified_machine(
-    db: Session, arch: str, board: models.Device, bios: models.Bios
+    db: Session, arch: str, board: models.Device, bios: models.Bios | None
 ) -> models.Machine:
     machine = repository.get_machine_with_same_hardware_params(db, arch, board, bios)
     if not machine:

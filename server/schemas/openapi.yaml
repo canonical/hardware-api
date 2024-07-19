@@ -74,7 +74,9 @@ components:
           title: Architecture
           type: string
         bios:
-          $ref: '#/components/schemas/BiosValidator'
+          anyOf:
+          - $ref: '#/components/schemas/BiosValidator'
+          - type: 'null'
         board:
           $ref: '#/components/schemas/BoardValidator'
         chassis:
@@ -109,7 +111,6 @@ components:
       - architecture
       - board
       - os
-      - bios
       - processor
       title: CertificationStatusRequest
       type: object
@@ -124,7 +125,9 @@ components:
           title: Available Releases
           type: array
         bios:
-          $ref: '#/components/schemas/BiosValidator'
+          anyOf:
+          - $ref: '#/components/schemas/BiosValidator'
+          - type: 'null'
         board:
           $ref: '#/components/schemas/BoardValidator'
         chassis:
@@ -156,7 +159,9 @@ components:
           title: Available Releases
           type: array
         bios:
-          $ref: '#/components/schemas/BiosValidator'
+          anyOf:
+          - $ref: '#/components/schemas/BiosValidator'
+          - type: 'null'
         board:
           $ref: '#/components/schemas/BoardValidator'
         chassis:
@@ -384,7 +389,9 @@ components:
           title: Available Releases
           type: array
         bios:
-          $ref: '#/components/schemas/BiosValidator'
+          anyOf:
+          - $ref: '#/components/schemas/BiosValidator'
+          - type: 'null'
         board:
           $ref: '#/components/schemas/BoardValidator'
         chassis:
