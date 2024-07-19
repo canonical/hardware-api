@@ -123,7 +123,7 @@ class DataGenerator:
         self,
         certificate: models.Certificate,
         kernel: models.Kernel,
-        bios: models.Bios,
+        bios: models.Bios | None = None,
         architecture: str = "amd64",
     ) -> models.Report:
         report = models.Report(

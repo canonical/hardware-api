@@ -41,7 +41,7 @@ from hwapi.data_models.data_validators import (
 class CertifiedResponse(BaseModel):
     status: Literal[CertificationStatus.CERTIFIED] = CertificationStatus.CERTIFIED
     architecture: str
-    bios: BiosValidator
+    bios: BiosValidator | None
     board: BoardValidator
     chassis: ChassisValidator | None = None
     available_releases: list[OSValidator]
@@ -57,7 +57,7 @@ class RelatedCertifiedSystemExistsResponse(BaseModel):
     )
     architecture: str
     board: BoardValidator
-    bios: BiosValidator
+    bios: BiosValidator | None
     chassis: ChassisValidator | None = None
     gpu: list[GPUValidator] | None = None
     audio: list[AudioValidator] | None = None
@@ -74,7 +74,7 @@ class CertifiedImageExistsResponse(BaseModel):
         CertificationStatus.CERTIFIED_IMAGE_EXISTS
     )
     architecture: str
-    bios: BiosValidator
+    bios: BiosValidator | None
     board: BoardValidator
     chassis: ChassisValidator | None = None
     available_releases: list[OSValidator]

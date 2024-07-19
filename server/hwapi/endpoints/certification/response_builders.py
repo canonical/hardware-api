@@ -31,11 +31,22 @@ def build_related_certified_response(
     db: Session,
     machine: models.Machine,
     board: models.Device,
-    bios: models.Bios,
+    bios: models.Bios | None,
     releases: list[models.Release],
     kernels: list[models.Kernel],
 ) -> RelatedCertifiedSystemExistsResponse:
     architecture = repository.get_machine_architecture(db, machine.id)
+    bios_validator = (
+        data_validators.BiosValidator(
+            vendor=bios.vendor.name,
+            version=bios.version,
+            revision=bios.revision,
+            firmware_revision=bios.firmware_revision,
+            release_date=bios.release_date,
+        )
+        if bios
+        else None
+    )
     return RelatedCertifiedSystemExistsResponse(
         architecture=architecture,
         board=data_validators.BoardValidator(
@@ -43,13 +54,7 @@ def build_related_certified_response(
             product_name=board.name,
             version=board.version,
         ),
-        bios=data_validators.BiosValidator(
-            vendor=bios.vendor.name,
-            version=bios.version,
-            revision=bios.revision,
-            firmware_revision=bios.firmware_revision,
-            release_date=bios.release_date,
-        ),
+        bios=bios_validator,
         available_releases=[
             data_validators.OSValidator(
                 distributor="Ubuntu",
@@ -70,12 +75,23 @@ def build_certified_response(
     db: Session,
     machine: models.Machine,
     board: models.Device,
-    bios: models.Bios,
+    bios: models.Bios | None,
     releases: list[models.Release],
     kernels: list[models.Kernel],
 ) -> CertifiedResponse:
     architecture = repository.get_machine_architecture(db, machine.id)
     releases, kernels = repository.get_releases_and_kernels_for_machine(db, machine.id)
+    bios_validator = (
+        data_validators.BiosValidator(
+            vendor=bios.vendor.name,
+            version=bios.version,
+            revision=bios.revision,
+            firmware_revision=bios.firmware_revision,
+            release_date=bios.release_date,
+        )
+        if bios
+        else None
+    )
     return CertifiedResponse(
         architecture=architecture,
         board=data_validators.BoardValidator(
@@ -83,13 +99,7 @@ def build_certified_response(
             product_name=board.name,
             version=board.version,
         ),
-        bios=data_validators.BiosValidator(
-            vendor=bios.vendor.name,
-            version=bios.version,
-            revision=bios.revision,
-            firmware_revision=bios.firmware_revision,
-            release_date=bios.release_date,
-        ),
+        bios=bios_validator,
         available_releases=[
             data_validators.OSValidator(
                 distributor="Ubuntu",
@@ -110,11 +120,22 @@ def build_certified_image_exists_response(
     db: Session,
     machine: models.Machine,
     board: models.Device,
-    bios: models.Bios,
+    bios: models.Bios | None,
     releases: list[models.Release],
     kernels: list[models.Kernel],
 ) -> CertifiedImageExistsResponse:
     architecture = repository.get_machine_architecture(db, machine.id)
+    bios_validator = (
+        data_validators.BiosValidator(
+            vendor=bios.vendor.name,
+            version=bios.version,
+            revision=bios.revision,
+            firmware_revision=bios.firmware_revision,
+            release_date=bios.release_date,
+        )
+        if bios
+        else None
+    )
     return CertifiedImageExistsResponse(
         architecture=architecture,
         board=data_validators.BoardValidator(
@@ -122,13 +143,7 @@ def build_certified_image_exists_response(
             product_name=board.name,
             version=board.version,
         ),
-        bios=data_validators.BiosValidator(
-            vendor=bios.vendor.name,
-            version=bios.version,
-            revision=bios.revision,
-            firmware_revision=bios.firmware_revision,
-            release_date=bios.release_date,
-        ),
+        bios=bios_validator,
         available_releases=[
             data_validators.OSValidator(
                 distributor="Ubuntu",
