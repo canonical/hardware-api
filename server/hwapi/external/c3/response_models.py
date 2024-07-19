@@ -71,3 +71,4 @@ class PublicDeviceInstance(BaseModel):
     certificate_name: str
     device: Device
     driver_name: str
+    cpu_codename: str
