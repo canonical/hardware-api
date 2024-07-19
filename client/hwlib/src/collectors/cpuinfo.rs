@@ -126,7 +126,7 @@ fn parse_bogomips(bogomips: Option<&String>) -> Result<i64, Box<dyn std::error::
         match f64::from_str(&bogo_str) {
             Ok(bogomips) => return Ok(bogomips.round() as i64),
             Err(e) => {
-                println!("Error parsing bogomips: {}", e);
+                eprintln!("Error parsing bogomips: {}", e);
                 return Err(e.into());
             }
         }

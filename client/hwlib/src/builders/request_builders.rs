@@ -29,7 +29,7 @@ pub fn create_certification_status_request(
     let smbios_data = match smbioslib::table_load_from_device() {
         Ok(data) => Some(data),
         Err(e) => {
-            println!("Failed to load SMBIOS data: {}.", e);
+            eprintln!("Failed to load SMBIOS data: {}.", e);
             None
         }
     };
