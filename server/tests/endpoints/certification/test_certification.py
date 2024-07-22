@@ -51,7 +51,7 @@ def test_vendor_not_found(generator: DataGenerator, test_client: TestClient):
             },
             "processor": {
                 "codename": "some codename",
-                "frequency": 2.4,
+                "frequency": 2400,
                 "manufacturer": "AMD",
                 "version": "AMD EPYC 3251 8-Core Processor",
             },
@@ -101,7 +101,7 @@ def test_hardware_mismatch(generator: DataGenerator, test_client: TestClient):
             },
             "processor": {
                 "codename": "some codename",
-                "frequency": 2.4,
+                "frequency": 2400,
                 "manufacturer": "AMD",
                 "version": "AMD EPYC 3251 8-Core Processor",
             },
@@ -176,9 +176,9 @@ def test_disqualifying_hardware(generator: DataGenerator, test_client: TestClien
             },
             "processor": {
                 "codename": "Broadwell",
-                "frequency": 2.0,
+                "frequency": 2000,
                 "manufacturer": "Intel Corp.",
-                "version": "Intel(R) Xeon(R) CPU D-1548 @ 2.00GHz",
+                "version": "Intel(R) Xeon(R) CPU D-1548 @ 20000GHz",
             },
         },
     )
@@ -288,9 +288,9 @@ def test_correct_hardware_incorrect_os(
             },
             "processor": {
                 "codename": processor.codename,
-                "frequency": 2.0,
+                "frequency": 2000,
                 "manufacturer": "Intel Corp.",
-                "version": "Intel(R) Core(TM) i7-7600U CPU @ 2.40GHz",
+                "version": "Intel(R) Core(TM) i7-7600U CPU @ 24000GHz",
             },
         },
     )
@@ -391,9 +391,9 @@ def test_all_criteria_matched(generator: DataGenerator, test_client: TestClient)
             },
             "processor": {
                 "codename": processor.codename,
-                "frequency": 2.0,
+                "frequency": 2000,
                 "manufacturer": "Intel Corp.",
-                "version": "Intel(R) Core(TM) i7-7600U CPU @ 2.40GHz",
+                "version": "Intel(R) Core(TM) i7-7600U CPU @ 24000GHz",
             },
         },
     )
@@ -487,9 +487,9 @@ def test_bios_is_none(generator: DataGenerator, test_client: TestClient):
             },
             "processor": {
                 "codename": processor.codename,
-                "frequency": 2.0,
+                "frequency": 2000,
                 "manufacturer": "Intel Corp.",
-                "version": "Intel(R) Core(TM) i7-7600U CPU @ 2.40GHz",
+                "version": "Intel(R) Core(TM) i7-7600U CPU @ 24000GHz",
             },
         },
     )

@@ -20,7 +20,9 @@
 
 import requests
 import logging
-from typing import Callable, Type
+import threading
+import queue
+from typing import Callable, Type, Any
 from pydantic import BaseModel
 
 from sqlite3 import IntegrityError as SQLite3IntegrityError
@@ -61,7 +63,7 @@ class C3Client:
         )
 
         # Load devices
-        LIMIT = 1000
+        LIMIT = 500
         logger.info("Importing devices from %s", urls.C3_URL)
         url = urls.PUBLIC_DEVICES_URL + urls.get_limit_offset(LIMIT)
         self._import_from_c3(
@@ -80,34 +82,54 @@ class C3Client:
         """
         next_url = url
         counter = 0
-        while next_url is not None:
-            logging.debug(f"Retrieving {next_url}")
-            response = requests.get(next_url, timeout=90)
-            response.raise_for_status()
-            response_json = response.json()
-            if counter == 0:
-                # since count is always the same, update total only the first time
-                # we retrieve the data from C3
-                total = response_json["count"]
-            next_url = response_json["next"]
-            objects = response_json["results"]
-            for obj in objects:
-                instance = resp_model(**obj)
-                try:
-                    loader(instance)
-                    counter += 1
-                    progress_bar(counter, total)
-                except (IntegrityError, SQLite3IntegrityError):
-                    logging.error(
-                        "A DB error occurred while importing data from C3",
-                        exc_info=True,
-                    )
-                    # Without this the sqlalchemy.exc.PendingRollbackError exception occurs
-                    self.db.rollback()
-                    continue
-                except ValueError as exc:
-                    logging.error("Value error occured: %s", str(exc))
-                    continue
+        # Queue to hold the next response
+        response_queue: queue.Queue[dict[str, Any]] = queue.Queue(maxsize=1)
+
+        def fetch_data():
+            """Background thread for fetching data from API."""
+            nonlocal next_url
+            while next_url is not None:
+                response = requests.get(next_url, timeout=90)
+                response.raise_for_status()
+                next_response_json = response.json()
+                response_queue.put(next_response_json)
+                next_url = next_response_json.get("next", None)
+
+        # Start the background fetch thread
+        fetch_thread = threading.Thread(target=fetch_data)
+        fetch_thread.start()
+
+        try:
+            while next_url is not None or not response_queue.empty():
+                # Wait for next response data
+                response_json = response_queue.get(block=True)
+                if counter == 0:
+                    total = response_json["count"]
+
+                objects = response_json["results"]
+                for obj in objects:
+                    instance = resp_model(**obj)
+                    try:
+                        loader(instance)
+                        counter += 1
+                        progress_bar(counter, total)
+                        if total == counter:
+                            print()
+                    except (IntegrityError, SQLite3IntegrityError):
+                        logging.error(
+                            "A DB error occurred while importing data from C3",
+                            exc_info=True,
+                        )
+                        self.db.rollback()
+                    except ValueError as exc:
+                        logging.error("Value error occurred: %s", str(exc))
+                        continue
+        finally:
+            # Ensure the fetch thread completes before exiting the method
+            fetch_thread.join()
+
+        if fetch_thread.is_alive():
+            fetch_thread.join()
 
     def _load_certified_configurations_from_response(
         self, response: response_models.PublicCertificate
@@ -242,6 +264,14 @@ class C3Client:
             created,
         )
 
+        if (
+            device.category == enums.DeviceCategory.PROCESSOR
+            and device_instance.cpu_codename
+        ):
+            # If there is already device.codename filled, don't overwrite it with Unknown value
+            if not (device_instance.cpu_codename == "Unknown" and device.codename):
+                device.codename = device_instance.cpu_codename
+
         report, created = get_or_create(
             self.db,
             models.Report,
@@ -250,4 +280,4 @@ class C3Client:
         )
         if created or device not in report.devices:
             report.devices.append(device)
-            self.db.commit()
+        self.db.commit()
