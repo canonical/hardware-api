@@ -18,6 +18,7 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
 from datetime import date, timedelta
+from threading import Event
 
 from fastapi.testclient import TestClient
 from requests_mock import Mocker
@@ -69,12 +70,14 @@ def test_load_certificates(db_session: Session, requests_mock: Mocker):
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=500",
         json={"count": 0, "next": None, "previous": None, "results": []},
     )
 
     c3_client = C3Client(db=db_session)
+    completion_event = Event()
     c3_client.load_hardware_data()
+    completion_event.wait(timeout=3)
 
     assert db_session.query(models.Vendor).count() == 1
     assert db_session.query(models.Platform).count() == 1
@@ -125,12 +128,14 @@ def test_load_certificates_with_missing_kernel_bios(
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=500",
         json={"count": 0, "next": None, "previous": None, "results": []},
     )
 
     c3_client = C3Client(db=db_session)
+    completion_event = Event()
     c3_client.load_hardware_data()
+    completion_event.wait(timeout=3)
 
     assert db_session.query(models.Kernel).count() == 0
     assert db_session.query(models.Bios).count() == 0
@@ -168,12 +173,12 @@ def test_load_devices(
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=500",
         json={
             "count": 1,
             "next": (
                 "https://c3_url/api/v2/public-devices/"
-                "?pagination=limitoffset&limit=1000&offset=1000"
+                "?pagination=limitoffset&limit=500&offset=500"
             ),
             "previous": None,
             "results": [
@@ -193,6 +198,7 @@ def test_load_devices(
                         "codename": "sample codfename",
                     },
                     "driver_name": "bnx2",
+                    "cpu_codename": "",
                 }
             ],
         },
@@ -200,7 +206,7 @@ def test_load_devices(
     requests_mock.get(
         (
             "https://c3_url/api/v2/public-devices/?pagination=limitoffset"
-            "&limit=1000&offset=1000"
+            "&limit=500&offset=500"
         ),
         json={
             "count": 1,
@@ -223,13 +229,16 @@ def test_load_devices(
                         "codename": "",
                     },
                     "driver_name": "ohci-pci",
+                    "cpu_codename": "",
                 }
             ],
         },
     )
 
     c3_client = C3Client(db=db_session)
+    completion_event = Event()
     c3_client.load_hardware_data()
+    completion_event.wait(timeout=3)
 
     assert db_session.query(models.Device).count() == 2
     assert db_session.query(models.Report).count() == 2
@@ -272,14 +281,14 @@ def test_load_devices_duplicate_names(
 ):
     """
     Test that devices with the same name, vendor, subsystem, bus, version,
-    and category are added only one
+    and category are added only once
     """
     vendor = generator.gen_vendor()
     platform = generator.gen_platform(vendor, name="Precision 3690 (ik12)")
     configuration = generator.gen_configuration(platform)
     machine = generator.gen_machine(configuration, canonical_id="202106-8086")
     certificate = generator.gen_certificate(
-        machine, generator.gen_release(), name="2204-10686"
+        machine, generator.gen_release(), name="2404-10686"
     )
 
     requests_mock.get(
@@ -315,6 +324,7 @@ def test_load_devices_duplicate_names(
                         "codename": "",
                     },
                     "driver_name": "unknown",
+                    "cpu_codename": "",
                 },
                 {
                     "machine_canonical_id": machine.canonical_id,
@@ -332,6 +342,7 @@ def test_load_devices_duplicate_names(
                         "codename": "",
                     },
                     "driver_name": "unknown",
+                    "cpu_codename": "",
                 },
                 # different subsystem identifier
                 {
@@ -350,13 +361,16 @@ def test_load_devices_duplicate_names(
                         "codename": "",
                     },
                     "driver_name": "unknown",
+                    "cpu_codename": "",
                 },
             ],
         },
     )
 
     c3_client = C3Client(db=db_session)
+    completion_event = Event()
     c3_client.load_hardware_data()
+    completion_event.wait(timeout=3)
 
     assert db_session.query(models.Device).count() == 2
     assert (
@@ -367,3 +381,72 @@ def test_load_devices_duplicate_names(
         db_session.query(models.Device).filter_by(subsystem="17aa:1036").first()
         is not None
     )
+
+
+def test_load_devices_cpu_codename(
+    db_session: Session,
+    requests_mock: Mocker,
+    test_client: TestClient,
+    generator: DataGenerator,
+):
+    """
+    Test that if a device has type PROCESSOR, we update device codename
+    """
+    vendor = generator.gen_vendor()
+    platform = generator.gen_platform(vendor, name="Precision 3690 (ik12)")
+    configuration = generator.gen_configuration(platform)
+    machine = generator.gen_machine(configuration, canonical_id="202106-8087")
+    certificate = generator.gen_certificate(
+        machine, generator.gen_release(), name="2204-10681"
+    )
+
+    requests_mock.get(
+        "https://c3_url/api/v2/public-certificates/",
+        json={
+            "count": 0,
+            "next": None,
+            "previous": None,
+            "results": [],
+        },
+    )
+
+    requests_mock.get(
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=500",
+        json={
+            "count": 1,
+            "next": None,
+            "previous": None,
+            "results": [
+                {
+                    "machine_canonical_id": machine.canonical_id,
+                    "certificate_name": certificate.name,
+                    "device": {
+                        "name": "Intel CPU",
+                        "subproduct_name": None,
+                        "vendor": "Intel Corp.",
+                        "device_type": None,
+                        "bus": "pci",
+                        "identifier": "1111:2222",
+                        "subsystem": "102a:028c",
+                        "version": None,
+                        "category": "PROCESSOR",
+                        "codename": "",
+                    },
+                    "driver_name": "bnx2",
+                    "cpu_codename": "Skylake",
+                }
+            ],
+        },
+    )
+
+    c3_client = C3Client(db=db_session)
+    completion_event = Event()
+    c3_client.load_hardware_data()
+    completion_event.wait(timeout=3)
+
+    processor = (
+        db_session.query(models.Device).filter_by(identifier="1111:2222").first()
+    )
+
+    assert processor is not None
+    assert processor.codename == "Skylake"
