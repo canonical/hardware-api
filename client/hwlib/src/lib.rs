@@ -32,6 +32,7 @@ use models::response_validators::{
     CertificationStatusResponse, CertifiedImageExistsResponse, CertifiedResponse, NotSeenResponse,
     RelatedCertifiedSystemExistsResponse,
 };
+use constants::CERT_STATUS_ENDPOINT;
 
 pub async fn send_certification_request(
     url: String,
@@ -39,7 +40,7 @@ pub async fn send_certification_request(
 ) -> Result<CertificationStatusResponse, Box<dyn std::error::Error>> {
     let client = Client::new();
     let mut server_url = url.clone();
-    server_url.push_str(crate::constants::CERT_STATUS_ENDPOINT);
+    server_url.push_str(CERT_STATUS_ENDPOINT);
     let response = client.post(server_url).json(request).send().await?;
 
     let response_text = response.text().await?;

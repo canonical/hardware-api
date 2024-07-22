@@ -66,6 +66,12 @@ pub fn collect_kernel_info() -> Result<software::KernelPackage, Box<dyn std::err
     Ok(kernel_package)
 }
 
+pub(crate) fn get_architecture() -> Result<String, Box<dyn std::error::Error>> {
+    let mut arch = Command::new("dpkg").arg("--print-architecture").output()?.stdout;
+    arch.pop();  // remove the new line char
+    Ok(String::from_utf8(arch)?)
+}
+
 pub(super) fn get_codename() -> Result<String, Box<dyn std::error::Error>> {
     let lsb_release_output = Command::new("lsb_release").arg("-c").output()?;
     let output_str = String::from_utf8(lsb_release_output.stdout)?;

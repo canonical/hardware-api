@@ -71,11 +71,16 @@ pub fn parse_cpuinfo() -> Result<CpuInfo, Box<dyn std::error::Error>> {
     let machine = std::env::consts::ARCH.to_string();
     let speed = parse_speed(attributes.get("cpu MHz")).unwrap_or(0);
 
+    let model = attributes.get("Model")
+        .or_else(|| attributes.get("model name"))
+        .unwrap_or(&machine)
+        .to_string();
+
     let cpu_info = CpuInfo {
         platform: machine.clone(),
         count,
         cpu_type: attributes.get("vendor_id").unwrap_or(&machine).to_string(),
-        model: attributes.get("model name").unwrap_or(&machine).to_string(),
+        model,
         model_number: attributes
             .get("cpu family")
             .unwrap_or(&"".to_string())

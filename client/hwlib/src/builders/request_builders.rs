@@ -21,6 +21,7 @@
 use smbioslib;
 
 use crate::collectors::{hardware_info, os_info};
+use crate::collectors::cpuinfo::parse_cpuinfo;
 use crate::models::request_validators::CertificationStatusRequest;
 
 pub fn create_certification_status_request(
@@ -54,18 +55,17 @@ pub fn create_certification_status_request(
 
     let board = match smbios_data {
         Some(ref data) => hardware_info::collect_motherboard_info(data)?,
-        None => crate::models::devices::Board {
-            manufacturer: "Unknown".to_string(),
-            product_name: "Unknown".to_string(),
-            version: "Unknown".to_string(),
-        },
+        None => hardware_info::collect_motherboard_info_from_device_tree()?,
     };
 
-    let architecture = std::env::consts::ARCH.to_string();
+    let architecture = os_info::get_architecture()?;
 
     let (model, vendor) = match smbios_data {
         Some(ref data) => hardware_info::get_system_info(data)?,
-        None => (String::new(), String::new()),
+        None => {
+            let cpu_info = parse_cpuinfo()?;
+            (cpu_info.model, cpu_info.platform)
+        },
     };
 
     // Placeholder for PCI and USB peripherals

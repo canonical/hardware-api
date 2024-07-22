@@ -114,6 +114,30 @@ pub fn collect_motherboard_info(
     Ok(board)
 }
 
+pub fn collect_motherboard_info_from_device_tree() -> Result<devices::Board, Box<dyn std::error::Error>> {
+    let base_path = std::path::Path::new("/proc/device-tree");
+
+    let manufacturer = std::fs::read_to_string(base_path.join("model"))
+        .map(|s| s.trim().to_string())
+        .unwrap_or_else(|_| "Unknown".to_string());
+
+    let product_name = std::fs::read_to_string(base_path.join("compatible"))
+        .map(|s| s.trim().to_string())
+        .unwrap_or_else(|_| "Unknown".to_string());
+
+    let version = std::fs::read_to_string(base_path.join("revision"))
+        .map(|s| s.trim().to_string())
+        .unwrap_or_else(|_| "Unknown".to_string());
+
+    let board = devices::Board {
+        manufacturer,
+        product_name,
+        version,
+    };
+
+    Ok(board)
+}
+
 pub fn get_system_info(
     smbios_data: &smbioslib::SMBiosData,
 ) -> Result<(String, String), Box<dyn std::error::Error>> {

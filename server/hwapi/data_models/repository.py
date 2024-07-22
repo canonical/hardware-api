@@ -86,7 +86,7 @@ def get_board(
         .join(models.Vendor)
         .where(
             and_(
-                models.Vendor.name.ilike(vendor_name),
+                models.Vendor.name.ilike(_clean_vendor_name(vendor_name)),
                 models.Device.name.ilike(product_name),
                 models.Device.version.ilike(version),
                 models.Device.category.in_(
@@ -107,9 +107,9 @@ def get_bios(
         .join(models.Vendor)
         .where(
             and_(
-                models.Vendor.name.ilike(vendor_name),
+                models.Vendor.name.ilike(_clean_vendor_name(vendor_name)),
                 models.Bios.version.ilike(version),
-                models.Bios.firmware_revision == firmware_revision,
+                models.Bios.firmware_revision.ilike(firmware_revision),
             )
         )
     )

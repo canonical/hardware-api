@@ -19,6 +19,6 @@
  */
 
 mod cpuid;
-mod cpuinfo;
+pub mod cpuinfo;
 pub mod hardware_info;
 pub mod os_info;
