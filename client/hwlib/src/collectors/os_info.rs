@@ -67,8 +67,11 @@ pub fn collect_kernel_info() -> Result<software::KernelPackage, Box<dyn std::err
 }
 
 pub(crate) fn get_architecture() -> Result<String, Box<dyn std::error::Error>> {
-    let mut arch = Command::new("dpkg").arg("--print-architecture").output()?.stdout;
-    arch.pop();  // remove the new line char
+    let mut arch = Command::new("dpkg")
+        .arg("--print-architecture")
+        .output()?
+        .stdout;
+    arch.pop(); // remove the new line char
     Ok(String::from_utf8(arch)?)
 }
 

@@ -27,12 +27,12 @@ pub mod py_bindings;
 
 use reqwest::Client;
 
+use constants::CERT_STATUS_ENDPOINT;
 use models::request_validators::CertificationStatusRequest;
 use models::response_validators::{
     CertificationStatusResponse, CertifiedImageExistsResponse, CertifiedResponse, NotSeenResponse,
     RelatedCertifiedSystemExistsResponse,
 };
-use constants::CERT_STATUS_ENDPOINT;
 
 pub async fn send_certification_request(
     url: String,

@@ -18,22 +18,14 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use smbioslib;
-
-use crate::collectors::{hardware_info, os_info};
 use crate::collectors::cpuinfo::parse_cpuinfo;
+use crate::collectors::{hardware_info, os_info};
 use crate::models::request_validators::CertificationStatusRequest;
 
 pub fn create_certification_status_request(
 ) -> Result<CertificationStatusRequest, Box<dyn std::error::Error>> {
     // Try to load SMBIOS data
-    let smbios_data = match smbioslib::table_load_from_device() {
-        Ok(data) => Some(data),
-        Err(e) => {
-            eprintln!("Failed to load SMBIOS data: {}.", e);
-            None
-        }
-    };
+    let smbios_data = hardware_info::load_smbios_data(None, None)?;
 
     // If SMBIOS data is available, collect BIOS info
     let bios = match smbios_data {
@@ -65,7 +57,7 @@ pub fn create_certification_status_request(
         None => {
             let cpu_info = parse_cpuinfo()?;
             (cpu_info.model, cpu_info.platform)
-        },
+        }
     };
 
     // Placeholder for PCI and USB peripherals

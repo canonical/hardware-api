@@ -23,6 +23,23 @@ use smbioslib;
 
 use crate::models::devices;
 
+pub fn load_smbios_data(
+    entry_file: Option<&'static str>,
+    table_file: Option<&'static str>,
+) -> Result<Option<smbioslib::SMBiosData>, Box<dyn std::error::Error>> {
+    let entry_file = entry_file.unwrap_or(smbioslib::SYS_ENTRY_FILE);
+    let table_file = table_file.unwrap_or(smbioslib::SYS_TABLE_FILE);
+
+    let smbios_data = match table_load_from_device(entry_file, table_file) {
+        Ok(data) => Some(data),
+        Err(e) => {
+            eprintln!("Failed to load SMBIOS data: {}.", e);
+            None
+        }
+    };
+    Ok(smbios_data)
+}
+
 pub fn collect_bios_info(
     smbios_data: &smbioslib::SMBiosData,
 ) -> Result<devices::Bios, Box<dyn std::error::Error>> {
@@ -114,7 +131,8 @@ pub fn collect_motherboard_info(
     Ok(board)
 }
 
-pub fn collect_motherboard_info_from_device_tree() -> Result<devices::Board, Box<dyn std::error::Error>> {
+pub fn collect_motherboard_info_from_device_tree(
+) -> Result<devices::Board, Box<dyn std::error::Error>> {
     let base_path = std::path::Path::new("/proc/device-tree");
 
     let manufacturer = std::fs::read_to_string(base_path.join("model"))
@@ -146,4 +164,55 @@ pub fn get_system_info(
         system_info.product_name().to_string(),
         system_info.manufacturer().to_string(),
     ))
+}
+
+#[cfg(target_os = "linux")]
+/// Overwrite smbioslib::table_load_from_device to use parameters for files
+/// so we can test our code without reading smbios data from the machine that
+/// runs the test
+fn table_load_from_device(
+    entry_file: &'static str,
+    table_file: &'static str,
+) -> Result<smbioslib::SMBiosData, std::io::Error> {
+    let version: smbioslib::SMBiosVersion;
+    let entry_path = std::path::Path::new(entry_file);
+
+    match smbioslib::SMBiosEntryPoint64::try_load_from_file(entry_path) {
+        Ok(entry_point) => {
+            version = smbioslib::SMBiosVersion {
+                major: entry_point.major_version(),
+                minor: entry_point.minor_version(),
+                revision: entry_point.docrev(),
+            }
+        }
+        Err(err) => match err.kind() {
+            std::io::ErrorKind::InvalidData => {
+                match smbioslib::SMBiosEntryPoint32::try_load_from_file(entry_path) {
+                    Ok(entry_point) => {
+                        version = smbioslib::SMBiosVersion {
+                            major: entry_point.major_version(),
+                            minor: entry_point.minor_version(),
+                            revision: 0,
+                        }
+                    }
+                    Err(err) => return Err(err),
+                }
+            }
+            _ => return Err(err),
+        },
+    }
+
+    smbioslib::SMBiosData::try_load_from_file(table_file, Some(version))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_load_smbios_data() {
+        let result = load_smbios_data(Some("./tests/test_data/smbios_entry_point"), Some("./tests/test_data/DMI"));
+        assert!(result.is_ok());
+        assert!(result.unwrap().is_some());
+    }
 }
