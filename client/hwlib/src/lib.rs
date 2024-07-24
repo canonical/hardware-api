@@ -24,6 +24,7 @@ pub mod collectors;
 mod constants;
 pub mod models;
 pub mod py_bindings;
+pub mod utils;
 
 use reqwest::Client;
 

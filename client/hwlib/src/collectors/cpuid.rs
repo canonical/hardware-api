@@ -51,6 +51,8 @@ pub(super) fn convert_cpu_codename(cpu_id: &str) -> Result<String, Box<dyn std::
     }
 }
 
+/// Implement the same logic as used in C3 to get CPU codename
+/// https://github.com/canonical/hexr/blob/0d6726f00f9fa77efdae201188ad10a8bbbfb2be/apps/hardware/parsers/cpuid.py#L29
 fn cpuid_to_human_friendly(cpuid: &str) -> Result<String, Box<dyn std::error::Error>> {
     let cpuid_map = vec![
         ("Amber Lake", vec!["0x806e9"]),

@@ -24,11 +24,11 @@ use smbioslib;
 use crate::models::devices;
 
 pub fn load_smbios_data(
-    entry_file: Option<&'static str>,
-    table_file: Option<&'static str>,
+    entry_filepath: Option<&'static str>,
+    table_filepath: Option<&'static str>,
 ) -> Result<Option<smbioslib::SMBiosData>, Box<dyn std::error::Error>> {
-    let entry_file = entry_file.unwrap_or(smbioslib::SYS_ENTRY_FILE);
-    let table_file = table_file.unwrap_or(smbioslib::SYS_TABLE_FILE);
+    let entry_file = entry_filepath.unwrap_or(smbioslib::SYS_ENTRY_FILE);
+    let table_file = table_filepath.unwrap_or(smbioslib::SYS_TABLE_FILE);
 
     let smbios_data = match table_load_from_device(entry_file, table_file) {
         Ok(data) => Some(data),
@@ -69,12 +69,13 @@ pub fn collect_bios_info(
 /// Retrieve CPU information from SMBios
 pub fn collect_processor_info_smbios(
     smbios_data: &smbioslib::SMBiosData,
+    max_cpu_frequency_filepath: Option<&'static str>,
 ) -> Result<devices::Processor, Box<dyn std::error::Error>> {
     let processor_info = &smbios_data.collect::<smbioslib::SMBiosProcessorInformation>()[0];
     let cpu_id = super::cpuid::get_cpuid(processor_info)?;
     let processor = devices::Processor {
         codename: super::cpuid::convert_cpu_codename(&cpu_id)?,
-        frequency: super::cpuinfo::read_max_cpu_frequency()?,
+        frequency: super::cpuinfo::read_max_cpu_frequency(max_cpu_frequency_filepath)?,
         manufacturer: processor_info.processor_manufacturer().to_string(),
         version: processor_info.processor_version().to_string(),
     };
@@ -82,11 +83,14 @@ pub fn collect_processor_info_smbios(
 }
 
 /// Retrieve CPU information from /proc/cpuinfo
-pub fn collect_processor_info_cpuinfo() -> Result<devices::Processor, Box<dyn std::error::Error>> {
-    let cpu_info = super::cpuinfo::parse_cpuinfo()?;
+pub fn collect_processor_info_cpuinfo(
+    cpuinfo_filepath: Option<&'static str>,
+    max_cpu_frequency_filepath: Option<&'static str>,
+) -> Result<devices::Processor, Box<dyn std::error::Error>> {
+    let cpu_info = super::cpuinfo::parse_cpuinfo(cpuinfo_filepath)?;
     let processor = devices::Processor {
         codename: String::new(),
-        frequency: super::cpuinfo::read_max_cpu_frequency()?,
+        frequency: super::cpuinfo::read_max_cpu_frequency(max_cpu_frequency_filepath)?,
         manufacturer: cpu_info.cpu_type,
         version: cpu_info.model,
     };
@@ -170,7 +174,7 @@ pub fn get_system_info(
 /// Overwrite smbioslib::table_load_from_device to use parameters for files
 /// so we can test our code without reading smbios data from the machine that
 /// runs the test
-fn table_load_from_device(
+pub(crate) fn table_load_from_device(
     entry_file: &'static str,
     table_file: &'static str,
 ) -> Result<smbioslib::SMBiosData, std::io::Error> {
@@ -208,11 +212,109 @@ fn table_load_from_device(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::utils::get_test_filepath;
 
     #[test]
     fn test_load_smbios_data() {
-        let result = load_smbios_data(Some("./tests/test_data/smbios_entry_point"), Some("./tests/test_data/DMI"));
+        let result = load_smbios_data(
+            Some(get_test_filepath("smbios_entry_point")),
+            Some(get_test_filepath("DMI")),
+        );
         assert!(result.is_ok());
         assert!(result.unwrap().is_some());
+    }
+
+    #[test]
+    fn test_collect_bios_info() {
+        let smbios_data = load_smbios_data(
+            Some(get_test_filepath("smbios_entry_point")),
+            Some(get_test_filepath("DMI")),
+        )
+        .unwrap()
+        .unwrap();
+        let bios_info = collect_bios_info(&smbios_data);
+        assert!(bios_info.is_ok());
+
+        let bios = bios_info.unwrap();
+        assert!(bios.firmware_revision.is_some());
+        assert!(bios.release_date.is_some());
+        assert!(bios.revision.is_some());
+        assert_eq!(bios.vendor, "American Megatrends International, LLC.");
+        assert_eq!(bios.version, "5.19");
+        assert_eq!(bios.release_date.unwrap(), "2021-05-14");
+        assert_eq!(bios.firmware_revision.unwrap(), "5.19");
+        assert_eq!(bios.revision.unwrap(), "5.19");
+    }
+
+    #[test]
+    fn test_collect_processor_info_smbios() {
+        let smbios_data = load_smbios_data(
+            Some(get_test_filepath("smbios_entry_point")),
+            Some(get_test_filepath("DMI")),
+        )
+        .unwrap()
+        .unwrap();
+        let processor_info = collect_processor_info_smbios(
+            &smbios_data,
+            Some(get_test_filepath("cpuinfo_max_freq")),
+        );
+        assert!(processor_info.is_ok());
+
+        let processor = processor_info.unwrap();
+        assert_eq!(processor.codename, "Unknown");
+        assert_eq!(processor.frequency, 1800);
+        assert_eq!(processor.manufacturer, "Intel(R) Corporation");
+        assert_eq!(processor.version, "Intel(R) Celeron(R) 6305E @ 1.80GHz");
+    }
+
+    #[test]
+    fn test_collect_chassis_info() {
+        let smbios_data = load_smbios_data(
+            Some(get_test_filepath("smbios_entry_point")),
+            Some(get_test_filepath("DMI")),
+        )
+        .unwrap()
+        .unwrap();
+        let chassis_info = collect_chassis_info(&smbios_data);
+        assert!(chassis_info.is_ok());
+
+        let chassis = chassis_info.unwrap();
+        assert_eq!(chassis.chassis_type, "Desktop");
+        assert_eq!(chassis.manufacturer, "AAEON");
+        assert_eq!(chassis.sku, "Default string");
+        assert_eq!(chassis.version, "V1.0");
+    }
+
+    #[test]
+    fn test_collect_motherboard_info() {
+        let smbios_data = load_smbios_data(
+            Some(get_test_filepath("smbios_entry_point")),
+            Some(get_test_filepath("DMI")),
+        )
+        .unwrap()
+        .unwrap();
+        let motherboard_info = collect_motherboard_info(&smbios_data);
+        assert!(motherboard_info.is_ok());
+
+        let board = motherboard_info.unwrap();
+        assert_eq!(board.manufacturer, "AAEON");
+        assert_eq!(board.product_name, "UPX-TGL01");
+        assert_eq!(board.version, "V1.0");
+    }
+
+    #[test]
+    fn test_get_system_info() {
+        let smbios_data = load_smbios_data(
+            Some(get_test_filepath("smbios_entry_point")),
+            Some(get_test_filepath("DMI")),
+        )
+        .unwrap()
+        .unwrap();
+        let system_info = get_system_info(&smbios_data);
+        assert!(system_info.is_ok());
+
+        let (model, vendor) = system_info.unwrap();
+        assert_eq!(model, "UPX-TGL01");
+        assert_eq!(vendor, "AAEON");
     }
 }

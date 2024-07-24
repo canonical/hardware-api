@@ -25,6 +25,7 @@ use std::str::FromStr;
 
 use crate::constants::{CPU_MAX_FREQ_FILEPATH, PROC_CPUINFO_FILEPATH};
 
+#[derive(Debug)]
 pub struct CpuInfo {
     pub platform: String,
     pub count: usize,
@@ -41,8 +42,10 @@ pub struct CpuInfo {
 
 /// Parse /proc/cpuinfo the same way it's done in checkbox
 /// https://github.com/canonical/checkbox/blob/a8d5e9d/checkbox-support/checkbox_support/parsers/cpuinfo.py
-pub fn parse_cpuinfo() -> Result<CpuInfo, Box<dyn std::error::Error>> {
-    let path = PROC_CPUINFO_FILEPATH;
+pub fn parse_cpuinfo(
+    cpuinfo_filepath: Option<&'static str>,
+) -> Result<CpuInfo, Box<dyn std::error::Error>> {
+    let path = cpuinfo_filepath.unwrap_or(PROC_CPUINFO_FILEPATH);
     let file = File::open(path)?;
     let reader = io::BufReader::new(file);
 
@@ -108,8 +111,10 @@ pub fn parse_cpuinfo() -> Result<CpuInfo, Box<dyn std::error::Error>> {
 
 /// Parse CPU frequency in MHz as it's done in checkbox
 /// https://github.com/canonical/checkbox/blob/a8d5e9/providers/resource/bin/cpuinfo_resource.py#L56-L63
-pub(super) fn read_max_cpu_frequency() -> Result<u64, Box<dyn std::error::Error>> {
-    let path = CPU_MAX_FREQ_FILEPATH;
+pub(super) fn read_max_cpu_frequency(
+    max_cpu_frequency_filepath: Option<&'static str>,
+) -> Result<u64, Box<dyn std::error::Error>> {
+    let path = max_cpu_frequency_filepath.unwrap_or(CPU_MAX_FREQ_FILEPATH);
     let file = File::open(path)?;
     let mut reader = io::BufReader::new(file);
     let mut buffer = String::new();
@@ -145,4 +150,34 @@ fn parse_speed(speed: Option<&String>) -> Result<u64, Box<dyn std::error::Error>
         return u64::from_str(spd).map_err(|e| e.into());
     }
     Ok(0)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::{parse_cpuinfo, read_max_cpu_frequency};
+    use crate::utils::get_test_filepath;
+
+    #[test]
+    fn test_parse_cpuinfo() {
+        let cpuinfo_result = parse_cpuinfo(Some(get_test_filepath("cpuinfo")));
+        assert!(cpuinfo_result.is_ok());
+        let cpuinfo = cpuinfo_result.unwrap();
+        assert_eq!(cpuinfo.platform, std::env::consts::ARCH.to_string());
+        assert_eq!(cpuinfo.count, 2);
+        assert_eq!(cpuinfo.cpu_type, "GenuineIntel");
+        assert_eq!(cpuinfo.model, "Intel(R) Celeron(R) 6305E @ 1.80GHz");
+        assert_eq!(cpuinfo.model_number, "6");
+        assert_eq!(cpuinfo.model_version, "140");
+        assert_eq!(cpuinfo.model_revision, "1");
+        assert_eq!(cpuinfo.cache, 4096);
+        assert_eq!(cpuinfo.bogomips, 3610);
+    }
+
+    #[test]
+    fn test_read_max_cpu_frequency() {
+        let cpu_freq_result = read_max_cpu_frequency(Some(get_test_filepath("cpuinfo_max_freq")));
+        assert!(cpu_freq_result.is_ok());
+        let cpu_freq = cpu_freq_result.unwrap();
+        assert_eq!(cpu_freq, 1800);
+    }
 }

@@ -4,7 +4,11 @@ description = "collects and sends hardware information to hwapi to find testing 
 license = "GPL-3.0-only"
 version = "0.1.0"
 edition = "2021"
-authors = []
+authors = [
+  "Canonical Hardware Certification <canonical-hw-cert@lists.launchpad.net>",
+  "Nadzeya Hutsko <nadzeya.hutsko@canonical.com>",
+  "Matias Piipari <matias.piipari@canonical.com>",
+]
 documentation = "https://github.com/canonical/hardware-api/"
 homepage = "https://github.com/canonical/hardware-api/"
 repository = "https://github.com/canonical/hardware-api/"
@@ -30,8 +34,7 @@ smbios-lib = "0.9.1"
 regex = "1.10.5"
 chrono = "0.4.38"
 mockito = "1.4.0"
-tempfile = "3.10.1"
-mockall = "0.13.0"
+project-root = "0.2.2"
 
 [package.metadata.deb]
 maintainer = "Canonical Hardware Certification <canonical-hw-cert@lists.launchpad.net>"

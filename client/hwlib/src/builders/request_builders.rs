@@ -34,8 +34,8 @@ pub fn create_certification_status_request(
     };
 
     let processor = match smbios_data {
-        Some(ref data) => hardware_info::collect_processor_info_smbios(data)?,
-        None => hardware_info::collect_processor_info_cpuinfo()?,
+        Some(ref data) => hardware_info::collect_processor_info_smbios(data, None)?,
+        None => hardware_info::collect_processor_info_cpuinfo(None, None)?,
     };
 
     let os = os_info::collect_os_info()?;
@@ -55,8 +55,8 @@ pub fn create_certification_status_request(
     let (model, vendor) = match smbios_data {
         Some(ref data) => hardware_info::get_system_info(data)?,
         None => {
-            let cpu_info = parse_cpuinfo()?;
-            (cpu_info.model, cpu_info.platform)
+            let cpu_info = parse_cpuinfo(None)?;
+            (cpu_info.model, "Unknown".to_string())
         }
     };
 
