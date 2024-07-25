@@ -26,14 +26,15 @@ use hwlib::send_certification_request;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let cert_status_request = create_certification_status_request()?;
-    println!("{}", serde_json::json!(cert_status_request));
+    let cert_status_request =
+        create_certification_status_request(None, None, None, None, None, None)?;
+    println!("Request:\n{:#}", serde_json::json!(cert_status_request));
     let url = std::env::var("HW_API_URL").unwrap_or_else(|_| String::from("https://hw.ubuntu.com"));
     let response = send_certification_request(url, &cert_status_request).await;
 
     match response {
         Ok(response) => {
-            println!("{:#?}", serde_json::json!(response));
+            println!("\nResponse:\n{:#}", serde_json::json!(response));
             exit(0);
         }
         Err(e) => {

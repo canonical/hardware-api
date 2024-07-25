@@ -21,6 +21,7 @@
 use chrono::NaiveDate;
 use smbioslib;
 
+use crate::constants::PROC_DEVICE_TREE_DIRPATH;
 use crate::models::devices;
 
 pub fn load_smbios_data(
@@ -136,8 +137,12 @@ pub fn collect_motherboard_info(
 }
 
 pub fn collect_motherboard_info_from_device_tree(
+    device_tree_filepath: Option<&'static str>,
 ) -> Result<devices::Board, Box<dyn std::error::Error>> {
-    let base_path = std::path::Path::new("/proc/device-tree");
+    let base_path = match device_tree_filepath {
+        Some(base) => std::path::Path::new(base),
+        None => std::path::Path::new(PROC_DEVICE_TREE_DIRPATH),
+    };
 
     let manufacturer = std::fs::read_to_string(base_path.join("model"))
         .map(|s| s.trim().to_string())
@@ -147,7 +152,7 @@ pub fn collect_motherboard_info_from_device_tree(
         .map(|s| s.trim().to_string())
         .unwrap_or_else(|_| "Unknown".to_string());
 
-    let version = std::fs::read_to_string(base_path.join("revision"))
+    let version = std::fs::read_to_string(base_path.join("model"))
         .map(|s| s.trim().to_string())
         .unwrap_or_else(|_| "Unknown".to_string());
 
@@ -300,6 +305,17 @@ mod tests {
         assert_eq!(board.manufacturer, "AAEON");
         assert_eq!(board.product_name, "UPX-TGL01");
         assert_eq!(board.version, "V1.0");
+    }
+
+    #[test]
+    fn test_collect_motherboard_info_from_device_tree() {
+        let motherboard_info =
+            collect_motherboard_info_from_device_tree(Some(get_test_filepath("device-tree")));
+        assert!(motherboard_info.is_ok());
+
+        let board = motherboard_info.unwrap();
+        assert_eq!(board.manufacturer, "Raspberry Pi 4 Model B Rev 1.5");
+        assert_eq!(board.product_name, "raspberrypi,4-model-bbrcm,bcm2711");
     }
 
     #[test]

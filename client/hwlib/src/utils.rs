@@ -29,6 +29,7 @@ pub fn get_test_filepath(file_name: &str) -> &'static str {
             path.push("client");
             path.push("hwlib");
         }
+        path.push("tests");
         path.push("test_data");
         path.push(file_name);
         path.to_str().unwrap().to_string()
@@ -39,12 +40,16 @@ pub fn get_test_filepath(file_name: &str) -> &'static str {
     static TEST_CPUINFO_FILE: Lazy<String> = Lazy::new(|| build_test_filepath("cpuinfo"));
     static TEST_CPU_MAX_FREQ_FILE: Lazy<String> =
         Lazy::new(|| build_test_filepath("cpuinfo_max_freq"));
+    static TEST_VERSION_FILE: Lazy<String> = Lazy::new(|| build_test_filepath("version"));
+    static TEST_DEVICE_TREE_DIR: Lazy<String> = Lazy::new(|| build_test_filepath("device-tree"));
 
     match file_name {
         "smbios_entry_point" => &TEST_ENTRY_FILE,
         "DMI" => &TEST_DMI_FILE,
         "cpuinfo" => &TEST_CPUINFO_FILE,
         "cpuinfo_max_freq" => &TEST_CPU_MAX_FREQ_FILE,
+        "version" => &TEST_VERSION_FILE,
+        "device-tree" => &TEST_DEVICE_TREE_DIR,
         _ => panic!("Unsupported file name"),
     }
 }

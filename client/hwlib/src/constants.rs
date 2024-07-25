@@ -19,6 +19,7 @@
  */
 
 pub const CERT_STATUS_ENDPOINT: &str = "/v1/certification/status";
-pub const PROC_VERSION_FILEPATH: &str = "/proc/version";
-pub const PROC_CPUINFO_FILEPATH: &str = "/proc/cpuinfo";
 pub const CPU_MAX_FREQ_FILEPATH: &str = "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq";
+pub const PROC_CPUINFO_FILEPATH: &str = "/proc/cpuinfo";
+pub const PROC_DEVICE_TREE_DIRPATH: &str = "/proc/device-tree";
+pub const PROC_VERSION_FILEPATH: &str = "/proc/version";

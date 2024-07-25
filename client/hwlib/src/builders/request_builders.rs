@@ -22,10 +22,32 @@ use crate::collectors::cpuinfo::parse_cpuinfo;
 use crate::collectors::{hardware_info, os_info};
 use crate::models::request_validators::CertificationStatusRequest;
 
+/// The function to create certification status request body
+/// by collecting information about hardware and kernel
+/// using the crate::collectors module
+/// In most cases you should call this function with default values (specifying None)
+///
+/// Arguments:
+///
+/// * `smbios_entry_filepath`: SMBIOS entry point file path.
+///                           Default is /sys/firmware/dmi/tables/smbios_entry_point
+/// * `smbios_table_filepath`:  SMBIOS DMI file path. Default is /sys/firmware/dmi/tables/DMI
+/// * `cpuinfo_filepath`: Path to cpuinfo file. Defaul is: /proc/cpuinfo
+/// * `max_cpu_frequency_filepath`: Path to file with CPU max frequency.
+///                                 Default is /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq
+/// * `device_tree_dirpath`: Path to the device-tree directory. Default is /proc/device-tree
+/// * `proc_version_filepath`: Path to the file with kernel version. Default is /proc/version
 pub fn create_certification_status_request(
+    smbios_entry_filepath: Option<&'static str>,
+    smbios_table_filepath: Option<&'static str>,
+    cpuinfo_filepath: Option<&'static str>,
+    max_cpu_frequency_filepath: Option<&'static str>,
+    device_tree_dirpath: Option<&'static str>,
+    proc_version_filepath: Option<&'static str>,
 ) -> Result<CertificationStatusRequest, Box<dyn std::error::Error>> {
     // Try to load SMBIOS data
-    let smbios_data = hardware_info::load_smbios_data(None, None)?;
+    let smbios_data =
+        hardware_info::load_smbios_data(smbios_entry_filepath, smbios_table_filepath)?;
 
     // If SMBIOS data is available, collect BIOS info
     let bios = match smbios_data {
@@ -35,10 +57,13 @@ pub fn create_certification_status_request(
 
     let processor = match smbios_data {
         Some(ref data) => hardware_info::collect_processor_info_smbios(data, None)?,
-        None => hardware_info::collect_processor_info_cpuinfo(None, None)?,
+        None => hardware_info::collect_processor_info_cpuinfo(
+            cpuinfo_filepath,
+            max_cpu_frequency_filepath,
+        )?,
     };
 
-    let os = os_info::collect_os_info()?;
+    let os = os_info::collect_os_info(proc_version_filepath)?;
 
     let chassis = match smbios_data {
         Some(ref data) => Some(hardware_info::collect_chassis_info(data)?),
@@ -47,7 +72,7 @@ pub fn create_certification_status_request(
 
     let board = match smbios_data {
         Some(ref data) => hardware_info::collect_motherboard_info(data)?,
-        None => hardware_info::collect_motherboard_info_from_device_tree()?,
+        None => hardware_info::collect_motherboard_info_from_device_tree(device_tree_dirpath)?,
     };
 
     let architecture = os_info::get_architecture()?;
@@ -55,7 +80,7 @@ pub fn create_certification_status_request(
     let (model, vendor) = match smbios_data {
         Some(ref data) => hardware_info::get_system_info(data)?,
         None => {
-            let cpu_info = parse_cpuinfo(None)?;
+            let cpu_info = parse_cpuinfo(cpuinfo_filepath)?;
             (cpu_info.model, "Unknown".to_string())
         }
     };
