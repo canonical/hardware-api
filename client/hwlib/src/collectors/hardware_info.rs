@@ -18,8 +18,9 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use chrono::NaiveDate;
 use smbioslib;
+use time::macros::format_description;
+use time::Date;
 
 use crate::constants::PROC_DEVICE_TREE_DIRPATH;
 use crate::models::devices;
@@ -47,9 +48,10 @@ pub fn collect_bios_info(
     let bios_info = &smbios_data.collect::<smbioslib::SMBiosInformation>()[0];
 
     let release_date_str = bios_info.release_date().to_string();
-    let release_date = NaiveDate::parse_from_str(&release_date_str, "%m/%d/%Y")?
-        .format("%Y-%m-%d")
-        .to_string();
+    let release_date_format = format_description!("[month]/[day]/[year]");
+    let release_date_parsed = Date::parse(&release_date_str, &release_date_format)?;
+    let output_format = format_description!("[year]-[month]-[day]");
+    let release_date = release_date_parsed.format(&output_format)?;
 
     let bios = devices::Bios {
         firmware_revision: match (

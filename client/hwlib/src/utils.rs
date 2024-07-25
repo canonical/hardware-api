@@ -19,7 +19,10 @@
  */
 
 use once_cell::sync::Lazy;
-use project_root::get_project_root;
+use std::fs::read_dir;
+use std::io::ErrorKind;
+use std::path::PathBuf;
+use std::{env, io};
 
 pub fn get_test_filepath(file_name: &str) -> &'static str {
     fn build_test_filepath(file_name: &str) -> String {
@@ -52,4 +55,21 @@ pub fn get_test_filepath(file_name: &str) -> &'static str {
         "device-tree" => &TEST_DEVICE_TREE_DIR,
         _ => panic!("Unsupported file name"),
     }
+}
+
+fn get_project_root() -> io::Result<PathBuf> {
+    let path = env::current_dir()?;
+    let path_ancestors = path.as_path().ancestors();
+
+    for p in path_ancestors {
+        let has_cargo = read_dir(p)?
+            .any(|p| p.unwrap().file_name() == *"Cargo.lock");
+        if has_cargo {
+            return Ok(PathBuf::from(p));
+        }
+    }
+    Err(io::Error::new(
+        ErrorKind::NotFound,
+        "Ran out of places to find Cargo.toml",
+    ))
 }
