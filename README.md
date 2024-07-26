@@ -40,14 +40,6 @@ export IMPORT_TOOL_PATH=./scripts/seed_db.py
 docker compose up --attach-dependencies --build hwapi-dev
 ```
 
-To verify that it works, you can make the following request from the host
-(you should receive the Certified response):
-
-```bash
-curl http://0.0.0.0:8080/v1/certification/status -X POST -H "Content-Type: application/json" \
--d '{"vendor": "Dell", "model": "ChengMing 3980"}' -s | python3 -m json.tool
-```
-
 ### Load the data from C3
 
 This approach populates the DB with the data from C3 (staging instance by default).
@@ -58,13 +50,6 @@ To build and run the container with staging data, execute the following command:
 
 ```bash
 docker compose up --attach-dependencies --build hwapi-dev
-```
-
-To verify that it works, make the following request from the host (you should receive the Certified response):
-
-```bash
-curl http://0.0.0.0:8080/v1/certification/status -X POST -H "Content-Type: application/json" \
--d '{"vendor": "HP", "model": "Z8 G4 Workstation"}' -s | python3 -m json.tool
 ```
 
 Alternatively, you can specify another C3 host (like production or the local one) by specifying the `C3_URL`:
