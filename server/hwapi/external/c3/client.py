@@ -20,7 +20,7 @@
 
 import requests
 import logging
-from typing import Callable, Type, Any
+from typing import Callable, Type
 from pydantic import BaseModel
 
 from sqlite3 import IntegrityError as SQLite3IntegrityError
