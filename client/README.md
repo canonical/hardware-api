@@ -57,16 +57,14 @@ $ cd hwlib
 $ maturin develop
 ```
 
-Now you can use the lib in your Python code:
+Now you can use the lib in your Python code. The library requires root access
+since we collect the hardware information using SMBIOS data. If you're running it
+on a device that doesn't have SMBIOS data available, root privileges are not required.
 
 ```python
+$ sudo /path/to/venv/bin/python3  # or `python3`
 >>> import hwlib
->>> hwlib.get_certification_status("https://example.com")
-{'status':'Not Seen'}
->>> import os
->>> os.environ["CERTIFICATION_STATUS"] = "2"
->>> hwlib.get_certification_status("https://example.com")
-{'bios': {'firmware_revision': '1.0', 'release_date': '2020-01-01', 'revision': 'rev1', 'vendor': 'BIOSVendor', 'version': 'v1.0'}, 'os': {'codename': 'focal', 'description': 'Ubuntu 20.04.1 LTS', 'distributor': 'Ubuntu', 'kernel': {'name': 'Linux', 'signature': 'Sample Signature', 'version': '5.4.0-42-generic'}, 'loaded_modules': ['module1', 'module2'], 'version': '20.04'}, 'status': 'Certified'}
+>>> hwlib.get_certification_status("https://hw.ubuntu.com")
 ```
 
 
@@ -75,7 +73,7 @@ Now you can use the lib in your Python code:
 Since we're using python bindings, this library contains tests for both Rust and Python code.
 To execute them, run the following commands in the `hwlib/` directory:
 
-* Run Rust tests: `$ cargo test -- --test-threads=1`
+* Run Rust tests: `$ cargo test`
 * For Python tests, you need to have `tox` on your system installed: `pip install tox`.
 Then, you can run Python tests with tox `$ tox`
 

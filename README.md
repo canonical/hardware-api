@@ -1,4 +1,3 @@
-
 # Hardware Information API (hwapi)
 
 The repo contains the API server and client for retrieving hardware information.
@@ -92,15 +91,9 @@ You can retrieve API schema in HTML, YAML, and JSON formats:
 
 ## Build the library (`hwlib`)
 
-For now, the library contains the function to return a sample certification
-status. It depends on the environment variable `CERTIFICATION_STATUS` and
-accepts the following values:
-
-- `0`: The system has not been seen (default behaviour even if the env variable
-  is not defined).
-- `1`: The system is partially certified (we haven't seen this specific system,
-  but some of its hardware components have been tested on other systems).
-- `2`: This system has been certified (but probably for other Ubuntu release).
+Currently, the library contains the functionality to collect the information about
+the machine hardware and OS, send the request to the server, and get the machine
+certification status.
 
 ```bash
 cd client/hwlib
@@ -109,40 +102,111 @@ cargo build
 
 ## Build and run the reference CLI tool (`hwctl`)
 
+To check the machine certification status, run the following command. It sends the request
+to the server URL defined by `HW_API_URL` environment value (https://hw.ubuntu.com
+by default). The library requires root access
+since we collect the hardware information using SMBIOS data. If you're running it
+on a device that doesn't have SMBIOS data available, root privileges are not required.
+
 ```bash
-export CERTIFICATION_STATUS=2
-cd client/hwctl
-cargo run
+cd client
+sudo cargo run  # or `cargo run`
 ```
 
-This is the output you should get running the commands above:
+To send the request to a different server, run the tool the following way:
 
 ```bash
-    Finished dev [unoptimized + debuginfo] target(s) in 2.00s
-Object {
-    "bios": Object {
-        "firmware_revision": String("1.0"),
-        "release_date": String("2020-01-01"),
-        "revision": String("rev1"),
-        "vendor": String("BIOSVendor"),
-        "version": String("v1.0"),
+sudo HW_API_URL=https://your.server.url cargo run
+```
+
+This is the output should look a similar way:
+
+```json
+Request:
+{
+  "architecture": "amd64",
+  "bios": {
+    "firmware_revision": "1.13",
+    "release_date": "2023-03-14",
+    "revision": "1.13.0",
+    "vendor": "Dell Inc.",
+    "version": "1.13.0"
+  },
+  "board": {
+    "manufacturer": "Dell Inc.",
+    "product_name": "0F0W8W",
+    "version": "A00"
+  },
+  "chassis": {
+    "chassis_type": "Notebook",
+    "manufacturer": "Dell Inc.",
+    "sku": "Notebook",
+    "version": ""
+  },
+  "model": "Inspiron 14 5420",
+  "os": {
+    "codename": "noble",
+    "distributor": "Ubuntu",
+    "kernel": {
+      "loaded_modules": [
+        "tls",
+        "nft_masq",
+        "truncated for this example",
+      ],
+      "name": "Linux",
+      "signature": null,
+      "version": "6.8.0-38-generic"
     },
-    "os": Object {
-        "codename": String("focal"),
-        "description": String("Ubuntu 20.04.1 LTS"),
-        "distributor": String("Ubuntu"),
-        "kernel": Object {
-            "name": String("Linux"),
-            "signature": String("Sample Signature"),
-            "version": String("5.4.0-42-generic"),
-        },
-        "loaded_modules": Array [
-            String("module1"),
-            String("module2"),
-        ],
-        "version": String("20.04"),
-    },
-    "status": String("Certified"),
+    "version": "24.04"
+  },
+  "pci_peripherals": [],
+  "processor": {
+    "codename": "Unknown",
+    "frequency": 4400,
+    "manufacturer": "Intel(R) Corporation",
+    "version": "12th Gen Intel(R) Core(TM) i5-1235U"
+  },
+  "usb_peripherals": [],
+  "vendor": "Dell Inc."
+}
+
+Response:
+{
+  "architecture": "amd64",
+  "audio": null,
+  "available_releases": [
+    {
+      "codename": "focal",
+      "distributor": "Ubuntu",
+      "kernel": {
+        "loaded_modules": [],
+        "name": null,
+        "signature": null,
+        "version": "5.14.0-1010-oem"
+      },
+      "version": "20.04 LTS"
+    }
+  ],
+  "bios": {
+    "firmware_revision": "1.13",
+    "release_date": null,
+    "revision": null,
+    "vendor": "Dell",
+    "version": "1.13.0"
+  },
+  "board": {
+    "manufacturer": "Dell",
+    "product_name": "0F0W8W",
+    "version": "A00"
+  },
+  "chassis": null,
+  "gpu": null,
+  "network": null,
+  "pci_peripherals": [],
+  "status": "Related Certified System Exists",
+  "usb_peripherals": [],
+  "video": null,
+  "wireless": null
 }
 ```
 

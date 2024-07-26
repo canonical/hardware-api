@@ -32,42 +32,11 @@ use tokio::runtime::Runtime;
 static RT: Lazy<Runtime> = Lazy::new(|| Runtime::new().expect("Failed to create Tokio runtime"));
 
 /// This function creates and sends the certification status request to the specified
-/// hardware-api server URL. The *path arguments can be used if you want to specify
-/// alternative entry points for retrieving hardware information that are different from the
-/// standard once. In most cases you should keep them as None
+/// hardware-api server URL.
 #[pyfunction]
-#[pyo3(signature = (url, smbios_entry_filepath=None, smbios_table_filepath=None, cpuinfo_filepath=None, max_cpu_frequency_filepath=None, device_tree_dirpath=None, proc_version_filepath=None))]
-fn send_certification_request(
-    py: Python,
-    url: String,
-    smbios_entry_filepath: Option<&str>,
-    smbios_table_filepath: Option<&str>,
-    cpuinfo_filepath: Option<&str>,
-    max_cpu_frequency_filepath: Option<&str>,
-    device_tree_dirpath: Option<&str>,
-    proc_version_filepath: Option<&str>,
-) -> PyResult<PyObject> {
-    // Convert Option<&str> to Option<&'static str>
-    fn to_static_str(option: Option<&str>) -> Option<&'static str> {
-        option.map(|s| Box::leak(s.to_string().into_boxed_str()) as &'static str)
-    }
-
-    let smbios_entry_filepath_static = to_static_str(smbios_entry_filepath);
-    let smbios_table_filepath_static = to_static_str(smbios_table_filepath);
-    let cpuinfo_filepath_static = to_static_str(cpuinfo_filepath);
-    let max_cpu_frequency_filepath_static = to_static_str(max_cpu_frequency_filepath);
-    let device_tree_dirpath_static = to_static_str(device_tree_dirpath);
-    let proc_version_filepath_static = to_static_str(proc_version_filepath);
-
-    let request_body = create_certification_status_request(
-        smbios_entry_filepath_static,
-        smbios_table_filepath_static,
-        cpuinfo_filepath_static,
-        max_cpu_frequency_filepath_static,
-        device_tree_dirpath_static,
-        proc_version_filepath_static,
-    )
-    .map_err(|e| PyRuntimeError::new_err(format!("Failed to create request: {}", e)))?;
+fn send_certification_request(py: Python, url: String) -> PyResult<PyObject> {
+    let request_body = create_certification_status_request(None, None, None, None, None, None)
+        .map_err(|e| PyRuntimeError::new_err(format!("Failed to create request: {}", e)))?;
 
     let response =
         RT.block_on(async { native_send_certification_request(url, &request_body).await });
