@@ -25,8 +25,8 @@ def progress_bar(it: int, total: int):
     :it: the current number of items
     :total: the total number of items
     """
-    fillwith = "█"
-    dec = 2
+    fillwith = "#"
+    dec = 1
     leng = 50
     percent = f"{100 * (it / total):.{dec}f}"
     fill_length = int(leng * it // total)

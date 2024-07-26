@@ -18,7 +18,6 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
 from datetime import date, timedelta
-from threading import Event
 
 from fastapi.testclient import TestClient
 from requests_mock import Mocker
@@ -70,14 +69,12 @@ def test_load_certificates(db_session: Session, requests_mock: Mocker):
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=500",
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
         json={"count": 0, "next": None, "previous": None, "results": []},
     )
 
     c3_client = C3Client(db=db_session)
-    completion_event = Event()
     c3_client.load_hardware_data()
-    completion_event.wait(timeout=3)
 
     assert db_session.query(models.Vendor).count() == 1
     assert db_session.query(models.Platform).count() == 1
@@ -128,14 +125,12 @@ def test_load_certificates_with_missing_kernel_bios(
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=500",
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
         json={"count": 0, "next": None, "previous": None, "results": []},
     )
 
     c3_client = C3Client(db=db_session)
-    completion_event = Event()
     c3_client.load_hardware_data()
-    completion_event.wait(timeout=3)
 
     assert db_session.query(models.Kernel).count() == 0
     assert db_session.query(models.Bios).count() == 0
@@ -173,12 +168,12 @@ def test_load_devices(
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=500",
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
         json={
             "count": 1,
             "next": (
                 "https://c3_url/api/v2/public-devices/"
-                "?pagination=limitoffset&limit=500&offset=500"
+                "?pagination=limitoffset&limit=1000&offset=1000"
             ),
             "previous": None,
             "results": [
@@ -206,7 +201,7 @@ def test_load_devices(
     requests_mock.get(
         (
             "https://c3_url/api/v2/public-devices/?pagination=limitoffset"
-            "&limit=500&offset=500"
+            "&limit=1000&offset=1000"
         ),
         json={
             "count": 1,
@@ -236,9 +231,7 @@ def test_load_devices(
     )
 
     c3_client = C3Client(db=db_session)
-    completion_event = Event()
     c3_client.load_hardware_data()
-    completion_event.wait(timeout=3)
 
     assert db_session.query(models.Device).count() == 2
     assert db_session.query(models.Report).count() == 2
@@ -281,14 +274,14 @@ def test_load_devices_duplicate_names(
 ):
     """
     Test that devices with the same name, vendor, subsystem, bus, version,
-    and category are added only once
+    and category are added only one
     """
     vendor = generator.gen_vendor()
     platform = generator.gen_platform(vendor, name="Precision 3690 (ik12)")
     configuration = generator.gen_configuration(platform)
     machine = generator.gen_machine(configuration, canonical_id="202106-8086")
     certificate = generator.gen_certificate(
-        machine, generator.gen_release(), name="2404-10686"
+        machine, generator.gen_release(), name="2204-10686"
     )
 
     requests_mock.get(
@@ -368,9 +361,7 @@ def test_load_devices_duplicate_names(
     )
 
     c3_client = C3Client(db=db_session)
-    completion_event = Event()
     c3_client.load_hardware_data()
-    completion_event.wait(timeout=3)
 
     assert db_session.query(models.Device).count() == 2
     assert (
@@ -411,7 +402,7 @@ def test_load_devices_cpu_codename(
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=500",
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
         json={
             "count": 1,
             "next": None,
@@ -440,10 +431,7 @@ def test_load_devices_cpu_codename(
     )
 
     c3_client = C3Client(db=db_session)
-    completion_event = Event()
     c3_client.load_hardware_data()
-    completion_event.wait(timeout=3)
-
     processor = (
         db_session.query(models.Device).filter_by(identifier="1111:2222").first()
     )
