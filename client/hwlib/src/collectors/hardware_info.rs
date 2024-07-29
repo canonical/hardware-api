@@ -18,7 +18,7 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use smbioslib;
 use time::macros::format_description;
 use time::Date;
@@ -40,7 +40,11 @@ pub fn load_smbios_data(
 }
 
 pub fn collect_bios_info(smbios_data: &smbioslib::SMBiosData) -> Result<devices::Bios> {
-    let bios_info = &smbios_data.collect::<smbioslib::SMBiosInformation>()[0];
+    let bios_info_vec = smbios_data.collect::<smbioslib::SMBiosInformation>();
+    let bios_info = match bios_info_vec.first() {
+        Some(bios_data) => bios_data,
+        None => bail!("Failed to load BIOS data"),
+    };
 
     let release_date_str = bios_info.release_date().to_string();
     let release_date_format = format_description!("[month]/[day]/[year]");
@@ -69,7 +73,13 @@ pub fn collect_processor_info_smbios(
     smbios_data: &smbioslib::SMBiosData,
     max_cpu_frequency_filepath: &'static str,
 ) -> Result<devices::Processor> {
-    let processor_info = &smbios_data.collect::<smbioslib::SMBiosProcessorInformation>()[0];
+    let processor_info_vec = smbios_data.collect::<smbioslib::SMBiosProcessorInformation>();
+
+    let processor_info = match processor_info_vec.first() {
+        Some(proc_data) => proc_data,
+        None => bail!("Failed to load processor data"),
+    };
+
     let cpu_id = super::cpuid::get_cpuid(processor_info)?;
     let processor = devices::Processor {
         codename: super::cpuid::convert_cpu_codename(&cpu_id)?,
@@ -98,9 +108,17 @@ pub fn collect_processor_info_cpuinfo(
 pub fn collect_chassis_info(
     smbios_data: &smbioslib::SMBiosData,
 ) -> Result<crate::models::devices::Chassis> {
-    let chassis_info = &smbios_data.collect::<smbioslib::SMBiosSystemChassisInformation>()[0];
+    let chassis_info_vec = smbios_data.collect::<smbioslib::SMBiosSystemChassisInformation>();
+    let chassis_info = match chassis_info_vec.first() {
+        Some(chassis_data) => chassis_data,
+        None => bail!("Failed to load chassis data"),
+    };
 
-    let chassis_type = chassis_info.chassis_type().ok_or("").unwrap().to_string();
+    let chassis_type = chassis_info
+        .chassis_type()
+        .ok_or("Failed to get chassis type")
+        .unwrap()
+        .to_string();
     let manufacturer = chassis_info.manufacturer().to_string();
     let sku = chassis_info.sku_number().to_string();
     let version = chassis_info.version().to_string();
@@ -116,7 +134,11 @@ pub fn collect_chassis_info(
 }
 
 pub fn collect_motherboard_info(smbios_data: &smbioslib::SMBiosData) -> Result<devices::Board> {
-    let board_info = &smbios_data.collect::<smbioslib::SMBiosBaseboardInformation>()[0];
+    let board_info_vec = smbios_data.collect::<smbioslib::SMBiosBaseboardInformation>();
+    let board_info = match board_info_vec.first() {
+        Some(board_data) => board_data,
+        None => bail!("Failed to load board data"),
+    };
 
     let manufacturer = board_info.manufacturer().to_string();
     let product_name = board_info.product().to_string();
@@ -158,11 +180,14 @@ pub fn collect_motherboard_info_from_device_tree(
 }
 
 pub fn get_system_info(smbios_data: &smbioslib::SMBiosData) -> Result<(String, String)> {
-    let system_info = &smbios_data.collect::<smbioslib::SMBiosSystemInformation>()[0];
-    Ok((
-        system_info.product_name().to_string(),
-        system_info.manufacturer().to_string(),
-    ))
+    let system_info_vec = smbios_data.collect::<smbioslib::SMBiosSystemInformation>();
+    match system_info_vec.first() {
+        Some(system_data) => Ok((
+            system_data.product_name().to_string(),
+            system_data.manufacturer().to_string(),
+        )),
+        None => bail!("Failed to load system information"),
+    }
 }
 
 #[cfg(target_os = "linux")]

@@ -68,61 +68,76 @@ pub fn create_certification_status_request(
     let smbios_data =
         hardware_info::load_smbios_data(smbios_entry_filepath, smbios_table_filepath)?;
 
-    // If SMBIOS data is available, collect BIOS info
-    let bios = match smbios_data {
-        Some(ref data) => Some(hardware_info::collect_bios_info(data)?),
-        None => None,
+    let paths = Paths {
+        smbios_entry_filepath,
+        smbios_table_filepath,
+        cpuinfo_filepath,
+        max_cpu_frequency_filepath,
+        device_tree_dirpath,
+        proc_version_filepath,
     };
 
-    let processor = match smbios_data {
-        Some(ref data) => {
-            hardware_info::collect_processor_info_smbios(data, max_cpu_frequency_filepath)?
-        }
-        None => hardware_info::collect_processor_info_cpuinfo(
-            cpuinfo_filepath,
-            max_cpu_frequency_filepath,
-        )?,
-    };
-
-    let os = os_info::collect_os_info(proc_version_filepath)?;
-
-    let chassis = match smbios_data {
-        Some(ref data) => Some(hardware_info::collect_chassis_info(data)?),
-        None => None,
-    };
-
-    let board = match smbios_data {
-        Some(ref data) => hardware_info::collect_motherboard_info(data)?,
-        None => hardware_info::collect_motherboard_info_from_device_tree(device_tree_dirpath)?,
-    };
-
-    let architecture = os_info::get_architecture()?;
-
-    let (model, vendor) = match smbios_data {
-        Some(ref data) => hardware_info::get_system_info(data)?,
-        None => {
-            let cpu_info = parse_cpuinfo(cpuinfo_filepath)?;
-            (cpu_info.model, "Unknown".to_string())
-        }
-    };
-
-    // Placeholder for PCI and USB peripherals
-    let pci_peripherals = Vec::new();
-    let usb_peripherals = Vec::new();
-
-    // Construct the certification request
-    let certification_request = CertificationStatusRequest {
-        architecture,
-        bios,
-        board,
-        chassis,
-        model,
-        os,
-        pci_peripherals,
-        processor,
-        usb_peripherals,
-        vendor,
+    let certification_request = match smbios_data {
+        Some(data) => build_certification_request_from_smbios_data(&data, paths)?,
+        None => build_certification_request_from_defaults(paths)?,
     };
 
     Ok(certification_request)
+}
+
+fn build_certification_request_from_smbios_data(
+    data: &smbioslib::SMBiosData,
+    Paths {
+        smbios_entry_filepath: _,
+        smbios_table_filepath: _,
+        cpuinfo_filepath: _,
+        max_cpu_frequency_filepath,
+        device_tree_dirpath: _,
+        proc_version_filepath,
+    }: Paths,
+) -> Result<CertificationStatusRequest> {
+    let (model, vendor) = hardware_info::get_system_info(data)?;
+
+    Ok(CertificationStatusRequest {
+        architecture: os_info::get_architecture()?,
+        bios: Some(hardware_info::collect_bios_info(data)?),
+        board: hardware_info::collect_motherboard_info(data)?,
+        chassis: Some(hardware_info::collect_chassis_info(data)?),
+        model,
+        os: os_info::collect_os_info(proc_version_filepath)?,
+        pci_peripherals: Vec::new(),
+        processor: hardware_info::collect_processor_info_smbios(data, max_cpu_frequency_filepath)?,
+        usb_peripherals: Vec::new(),
+        vendor,
+    })
+}
+
+fn build_certification_request_from_defaults(
+    Paths {
+        smbios_entry_filepath: _,
+        smbios_table_filepath: _,
+        cpuinfo_filepath,
+        max_cpu_frequency_filepath,
+        device_tree_dirpath,
+        proc_version_filepath,
+    }: Paths,
+) -> Result<CertificationStatusRequest> {
+    let cpu_info = parse_cpuinfo(cpuinfo_filepath)?;
+    let (model, vendor) = (cpu_info.model, "Unknown".to_string());
+
+    Ok(CertificationStatusRequest {
+        architecture: os_info::get_architecture()?,
+        bios: None,
+        board: hardware_info::collect_motherboard_info_from_device_tree(device_tree_dirpath)?,
+        chassis: None,
+        model,
+        os: os_info::collect_os_info(proc_version_filepath)?,
+        pci_peripherals: Vec::new(),
+        processor: hardware_info::collect_processor_info_cpuinfo(
+            cpuinfo_filepath,
+            max_cpu_frequency_filepath,
+        )?,
+        usb_peripherals: Vec::new(),
+        vendor,
+    })
 }
