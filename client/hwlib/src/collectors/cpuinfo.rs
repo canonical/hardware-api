@@ -18,6 +18,7 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
+use anyhow::Result;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead};
@@ -40,9 +41,7 @@ pub struct CpuInfo {
 
 /// Parse /proc/cpuinfo the same way it's done in checkbox
 /// https://github.com/canonical/checkbox/blob/a8d5e9d/checkbox-support/checkbox_support/parsers/cpuinfo.py
-pub fn parse_cpuinfo(
-    cpuinfo_filepath: &'static str,
-) -> Result<CpuInfo, Box<dyn std::error::Error>> {
+pub fn parse_cpuinfo(cpuinfo_filepath: &'static str) -> Result<CpuInfo> {
     let file = File::open(cpuinfo_filepath)?;
     let reader = io::BufReader::new(file);
 
@@ -108,9 +107,7 @@ pub fn parse_cpuinfo(
 
 /// Parse CPU frequency in MHz as it's done in checkbox
 /// https://github.com/canonical/checkbox/blob/a8d5e9/providers/resource/bin/cpuinfo_resource.py#L56-L63
-pub(super) fn read_max_cpu_frequency(
-    max_cpu_frequency_filepath: &'static str,
-) -> Result<u64, Box<dyn std::error::Error>> {
+pub(super) fn read_max_cpu_frequency(max_cpu_frequency_filepath: &'static str) -> Result<u64> {
     let file = File::open(max_cpu_frequency_filepath)?;
     let mut reader = io::BufReader::new(file);
     let mut buffer = String::new();
@@ -119,7 +116,7 @@ pub(super) fn read_max_cpu_frequency(
     Ok(k_hz / 1000) // Convert kHz to MHz
 }
 
-fn parse_cache_size(cache_size: Option<&String>) -> Result<i64, Box<dyn std::error::Error>> {
+fn parse_cache_size(cache_size: Option<&String>) -> Result<i64> {
     if let Some(cache) = cache_size {
         let cache_str = cache.replace(" KB", "");
         return i64::from_str(&cache_str).map_err(|e| e.into());
@@ -127,7 +124,7 @@ fn parse_cache_size(cache_size: Option<&String>) -> Result<i64, Box<dyn std::err
     Ok(-1)
 }
 
-fn parse_bogomips(bogomips: Option<&String>) -> Result<i64, Box<dyn std::error::Error>> {
+fn parse_bogomips(bogomips: Option<&String>) -> Result<i64> {
     if let Some(bogo) = bogomips {
         let bogo_str = bogo.replace(' ', "");
         match f64::from_str(&bogo_str) {
@@ -141,7 +138,7 @@ fn parse_bogomips(bogomips: Option<&String>) -> Result<i64, Box<dyn std::error::
     Ok(-1)
 }
 
-fn parse_speed(speed: Option<&String>) -> Result<u64, Box<dyn std::error::Error>> {
+fn parse_speed(speed: Option<&String>) -> Result<u64> {
     if let Some(spd) = speed {
         return u64::from_str(spd).map_err(|e| e.into());
     }

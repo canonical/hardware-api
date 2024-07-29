@@ -14,3 +14,4 @@ all-features = false
 tokio = { version = "1.38.0", features = ["rt", "macros"], default-features = false }
 hwlib = { path = "../hwlib", version = "0.1.0" }
 serde_json = "~1.0.0"
+anyhow = "~1.0.0"

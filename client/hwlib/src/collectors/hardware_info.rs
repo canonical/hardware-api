@@ -18,6 +18,7 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
+use anyhow::Result;
 use smbioslib;
 use time::macros::format_description;
 use time::Date;
@@ -27,7 +28,7 @@ use crate::models::devices;
 pub fn load_smbios_data(
     entry_filepath: &'static str,
     table_filepath: &'static str,
-) -> Result<Option<smbioslib::SMBiosData>, Box<dyn std::error::Error>> {
+) -> Result<Option<smbioslib::SMBiosData>> {
     let smbios_data = match table_load_from_device(entry_filepath, table_filepath) {
         Ok(data) => Some(data),
         Err(e) => {
@@ -38,9 +39,7 @@ pub fn load_smbios_data(
     Ok(smbios_data)
 }
 
-pub fn collect_bios_info(
-    smbios_data: &smbioslib::SMBiosData,
-) -> Result<devices::Bios, Box<dyn std::error::Error>> {
+pub fn collect_bios_info(smbios_data: &smbioslib::SMBiosData) -> Result<devices::Bios> {
     let bios_info = &smbios_data.collect::<smbioslib::SMBiosInformation>()[0];
 
     let release_date_str = bios_info.release_date().to_string();
@@ -69,7 +68,7 @@ pub fn collect_bios_info(
 pub fn collect_processor_info_smbios(
     smbios_data: &smbioslib::SMBiosData,
     max_cpu_frequency_filepath: &'static str,
-) -> Result<devices::Processor, Box<dyn std::error::Error>> {
+) -> Result<devices::Processor> {
     let processor_info = &smbios_data.collect::<smbioslib::SMBiosProcessorInformation>()[0];
     let cpu_id = super::cpuid::get_cpuid(processor_info)?;
     let processor = devices::Processor {
@@ -85,7 +84,7 @@ pub fn collect_processor_info_smbios(
 pub fn collect_processor_info_cpuinfo(
     cpuinfo_filepath: &'static str,
     max_cpu_frequency_filepath: &'static str,
-) -> Result<devices::Processor, Box<dyn std::error::Error>> {
+) -> Result<devices::Processor> {
     let cpu_info = super::cpuinfo::parse_cpuinfo(cpuinfo_filepath)?;
     let processor = devices::Processor {
         codename: String::new(),
@@ -98,10 +97,10 @@ pub fn collect_processor_info_cpuinfo(
 
 pub fn collect_chassis_info(
     smbios_data: &smbioslib::SMBiosData,
-) -> Result<crate::models::devices::Chassis, Box<dyn std::error::Error>> {
+) -> Result<crate::models::devices::Chassis> {
     let chassis_info = &smbios_data.collect::<smbioslib::SMBiosSystemChassisInformation>()[0];
 
-    let chassis_type = chassis_info.chassis_type().ok_or("")?.to_string();
+    let chassis_type = chassis_info.chassis_type().ok_or("").unwrap().to_string();
     let manufacturer = chassis_info.manufacturer().to_string();
     let sku = chassis_info.sku_number().to_string();
     let version = chassis_info.version().to_string();
@@ -116,9 +115,7 @@ pub fn collect_chassis_info(
     Ok(chassis)
 }
 
-pub fn collect_motherboard_info(
-    smbios_data: &smbioslib::SMBiosData,
-) -> Result<devices::Board, Box<dyn std::error::Error>> {
+pub fn collect_motherboard_info(smbios_data: &smbioslib::SMBiosData) -> Result<devices::Board> {
     let board_info = &smbios_data.collect::<smbioslib::SMBiosBaseboardInformation>()[0];
 
     let manufacturer = board_info.manufacturer().to_string();
@@ -136,7 +133,7 @@ pub fn collect_motherboard_info(
 
 pub fn collect_motherboard_info_from_device_tree(
     device_tree_filepath: &'static str,
-) -> Result<devices::Board, Box<dyn std::error::Error>> {
+) -> Result<devices::Board> {
     let base_path = std::path::Path::new(device_tree_filepath);
 
     let manufacturer = std::fs::read_to_string(base_path.join("model"))
@@ -160,9 +157,7 @@ pub fn collect_motherboard_info_from_device_tree(
     Ok(board)
 }
 
-pub fn get_system_info(
-    smbios_data: &smbioslib::SMBiosData,
-) -> Result<(String, String), Box<dyn std::error::Error>> {
+pub fn get_system_info(smbios_data: &smbioslib::SMBiosData) -> Result<(String, String)> {
     let system_info = &smbios_data.collect::<smbioslib::SMBiosSystemInformation>()[0];
     Ok((
         system_info.product_name().to_string(),

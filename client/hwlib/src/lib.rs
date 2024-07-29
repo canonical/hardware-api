@@ -26,6 +26,7 @@ pub mod models;
 pub mod py_bindings;
 pub mod utils;
 
+use anyhow::{Result, bail};
 use reqwest::Client;
 
 use constants::CERT_STATUS_ENDPOINT;
@@ -38,7 +39,7 @@ use models::response_validators::{
 pub async fn send_certification_request(
     url: String,
     request: &CertificationStatusRequest,
-) -> Result<CertificationStatusResponse, Box<dyn std::error::Error>> {
+) -> Result<CertificationStatusResponse> {
     let client = Client::new();
     let mut server_url = url.clone();
     server_url.push_str(CERT_STATUS_ENDPOINT);
@@ -72,6 +73,6 @@ pub async fn send_certification_request(
                 related_certified_system_exists_response,
             ))
         }
-        _ => Err("Unknown status".into()),
+        _ => bail!("Unknown status"),
     }
 }

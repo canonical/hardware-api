@@ -18,15 +18,14 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
+use anyhow::Result;
 use regex::Regex;
 use std::fs;
 use std::process::Command;
 
 use crate::models::software;
 
-pub fn collect_os_info(
-    proc_version_filepath: &'static str,
-) -> Result<software::OS, Box<dyn std::error::Error>> {
+pub fn collect_os_info(proc_version_filepath: &'static str) -> Result<software::OS> {
     let codename = super::os_info::get_codename()?;
     let distributor = super::os_info::get_distributor()?;
     let version = super::os_info::get_version()?;
@@ -42,9 +41,7 @@ pub fn collect_os_info(
     Ok(os_info)
 }
 
-pub fn collect_kernel_info(
-    proc_version_filepath: &'static str,
-) -> Result<software::KernelPackage, Box<dyn std::error::Error>> {
+pub fn collect_kernel_info(proc_version_filepath: &'static str) -> Result<software::KernelPackage> {
     let kernel_version = fs::read_to_string(proc_version_filepath)?;
     let kernel_version = kernel_version
         .split_whitespace()
@@ -70,7 +67,7 @@ pub fn collect_kernel_info(
     Ok(kernel_package)
 }
 
-pub(crate) fn get_architecture() -> Result<String, Box<dyn std::error::Error>> {
+pub(crate) fn get_architecture() -> Result<String> {
     let mut arch = Command::new("dpkg")
         .arg("--print-architecture")
         .output()?
@@ -79,43 +76,49 @@ pub(crate) fn get_architecture() -> Result<String, Box<dyn std::error::Error>> {
     Ok(String::from_utf8(arch)?)
 }
 
-pub(super) fn get_codename() -> Result<String, Box<dyn std::error::Error>> {
+pub(super) fn get_codename() -> Result<String> {
     let lsb_release_output = Command::new("lsb_release").arg("-c").output()?;
     let output_str = String::from_utf8(lsb_release_output.stdout)?;
     let re = Regex::new(r"Codename:\s*(\S+)")?;
     let codename = re
         .captures(&output_str)
-        .ok_or("Failed to capture codename")?
+        .ok_or("Failed to capture codename")
+        .unwrap()
         .get(1)
-        .ok_or("Failed to capture codename")?
+        .ok_or("Failed to capture codename")
+        .unwrap()
         .as_str()
         .to_string();
     Ok(codename)
 }
 
-pub(super) fn get_distributor() -> Result<String, Box<dyn std::error::Error>> {
+pub(super) fn get_distributor() -> Result<String> {
     let lsb_release_output = Command::new("lsb_release").arg("-i").output()?;
     let output_str = String::from_utf8(lsb_release_output.stdout)?;
     let re = Regex::new(r"Distributor ID:\s*(\S+)")?;
     let distributor = re
         .captures(&output_str)
-        .ok_or("Failed to capture distributor ID")?
+        .ok_or("Failed to capture distributor ID")
+        .unwrap()
         .get(1)
-        .ok_or("Failed to capture distributor ID")?
+        .ok_or("Failed to capture distributor ID")
+        .unwrap()
         .as_str()
         .to_string();
     Ok(distributor)
 }
 
-pub(super) fn get_version() -> Result<String, Box<dyn std::error::Error>> {
+pub(super) fn get_version() -> Result<String> {
     let lsb_release_output = Command::new("lsb_release").arg("-r").output()?;
     let output_str = String::from_utf8(lsb_release_output.stdout)?;
     let re = Regex::new(r"Release:\s*(\S+)")?;
     let version = re
         .captures(&output_str)
-        .ok_or("Failed to capture version")?
+        .ok_or("Failed to capture version")
+        .unwrap()
         .get(1)
-        .ok_or("Failed to capture version")?
+        .ok_or("Failed to capture version")
+        .unwrap()
         .as_str()
         .to_string();
     Ok(version)

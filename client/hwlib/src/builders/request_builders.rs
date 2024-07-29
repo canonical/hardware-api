@@ -18,6 +18,7 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
+use anyhow::Result;
 use smbioslib;
 
 use crate::collectors::cpuinfo::parse_cpuinfo;
@@ -62,7 +63,7 @@ pub fn create_certification_status_request(
         device_tree_dirpath,
         proc_version_filepath,
     }: Paths,
-) -> Result<CertificationStatusRequest, Box<dyn std::error::Error>> {
+) -> Result<CertificationStatusRequest> {
     // Try to load SMBIOS data
     let smbios_data =
         hardware_info::load_smbios_data(smbios_entry_filepath, smbios_table_filepath)?;

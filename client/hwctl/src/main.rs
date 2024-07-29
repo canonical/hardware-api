@@ -19,13 +19,14 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
+use anyhow::Result;
 use std::process::exit;
 
 use hwlib::builders::request_builders::{create_certification_status_request, Paths};
 use hwlib::send_certification_request;
 
 #[tokio::main]
-async fn main() -> Result<(), Box<dyn std::error::Error>> {
+async fn main() -> Result<()> {
     let cert_status_request = create_certification_status_request(Paths::default())?;
     println!(
         "Request:\n{}",

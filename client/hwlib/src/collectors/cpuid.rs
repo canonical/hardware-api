@@ -15,19 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+use anyhow::Result;
 use smbioslib;
 
-pub(super) fn get_cpuid(
-    proc_info: &smbioslib::SMBiosProcessorInformation,
-) -> Result<String, Box<dyn std::error::Error>> {
+pub(super) fn get_cpuid(proc_info: &smbioslib::SMBiosProcessorInformation) -> Result<String> {
     let cpu_id = proc_info
         .processor_id()
         .map(|id| format!("{:x?}", id))
-        .ok_or("Processor ID not found")?;
+        .ok_or("Processor ID not found")
+        .unwrap();
     Ok(cpu_id)
 }
 
-pub(super) fn convert_cpu_codename(cpu_id: &str) -> Result<String, Box<dyn std::error::Error>> {
+pub(super) fn convert_cpu_codename(cpu_id: &str) -> Result<String> {
     if cpu_id.is_empty() {
         return Ok(String::from("Unknown"));
     }
@@ -45,15 +45,12 @@ pub(super) fn convert_cpu_codename(cpu_id: &str) -> Result<String, Box<dyn std::
     let cpu_id_hex = format!("0x{}", joined_bytes);
 
     // Translate the CPU ID into a human-friendly name
-    match cpuid_to_human_friendly(&cpu_id_hex) {
-        Ok(name) => Ok(name),
-        Err(_) => Ok(String::from("Unknown")),
-    }
+    cpuid_to_human_friendly(&cpu_id_hex)
 }
 
 /// Implement the same logic as used in C3 to get CPU codename
 /// https://github.com/canonical/hexr/blob/0d6726f00f9fa77efdae201188ad10a8bbbfb2be/apps/hardware/parsers/cpuid.py#L29
-fn cpuid_to_human_friendly(cpuid: &str) -> Result<String, Box<dyn std::error::Error>> {
+fn cpuid_to_human_friendly(cpuid: &str) -> Result<String> {
     let cpuid_map = vec![
         ("Amber Lake", vec!["0x806e9"]),
         ("AMD EPYC", vec!["0x800f12"]),
@@ -114,8 +111,5 @@ fn cpuid_to_human_friendly(cpuid: &str) -> Result<String, Box<dyn std::error::Er
         }
     }
 
-    Err(Box::new(std::io::Error::new(
-        std::io::ErrorKind::NotFound,
-        "No processor found with the specified CPUID",
-    )))
+    Ok("Unknown".to_string())
 }
