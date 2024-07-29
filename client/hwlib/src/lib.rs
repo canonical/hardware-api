@@ -26,7 +26,7 @@ pub mod models;
 pub mod py_bindings;
 pub mod utils;
 
-use anyhow::{Result, bail};
+use anyhow::{bail, Result};
 use reqwest::Client;
 
 use constants::CERT_STATUS_ENDPOINT;
