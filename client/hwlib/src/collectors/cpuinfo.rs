@@ -18,7 +18,7 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::Result;
+use anyhow::{bail, Result};
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead};
@@ -68,7 +68,7 @@ pub fn parse_cpuinfo(cpuinfo_filepath: &'static str) -> Result<CpuInfo> {
     }
 
     let machine = std::env::consts::ARCH.to_string();
-    let speed = parse_speed(attributes.get("cpu MHz")).unwrap_or(0);
+    let speed = parse_speed(attributes.get("cpu MHz"))?.unwrap_or(0);
 
     let model = attributes
         .get("Model")
@@ -81,16 +81,11 @@ pub fn parse_cpuinfo(cpuinfo_filepath: &'static str) -> Result<CpuInfo> {
         count,
         cpu_type: attributes.get("vendor_id").unwrap_or(&machine).to_string(),
         model,
-        model_number: attributes
-            .remove("cpu family").unwrap_or_default(),
-        model_version: attributes
-            .remove("model")
-            .unwrap_or_default(),
-        model_revision: attributes
-            .remove("stepping")
-            .unwrap_or_default(),
-        cache: parse_cache_size(attributes.remove("cache size"))?,
-        bogomips: parse_bogomips(attributes.remove("bogomips"))?,
+        model_number: attributes.remove("cpu family").unwrap_or_default(),
+        model_version: attributes.remove("model").unwrap_or_default(),
+        model_revision: attributes.remove("stepping").unwrap_or_default(),
+        cache: parse_cache_size(attributes.remove("cache size"))?.unwrap_or(-1),
+        bogomips: parse_bogomips(attributes.remove("bogomips"))?.unwrap_or(-1),
         speed,
         other: attributes
             .get("flags")
@@ -112,33 +107,44 @@ pub(super) fn read_max_cpu_frequency(max_cpu_frequency_filepath: &'static str) -
     Ok(k_hz / 1000) // Convert kHz to MHz
 }
 
-fn parse_cache_size(cache_size: Option<String>) -> Result<i64> {
+fn parse_cache_size(cache_size: Option<String>) -> Result<Option<i64>> {
     if let Some(cache) = cache_size {
         let cache_str = cache.replace(" KB", "");
-        return i64::from_str(&cache_str).map_err(|e| e.into());
+        match i64::from_str(&cache_str) {
+            Ok(data) => return Ok(Some(data)),
+            Err(e) => {
+                bail!(e)
+            }
+        }
     }
-    Ok(-1)
+    Ok(None)
 }
 
-fn parse_bogomips(bogomips: Option<String>) -> Result<i64> {
+fn parse_bogomips(bogomips: Option<String>) -> Result<Option<i64>> {
     if let Some(bogo) = bogomips {
         let bogo_str = bogo.replace(' ', "");
         match f64::from_str(&bogo_str) {
-            Ok(bogomips) => return Ok(bogomips.round() as i64),
+            Ok(bogomips) => return Ok(Some(bogomips.round() as i64)),
             Err(e) => {
                 eprintln!("Error parsing bogomips: {}", e);
                 return Err(e.into());
             }
         }
     }
-    Ok(-1)
+    Ok(None)
 }
 
-fn parse_speed(speed: Option<&String>) -> Result<u64> {
+fn parse_speed(speed: Option<&String>) -> Result<Option<u64>> {
     if let Some(spd) = speed {
-        return u64::from_str(spd).map_err(|e| e.into());
+        match f64::from_str(spd) {
+            Ok(data) => return Ok(Some(data.round() as u64)),
+            Err(e) => {
+                eprintln!("Error parsing speed: {}", e);
+                return Err(e.into());
+            }
+        }
     }
-    Ok(0)
+    Ok(None)
 }
 
 #[cfg(test)]
