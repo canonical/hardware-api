@@ -25,7 +25,6 @@ use crate::models::software;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CertifiedResponse {
-    pub status: String,
     pub architecture: String,
     pub available_releases: Vec<software::OS>,
     pub bios: devices::Bios,
@@ -35,12 +34,10 @@ pub struct CertifiedResponse {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct NotSeenResponse {
-    pub status: String,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RelatedCertifiedSystemExistsResponse {
-    pub status: String,
     pub architecture: String,
     pub board: devices::Board,
     pub bios: devices::Bios,
@@ -57,7 +54,6 @@ pub struct RelatedCertifiedSystemExistsResponse {
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CertifiedImageExistsResponse {
-    pub status: String,
     pub architecture: String,
     pub bios: devices::Bios,
     pub board: devices::Board,
