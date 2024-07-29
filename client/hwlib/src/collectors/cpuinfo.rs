@@ -82,19 +82,15 @@ pub fn parse_cpuinfo(cpuinfo_filepath: &'static str) -> Result<CpuInfo> {
         cpu_type: attributes.get("vendor_id").unwrap_or(&machine).to_string(),
         model,
         model_number: attributes
-            .get("cpu family")
-            .unwrap_or(&"".to_string())
-            .to_string(),
+            .remove("cpu family").unwrap_or_default(),
         model_version: attributes
-            .get("model")
-            .unwrap_or(&"".to_string())
-            .to_string(),
+            .remove("model")
+            .unwrap_or_default(),
         model_revision: attributes
-            .get("stepping")
-            .unwrap_or(&"".to_string())
-            .to_string(),
-        cache: parse_cache_size(attributes.get("cache size"))?,
-        bogomips: parse_bogomips(attributes.get("bogomips"))?,
+            .remove("stepping")
+            .unwrap_or_default(),
+        cache: parse_cache_size(attributes.remove("cache size"))?,
+        bogomips: parse_bogomips(attributes.remove("bogomips"))?,
         speed,
         other: attributes
             .get("flags")
@@ -116,7 +112,7 @@ pub(super) fn read_max_cpu_frequency(max_cpu_frequency_filepath: &'static str) -
     Ok(k_hz / 1000) // Convert kHz to MHz
 }
 
-fn parse_cache_size(cache_size: Option<&String>) -> Result<i64> {
+fn parse_cache_size(cache_size: Option<String>) -> Result<i64> {
     if let Some(cache) = cache_size {
         let cache_str = cache.replace(" KB", "");
         return i64::from_str(&cache_str).map_err(|e| e.into());
@@ -124,7 +120,7 @@ fn parse_cache_size(cache_size: Option<&String>) -> Result<i64> {
     Ok(-1)
 }
 
-fn parse_bogomips(bogomips: Option<&String>) -> Result<i64> {
+fn parse_bogomips(bogomips: Option<String>) -> Result<i64> {
     if let Some(bogo) = bogomips {
         let bogo_str = bogo.replace(' ', "");
         match f64::from_str(&bogo_str) {
