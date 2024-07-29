@@ -18,18 +18,19 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
+use super::devices;
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CertificationStatusRequest {
     pub architecture: String,
-    pub bios: Option<super::devices::Bios>,
-    pub board: super::devices::Board,
-    pub chassis: Option<super::devices::Chassis>,
+    pub bios: Option<devices::Bios>,
+    pub board: devices::Board,
+    pub chassis: Option<devices::Chassis>,
     pub model: String,
     pub os: super::software::OS,
-    pub pci_peripherals: Vec<super::devices::PCIPeripheral>,
-    pub processor: super::devices::Processor,
-    pub usb_peripherals: Vec<super::devices::USBPeripheral>,
+    pub pci_peripherals: Vec<devices::PCIPeripheral>,
+    pub processor: devices::Processor,
+    pub usb_peripherals: Vec<devices::USBPeripheral>,
     pub vendor: String,
 }

@@ -18,11 +18,11 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
+use anyhow::{bail, Result};
 use once_cell::sync::Lazy;
 use std::fs::read_dir;
-use std::io::ErrorKind;
 use std::path::PathBuf;
-use std::{env, io};
+use std::{env};
 
 pub fn get_test_filepath(file_name: &str) -> &'static str {
     fn build_test_filepath(file_name: &str) -> String {
@@ -57,7 +57,7 @@ pub fn get_test_filepath(file_name: &str) -> &'static str {
     }
 }
 
-fn get_project_root() -> io::Result<PathBuf> {
+fn get_project_root() -> Result<PathBuf> {
     let path = env::current_dir()?;
     let path_ancestors = path.as_path().ancestors();
 
@@ -67,8 +67,5 @@ fn get_project_root() -> io::Result<PathBuf> {
             return Ok(PathBuf::from(p));
         }
     }
-    Err(io::Error::new(
-        ErrorKind::NotFound,
-        "Ran out of places to find Cargo.toml",
-    ))
+    bail!("Ran out of places to find Cargo.lock")
 }
