@@ -65,8 +65,7 @@ pub fn create_certification_status_request(
     }: Paths,
 ) -> Result<CertificationStatusRequest> {
     // Try to load SMBIOS data
-    let smbios_data =
-        hardware_info::load_smbios_data(smbios_entry_filepath, smbios_table_filepath)?;
+    let smbios_data = hardware_info::load_smbios_data(smbios_entry_filepath, smbios_table_filepath);
 
     let paths = Paths {
         smbios_entry_filepath,
@@ -88,12 +87,9 @@ pub fn create_certification_status_request(
 fn build_certification_request_from_smbios_data(
     data: &smbioslib::SMBiosData,
     Paths {
-        smbios_entry_filepath: _,
-        smbios_table_filepath: _,
-        cpuinfo_filepath: _,
         max_cpu_frequency_filepath,
-        device_tree_dirpath: _,
         proc_version_filepath,
+        ..
     }: Paths,
 ) -> Result<CertificationStatusRequest> {
     let (model, vendor) = hardware_info::get_system_info(data)?;
@@ -114,12 +110,11 @@ fn build_certification_request_from_smbios_data(
 
 fn build_certification_request_from_defaults(
     Paths {
-        smbios_entry_filepath: _,
-        smbios_table_filepath: _,
         cpuinfo_filepath,
         max_cpu_frequency_filepath,
         device_tree_dirpath,
         proc_version_filepath,
+        ..
     }: Paths,
 ) -> Result<CertificationStatusRequest> {
     let cpu_info = parse_cpuinfo(cpuinfo_filepath)?;

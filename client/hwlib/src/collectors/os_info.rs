@@ -26,9 +26,9 @@ use std::process::Command;
 use crate::models::software;
 
 pub fn collect_os_info(proc_version_filepath: &'static str) -> Result<software::OS> {
-    let codename = super::os_info::get_codename()?;
-    let distributor = super::os_info::get_distributor()?;
-    let version = super::os_info::get_version()?;
+    let codename = get_codename()?;
+    let distributor = get_distributor()?;
+    let version = get_version()?;
     let kernel = collect_kernel_info(proc_version_filepath)?;
 
     let os_info = software::OS {
