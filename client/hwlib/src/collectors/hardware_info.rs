@@ -22,17 +22,13 @@ use smbioslib;
 use time::macros::format_description;
 use time::Date;
 
-use crate::constants::PROC_DEVICE_TREE_DIRPATH;
 use crate::models::devices;
 
 pub fn load_smbios_data(
-    entry_filepath: Option<&'static str>,
-    table_filepath: Option<&'static str>,
+    entry_filepath: &'static str,
+    table_filepath: &'static str,
 ) -> Result<Option<smbioslib::SMBiosData>, Box<dyn std::error::Error>> {
-    let entry_file = entry_filepath.unwrap_or(smbioslib::SYS_ENTRY_FILE);
-    let table_file = table_filepath.unwrap_or(smbioslib::SYS_TABLE_FILE);
-
-    let smbios_data = match table_load_from_device(entry_file, table_file) {
+    let smbios_data = match table_load_from_device(entry_filepath, table_filepath) {
         Ok(data) => Some(data),
         Err(e) => {
             eprintln!("Failed to load SMBIOS data: {}.", e);
@@ -72,7 +68,7 @@ pub fn collect_bios_info(
 /// Retrieve CPU information from SMBios
 pub fn collect_processor_info_smbios(
     smbios_data: &smbioslib::SMBiosData,
-    max_cpu_frequency_filepath: Option<&'static str>,
+    max_cpu_frequency_filepath: &'static str,
 ) -> Result<devices::Processor, Box<dyn std::error::Error>> {
     let processor_info = &smbios_data.collect::<smbioslib::SMBiosProcessorInformation>()[0];
     let cpu_id = super::cpuid::get_cpuid(processor_info)?;
@@ -87,8 +83,8 @@ pub fn collect_processor_info_smbios(
 
 /// Retrieve CPU information from /proc/cpuinfo
 pub fn collect_processor_info_cpuinfo(
-    cpuinfo_filepath: Option<&'static str>,
-    max_cpu_frequency_filepath: Option<&'static str>,
+    cpuinfo_filepath: &'static str,
+    max_cpu_frequency_filepath: &'static str,
 ) -> Result<devices::Processor, Box<dyn std::error::Error>> {
     let cpu_info = super::cpuinfo::parse_cpuinfo(cpuinfo_filepath)?;
     let processor = devices::Processor {
@@ -139,12 +135,9 @@ pub fn collect_motherboard_info(
 }
 
 pub fn collect_motherboard_info_from_device_tree(
-    device_tree_filepath: Option<&'static str>,
+    device_tree_filepath: &'static str,
 ) -> Result<devices::Board, Box<dyn std::error::Error>> {
-    let base_path = match device_tree_filepath {
-        Some(base) => std::path::Path::new(base),
-        None => std::path::Path::new(PROC_DEVICE_TREE_DIRPATH),
-    };
+    let base_path = std::path::Path::new(device_tree_filepath);
 
     let manufacturer = std::fs::read_to_string(base_path.join("model"))
         .map(|s| s.trim().to_string())
@@ -224,8 +217,8 @@ mod tests {
     #[test]
     fn test_load_smbios_data() {
         let result = load_smbios_data(
-            Some(get_test_filepath("smbios_entry_point")),
-            Some(get_test_filepath("DMI")),
+            get_test_filepath("smbios_entry_point"),
+            get_test_filepath("DMI"),
         );
         assert!(result.is_ok());
         assert!(result.unwrap().is_some());
@@ -234,8 +227,8 @@ mod tests {
     #[test]
     fn test_collect_bios_info() {
         let smbios_data = load_smbios_data(
-            Some(get_test_filepath("smbios_entry_point")),
-            Some(get_test_filepath("DMI")),
+            get_test_filepath("smbios_entry_point"),
+            get_test_filepath("DMI"),
         )
         .unwrap()
         .unwrap();
@@ -256,15 +249,13 @@ mod tests {
     #[test]
     fn test_collect_processor_info_smbios() {
         let smbios_data = load_smbios_data(
-            Some(get_test_filepath("smbios_entry_point")),
-            Some(get_test_filepath("DMI")),
+            get_test_filepath("smbios_entry_point"),
+            get_test_filepath("DMI"),
         )
         .unwrap()
         .unwrap();
-        let processor_info = collect_processor_info_smbios(
-            &smbios_data,
-            Some(get_test_filepath("cpuinfo_max_freq")),
-        );
+        let processor_info =
+            collect_processor_info_smbios(&smbios_data, get_test_filepath("cpuinfo_max_freq"));
         assert!(processor_info.is_ok());
 
         let processor = processor_info.unwrap();
@@ -277,8 +268,8 @@ mod tests {
     #[test]
     fn test_collect_chassis_info() {
         let smbios_data = load_smbios_data(
-            Some(get_test_filepath("smbios_entry_point")),
-            Some(get_test_filepath("DMI")),
+            get_test_filepath("smbios_entry_point"),
+            get_test_filepath("DMI"),
         )
         .unwrap()
         .unwrap();
@@ -295,8 +286,8 @@ mod tests {
     #[test]
     fn test_collect_motherboard_info() {
         let smbios_data = load_smbios_data(
-            Some(get_test_filepath("smbios_entry_point")),
-            Some(get_test_filepath("DMI")),
+            get_test_filepath("smbios_entry_point"),
+            get_test_filepath("DMI"),
         )
         .unwrap()
         .unwrap();
@@ -312,7 +303,7 @@ mod tests {
     #[test]
     fn test_collect_motherboard_info_from_device_tree() {
         let motherboard_info =
-            collect_motherboard_info_from_device_tree(Some(get_test_filepath("device-tree")));
+            collect_motherboard_info_from_device_tree(get_test_filepath("device-tree"));
         assert!(motherboard_info.is_ok());
 
         let board = motherboard_info.unwrap();
@@ -323,8 +314,8 @@ mod tests {
     #[test]
     fn test_get_system_info() {
         let smbios_data = load_smbios_data(
-            Some(get_test_filepath("smbios_entry_point")),
-            Some(get_test_filepath("DMI")),
+            get_test_filepath("smbios_entry_point"),
+            get_test_filepath("DMI"),
         )
         .unwrap()
         .unwrap();

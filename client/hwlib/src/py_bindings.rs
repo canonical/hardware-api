@@ -18,7 +18,7 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use crate::builders::request_builders::create_certification_status_request;
+use crate::builders::request_builders::{create_certification_status_request, Paths};
 use crate::send_certification_request as native_send_certification_request;
 use once_cell::sync::Lazy;
 use pyo3::exceptions::PyRuntimeError;
@@ -35,7 +35,7 @@ static RT: Lazy<Runtime> = Lazy::new(|| Runtime::new().expect("Failed to create 
 /// hardware-api server URL.
 #[pyfunction]
 fn send_certification_request(py: Python, url: String) -> PyResult<PyObject> {
-    let request_body = create_certification_status_request(None, None, None, None, None, None)
+    let request_body = create_certification_status_request(Paths::default())
         .map_err(|e| PyRuntimeError::new_err(format!("Failed to create request: {}", e)))?;
 
     let response =

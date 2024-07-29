@@ -22,11 +22,10 @@ use regex::Regex;
 use std::fs;
 use std::process::Command;
 
-use crate::constants::PROC_VERSION_FILEPATH;
 use crate::models::software;
 
 pub fn collect_os_info(
-    proc_version_filepath: Option<&'static str>,
+    proc_version_filepath: &'static str,
 ) -> Result<software::OS, Box<dyn std::error::Error>> {
     let codename = super::os_info::get_codename()?;
     let distributor = super::os_info::get_distributor()?;
@@ -44,12 +43,9 @@ pub fn collect_os_info(
 }
 
 pub fn collect_kernel_info(
-    proc_version_filepath: Option<&'static str>,
+    proc_version_filepath: &'static str,
 ) -> Result<software::KernelPackage, Box<dyn std::error::Error>> {
-    let kernel_version = match proc_version_filepath {
-        Some(data) => fs::read_to_string(data)?,
-        None => fs::read_to_string(PROC_VERSION_FILEPATH)?,
-    };
+    let kernel_version = fs::read_to_string(proc_version_filepath)?;
     let kernel_version = kernel_version
         .split_whitespace()
         .nth(2)

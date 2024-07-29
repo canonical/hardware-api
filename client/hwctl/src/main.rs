@@ -21,14 +21,16 @@
 
 use std::process::exit;
 
-use hwlib::builders::request_builders::create_certification_status_request;
+use hwlib::builders::request_builders::{create_certification_status_request, Paths};
 use hwlib::send_certification_request;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let cert_status_request =
-        create_certification_status_request(None, None, None, None, None, None)?;
-    println!("Request:\n{}", serde_json::to_string_pretty(&cert_status_request)?);
+    let cert_status_request = create_certification_status_request(Paths::default())?;
+    println!(
+        "Request:\n{}",
+        serde_json::to_string_pretty(&cert_status_request)?
+    );
     let url = std::env::var("HW_API_URL").unwrap_or_else(|_| String::from("https://hw.ubuntu.com"));
     let response = send_certification_request(url, &cert_status_request).await;
 

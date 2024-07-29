@@ -23,8 +23,6 @@ use std::fs::File;
 use std::io::{self, BufRead};
 use std::str::FromStr;
 
-use crate::constants::{CPU_MAX_FREQ_FILEPATH, PROC_CPUINFO_FILEPATH};
-
 #[derive(Debug)]
 pub struct CpuInfo {
     pub platform: String,
@@ -43,10 +41,9 @@ pub struct CpuInfo {
 /// Parse /proc/cpuinfo the same way it's done in checkbox
 /// https://github.com/canonical/checkbox/blob/a8d5e9d/checkbox-support/checkbox_support/parsers/cpuinfo.py
 pub fn parse_cpuinfo(
-    cpuinfo_filepath: Option<&'static str>,
+    cpuinfo_filepath: &'static str,
 ) -> Result<CpuInfo, Box<dyn std::error::Error>> {
-    let path = cpuinfo_filepath.unwrap_or(PROC_CPUINFO_FILEPATH);
-    let file = File::open(path)?;
+    let file = File::open(cpuinfo_filepath)?;
     let reader = io::BufReader::new(file);
 
     let mut attributes: HashMap<String, String> = HashMap::new();
@@ -112,10 +109,9 @@ pub fn parse_cpuinfo(
 /// Parse CPU frequency in MHz as it's done in checkbox
 /// https://github.com/canonical/checkbox/blob/a8d5e9/providers/resource/bin/cpuinfo_resource.py#L56-L63
 pub(super) fn read_max_cpu_frequency(
-    max_cpu_frequency_filepath: Option<&'static str>,
+    max_cpu_frequency_filepath: &'static str,
 ) -> Result<u64, Box<dyn std::error::Error>> {
-    let path = max_cpu_frequency_filepath.unwrap_or(CPU_MAX_FREQ_FILEPATH);
-    let file = File::open(path)?;
+    let file = File::open(max_cpu_frequency_filepath)?;
     let mut reader = io::BufReader::new(file);
     let mut buffer = String::new();
     reader.read_line(&mut buffer)?;
@@ -159,7 +155,7 @@ mod tests {
 
     #[test]
     fn test_parse_cpuinfo() {
-        let cpuinfo_result = parse_cpuinfo(Some(get_test_filepath("cpuinfo")));
+        let cpuinfo_result = parse_cpuinfo(get_test_filepath("cpuinfo"));
         assert!(cpuinfo_result.is_ok());
         let cpuinfo = cpuinfo_result.unwrap();
         assert_eq!(cpuinfo.platform, std::env::consts::ARCH.to_string());
@@ -175,7 +171,7 @@ mod tests {
 
     #[test]
     fn test_read_max_cpu_frequency() {
-        let cpu_freq_result = read_max_cpu_frequency(Some(get_test_filepath("cpuinfo_max_freq")));
+        let cpu_freq_result = read_max_cpu_frequency(get_test_filepath("cpuinfo_max_freq"));
         assert!(cpu_freq_result.is_ok());
         let cpu_freq = cpu_freq_result.unwrap();
         assert_eq!(cpu_freq, 1800);

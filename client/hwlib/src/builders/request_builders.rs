@@ -18,32 +18,50 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
+use smbioslib;
+
 use crate::collectors::cpuinfo::parse_cpuinfo;
 use crate::collectors::{hardware_info, os_info};
+use crate::constants;
 use crate::models::request_validators::CertificationStatusRequest;
+
+pub struct Paths {
+    pub smbios_entry_filepath: &'static str,
+    pub smbios_table_filepath: &'static str,
+    pub cpuinfo_filepath: &'static str,
+    pub max_cpu_frequency_filepath: &'static str,
+    pub device_tree_dirpath: &'static str,
+    pub proc_version_filepath: &'static str,
+}
+
+impl Default for Paths {
+    fn default() -> Self {
+        Self {
+            smbios_entry_filepath: smbioslib::SYS_ENTRY_FILE,
+            smbios_table_filepath: smbioslib::SYS_TABLE_FILE,
+            cpuinfo_filepath: constants::PROC_CPUINFO_FILEPATH,
+            max_cpu_frequency_filepath: constants::CPU_MAX_FREQ_FILEPATH,
+            device_tree_dirpath: constants::PROC_DEVICE_TREE_DIRPATH,
+            proc_version_filepath: constants::PROC_VERSION_FILEPATH,
+        }
+    }
+}
 
 /// The function to create certification status request body
 /// by collecting information about hardware and kernel
 /// using the crate::collectors module
-/// In most cases you should call this function with default values (specifying None)
-///
-/// Arguments:
-///
-/// * `smbios_entry_filepath`: SMBIOS entry point file path.
-///                           Default is /sys/firmware/dmi/tables/smbios_entry_point
-/// * `smbios_table_filepath`:  SMBIOS DMI file path. Default is /sys/firmware/dmi/tables/DMI
-/// * `cpuinfo_filepath`: Path to cpuinfo file. Defaul is: /proc/cpuinfo
-/// * `max_cpu_frequency_filepath`: Path to file with CPU max frequency.
-///                                 Default is /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq
-/// * `device_tree_dirpath`: Path to the device-tree directory. Default is /proc/device-tree
-/// * `proc_version_filepath`: Path to the file with kernel version. Default is /proc/version
 pub fn create_certification_status_request(
-    smbios_entry_filepath: Option<&'static str>,
-    smbios_table_filepath: Option<&'static str>,
-    cpuinfo_filepath: Option<&'static str>,
-    max_cpu_frequency_filepath: Option<&'static str>,
-    device_tree_dirpath: Option<&'static str>,
-    proc_version_filepath: Option<&'static str>,
+    // Function parameters can be destructured directly like this or alternatively you
+    // could just accept the struct and then destructure or access fields within the
+    // body of the function if you prefer.
+    Paths {
+        smbios_entry_filepath,
+        smbios_table_filepath,
+        cpuinfo_filepath,
+        max_cpu_frequency_filepath,
+        device_tree_dirpath,
+        proc_version_filepath,
+    }: Paths,
 ) -> Result<CertificationStatusRequest, Box<dyn std::error::Error>> {
     // Try to load SMBIOS data
     let smbios_data =
@@ -56,7 +74,9 @@ pub fn create_certification_status_request(
     };
 
     let processor = match smbios_data {
-        Some(ref data) => hardware_info::collect_processor_info_smbios(data, None)?,
+        Some(ref data) => {
+            hardware_info::collect_processor_info_smbios(data, max_cpu_frequency_filepath)?
+        }
         None => hardware_info::collect_processor_info_cpuinfo(
             cpuinfo_filepath,
             max_cpu_frequency_filepath,
