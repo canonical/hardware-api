@@ -20,9 +20,9 @@
 
 use anyhow::{bail, Result};
 use once_cell::sync::Lazy;
+use std::env;
 use std::fs::read_dir;
 use std::path::PathBuf;
-use std::{env};
 
 pub fn get_test_filepath(file_name: &str) -> &'static str {
     fn build_test_filepath(file_name: &str) -> String {

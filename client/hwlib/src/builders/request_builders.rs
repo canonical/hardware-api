@@ -55,26 +55,16 @@ pub fn create_certification_status_request(
     // Function parameters can be destructured directly like this or alternatively you
     // could just accept the struct and then destructure or access fields within the
     // body of the function if you prefer.
-    Paths {
+    paths: Paths,
+) -> Result<CertificationStatusRequest> {
+    let Paths {
         smbios_entry_filepath,
         smbios_table_filepath,
-        cpuinfo_filepath,
-        max_cpu_frequency_filepath,
-        device_tree_dirpath,
-        proc_version_filepath,
-    }: Paths,
-) -> Result<CertificationStatusRequest> {
+        ..
+    } = paths;
+
     // Try to load SMBIOS data
     let smbios_data = hardware_info::load_smbios_data(smbios_entry_filepath, smbios_table_filepath);
-
-    let paths = Paths {
-        smbios_entry_filepath,
-        smbios_table_filepath,
-        cpuinfo_filepath,
-        max_cpu_frequency_filepath,
-        device_tree_dirpath,
-        proc_version_filepath,
-    };
 
     let certification_request = match smbios_data {
         Some(data) => build_certification_request_from_smbios_data(&data, paths)?,
