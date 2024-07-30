@@ -24,7 +24,7 @@ use time::macros::format_description;
 use time::Date;
 
 use super::cpuid::CpuId;
-use super::cpuinfo;
+use super::cpuinfo::{CpuFrequency, CpuInfo};
 use crate::models::devices;
 
 pub fn load_smbios_data(
@@ -82,24 +82,31 @@ pub fn collect_processor_info_smbios(
     };
 
     let cpu_id = CpuId::new(processor_info)?;
+    let cpu_freq = CpuFrequency::from_file(max_cpu_frequency_filepath)
+        .unwrap()
+        .mHz();
+
     let processor = devices::Processor {
         codename: cpu_id.codename().unwrap_or_else(|| "Unknown".to_string()),
-        frequency: cpuinfo::read_max_cpu_frequency(max_cpu_frequency_filepath)?,
+        frequency: cpu_freq,
         manufacturer: processor_info.processor_manufacturer().to_string(),
         version: processor_info.processor_version().to_string(),
     };
     Ok(processor)
 }
 
-/// Retrieve CPU information from /proc/cpuinfo
+/// Retrieve CPU information from cpuinfo file
 pub fn collect_processor_info_cpuinfo(
     cpuinfo_filepath: &'static str,
     max_cpu_frequency_filepath: &'static str,
 ) -> Result<devices::Processor> {
-    let cpu_info = cpuinfo::parse_cpuinfo(cpuinfo_filepath)?;
+    let cpu_info = CpuInfo::from_file(cpuinfo_filepath)?;
+    let cpu_freq = CpuFrequency::from_file(max_cpu_frequency_filepath)
+        .unwrap()
+        .mHz();
     let processor = devices::Processor {
         codename: String::new(),
-        frequency: cpuinfo::read_max_cpu_frequency(max_cpu_frequency_filepath)?,
+        frequency: cpu_freq,
         manufacturer: cpu_info.cpu_type,
         version: cpu_info.model,
     };

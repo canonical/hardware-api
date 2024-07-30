@@ -39,77 +39,118 @@ pub struct CpuInfo {
     pub other: String,
 }
 
-/// Parse /proc/cpuinfo the same way it's done in checkbox
-/// https://github.com/canonical/checkbox/blob/a8d5e9d/checkbox-support/checkbox_support/parsers/cpuinfo.py
-pub fn parse_cpuinfo(cpuinfo_filepath: &'static str) -> Result<CpuInfo> {
-    let file = File::open(cpuinfo_filepath)?;
-    let reader = io::BufReader::new(file);
+impl CpuInfo {
+    /// Parse cpuinfo file the same way it's done in checkbox
+    /// https://github.com/canonical/checkbox/blob/a8d5e9d/checkbox-support/checkbox_support/parsers/cpuinfo.py
+    pub fn from_file(cpuinfo_filepath: &'static str) -> Result<CpuInfo> {
+        let file = File::open(cpuinfo_filepath)?;
+        let reader = io::BufReader::new(file);
 
-    let mut attributes: HashMap<String, String> = HashMap::new();
-    let mut count = 0;
+        let mut attributes: HashMap<&str, &str> = HashMap::new();
+        let mut processor_count = 0;
 
-    for line in reader.lines() {
-        let line = line?;
-        if line.trim().is_empty() {
-            continue;
+        let mut buffer = String::new();
+
+        for line in reader.lines() {
+            let line = line?;
+            buffer.push_str(&line);
+            buffer.push('\n');
         }
 
-        let parts: Vec<&str> = line.split(':').collect();
-        if parts.len() == 2 {
-            let key = parts[0].trim().to_string();
-            let value = parts[1].trim().to_string();
-
-            if key == "processor" {
-                count += 1;
+        for line in buffer.lines() {
+            if line.trim().is_empty() {
+                continue;
             }
 
-            attributes.insert(key, value);
+            let parts: Vec<&str> = line.split(':').collect();
+            if parts.len() == 2 {
+                let key = parts[0].trim();
+                let value = parts[1].trim();
+
+                if key == "processor" {
+                    processor_count += 1;
+                }
+
+                attributes.insert(key, value);
+            }
         }
+
+        let arch = std::env::consts::ARCH;
+        let speed = parse_speed(attributes.get("cpu MHz"))?.unwrap_or(0);
+
+        let model = attributes
+            .get("Model")
+            .or_else(|| attributes.get("model name"))
+            .unwrap_or(&arch)
+            .to_string();
+
+        let cpu_type = attributes.get("vendor_id").unwrap_or(&arch).to_string();
+        let model_number = attributes
+            .remove("cpu family")
+            .unwrap_or_default()
+            .to_string();
+        let model_version = attributes.remove("model").unwrap_or_default().to_string();
+        let model_revision = attributes
+            .remove("stepping")
+            .unwrap_or_default()
+            .to_string();
+        let cache = parse_cache_size(attributes.remove("cache size"))?.unwrap_or(-1);
+        let bogomips = parse_bogomips(attributes.remove("bogomips"))?.unwrap_or(-1);
+        let other = parse_bogomips(attributes.remove("bogomips"))?
+            .unwrap_or_default()
+            .to_string();
+
+        let cpu_info = CpuInfo {
+            platform: arch.to_string(),
+            count: processor_count,
+            cpu_type,
+            model,
+            model_number,
+            model_version,
+            model_revision,
+            cache,
+            bogomips,
+            speed,
+            other,
+        };
+
+        Ok(cpu_info)
+    }
+}
+
+pub struct CpuFrequency(u64);
+
+impl CpuFrequency {
+    /// Read max CPU frequency fromf file and parse it in MHz
+    /// as it's done in checkbox
+    /// https://github.com/canonical/checkbox/blob/a8d5e9/providers/resource/bin/cpuinfo_resource.py#L56-L63
+    pub fn from_file(
+        max_cpu_frequency_filepath: &'static str,
+    ) -> Result<Self, Box<dyn std::error::Error>> {
+        let file = File::open(max_cpu_frequency_filepath)?;
+        let mut reader = io::BufReader::new(file);
+        let mut buffer = String::new();
+        reader.read_line(&mut buffer)?;
+        let k_hz: u64 = buffer.trim().parse()?;
+        Ok(Self::from_kHz(k_hz))
     }
 
-    let machine = std::env::consts::ARCH.to_string();
-    let speed = parse_speed(attributes.get("cpu MHz"))?.unwrap_or(0);
+    #[allow(non_snake_case)]
+    /// Create a CpuFrequency from a frequency in kHz
+    fn from_kHz(freq: u64) -> Self {
+        Self(freq / 1000) // Convert kHz to MHz
+    }
 
-    let model = attributes
-        .get("Model")
-        .or_else(|| attributes.get("model name"))
-        .unwrap_or(&machine)
-        .to_string();
-
-    let cpu_info = CpuInfo {
-        platform: machine.clone(),
-        count,
-        cpu_type: attributes.get("vendor_id").unwrap_or(&machine).to_string(),
-        model,
-        model_number: attributes.remove("cpu family").unwrap_or_default(),
-        model_version: attributes.remove("model").unwrap_or_default(),
-        model_revision: attributes.remove("stepping").unwrap_or_default(),
-        cache: parse_cache_size(attributes.remove("cache size"))?.unwrap_or(-1),
-        bogomips: parse_bogomips(attributes.remove("bogomips"))?.unwrap_or(-1),
-        speed,
-        other: attributes
-            .get("flags")
-            .unwrap_or(&"".to_string())
-            .to_string(),
-    };
-
-    Ok(cpu_info)
+    #[allow(non_snake_case)]
+    /// Get the frequency in MHz
+    pub fn mHz(&self) -> u64 {
+        self.0
+    }
 }
 
-/// Parse CPU frequency in MHz as it's done in checkbox
-/// https://github.com/canonical/checkbox/blob/a8d5e9/providers/resource/bin/cpuinfo_resource.py#L56-L63
-pub(super) fn read_max_cpu_frequency(max_cpu_frequency_filepath: &'static str) -> Result<u64> {
-    let file = File::open(max_cpu_frequency_filepath)?;
-    let mut reader = io::BufReader::new(file);
-    let mut buffer = String::new();
-    reader.read_line(&mut buffer)?;
-    let k_hz: u64 = buffer.trim().parse()?;
-    Ok(k_hz / 1000) // Convert kHz to MHz
-}
-
-fn parse_cache_size(cache_size: Option<String>) -> Result<Option<i64>> {
-    if let Some(cache) = cache_size {
-        let cache_str = cache.replace(" KB", "");
+fn parse_cache_size(cache_size: Option<&str>) -> Result<Option<i64>> {
+    if let Some(cache_size) = cache_size {
+        let cache_str = cache_size.replace(" KB", "");
         match i64::from_str(&cache_str) {
             Ok(data) => return Ok(Some(data)),
             Err(e) => {
@@ -120,21 +161,16 @@ fn parse_cache_size(cache_size: Option<String>) -> Result<Option<i64>> {
     Ok(None)
 }
 
-fn parse_bogomips(bogomips: Option<String>) -> Result<Option<i64>> {
+fn parse_bogomips(bogomips: Option<&str>) -> Result<Option<i64>> {
     if let Some(bogo) = bogomips {
         let bogo_str = bogo.replace(' ', "");
-        match f64::from_str(&bogo_str) {
-            Ok(bogomips) => return Ok(Some(bogomips.round() as i64)),
-            Err(e) => {
-                eprintln!("Error parsing bogomips: {}", e);
-                return Err(e.into());
-            }
-        }
+        let bogomips = bogo_str.parse::<f64>().map(|b| b.round() as i64)?;
+        return Ok(Some(bogomips));
     }
     Ok(None)
 }
 
-fn parse_speed(speed: Option<&String>) -> Result<Option<u64>> {
+fn parse_speed(speed: Option<&&str>) -> Result<Option<u64>> {
     if let Some(spd) = speed {
         match f64::from_str(spd) {
             Ok(data) => return Ok(Some(data.round() as u64)),
@@ -149,15 +185,15 @@ fn parse_speed(speed: Option<&String>) -> Result<Option<u64>> {
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_cpuinfo, read_max_cpu_frequency};
+    use super::{CpuFrequency, CpuInfo};
     use crate::utils::get_test_filepath;
 
     #[test]
-    fn test_parse_cpuinfo() {
-        let cpuinfo_result = parse_cpuinfo(get_test_filepath("cpuinfo"));
+    fn test_parsing_cpuinfo() {
+        let cpuinfo_result = CpuInfo::from_file(get_test_filepath("cpuinfo"));
         assert!(cpuinfo_result.is_ok());
         let cpuinfo = cpuinfo_result.unwrap();
-        assert_eq!(cpuinfo.platform, std::env::consts::ARCH.to_string());
+        assert_eq!(cpuinfo.platform, std::env::consts::ARCH);
         assert_eq!(cpuinfo.count, 2);
         assert_eq!(cpuinfo.cpu_type, "GenuineIntel");
         assert_eq!(cpuinfo.model, "Intel(R) Celeron(R) 6305E @ 1.80GHz");
@@ -170,9 +206,9 @@ mod tests {
 
     #[test]
     fn test_read_max_cpu_frequency() {
-        let cpu_freq_result = read_max_cpu_frequency(get_test_filepath("cpuinfo_max_freq"));
+        let cpu_freq_result = CpuFrequency::from_file(get_test_filepath("cpuinfo_max_freq"));
         assert!(cpu_freq_result.is_ok());
-        let cpu_freq = cpu_freq_result.unwrap();
+        let cpu_freq = cpu_freq_result.unwrap().mHz();
         assert_eq!(cpu_freq, 1800);
     }
 }

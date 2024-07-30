@@ -21,7 +21,7 @@
 use anyhow::Result;
 use smbioslib;
 
-use crate::collectors::cpuinfo::parse_cpuinfo;
+use crate::collectors::cpuinfo::CpuInfo;
 use crate::collectors::{hardware_info, os_info};
 use crate::constants;
 use crate::models::request_validators::CertificationStatusRequest;
@@ -107,7 +107,7 @@ fn build_certification_request_from_defaults(
         ..
     }: Paths,
 ) -> Result<CertificationStatusRequest> {
-    let cpu_info = parse_cpuinfo(cpuinfo_filepath)?;
+    let cpu_info = CpuInfo::from_file(cpuinfo_filepath)?;
     let (model, vendor) = (cpu_info.model, "Unknown".to_string());
 
     Ok(CertificationStatusRequest {
