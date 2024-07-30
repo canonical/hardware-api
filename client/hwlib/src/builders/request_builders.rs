@@ -18,8 +18,11 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::Result;
-use smbioslib;
+use anyhow::{anyhow, Result};
+use smbioslib::{
+    self, SMBiosBaseboardInformation, SMBiosInformation, SMBiosProcessorInformation,
+    SMBiosSystemChassisInformation, SMBiosSystemInformation,
+};
 
 use crate::collectors::cpuinfo::CpuInfo;
 use crate::collectors::{hardware_info, os_info};
@@ -82,17 +85,42 @@ fn build_certification_request_from_smbios_data(
         ..
     }: Paths,
 ) -> Result<CertificationStatusRequest> {
-    let system_info = hardware_info::SystemInfo::from_smbios(data)?;
+    let bios_info_vec = data.collect::<SMBiosInformation>();
+    let bios_info = bios_info_vec
+        .first()
+        .ok_or_else(|| anyhow!("Failed to load BIOS data"))?;
+
+    let processor_info_vec = data.collect::<SMBiosProcessorInformation>();
+    let processor_info = processor_info_vec
+        .first()
+        .ok_or_else(|| anyhow!("Failed to load processor data"))?;
+
+    let chassis_info_vec = data.collect::<SMBiosSystemChassisInformation>();
+    let chassis_info = chassis_info_vec
+        .first()
+        .ok_or_else(|| anyhow!("Failed to load chassis data"))?;
+
+    let board_info_vec = data.collect::<SMBiosBaseboardInformation>();
+    let board_info = board_info_vec
+        .first()
+        .ok_or_else(|| anyhow!("Failed to load board data"))?;
+
+    let system_data_vec = data.collect::<SMBiosSystemInformation>();
+    let system_data = system_data_vec.first().unwrap();
+    let system_info = hardware_info::SystemInfo::from_smbios(system_data)?;
 
     Ok(CertificationStatusRequest {
         architecture: os_info::get_architecture()?,
-        bios: Some(hardware_info::collect_bios_info(data)?),
-        board: hardware_info::collect_motherboard_info(data)?,
-        chassis: Some(hardware_info::collect_chassis_info(data)?),
+        bios: Some(hardware_info::collect_bios_info(bios_info)?),
+        board: hardware_info::collect_motherboard_info(board_info)?,
+        chassis: Some(hardware_info::collect_chassis_info(chassis_info)?),
         model: system_info.product_name,
         os: os_info::collect_os_info(proc_version_filepath)?,
         pci_peripherals: Vec::new(),
-        processor: hardware_info::collect_processor_info_smbios(data, max_cpu_frequency_filepath)?,
+        processor: hardware_info::collect_processor_info_smbios(
+            processor_info,
+            max_cpu_frequency_filepath,
+        )?,
         usb_peripherals: Vec::new(),
         vendor: system_info.manufacturer,
     })

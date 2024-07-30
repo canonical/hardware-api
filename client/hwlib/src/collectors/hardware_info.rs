@@ -18,7 +18,7 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use smbioslib::{
     SMBiosBaseboardInformation, SMBiosData, SMBiosEntryPoint32, SMBiosEntryPoint64,
     SMBiosInformation, SMBiosProcessorInformation, SMBiosSystemChassisInformation,
@@ -45,13 +45,7 @@ pub fn load_smbios_data(
     }
 }
 
-pub fn collect_bios_info(smbios_data: &SMBiosData) -> Result<devices::Bios> {
-    let bios_info_vec = smbios_data.collect::<SMBiosInformation>();
-    let bios_info = match bios_info_vec.first() {
-        Some(bios_data) => bios_data,
-        None => bail!("Failed to load BIOS data"),
-    };
-
+pub fn collect_bios_info(bios_info: &SMBiosInformation) -> Result<devices::Bios> {
     let release_date_str = bios_info.release_date().to_string();
     let release_date_format = format_description!("[month]/[day]/[year]");
     let release_date_parsed = Date::parse(&release_date_str, &release_date_format)?;
@@ -78,16 +72,9 @@ pub fn collect_bios_info(smbios_data: &SMBiosData) -> Result<devices::Bios> {
 
 /// Retrieve CPU information from SMBios
 pub fn collect_processor_info_smbios(
-    smbios_data: &SMBiosData,
+    processor_info: &SMBiosProcessorInformation,
     max_cpu_frequency_filepath: &'static str,
 ) -> Result<devices::Processor> {
-    let processor_info_vec = smbios_data.collect::<SMBiosProcessorInformation>();
-
-    let processor_info = match processor_info_vec.first() {
-        Some(proc_data) => proc_data,
-        None => bail!("Failed to load processor data"),
-    };
-
     let cpu_id = CpuId::new(processor_info)?;
     let cpu_freq = CpuFrequency::from_file(max_cpu_frequency_filepath)
         .unwrap()
@@ -120,13 +107,9 @@ pub fn retrieve_processor_info_cpuinfo(
     Ok(processor)
 }
 
-pub fn collect_chassis_info(smbios_data: &SMBiosData) -> Result<devices::Chassis> {
-    let chassis_info_vec = smbios_data.collect::<SMBiosSystemChassisInformation>();
-    let chassis_info = match chassis_info_vec.first() {
-        Some(chassis_data) => chassis_data,
-        None => bail!("Failed to load chassis data"),
-    };
-
+pub fn collect_chassis_info(
+    chassis_info: &SMBiosSystemChassisInformation,
+) -> Result<devices::Chassis> {
     let chassis_type = chassis_info
         .chassis_type()
         .ok_or("Failed to get chassis type")
@@ -146,13 +129,7 @@ pub fn collect_chassis_info(smbios_data: &SMBiosData) -> Result<devices::Chassis
     Ok(chassis)
 }
 
-pub fn collect_motherboard_info(smbios_data: &SMBiosData) -> Result<devices::Board> {
-    let board_info_vec = smbios_data.collect::<SMBiosBaseboardInformation>();
-    let board_info = match board_info_vec.first() {
-        Some(board_data) => board_data,
-        None => bail!("Failed to load board data"),
-    };
-
+pub fn collect_motherboard_info(board_info: &SMBiosBaseboardInformation) -> Result<devices::Board> {
     let manufacturer = board_info.manufacturer().to_string();
     let product_name = board_info.product().to_string();
     let version = board_info.version().to_string();
@@ -198,15 +175,11 @@ pub struct SystemInfo {
 }
 
 impl SystemInfo {
-    pub fn from_smbios(smbios_data: &SMBiosData) -> Result<Self> {
-        let system_info_vec = smbios_data.collect::<SMBiosSystemInformation>();
-        match system_info_vec.first() {
-            Some(system_data) => Ok(SystemInfo {
-                product_name: system_data.product_name().to_string(),
-                manufacturer: system_data.manufacturer().to_string(),
-            }),
-            None => bail!("Failed to load system information"),
-        }
+    pub fn from_smbios(system_data: &SMBiosSystemInformation) -> Result<Self> {
+        Ok(SystemInfo {
+            product_name: system_data.product_name().to_string(),
+            manufacturer: system_data.manufacturer().to_string(),
+        })
     }
 }
 
@@ -262,7 +235,10 @@ mod tests {
             get_test_filepath("DMI"),
         )
         .unwrap();
-        let bios = collect_bios_info(&smbios_data).unwrap();
+        let bios_info_vec = smbios_data.collect::<SMBiosInformation>();
+        let bios_info = bios_info_vec.first().unwrap();
+
+        let bios = collect_bios_info(bios_info).unwrap();
 
         assert!(bios.firmware_revision.is_some());
         assert!(bios.release_date.is_some());
@@ -281,8 +257,11 @@ mod tests {
             get_test_filepath("DMI"),
         )
         .unwrap();
+        let processor_info_vec = smbios_data.collect::<SMBiosProcessorInformation>();
+        let processor_info = processor_info_vec.first().unwrap();
+
         let processor =
-            collect_processor_info_smbios(&smbios_data, get_test_filepath("cpuinfo_max_freq"))
+            collect_processor_info_smbios(processor_info, get_test_filepath("cpuinfo_max_freq"))
                 .unwrap();
 
         assert_eq!(processor.codename, "Unknown");
@@ -298,7 +277,10 @@ mod tests {
             get_test_filepath("DMI"),
         )
         .unwrap();
-        let chassis = collect_chassis_info(&smbios_data).unwrap();
+        let chassis_info_vec = smbios_data.collect::<SMBiosSystemChassisInformation>();
+        let chassis_info = chassis_info_vec.first().unwrap();
+
+        let chassis = collect_chassis_info(chassis_info).unwrap();
 
         assert_eq!(chassis.chassis_type, "Desktop");
         assert_eq!(chassis.manufacturer, "AAEON");
@@ -313,7 +295,10 @@ mod tests {
             get_test_filepath("DMI"),
         )
         .unwrap();
-        let board = collect_motherboard_info(&smbios_data).unwrap();
+        let board_info_vec = smbios_data.collect::<SMBiosBaseboardInformation>();
+        let board_info = board_info_vec.first().unwrap();
+
+        let board = collect_motherboard_info(board_info).unwrap();
 
         assert_eq!(board.manufacturer, "AAEON");
         assert_eq!(board.product_name, "UPX-TGL01");
@@ -336,7 +321,10 @@ mod tests {
             get_test_filepath("DMI"),
         )
         .unwrap();
-        let system_info = SystemInfo::from_smbios(&smbios_data).unwrap();
+        let system_data_vec = smbios_data.collect::<SMBiosSystemInformation>();
+        let system_data = system_data_vec.first().unwrap();
+
+        let system_info = SystemInfo::from_smbios(system_data).unwrap();
 
         assert_eq!(system_info.product_name, "UPX-TGL01");
         assert_eq!(system_info.manufacturer, "AAEON");
