@@ -18,11 +18,10 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{self, BufRead};
-use std::str::FromStr;
 
 #[derive(Debug)]
 pub struct CpuInfo {
@@ -76,7 +75,7 @@ impl CpuInfo {
         }
 
         let arch = std::env::consts::ARCH;
-        let speed = parse_speed(attributes.get("cpu MHz"))?.unwrap_or(0);
+        let speed = CpuSpeed::from_str(attributes.get("cpu MHz").unwrap_or(&"0"))?.mHz();
 
         let model = attributes
             .get("Model")
@@ -148,15 +147,27 @@ impl CpuFrequency {
     }
 }
 
+struct CpuSpeed(f64);
+
+impl CpuSpeed {
+    fn from_str(speed: &&str) -> Result<Self> {
+        Ok(Self(speed.parse::<f64>()?))
+    }
+
+    #[allow(non_snake_case)]
+    fn mHz(&self) -> u64 {
+        self.0.round() as u64
+    }
+}
+
 fn parse_cache_size(cache_size: Option<&str>) -> Result<Option<i64>> {
     if let Some(cache_size) = cache_size {
-        let cache_str = cache_size.replace(" KB", "");
-        match i64::from_str(&cache_str) {
-            Ok(data) => return Ok(Some(data)),
-            Err(e) => {
-                bail!(e)
-            }
-        }
+        return Ok(Some(
+            cache_size
+                .strip_suffix(" KB")
+                .unwrap_or(cache_size)
+                .parse()?,
+        ));
     }
     Ok(None)
 }
@@ -166,19 +177,6 @@ fn parse_bogomips(bogomips: Option<&str>) -> Result<Option<i64>> {
         let bogo_str = bogo.replace(' ', "");
         let bogomips = bogo_str.parse::<f64>().map(|b| b.round() as i64)?;
         return Ok(Some(bogomips));
-    }
-    Ok(None)
-}
-
-fn parse_speed(speed: Option<&&str>) -> Result<Option<u64>> {
-    if let Some(spd) = speed {
-        match f64::from_str(spd) {
-            Ok(data) => return Ok(Some(data.round() as u64)),
-            Err(e) => {
-                eprintln!("Error parsing speed: {}", e);
-                return Err(e.into());
-            }
-        }
     }
     Ok(None)
 }
