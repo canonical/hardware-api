@@ -27,7 +27,7 @@ use std::str::FromStr;
 #[derive(Debug)]
 pub struct CpuInfo {
     pub platform: String,
-    pub count: usize,
+    pub cores_count: usize,
     pub cpu_type: String,
     pub model: String,
     pub model_number: String,
@@ -47,7 +47,7 @@ impl CpuInfo {
         let reader = io::BufReader::new(file);
 
         let mut attributes: HashMap<&str, &str> = HashMap::new();
-        let mut processor_count = 0;
+        let mut cores_count = 0;
 
         let mut buffer = String::new();
 
@@ -68,7 +68,7 @@ impl CpuInfo {
                 let value = parts[1].trim();
 
                 if key == "processor" {
-                    processor_count += 1;
+                    cores_count += 1;
                 }
 
                 attributes.insert(key, value);
@@ -102,7 +102,7 @@ impl CpuInfo {
 
         let cpu_info = CpuInfo {
             platform: arch.to_string(),
-            count: processor_count,
+            cores_count,
             cpu_type,
             model,
             model_number,
@@ -194,7 +194,7 @@ mod tests {
         assert!(cpuinfo_result.is_ok());
         let cpuinfo = cpuinfo_result.unwrap();
         assert_eq!(cpuinfo.platform, std::env::consts::ARCH);
-        assert_eq!(cpuinfo.count, 2);
+        assert_eq!(cpuinfo.cores_count, 2);
         assert_eq!(cpuinfo.cpu_type, "GenuineIntel");
         assert_eq!(cpuinfo.model, "Intel(R) Celeron(R) 6305E @ 1.80GHz");
         assert_eq!(cpuinfo.model_number, "6");
