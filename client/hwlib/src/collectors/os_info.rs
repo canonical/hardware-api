@@ -19,6 +19,7 @@
  */
 
 use anyhow::{Context, Result};
+use lazy_static::lazy_static;
 use regex::Regex;
 use std::fs;
 use std::process::Command;
@@ -82,13 +83,15 @@ pub(super) fn get_codename() -> Result<String> {
         .context("Failed to execute lsb_release command")?;
     let output_str = String::from_utf8(lsb_release_output.stdout)
         .context("Failed to convert lsb_release output to UTF-8 string")?;
-    let re = Regex::new(r"Codename:\s*(\S+)")
-        .context("Failed to compile regex for codename extraction")?;
-    let codename = re
+    lazy_static! {
+        static ref RE: Regex = Regex::new(r"Codename:\s*(\S+)").unwrap();
+    }
+    let codename = RE
         .captures(&output_str)
         .and_then(|caps| caps.get(1))
         .map(|m| m.as_str().to_string())
         .ok_or_else(|| anyhow::anyhow!("Failed to capture codename"))?;
+
     Ok(codename)
 }
 
@@ -99,9 +102,10 @@ pub(super) fn get_distributor() -> Result<String> {
         .context("Failed to execute lsb_release command")?;
     let output_str = String::from_utf8(lsb_release_output.stdout)
         .context("Failed to convert lsb_release output to UTF-8 string")?;
-    let re = Regex::new(r"Distributor ID:\s*(\S+)")
-        .context("Failed to compile regex for distributor ID extraction")?;
-    let distributor = re
+    lazy_static! {
+        static ref RE_DISTRIBUTOR: Regex = Regex::new(r"Distributor ID:\s*(\S+)").unwrap();
+    }
+    let distributor = RE_DISTRIBUTOR
         .captures(&output_str)
         .and_then(|caps| caps.get(1))
         .map(|m| m.as_str().to_string())
@@ -116,12 +120,14 @@ pub(super) fn get_version() -> Result<String> {
         .context("Failed to execute lsb_release command")?;
     let output_str = String::from_utf8(lsb_release_output.stdout)
         .context("Failed to convert lsb_release output to UTF-8 string")?;
-    let re = Regex::new(r"Release:\s*(\S+)")
-        .context("Failed to compile regex for version extraction")?;
-    let version = re
+    lazy_static! {
+        static ref RE_VERSION: Regex = Regex::new(r"Release:\s*(\S+)").unwrap();
+    }
+    let version = RE_VERSION
         .captures(&output_str)
         .and_then(|caps| caps.get(1))
         .map(|m| m.as_str().to_string())
         .ok_or_else(|| anyhow::anyhow!("Failed to capture version"))?;
+
     Ok(version)
 }
