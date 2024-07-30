@@ -34,6 +34,7 @@ smbios-lib = "0.9.0"
 regex = "1.10.0"
 time = { version = "~0.3.0", features = ["macros" ,"parsing", "formatting"]}
 anyhow = "~1.0.0"
+itertools = "0.13.0"
 
 [package.metadata.deb]
 maintainer = "Canonical Hardware Certification <canonical-hw-cert@lists.launchpad.net>"

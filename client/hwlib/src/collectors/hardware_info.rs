@@ -23,7 +23,8 @@ use smbioslib;
 use time::macros::format_description;
 use time::Date;
 
-use super::{cpuid, cpuinfo};
+use super::cpuid::CpuId;
+use super::cpuinfo;
 use crate::models::devices;
 
 pub fn load_smbios_data(
@@ -80,9 +81,9 @@ pub fn collect_processor_info_smbios(
         None => bail!("Failed to load processor data"),
     };
 
-    let cpu_id = cpuid::get_cpuid(processor_info)?;
+    let cpu_id = CpuId::new(processor_info)?;
     let processor = devices::Processor {
-        codename: cpuid::convert_cpu_codename(&cpu_id)?,
+        codename: cpu_id.codename().unwrap_or_else(|| "Unknown".to_string()),
         frequency: cpuinfo::read_max_cpu_frequency(max_cpu_frequency_filepath)?,
         manufacturer: processor_info.processor_manufacturer().to_string(),
         version: processor_info.processor_version().to_string(),
