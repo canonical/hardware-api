@@ -63,7 +63,6 @@ pub struct CertifiedImageExistsResponse {
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "status")]
 pub enum CertificationStatusResponse {
-    #[serde(rename = "Certified")]
     Certified(CertifiedResponse),
     #[serde(rename = "Not Seen")]
     NotSeen(NotSeenResponse),

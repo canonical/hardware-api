@@ -40,10 +40,10 @@ impl Default for Paths {
         Self {
             smbios_entry_filepath: smbioslib::SYS_ENTRY_FILE,
             smbios_table_filepath: smbioslib::SYS_TABLE_FILE,
-            cpuinfo_filepath: constants::PROC_CPUINFO_FILEPATH,
-            max_cpu_frequency_filepath: constants::CPU_MAX_FREQ_FILEPATH,
-            device_tree_dirpath: constants::PROC_DEVICE_TREE_DIRPATH,
-            proc_version_filepath: constants::PROC_VERSION_FILEPATH,
+            cpuinfo_filepath: constants::PROC_CPUINFO_FILE_PATH,
+            max_cpu_frequency_filepath: constants::CPU_MAX_FREQ_FILE_PATH,
+            device_tree_dirpath: constants::PROC_DEVICE_TREE_DIR_PATH,
+            proc_version_filepath: constants::PROC_VERSION_FILE_PATH,
         }
     }
 }

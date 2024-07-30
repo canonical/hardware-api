@@ -20,7 +20,7 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct KernelPackage {
     pub name: Option<String>,
     pub version: String,
@@ -28,7 +28,7 @@ pub struct KernelPackage {
     pub loaded_modules: Vec<String>,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct OS {
     pub codename: String,
     pub distributor: String,

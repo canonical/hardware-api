@@ -20,14 +20,14 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct Audio {
     pub identifier: String,
     pub model: String,
     pub vendor: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct Bios {
     pub firmware_revision: Option<String>,
     pub release_date: Option<String>,
@@ -36,14 +36,14 @@ pub struct Bios {
     pub version: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct Board {
     pub manufacturer: String,
     pub product_name: String,
     pub version: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct Chassis {
     pub chassis_type: String,
     pub manufacturer: String,
@@ -51,7 +51,7 @@ pub struct Chassis {
     pub version: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct GPU {
     pub codename: Option<String>,
     pub identifier: String,
@@ -60,7 +60,7 @@ pub struct GPU {
     pub version: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct NetworkAdapter {
     pub bus: String,
     pub capacity: i32,
@@ -69,7 +69,7 @@ pub struct NetworkAdapter {
     pub vendor: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct PCIPeripheral {
     pub pci_id: String,
     pub name: String,
@@ -77,7 +77,7 @@ pub struct PCIPeripheral {
     pub vendor: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct Processor {
     pub codename: String,
     pub frequency: u64,
@@ -85,7 +85,7 @@ pub struct Processor {
     pub version: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct USBPeripheral {
     pub usb_id: String,
     pub name: String,
@@ -93,7 +93,7 @@ pub struct USBPeripheral {
     pub vendor: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct VideoCapture {
     pub identifier: String,
     pub model: String,
@@ -101,7 +101,7 @@ pub struct VideoCapture {
     pub vendor: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct WirelessAdapter {
     pub identifier: String,
     pub model: String,
@@ -109,7 +109,7 @@ pub struct WirelessAdapter {
     pub vendor: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub enum DeviceStatus {
     KnownWorking,
     KnownBreaking,

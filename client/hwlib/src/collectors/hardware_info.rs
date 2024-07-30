@@ -58,14 +58,16 @@ pub fn collect_bios_info(smbios_data: &SMBiosData) -> Result<devices::Bios> {
     let output_format = format_description!("[year]-[month]-[day]");
     let release_date = release_date_parsed.format(&output_format)?;
 
+    let firmware_revision = match (
+        bios_info.system_bios_major_release(),
+        bios_info.system_bios_minor_release(),
+    ) {
+        (Some(major), Some(minor)) => Some(format!("{}.{}", major, minor)),
+        _ => None,
+    };
+
     let bios = devices::Bios {
-        firmware_revision: match (
-            bios_info.system_bios_major_release(),
-            bios_info.system_bios_minor_release(),
-        ) {
-            (Some(major), Some(minor)) => Some(format!("{}.{}", major, minor)),
-            _ => None,
-        },
+        firmware_revision,
         release_date: Some(release_date),
         revision: Some(bios_info.version().to_string()),
         vendor: bios_info.vendor().to_string(),
