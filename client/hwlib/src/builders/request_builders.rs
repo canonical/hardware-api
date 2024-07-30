@@ -82,19 +82,19 @@ fn build_certification_request_from_smbios_data(
         ..
     }: Paths,
 ) -> Result<CertificationStatusRequest> {
-    let (model, vendor) = hardware_info::get_system_info(data)?;
+    let system_info = hardware_info::SystemInfo::from_smbios(data)?;
 
     Ok(CertificationStatusRequest {
         architecture: os_info::get_architecture()?,
         bios: Some(hardware_info::collect_bios_info(data)?),
         board: hardware_info::collect_motherboard_info(data)?,
         chassis: Some(hardware_info::collect_chassis_info(data)?),
-        model,
+        model: system_info.product_name,
         os: os_info::collect_os_info(proc_version_filepath)?,
         pci_peripherals: Vec::new(),
         processor: hardware_info::collect_processor_info_smbios(data, max_cpu_frequency_filepath)?,
         usb_peripherals: Vec::new(),
-        vendor,
+        vendor: system_info.manufacturer,
     })
 }
 
@@ -118,7 +118,7 @@ fn build_certification_request_from_defaults(
         model,
         os: os_info::collect_os_info(proc_version_filepath)?,
         pci_peripherals: Vec::new(),
-        processor: hardware_info::collect_processor_info_cpuinfo(
+        processor: hardware_info::retrieve_processor_info_cpuinfo(
             cpuinfo_filepath,
             max_cpu_frequency_filepath,
         )?,
