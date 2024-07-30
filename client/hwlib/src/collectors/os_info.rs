@@ -18,7 +18,7 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use regex::Regex;
 use std::fs;
 use std::process::Command;
@@ -46,7 +46,7 @@ pub fn collect_kernel_info(proc_version_filepath: &'static str) -> Result<softwa
     let kernel_version = kernel_version
         .split_whitespace()
         .nth(2)
-        .unwrap_or("")
+        .unwrap_or_default()
         .to_string();
 
     let loaded_modules_output = Command::new("lsmod").output()?;
@@ -68,58 +68,60 @@ pub fn collect_kernel_info(proc_version_filepath: &'static str) -> Result<softwa
 }
 
 pub(crate) fn get_architecture() -> Result<String> {
-    let mut arch = Command::new("dpkg")
+    let arch = Command::new("dpkg")
         .arg("--print-architecture")
         .output()?
         .stdout;
-    arch.pop(); // remove the new line char
-    Ok(String::from_utf8(arch)?)
+    Ok(String::from_utf8(arch)?.trim().to_string())
 }
 
 pub(super) fn get_codename() -> Result<String> {
-    let lsb_release_output = Command::new("lsb_release").arg("-c").output()?;
-    let output_str = String::from_utf8(lsb_release_output.stdout)?;
-    let re = Regex::new(r"Codename:\s*(\S+)")?;
+    let lsb_release_output = Command::new("lsb_release")
+        .arg("-c")
+        .output()
+        .context("Failed to execute lsb_release command")?;
+    let output_str = String::from_utf8(lsb_release_output.stdout)
+        .context("Failed to convert lsb_release output to UTF-8 string")?;
+    let re = Regex::new(r"Codename:\s*(\S+)")
+        .context("Failed to compile regex for codename extraction")?;
     let codename = re
         .captures(&output_str)
-        .ok_or("Failed to capture codename")
-        .unwrap()
-        .get(1)
-        .ok_or("Failed to capture codename")
-        .unwrap()
-        .as_str()
-        .to_string();
+        .and_then(|caps| caps.get(1))
+        .map(|m| m.as_str().to_string())
+        .ok_or_else(|| anyhow::anyhow!("Failed to capture codename"))?;
     Ok(codename)
 }
 
 pub(super) fn get_distributor() -> Result<String> {
-    let lsb_release_output = Command::new("lsb_release").arg("-i").output()?;
-    let output_str = String::from_utf8(lsb_release_output.stdout)?;
-    let re = Regex::new(r"Distributor ID:\s*(\S+)")?;
+    let lsb_release_output = Command::new("lsb_release")
+        .arg("-i")
+        .output()
+        .context("Failed to execute lsb_release command")?;
+    let output_str = String::from_utf8(lsb_release_output.stdout)
+        .context("Failed to convert lsb_release output to UTF-8 string")?;
+    let re = Regex::new(r"Distributor ID:\s*(\S+)")
+        .context("Failed to compile regex for distributor ID extraction")?;
     let distributor = re
         .captures(&output_str)
-        .ok_or("Failed to capture distributor ID")
-        .unwrap()
-        .get(1)
-        .ok_or("Failed to capture distributor ID")
-        .unwrap()
-        .as_str()
-        .to_string();
+        .and_then(|caps| caps.get(1))
+        .map(|m| m.as_str().to_string())
+        .ok_or_else(|| anyhow::anyhow!("Failed to capture distributor ID"))?;
     Ok(distributor)
 }
 
 pub(super) fn get_version() -> Result<String> {
-    let lsb_release_output = Command::new("lsb_release").arg("-r").output()?;
-    let output_str = String::from_utf8(lsb_release_output.stdout)?;
-    let re = Regex::new(r"Release:\s*(\S+)")?;
+    let lsb_release_output = Command::new("lsb_release")
+        .arg("-r")
+        .output()
+        .context("Failed to execute lsb_release command")?;
+    let output_str = String::from_utf8(lsb_release_output.stdout)
+        .context("Failed to convert lsb_release output to UTF-8 string")?;
+    let re = Regex::new(r"Release:\s*(\S+)")
+        .context("Failed to compile regex for version extraction")?;
     let version = re
         .captures(&output_str)
-        .ok_or("Failed to capture version")
-        .unwrap()
-        .get(1)
-        .ok_or("Failed to capture version")
-        .unwrap()
-        .as_str()
-        .to_string();
+        .and_then(|caps| caps.get(1))
+        .map(|m| m.as_str().to_string())
+        .ok_or_else(|| anyhow::anyhow!("Failed to capture version"))?;
     Ok(version)
 }
