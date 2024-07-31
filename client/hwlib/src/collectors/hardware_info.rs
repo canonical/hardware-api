@@ -148,17 +148,15 @@ pub fn collect_motherboard_info_from_device_tree(
 ) -> Result<devices::Board> {
     let base_path = std::path::Path::new(device_tree_filepath);
 
-    let manufacturer = std::fs::read_to_string(base_path.join("model"))
-        .map(|s| s.trim().to_string())
-        .unwrap_or_else(|_| "Unknown".to_string());
+    let try_read = |file| {
+        std::fs::read_to_string(base_path.join(file))
+            .map(|s| s.trim().to_string())
+            .unwrap_or_else(|_| "Unknown".to_string())
+    };
 
-    let product_name = std::fs::read_to_string(base_path.join("compatible"))
-        .map(|s| s.trim().to_string())
-        .unwrap_or_else(|_| "Unknown".to_string());
-
-    let version = std::fs::read_to_string(base_path.join("model"))
-        .map(|s| s.trim().to_string())
-        .unwrap_or_else(|_| "Unknown".to_string());
+    let manufacturer = try_read("model");
+    let product_name = try_read("compatible");
+    let version = try_read("model");
 
     let board = devices::Board {
         manufacturer,

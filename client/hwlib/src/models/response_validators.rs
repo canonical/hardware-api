@@ -18,7 +18,6 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::bail;
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
@@ -27,41 +26,44 @@ use crate::models::software;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RawCertificationStatusResponse {
-    status: String,
+    status: CertificationStatus,
     #[serde(flatten)]
     data: serde_json::Value,
 }
 
 impl TryFrom<RawCertificationStatusResponse> for CertificationStatusResponse {
     type Error = anyhow::Error;
-
     fn try_from(raw: RawCertificationStatusResponse) -> Result<Self> {
-        match raw.status.as_str() {
-            "Certified" => {
-                let certified_response: CertifiedResponse = serde_json::from_value(raw.data)?;
-                Ok(CertificationStatusResponse::Certified(certified_response))
-            }
-            "Not Seen" => {
-                let not_seen_response: NotSeenResponse = serde_json::from_value(raw.data)?;
-                Ok(CertificationStatusResponse::NotSeen(not_seen_response))
-            }
-            "Certified Image Exists" => {
-                let certified_image_exists_response: CertifiedImageExistsResponse =
-                    serde_json::from_value(raw.data)?;
+        match raw.status {
+            CertificationStatus::Certified => Ok(CertificationStatusResponse::Certified(
+                serde_json::from_value(raw.data)?,
+            )),
+            CertificationStatus::NotSeen => Ok(CertificationStatusResponse::NotSeen(
+                serde_json::from_value(raw.data)?,
+            )),
+            CertificationStatus::CertifiedImageExists => {
                 Ok(CertificationStatusResponse::CertifiedImageExists(
-                    certified_image_exists_response,
+                    serde_json::from_value(raw.data)?,
                 ))
             }
-            "Related Certified System Exists" => {
-                let related_certified_system_exists_response: RelatedCertifiedSystemExistsResponse =
-                    serde_json::from_value(raw.data)?;
+            CertificationStatus::RelatedCertifiedSystemExists => {
                 Ok(CertificationStatusResponse::RelatedCertifiedSystemExists(
-                    related_certified_system_exists_response,
+                    serde_json::from_value(raw.data)?,
                 ))
             }
-            _ => bail!("Unknown status"),
         }
     }
+}
+
+#[derive(Debug, Deserialize, Serialize)]
+enum CertificationStatus {
+    Certified,
+    #[serde(rename = "Not Seen")]
+    NotSeen,
+    #[serde(rename = "Certified Image Exists")]
+    CertifiedImageExists,
+    #[serde(rename = "Related Certified System Exists")]
+    RelatedCertifiedSystemExists,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
