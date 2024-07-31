@@ -26,15 +26,12 @@ pub mod models;
 pub mod py_bindings;
 pub mod utils;
 
-use anyhow::{bail, Result};
+use anyhow::Result;
 use reqwest::Client;
 
 use constants::CERT_STATUS_ENDPOINT;
 use models::request_validators::CertificationStatusRequest;
-use models::response_validators::{
-    CertificationStatusResponse, CertifiedImageExistsResponse, CertifiedResponse, NotSeenResponse,
-    RelatedCertifiedSystemExistsResponse,
-};
+use models::response_validators::{CertificationStatusResponse, RawCertificationStatusResponse};
 
 pub async fn send_certification_request(
     url: String,
@@ -46,33 +43,8 @@ pub async fn send_certification_request(
     let response = client.post(server_url).json(request).send().await?;
 
     let response_text = response.text().await?;
-    let response_value: serde_json::Value = serde_json::from_str(&response_text)?;
-    match response_value
-        .get("status")
-        .and_then(serde_json::Value::as_str)
-    {
-        Some("Certified") => {
-            let certified_response: CertifiedResponse = serde_json::from_value(response_value)?;
-            Ok(CertificationStatusResponse::Certified(certified_response))
-        }
-        Some("Not Seen") => {
-            let not_seen_response: NotSeenResponse = serde_json::from_value(response_value)?;
-            Ok(CertificationStatusResponse::NotSeen(not_seen_response))
-        }
-        Some("Certified Image Exists") => {
-            let certified_image_exists_response: CertifiedImageExistsResponse =
-                serde_json::from_value(response_value)?;
-            Ok(CertificationStatusResponse::CertifiedImageExists(
-                certified_image_exists_response,
-            ))
-        }
-        Some("Related Certified System Exists") => {
-            let related_certified_system_exists_response: RelatedCertifiedSystemExistsResponse =
-                serde_json::from_value(response_value)?;
-            Ok(CertificationStatusResponse::RelatedCertifiedSystemExists(
-                related_certified_system_exists_response,
-            ))
-        }
-        _ => bail!("Unknown status"),
-    }
+    let raw_response: RawCertificationStatusResponse = serde_json::from_str(&response_text)?;
+    let typed_response: CertificationStatusResponse = raw_response.try_into()?;
+
+    Ok(typed_response)
 }

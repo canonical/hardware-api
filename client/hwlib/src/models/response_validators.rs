@@ -18,10 +18,63 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
+use anyhow::bail;
+use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 use crate::models::devices;
 use crate::models::software;
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct RawCertificationStatusResponse {
+    status: String,
+    #[serde(flatten)]
+    data: serde_json::Value,
+}
+
+impl TryFrom<RawCertificationStatusResponse> for CertificationStatusResponse {
+    type Error = anyhow::Error;
+
+    fn try_from(raw: RawCertificationStatusResponse) -> Result<Self> {
+        match raw.status.as_str() {
+            "Certified" => {
+                let certified_response: CertifiedResponse = serde_json::from_value(raw.data)?;
+                Ok(CertificationStatusResponse::Certified(certified_response))
+            }
+            "Not Seen" => {
+                let not_seen_response: NotSeenResponse = serde_json::from_value(raw.data)?;
+                Ok(CertificationStatusResponse::NotSeen(not_seen_response))
+            }
+            "Certified Image Exists" => {
+                let certified_image_exists_response: CertifiedImageExistsResponse =
+                    serde_json::from_value(raw.data)?;
+                Ok(CertificationStatusResponse::CertifiedImageExists(
+                    certified_image_exists_response,
+                ))
+            }
+            "Related Certified System Exists" => {
+                let related_certified_system_exists_response: RelatedCertifiedSystemExistsResponse =
+                    serde_json::from_value(raw.data)?;
+                Ok(CertificationStatusResponse::RelatedCertifiedSystemExists(
+                    related_certified_system_exists_response,
+                ))
+            }
+            _ => bail!("Unknown status"),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(tag = "status")]
+pub enum CertificationStatusResponse {
+    Certified(CertifiedResponse),
+    #[serde(rename = "Not Seen")]
+    NotSeen(NotSeenResponse),
+    #[serde(rename = "Certified Image Exists")]
+    CertifiedImageExists(CertifiedImageExistsResponse),
+    #[serde(rename = "Related Certified System Exists")]
+    RelatedCertifiedSystemExists(RelatedCertifiedSystemExistsResponse),
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CertifiedResponse {
@@ -58,16 +111,4 @@ pub struct CertifiedImageExistsResponse {
     pub board: devices::Board,
     pub available_releases: Vec<software::OS>,
     pub chassis: Option<devices::Chassis>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(tag = "status")]
-pub enum CertificationStatusResponse {
-    Certified(CertifiedResponse),
-    #[serde(rename = "Not Seen")]
-    NotSeen(NotSeenResponse),
-    #[serde(rename = "Certified Image Exists")]
-    CertifiedImageExists(CertifiedImageExistsResponse),
-    #[serde(rename = "Related Certified System Exists")]
-    RelatedCertifiedSystemExists(RelatedCertifiedSystemExistsResponse),
 }
