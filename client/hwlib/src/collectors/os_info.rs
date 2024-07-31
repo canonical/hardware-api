@@ -19,7 +19,6 @@
  */
 
 use anyhow::{Context, Result};
-use lazy_static::lazy_static;
 use regex::Regex;
 use std::fs;
 use std::process::Command;
@@ -77,57 +76,35 @@ pub(crate) fn get_architecture() -> Result<String> {
 }
 
 pub(super) fn get_codename() -> Result<String> {
-    let lsb_release_output = Command::new("lsb_release")
-        .arg("-c")
-        .output()
-        .context("Failed to execute lsb_release command")?;
-    let output_str = String::from_utf8(lsb_release_output.stdout)
-        .context("Failed to convert lsb_release output to UTF-8 string")?;
-    lazy_static! {
-        static ref RE: Regex = Regex::new(r"Codename:\s*(\S+)").unwrap();
-    }
-    let codename = RE
-        .captures(&output_str)
-        .and_then(|caps| caps.get(1))
-        .map(|m| m.as_str().to_string())
-        .ok_or_else(|| anyhow::anyhow!("Failed to capture codename"))?;
-
-    Ok(codename)
+    get_lsb_release_info("-c", r"Codename:\s*(\S+)")
 }
 
 pub(super) fn get_distributor() -> Result<String> {
-    let lsb_release_output = Command::new("lsb_release")
-        .arg("-i")
-        .output()
-        .context("Failed to execute lsb_release command")?;
-    let output_str = String::from_utf8(lsb_release_output.stdout)
-        .context("Failed to convert lsb_release output to UTF-8 string")?;
-    lazy_static! {
-        static ref RE_DISTRIBUTOR: Regex = Regex::new(r"Distributor ID:\s*(\S+)").unwrap();
-    }
-    let distributor = RE_DISTRIBUTOR
-        .captures(&output_str)
-        .and_then(|caps| caps.get(1))
-        .map(|m| m.as_str().to_string())
-        .ok_or_else(|| anyhow::anyhow!("Failed to capture distributor ID"))?;
-    Ok(distributor)
+    get_lsb_release_info("-i", r"Distributor ID:\s*(\S+)")
 }
 
 pub(super) fn get_version() -> Result<String> {
+    get_lsb_release_info("-r", r"Release:\s*(\S+)")
+}
+
+fn get_lsb_release_info(flag: &str, pattern: &str) -> Result<String> {
     let lsb_release_output = Command::new("lsb_release")
-        .arg("-r")
+        .arg(flag)
         .output()
-        .context("Failed to execute lsb_release command")?;
+        .context(format!(
+            "Failed to execute lsb_release command with flag {}",
+            flag
+        ))?;
     let output_str = String::from_utf8(lsb_release_output.stdout)
         .context("Failed to convert lsb_release output to UTF-8 string")?;
-    lazy_static! {
-        static ref RE_VERSION: Regex = Regex::new(r"Release:\s*(\S+)").unwrap();
-    }
-    let version = RE_VERSION
+    let re = Regex::new(pattern).context("Failed to compile regex pattern")?;
+    let result = re
         .captures(&output_str)
         .and_then(|caps| caps.get(1))
         .map(|m| m.as_str().to_string())
-        .ok_or_else(|| anyhow::anyhow!("Failed to capture version"))?;
+        .ok_or_else(|| {
+            anyhow::anyhow!("Failed to capture information using pattern {}", pattern)
+        })?;
 
-    Ok(version)
+    Ok(result)
 }

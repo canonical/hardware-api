@@ -62,7 +62,9 @@ fn get_project_root() -> Result<PathBuf> {
     let path_ancestors = path.as_path().ancestors();
 
     for p in path_ancestors {
-        let has_cargo = read_dir(p)?.any(|p| p.unwrap().file_name() == *"Cargo.lock");
+        let has_cargo = read_dir(p)?
+            .flat_map(|entry| entry.ok())
+            .any(|entry| entry.file_name() == "Cargo.lock");
         if has_cargo {
             return Ok(PathBuf::from(p));
         }
