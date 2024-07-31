@@ -70,7 +70,7 @@ pub fn collect_bios_info(bios_info: &SMBiosInformation) -> Result<devices::Bios>
     Ok(bios)
 }
 
-/// Retrieve CPU information from SMBios
+/// Retrieve CPU information from SMBIOS
 pub fn collect_processor_info_smbios(
     processor_info: &SMBiosProcessorInformation,
     max_cpu_frequency_filepath: &'static str,

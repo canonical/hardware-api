@@ -120,8 +120,7 @@ impl CpuInfo {
 pub struct CpuFrequency(u64);
 
 impl CpuFrequency {
-    /// Read max CPU frequency fromf file and parse it in MHz
-    /// as it's done in checkbox
+    /// Read max CPU frequency fromf file and parse it in MHz as it's done in checkbox
     /// https://github.com/canonical/checkbox/blob/a8d5e9/providers/resource/bin/cpuinfo_resource.py#L56-L63
     pub fn from_file(
         max_cpu_frequency_filepath: &'static str,

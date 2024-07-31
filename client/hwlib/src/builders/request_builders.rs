@@ -54,12 +54,7 @@ impl Default for Paths {
 /// The function to create certification status request body
 /// by collecting information about hardware and kernel
 /// using the crate::collectors module
-pub fn create_certification_status_request(
-    // Function parameters can be destructured directly like this or alternatively you
-    // could just accept the struct and then destructure or access fields within the
-    // body of the function if you prefer.
-    paths: Paths,
-) -> Result<CertificationStatusRequest> {
+pub fn create_certification_status_request(paths: Paths) -> Result<CertificationStatusRequest> {
     let Paths {
         smbios_entry_filepath,
         smbios_table_filepath,
