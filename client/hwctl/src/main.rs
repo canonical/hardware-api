@@ -41,7 +41,7 @@ async fn main() -> Result<()> {
             exit(0);
         }
         Err(e) => {
-            eprintln!("ERROR: {}", e);
+            eprintln!("{}", e);
             exit(1);
         }
     }

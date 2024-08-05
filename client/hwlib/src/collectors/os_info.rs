@@ -18,7 +18,7 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use regex::Regex;
 use std::fs;
 use std::process::Command;
@@ -92,19 +92,17 @@ fn get_lsb_release_info(flag: &str, pattern: &str) -> Result<String> {
         .arg(flag)
         .output()
         .context(format!(
-            "Failed to execute lsb_release command with flag {}",
+            "failed to execute lsb_release command with flag {}",
             flag
         ))?;
     let output_str = String::from_utf8(lsb_release_output.stdout)
-        .context("Failed to convert lsb_release output to UTF-8 string")?;
-    let re = Regex::new(pattern).context("Failed to compile regex pattern")?;
+        .context("failed to convert lsb_release output to UTF-8 string")?;
+    let re = Regex::new(pattern).context("failed to compile regex pattern")?;
     let result = re
         .captures(&output_str)
         .and_then(|caps| caps.get(1))
         .map(|m| m.as_str().to_string())
-        .ok_or_else(|| {
-            anyhow::anyhow!("Failed to capture information using pattern {}", pattern)
-        })?;
+        .ok_or_else(|| anyhow!("failed to capture information using pattern {}", pattern))?;
 
     Ok(result)
 }

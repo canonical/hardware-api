@@ -69,5 +69,5 @@ fn get_project_root() -> Result<PathBuf> {
             return Ok(PathBuf::from(p));
         }
     }
-    bail!("Ran out of places to find Cargo.lock")
+    bail!("ran out of places to find Cargo.lock")
 }

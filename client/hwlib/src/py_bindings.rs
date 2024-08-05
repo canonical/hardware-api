@@ -29,14 +29,14 @@ use pyo3::{PyObject, PyResult, Python};
 use serde_json;
 use tokio::runtime::Runtime;
 
-static RT: Lazy<Runtime> = Lazy::new(|| Runtime::new().expect("Failed to create Tokio runtime"));
+static RT: Lazy<Runtime> = Lazy::new(|| Runtime::new().expect("failed to create Tokio runtime"));
 
 /// This function creates and sends the certification status request to the specified
 /// hardware-api server URL.
 #[pyfunction]
 fn send_certification_request(py: Python, url: String) -> PyResult<PyObject> {
     let request_body = create_certification_status_request(Paths::default())
-        .map_err(|e| PyRuntimeError::new_err(format!("Failed to create request: {}", e)))?;
+        .map_err(|e| PyRuntimeError::new_err(format!("failed to create request: {}", e)))?;
 
     let response =
         RT.block_on(async { native_send_certification_request(url, &request_body).await });

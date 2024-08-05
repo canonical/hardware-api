@@ -39,7 +39,7 @@ pub fn load_smbios_data(
     match table_load_from_device(entry_filepath, table_filepath) {
         Ok(data) => Some(data),
         Err(e) => {
-            eprintln!("Failed to load SMBIOS data: {}.", e);
+            eprintln!("failed to load SMBIOS data: {}.", e);
             None
         }
     }
@@ -112,7 +112,7 @@ pub fn collect_chassis_info(
 ) -> Result<devices::Chassis> {
     let chassis_type = chassis_info
         .chassis_type()
-        .ok_or("Failed to get chassis type")
+        .ok_or("failed to get chassis type")
         .unwrap()
         .to_string();
     let manufacturer = chassis_info.manufacturer().to_string();

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use itertools::Itertools;
 use smbioslib;
 use std::fmt::{self, Display};
@@ -28,8 +28,8 @@ impl CpuId {
         let cpu_id = proc_info
             .processor_id()
             .map(|id| format!("{:x?}", id))
-            .ok_or_else(|| anyhow::anyhow!("Processor ID not found"))?;
-        Ok(CpuId(cpu_id))
+            .ok_or_else(|| anyhow!("processor ID not found"))?;
+        Ok(Self(cpu_id))
     }
 
     pub fn codename(&self) -> Option<String> {
@@ -37,32 +37,24 @@ impl CpuId {
             return None;
         }
 
-        // Collect the first three whitespace-separated parts into a tuple
         let cpu_id_parts = self
             .0
             .split_whitespace()
             .take(3)
             .collect_tuple::<(_, _, _)>();
 
-        // CPU ID bytes are represented as strings
-        if let Some((byte1, byte2, byte3)) = cpu_id_parts {
-            // Reverse the order of the bytes and create the hex string
-            let cpu_id_hex = format!("0x{}{}{}", byte3, byte2, byte1);
-
-            // Translate the CPU ID into a human-friendly name
-            Some(
-                self.to_human_friendly(&cpu_id_hex)
-                    .unwrap_or_default()?
-                    .to_string(),
-            )
-        } else {
-            None
-        }
+        let (byte_1, byte_2, byte_3) = cpu_id_parts?;
+        let cpu_id_hex = format!("0x{byte_3}{byte_2}{byte_1}");
+        Some(
+            self.to_human_friendly(&cpu_id_hex)
+                .unwrap_or("Unknown")
+                .to_string(),
+        )
     }
 
     /// Implement the same logic as used in C3 to get CPU codename
-    /// https://github.com/canonical/hexr/blob/0d6726f00f9fa77efdae201188ad10a8bbbfb2be/apps/hardware/parsers/cpuid.py#L29
-    fn to_human_friendly(&self, cpu_id_hex: &str) -> Result<Option<&'static str>> {
+    /// https://github.com/canonical/hexr/blob/0d6726f/apps/hardware/parsers/cpuid.py#L29
+    fn to_human_friendly(&self, cpu_id_hex: &str) -> Option<&'static str> {
         let cpuid_map: &[(&str, &[&str])] = &[
             ("Amber Lake", &["0x806e9"]),
             ("AMD EPYC", &["0x800f12"]),
@@ -110,14 +102,13 @@ impl CpuId {
         ];
 
         for (name, ids) in cpuid_map {
-            for &id in *ids {
+            for id in *ids {
                 if id.eq_ignore_ascii_case(cpu_id_hex) {
-                    return Ok(Some(name));
+                    return Some(name);
                 }
             }
         }
-
-        Ok(None)
+        None
     }
 }
 
