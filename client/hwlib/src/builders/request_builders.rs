@@ -51,6 +51,19 @@ impl Default for Paths {
     }
 }
 
+impl Clone for Paths {
+    fn clone(&self) -> Self {
+        Self {
+            smbios_entry_filepath: self.smbios_entry_filepath,
+            smbios_table_filepath: self.smbios_table_filepath,
+            cpuinfo_filepath: self.cpuinfo_filepath,
+            max_cpu_frequency_filepath: self.max_cpu_frequency_filepath,
+            device_tree_dirpath: self.device_tree_dirpath,
+            proc_version_filepath: self.proc_version_filepath,
+        }
+    }
+}
+
 /// The function to create certification status request body
 /// by collecting information about hardware and kernel
 /// using the crate::collectors module
@@ -61,44 +74,39 @@ pub fn create_certification_status_request(paths: Paths) -> Result<Certification
         ..
     } = paths;
 
-    // Try to load SMBIOS data
-    let smbios_data = hardware_info::load_smbios_data(smbios_entry_filepath, smbios_table_filepath);
-
-    let certification_request = match smbios_data {
-        Some(data) => build_certification_request_from_smbios_data(&data, paths)?,
-        None => build_certification_request_from_defaults(paths)?,
-    };
-
-    Ok(certification_request)
+    hardware_info::load_smbios_data(smbios_entry_filepath, smbios_table_filepath)
+        .map(|data| build_certification_request_from_smbios_data(&data, paths.clone()))
+        .unwrap_or_else(|| build_certification_request_from_defaults(paths))
 }
 
 fn build_certification_request_from_smbios_data(
     data: &smbioslib::SMBiosData,
-    Paths {
+    paths: Paths,
+) -> Result<CertificationStatusRequest> {
+    let Paths {
         max_cpu_frequency_filepath,
         proc_version_filepath,
         ..
-    }: Paths,
-) -> Result<CertificationStatusRequest> {
+    } = paths;
     let bios_info_vec = data.collect::<SMBiosInformation>();
     let bios_info = bios_info_vec
         .first()
-        .ok_or_else(|| anyhow!("Failed to load BIOS data"))?;
+        .ok_or_else(|| anyhow!("failed to load BIOS data"))?;
 
     let processor_info_vec = data.collect::<SMBiosProcessorInformation>();
     let processor_info = processor_info_vec
         .first()
-        .ok_or_else(|| anyhow!("Failed to load processor data"))?;
+        .ok_or_else(|| anyhow!("failed to load processor data"))?;
 
     let chassis_info_vec = data.collect::<SMBiosSystemChassisInformation>();
     let chassis_info = chassis_info_vec
         .first()
-        .ok_or_else(|| anyhow!("Failed to load chassis data"))?;
+        .ok_or_else(|| anyhow!("failed to load chassis data"))?;
 
     let board_info_vec = data.collect::<SMBiosBaseboardInformation>();
     let board_info = board_info_vec
         .first()
-        .ok_or_else(|| anyhow!("Failed to load board data"))?;
+        .ok_or_else(|| anyhow!("failed to load board data"))?;
 
     let system_data_vec = data.collect::<SMBiosSystemInformation>();
     let system_data = system_data_vec.first().unwrap();
@@ -121,31 +129,34 @@ fn build_certification_request_from_smbios_data(
     })
 }
 
-fn build_certification_request_from_defaults(
-    Paths {
+fn build_certification_request_from_defaults(paths: Paths) -> Result<CertificationStatusRequest> {
+    let Paths {
         cpuinfo_filepath,
         max_cpu_frequency_filepath,
         device_tree_dirpath,
         proc_version_filepath,
         ..
-    }: Paths,
-) -> Result<CertificationStatusRequest> {
+    } = paths;
+
     let cpu_info = CpuInfo::from_file(cpuinfo_filepath)?;
-    let (model, vendor) = (cpu_info.model, "Unknown".to_string());
+    let architecture = os_info::get_architecture()?;
+    let board = hardware_info::collect_motherboard_info_from_device_tree(device_tree_dirpath)?;
+    let os = os_info::collect_os_info(proc_version_filepath)?;
+    let processor = hardware_info::retrieve_processor_info_cpuinfo(
+        cpuinfo_filepath,
+        max_cpu_frequency_filepath,
+    )?;
 
     Ok(CertificationStatusRequest {
-        architecture: os_info::get_architecture()?,
+        architecture,
         bios: None,
-        board: hardware_info::collect_motherboard_info_from_device_tree(device_tree_dirpath)?,
+        board,
         chassis: None,
-        model,
-        os: os_info::collect_os_info(proc_version_filepath)?,
+        model: cpu_info.model,
+        os,
         pci_peripherals: Vec::new(),
-        processor: hardware_info::retrieve_processor_info_cpuinfo(
-            cpuinfo_filepath,
-            max_cpu_frequency_filepath,
-        )?,
+        processor,
         usb_peripherals: Vec::new(),
-        vendor,
+        vendor: String::from("Unknown"),
     })
 }

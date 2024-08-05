@@ -94,8 +94,8 @@ since we collect the hardware information using SMBIOS data. If you're running i
 on a device that doesn't have SMBIOS data available, root privileges are not required.
 
 ```bash
-cd client
-sudo cargo run  # or `cargo run`
+cargo build
+sudo ./target/debug/hwctl
 ```
 
 To send the request to a different server, run the tool the following way:
