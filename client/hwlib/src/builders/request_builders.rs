@@ -27,6 +27,7 @@ use smbioslib::{
 use crate::collectors::cpuinfo::CpuInfo;
 use crate::collectors::{hardware_info, os_info};
 use crate::constants;
+use crate::models::devices::{Bios, Board, Chassis, Processor};
 use crate::models::request_validators::CertificationStatusRequest;
 
 pub struct Paths {
@@ -110,20 +111,17 @@ fn build_certification_request_from_smbios_data(
 
     let system_data_vec = data.collect::<SMBiosSystemInformation>();
     let system_data = system_data_vec.first().unwrap();
-    let system_info = hardware_info::SystemInfo::from_smbios(system_data)?;
+    let system_info = hardware_info::SystemInfo::try_from_smbios(system_data)?;
 
     Ok(CertificationStatusRequest {
         architecture: os_info::get_architecture()?,
-        bios: Some(hardware_info::collect_bios_info(bios_info)?),
-        board: hardware_info::collect_motherboard_info(board_info)?,
-        chassis: Some(hardware_info::collect_chassis_info(chassis_info)?),
+        bios: Some(Bios::try_from(bios_info)?),
+        board: Board::try_from(board_info)?,
+        chassis: Some(Chassis::try_from(chassis_info)?),
         model: system_info.product_name,
         os: os_info::collect_os_info(proc_version_filepath)?,
         pci_peripherals: Vec::new(),
-        processor: hardware_info::collect_processor_info_smbios(
-            processor_info,
-            max_cpu_frequency_filepath,
-        )?,
+        processor: Processor::try_from((processor_info, max_cpu_frequency_filepath))?,
         usb_peripherals: Vec::new(),
         vendor: system_info.manufacturer,
     })
@@ -140,12 +138,9 @@ fn build_certification_request_from_defaults(paths: Paths) -> Result<Certificati
 
     let cpu_info = CpuInfo::from_file(cpuinfo_filepath)?;
     let architecture = os_info::get_architecture()?;
-    let board = hardware_info::collect_motherboard_info_from_device_tree(device_tree_dirpath)?;
+    let board = Board::try_from(device_tree_dirpath)?;
     let os = os_info::collect_os_info(proc_version_filepath)?;
-    let processor = hardware_info::retrieve_processor_info_cpuinfo(
-        cpuinfo_filepath,
-        max_cpu_frequency_filepath,
-    )?;
+    let processor = Processor::try_from((cpuinfo_filepath, max_cpu_frequency_filepath))?;
 
     Ok(CertificationStatusRequest {
         architecture,

@@ -24,13 +24,14 @@ use smbioslib::{
     SMBiosInformation, SMBiosProcessorInformation, SMBiosSystemChassisInformation,
     SMBiosSystemInformation, SMBiosVersion,
 };
+use std::fs;
 use std::io::ErrorKind;
 use time::macros::format_description;
 use time::Date;
 
 use super::cpuid::CpuId;
 use super::cpuinfo::{CpuFrequency, CpuInfo};
-use crate::models::devices;
+use crate::models::devices::{Bios, Board, Chassis, Processor};
 
 pub fn load_smbios_data(
     entry_filepath: &'static str,
@@ -45,126 +46,121 @@ pub fn load_smbios_data(
     }
 }
 
-pub fn collect_bios_info(bios_info: &SMBiosInformation) -> Result<devices::Bios> {
-    let release_date_str = bios_info.release_date().to_string();
-    let release_date_format = format_description!("[month]/[day]/[year]");
-    let release_date_parsed = Date::parse(&release_date_str, &release_date_format)?;
-    let output_format = format_description!("[year]-[month]-[day]");
-    let release_date = release_date_parsed.format(&output_format)?;
+impl TryFrom<&SMBiosInformation<'_>> for Bios {
+    type Error = anyhow::Error;
 
-    let firmware_revision = match (
-        bios_info.system_bios_major_release(),
-        bios_info.system_bios_minor_release(),
-    ) {
-        (Some(major), Some(minor)) => Some(format!("{}.{}", major, minor)),
-        _ => None,
-    };
-
-    let bios = devices::Bios {
-        firmware_revision,
-        release_date: Some(release_date),
-        revision: Some(bios_info.version().to_string()),
-        vendor: bios_info.vendor().to_string(),
-        version: bios_info.version().to_string(),
-    };
-    Ok(bios)
+    fn try_from(bios_info: &SMBiosInformation) -> Result<Self> {
+        let release_date_str = bios_info.release_date().to_string();
+        let release_date_format = format_description!("[month]/[day]/[year]");
+        let release_date_parsed = Date::parse(&release_date_str, &release_date_format)?;
+        let output_format = format_description!("[year]-[month]-[day]");
+        let release_date = release_date_parsed.format(&output_format)?;
+        let firmware_revision = match (
+            bios_info.system_bios_major_release(),
+            bios_info.system_bios_minor_release(),
+        ) {
+            (Some(major), Some(minor)) => Some(format!("{}.{}", major, minor)),
+            _ => None,
+        };
+        Ok(Bios {
+            firmware_revision,
+            release_date: Some(release_date),
+            revision: Some(bios_info.version().to_string()),
+            vendor: bios_info.vendor().to_string(),
+            version: bios_info.version().to_string(),
+        })
+    }
 }
 
 /// Retrieve CPU information from SMBIOS
-pub fn collect_processor_info_smbios(
-    processor_info: &SMBiosProcessorInformation,
-    max_cpu_frequency_filepath: &'static str,
-) -> Result<devices::Processor> {
-    let cpu_id = CpuId::new(processor_info)?;
-    let cpu_freq = CpuFrequency::from_file(max_cpu_frequency_filepath)
-        .unwrap()
-        .m_hz;
+impl TryFrom<(&SMBiosProcessorInformation<'_>, &'static str)> for Processor {
+    type Error = anyhow::Error;
 
-    let processor = devices::Processor {
-        codename: cpu_id.codename().unwrap_or_else(|| "Unknown".to_string()),
-        frequency: cpu_freq,
-        manufacturer: processor_info.processor_manufacturer().to_string(),
-        version: processor_info.processor_version().to_string(),
-    };
-    Ok(processor)
+    fn try_from(value: (&SMBiosProcessorInformation, &'static str)) -> Result<Self> {
+        let (processor_info, max_cpu_frequency_filepath) = value;
+        let cpu_id = CpuId::new(processor_info)?;
+        let cpu_freq = CpuFrequency::from_file(max_cpu_frequency_filepath)?.m_hz;
+        Ok(Processor {
+            codename: cpu_id.codename().unwrap_or_else(|| "Unknown".to_string()),
+            frequency: cpu_freq,
+            manufacturer: processor_info.processor_manufacturer().to_string(),
+            version: processor_info.processor_version().to_string(),
+        })
+    }
 }
 
 /// Retrieve CPU information from cpuinfo file
-pub fn retrieve_processor_info_cpuinfo(
-    cpuinfo_filepath: &'static str,
-    max_cpu_frequency_filepath: &'static str,
-) -> Result<devices::Processor> {
-    let cpu_info = CpuInfo::from_file(cpuinfo_filepath)?;
-    let cpu_freq = CpuFrequency::from_file(max_cpu_frequency_filepath)
-        .unwrap()
-        .m_hz;
-    let processor = devices::Processor {
-        codename: String::new(),
-        frequency: cpu_freq,
-        manufacturer: cpu_info.cpu_type,
-        version: cpu_info.model,
-    };
-    Ok(processor)
+impl TryFrom<(&'static str, &'static str)> for Processor {
+    type Error = anyhow::Error;
+
+    fn try_from(value: (&'static str, &'static str)) -> Result<Self> {
+        let (cpuinfo_filepath, max_cpu_frequency_filepath) = value;
+        let cpu_info = CpuInfo::from_file(cpuinfo_filepath)?;
+        let cpu_freq = CpuFrequency::from_file(max_cpu_frequency_filepath)?.m_hz;
+        Ok(Processor {
+            codename: String::new(),
+            frequency: cpu_freq,
+            manufacturer: cpu_info.cpu_type,
+            version: cpu_info.model,
+        })
+    }
 }
 
-pub fn collect_chassis_info(
-    chassis_info: &SMBiosSystemChassisInformation,
-) -> Result<devices::Chassis> {
-    let chassis_type = chassis_info
-        .chassis_type()
-        .ok_or("failed to get chassis type")
-        .unwrap()
-        .to_string();
-    let manufacturer = chassis_info.manufacturer().to_string();
-    let sku = chassis_info.sku_number().to_string();
-    let version = chassis_info.version().to_string();
+impl TryFrom<&SMBiosSystemChassisInformation<'_>> for Chassis {
+    type Error = anyhow::Error;
 
-    let chassis = devices::Chassis {
-        chassis_type,
-        manufacturer,
-        sku,
-        version,
-    };
-
-    Ok(chassis)
+    fn try_from(chassis_info: &SMBiosSystemChassisInformation) -> Result<Self> {
+        let chassis_type = chassis_info
+            .chassis_type()
+            .ok_or("failed to get chassis type")
+            .unwrap()
+            .to_string();
+        let manufacturer = chassis_info.manufacturer().to_string();
+        let sku = chassis_info.sku_number().to_string();
+        let version = chassis_info.version().to_string();
+        Ok(Chassis {
+            chassis_type,
+            manufacturer,
+            sku,
+            version,
+        })
+    }
 }
 
-pub fn collect_motherboard_info(board_info: &SMBiosBaseboardInformation) -> Result<devices::Board> {
-    let manufacturer = board_info.manufacturer().to_string();
-    let product_name = board_info.product().to_string();
-    let version = board_info.version().to_string();
+impl TryFrom<&SMBiosBaseboardInformation<'_>> for Board {
+    type Error = anyhow::Error;
 
-    let board = devices::Board {
-        manufacturer,
-        product_name,
-        version,
-    };
-
-    Ok(board)
+    fn try_from(board_info: &SMBiosBaseboardInformation) -> Result<Self> {
+        let manufacturer = board_info.manufacturer().to_string();
+        let product_name = board_info.product().to_string();
+        let version = board_info.version().to_string();
+        Ok(Board {
+            manufacturer,
+            product_name,
+            version,
+        })
+    }
 }
 
-pub fn collect_motherboard_info_from_device_tree(
-    device_tree_filepath: &'static str,
-) -> Result<devices::Board> {
-    let base_path = std::path::Path::new(device_tree_filepath);
+impl TryFrom<&'static str> for Board {
+    type Error = anyhow::Error;
 
-    let try_read = |file| {
-        std::fs::read_to_string(base_path.join(file))
-            .map(|s| s.trim().to_string())
-            .unwrap_or_else(|_| "Unknown".to_string())
-    };
-
-    let manufacturer = try_read("model");
-    let product_name = try_read("compatible");
-    let version = try_read("model");
-
-    let board = devices::Board {
-        manufacturer,
-        product_name,
-        version,
-    };
-
-    Ok(board)
+    fn try_from(device_tree_filepath: &'static str) -> Result<Self> {
+        let base_path = std::path::Path::new(device_tree_filepath);
+        let try_read = |file| {
+            fs::read_to_string(base_path.join(file))
+                .map(|s| s.trim().to_string())
+                .unwrap_or("Unknown".to_string())
+        };
+        let manufacturer = try_read("model");
+        let product_name = try_read("compatible");
+        let version = try_read("model");
+        Ok(Board {
+            manufacturer,
+            product_name,
+            version,
+        })
+    }
 }
 
 pub struct SystemInfo {
@@ -173,7 +169,7 @@ pub struct SystemInfo {
 }
 
 impl SystemInfo {
-    pub fn from_smbios(system_data: &SMBiosSystemInformation) -> Result<Self> {
+    pub fn try_from_smbios(system_data: &SMBiosSystemInformation) -> Result<Self> {
         Ok(SystemInfo {
             product_name: system_data.product_name().to_string(),
             manufacturer: system_data.manufacturer().to_string(),
@@ -184,7 +180,7 @@ impl SystemInfo {
 #[cfg(target_os = "linux")]
 /// Overwrite smbioslib::table_load_from_device to use parameters for files
 /// so we can test our code without reading smbios data from the machine that
-/// runs the test
+/// runs the test.
 pub(crate) fn table_load_from_device(
     entry_file: &'static str,
     table_file: &'static str,
@@ -227,7 +223,7 @@ mod tests {
     }
 
     #[test]
-    fn test_collect_bios_info() {
+    fn test_bios_from_smbios() {
         let smbios_data = load_smbios_data(
             get_test_filepath("smbios_entry_point"),
             get_test_filepath("DMI"),
@@ -236,7 +232,7 @@ mod tests {
         let bios_info_vec = smbios_data.collect::<SMBiosInformation>();
         let bios_info = bios_info_vec.first().unwrap();
 
-        let bios = collect_bios_info(bios_info).unwrap();
+        let bios = Bios::try_from(bios_info).unwrap();
 
         assert!(bios.firmware_revision.is_some());
         assert!(bios.release_date.is_some());
@@ -249,7 +245,7 @@ mod tests {
     }
 
     #[test]
-    fn test_collect_processor_info_smbios() {
+    fn test_processor_from_smbios() {
         let smbios_data = load_smbios_data(
             get_test_filepath("smbios_entry_point"),
             get_test_filepath("DMI"),
@@ -259,8 +255,7 @@ mod tests {
         let processor_info = processor_info_vec.first().unwrap();
 
         let processor =
-            collect_processor_info_smbios(processor_info, get_test_filepath("cpuinfo_max_freq"))
-                .unwrap();
+            Processor::try_from((processor_info, get_test_filepath("cpuinfo_max_freq"))).unwrap();
 
         assert_eq!(processor.codename, "Unknown");
         assert_eq!(processor.frequency, 1800);
@@ -278,7 +273,7 @@ mod tests {
         let chassis_info_vec = smbios_data.collect::<SMBiosSystemChassisInformation>();
         let chassis_info = chassis_info_vec.first().unwrap();
 
-        let chassis = collect_chassis_info(chassis_info).unwrap();
+        let chassis = Chassis::try_from(chassis_info).unwrap();
 
         assert_eq!(chassis.chassis_type, "Desktop");
         assert_eq!(chassis.manufacturer, "AAEON");
@@ -296,7 +291,7 @@ mod tests {
         let board_info_vec = smbios_data.collect::<SMBiosBaseboardInformation>();
         let board_info = board_info_vec.first().unwrap();
 
-        let board = collect_motherboard_info(board_info).unwrap();
+        let board = Board::try_from(board_info).unwrap();
 
         assert_eq!(board.manufacturer, "AAEON");
         assert_eq!(board.product_name, "UPX-TGL01");
@@ -305,8 +300,7 @@ mod tests {
 
     #[test]
     fn test_collect_motherboard_info_from_device_tree() {
-        let board =
-            collect_motherboard_info_from_device_tree(get_test_filepath("device-tree")).unwrap();
+        let board = Board::try_from(get_test_filepath("device-tree")).unwrap();
 
         assert_eq!(board.manufacturer, "Raspberry Pi 4 Model B Rev 1.5");
         assert_eq!(board.product_name, "raspberrypi,4-model-bbrcm,bcm2711");
@@ -322,7 +316,7 @@ mod tests {
         let system_data_vec = smbios_data.collect::<SMBiosSystemInformation>();
         let system_data = system_data_vec.first().unwrap();
 
-        let system_info = SystemInfo::from_smbios(system_data).unwrap();
+        let system_info = SystemInfo::try_from_smbios(system_data).unwrap();
 
         assert_eq!(system_info.product_name, "UPX-TGL01");
         assert_eq!(system_info.manufacturer, "AAEON");
