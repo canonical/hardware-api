@@ -35,7 +35,6 @@ pub struct CpuInfo {
     pub cache: i64,
     pub bogomips: i64,
     pub speed: u64,
-    pub other: String,
 }
 
 impl CpuInfo {
@@ -84,11 +83,15 @@ impl CpuInfo {
             .remove("stepping")
             .unwrap_or_default()
             .to_string();
-        let cache = parse_cache_size(attributes.remove("cache size"))?.unwrap_or(-1);
-        let bogomips = parse_bogomips(attributes.remove("bogomips"))?.unwrap_or(-1);
-        let other = parse_bogomips(attributes.remove("bogomips"))?
-            .unwrap_or_default()
-            .to_string();
+        let cache = match attributes.remove("cache size") {
+            Some(data) => parse_cache_size(data)?,
+            None => -1,
+        };
+
+        let bogomips = match attributes.remove("bogomips") {
+            Some(data) => parse_bogomips(data)?,
+            None => -1,
+        };
 
         Ok(CpuInfo {
             platform,
@@ -101,7 +104,6 @@ impl CpuInfo {
             cache,
             bogomips,
             speed,
-            other,
         })
     }
 }
@@ -156,25 +158,16 @@ impl TryFrom<Option<&str>> for CpuSpeed {
     }
 }
 
-fn parse_cache_size(cache_size: Option<&str>) -> Result<Option<i64>> {
-    if let Some(cache_size) = cache_size {
-        return Ok(Some(
-            cache_size
-                .strip_suffix(" KB")
-                .unwrap_or(cache_size)
-                .parse()?,
-        ));
-    }
-    Ok(None)
+fn parse_cache_size(cache_size: &str) -> Result<i64> {
+    Ok(cache_size
+        .strip_suffix(" KB")
+        .unwrap_or(cache_size)
+        .parse::<i64>()?)
 }
 
-fn parse_bogomips(bogomips: Option<&str>) -> Result<Option<i64>> {
-    if let Some(bogo) = bogomips {
-        let bogo_str = bogo.replace(' ', "");
-        let bogomips = bogo_str.parse::<f64>().map(|b| b.round() as i64)?;
-        return Ok(Some(bogomips));
-    }
-    Ok(None)
+fn parse_bogomips(bogomips: &str) -> Result<i64> {
+    let bogo_str = bogomips.replace(' ', "");
+    Ok(bogo_str.parse::<f64>().map(|b| b.round() as i64)?)
 }
 
 #[cfg(test)]
