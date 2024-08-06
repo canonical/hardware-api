@@ -21,8 +21,11 @@
 use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
-use crate::models::devices;
-use crate::models::software;
+use super::devices::{
+    Audio, Bios, Board, Chassis, NetworkAdapter, PCIPeripheral, USBPeripheral, VideoCapture,
+    WirelessAdapter, GPU,
+};
+use super::software::OS;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RawCertificationStatusResponse {
@@ -38,9 +41,7 @@ impl TryFrom<RawCertificationStatusResponse> for CertificationStatusResponse {
             CertificationStatus::Certified => Ok(CertificationStatusResponse::Certified(
                 serde_json::from_value(raw.data)?,
             )),
-            CertificationStatus::NotSeen => Ok(CertificationStatusResponse::NotSeen(
-                serde_json::from_value(raw.data)?,
-            )),
+            CertificationStatus::NotSeen => Ok(CertificationStatusResponse::NotSeen),
             CertificationStatus::CertifiedImageExists => {
                 Ok(CertificationStatusResponse::CertifiedImageExists(
                     serde_json::from_value(raw.data)?,
@@ -71,7 +72,7 @@ enum CertificationStatus {
 pub enum CertificationStatusResponse {
     Certified(CertifiedResponse),
     #[serde(rename = "Not Seen")]
-    NotSeen(NotSeenResponse),
+    NotSeen,
     #[serde(rename = "Certified Image Exists")]
     CertifiedImageExists(CertifiedImageExistsResponse),
     #[serde(rename = "Related Certified System Exists")]
@@ -81,10 +82,10 @@ pub enum CertificationStatusResponse {
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CertifiedResponse {
     pub architecture: String,
-    pub available_releases: Vec<software::OS>,
-    pub bios: devices::Bios,
-    pub board: devices::Board,
-    pub chassis: Option<devices::Chassis>,
+    pub available_releases: Vec<OS>,
+    pub bios: Bios,
+    pub board: Board,
+    pub chassis: Option<Chassis>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -93,24 +94,24 @@ pub struct NotSeenResponse {}
 #[derive(Serialize, Deserialize, Debug)]
 pub struct RelatedCertifiedSystemExistsResponse {
     pub architecture: String,
-    pub board: devices::Board,
-    pub bios: devices::Bios,
-    pub chassis: Option<devices::Chassis>,
-    pub gpu: Option<Vec<devices::GPU>>,
-    pub audio: Option<Vec<devices::Audio>>,
-    pub video: Option<Vec<devices::VideoCapture>>,
-    pub network: Option<Vec<devices::NetworkAdapter>>,
-    pub wireless: Option<Vec<devices::WirelessAdapter>>,
-    pub pci_peripherals: Vec<devices::PCIPeripheral>,
-    pub usb_peripherals: Vec<devices::USBPeripheral>,
-    pub available_releases: Vec<software::OS>,
+    pub board: Board,
+    pub bios: Bios,
+    pub chassis: Option<Chassis>,
+    pub gpu: Option<Vec<GPU>>,
+    pub audio: Option<Vec<Audio>>,
+    pub video: Option<Vec<VideoCapture>>,
+    pub network: Option<Vec<NetworkAdapter>>,
+    pub wireless: Option<Vec<WirelessAdapter>>,
+    pub pci_peripherals: Vec<PCIPeripheral>,
+    pub usb_peripherals: Vec<USBPeripheral>,
+    pub available_releases: Vec<OS>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CertifiedImageExistsResponse {
     pub architecture: String,
-    pub bios: devices::Bios,
-    pub board: devices::Board,
-    pub available_releases: Vec<software::OS>,
-    pub chassis: Option<devices::Chassis>,
+    pub bios: Bios,
+    pub board: Board,
+    pub available_releases: Vec<OS>,
+    pub chassis: Option<Chassis>,
 }

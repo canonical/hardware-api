@@ -210,7 +210,7 @@ pub(crate) fn table_load_from_device(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::utils::get_test_filepath;
+    use crate::helpers::test_utils::get_test_filepath;
 
     #[test]
     fn test_load_smbios_data() {

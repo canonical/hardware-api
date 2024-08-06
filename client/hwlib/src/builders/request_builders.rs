@@ -25,10 +25,12 @@ use smbioslib::{
 };
 
 use crate::collectors::cpuinfo::CpuInfo;
-use crate::collectors::{hardware_info, os_info};
+use crate::collectors::hardware_info::{load_smbios_data, SystemInfo};
+use crate::collectors::os_info::get_architecture;
 use crate::constants;
 use crate::models::devices::{Bios, Board, Chassis, Processor};
 use crate::models::request_validators::CertificationStatusRequest;
+use crate::models::software::OS;
 
 pub struct Paths {
     pub smbios_entry_filepath: &'static str,
@@ -75,7 +77,7 @@ pub fn create_certification_status_request(paths: Paths) -> Result<Certification
         ..
     } = paths;
 
-    hardware_info::load_smbios_data(smbios_entry_filepath, smbios_table_filepath)
+    load_smbios_data(smbios_entry_filepath, smbios_table_filepath)
         .map(|data| build_certification_request_from_smbios_data(&data, paths.clone()))
         .unwrap_or_else(|| build_certification_request_from_defaults(paths))
 }
@@ -111,15 +113,15 @@ fn build_certification_request_from_smbios_data(
 
     let system_data_vec = data.collect::<SMBiosSystemInformation>();
     let system_data = system_data_vec.first().unwrap();
-    let system_info = hardware_info::SystemInfo::try_from_smbios(system_data)?;
+    let system_info = SystemInfo::try_from_smbios(system_data)?;
 
     Ok(CertificationStatusRequest {
-        architecture: os_info::get_architecture()?,
+        architecture: get_architecture()?,
         bios: Some(Bios::try_from(bios_info)?),
         board: Board::try_from(board_info)?,
         chassis: Some(Chassis::try_from(chassis_info)?),
         model: system_info.product_name,
-        os: os_info::collect_os_info(proc_version_filepath)?,
+        os: OS::try_from(proc_version_filepath)?,
         pci_peripherals: Vec::new(),
         processor: Processor::try_from((processor_info, max_cpu_frequency_filepath))?,
         usb_peripherals: Vec::new(),
@@ -137,9 +139,9 @@ fn build_certification_request_from_defaults(paths: Paths) -> Result<Certificati
     } = paths;
 
     let cpu_info = CpuInfo::from_file(cpuinfo_filepath)?;
-    let architecture = os_info::get_architecture()?;
+    let architecture = get_architecture()?;
     let board = Board::try_from(device_tree_dirpath)?;
-    let os = os_info::collect_os_info(proc_version_filepath)?;
+    let os = OS::try_from(proc_version_filepath)?;
     let processor = Processor::try_from((cpuinfo_filepath, max_cpu_frequency_filepath))?;
 
     Ok(CertificationStatusRequest {

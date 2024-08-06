@@ -23,7 +23,7 @@ use anyhow::Result;
 use std::process::exit;
 
 use hwlib::builders::request_builders::{create_certification_status_request, Paths};
-use hwlib::send_certification_request;
+use hwlib::send_certification_status_request;
 
 #[tokio::main]
 async fn main() -> Result<()> {
@@ -33,7 +33,7 @@ async fn main() -> Result<()> {
         serde_json::to_string_pretty(&cert_status_request)?
     );
     let url = std::env::var("HW_API_URL").unwrap_or_else(|_| String::from("https://hw.ubuntu.com"));
-    let response = send_certification_request(url, &cert_status_request).await;
+    let response = send_certification_status_request(url, &cert_status_request).await;
 
     match response {
         Ok(response) => {

@@ -22,9 +22,9 @@
 pub mod builders;
 pub mod collectors;
 mod constants;
+mod helpers;
 pub mod models;
 pub mod py_bindings;
-pub mod utils;
 
 use anyhow::Result;
 use reqwest::Client;
@@ -33,7 +33,7 @@ use constants::CERT_STATUS_ENDPOINT;
 use models::request_validators::CertificationStatusRequest;
 use models::response_validators::{CertificationStatusResponse, RawCertificationStatusResponse};
 
-pub async fn send_certification_request(
+pub async fn send_certification_status_request(
     url: String,
     request: &CertificationStatusRequest,
 ) -> Result<CertificationStatusResponse> {

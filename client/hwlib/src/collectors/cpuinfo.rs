@@ -173,7 +173,7 @@ fn parse_bogomips(bogomips: &str) -> Result<i64> {
 #[cfg(test)]
 mod tests {
     use super::{CpuFrequency, CpuInfo};
-    use crate::utils::get_test_filepath;
+    use crate::helpers::test_utils::get_test_filepath;
 
     #[test]
     fn test_parsing_cpuinfo() {
