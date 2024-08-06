@@ -78,7 +78,7 @@ pub fn collect_processor_info_smbios(
     let cpu_id = CpuId::new(processor_info)?;
     let cpu_freq = CpuFrequency::from_file(max_cpu_frequency_filepath)
         .unwrap()
-        .mHz();
+        .m_hz;
 
     let processor = devices::Processor {
         codename: cpu_id.codename().unwrap_or_else(|| "Unknown".to_string()),
@@ -97,7 +97,7 @@ pub fn retrieve_processor_info_cpuinfo(
     let cpu_info = CpuInfo::from_file(cpuinfo_filepath)?;
     let cpu_freq = CpuFrequency::from_file(max_cpu_frequency_filepath)
         .unwrap()
-        .mHz();
+        .m_hz;
     let processor = devices::Processor {
         codename: String::new(),
         frequency: cpu_freq,

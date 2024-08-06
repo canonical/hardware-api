@@ -18,10 +18,10 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::Result;
+use anyhow::{Error, Result};
+use itertools::Itertools;
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::{self, BufRead};
+use std::fs::{self, read_to_string};
 
 #[derive(Debug)]
 pub struct CpuInfo {
@@ -39,44 +39,35 @@ pub struct CpuInfo {
 }
 
 impl CpuInfo {
-    /// Parse cpuinfo file the same way it's done in checkbox
-    /// https://github.com/canonical/checkbox/blob/a8d5e9d/checkbox-support/checkbox_support/parsers/cpuinfo.py
+    /// Parse cpuinfo file the same way it's done in checkbox:
+    /// https://github.com/canonical/checkbox/blob/3789fdd/checkbox-support/checkbox_support/parsers/cpuinfo.py
     pub fn from_file(cpuinfo_filepath: &'static str) -> Result<CpuInfo> {
-        let file = File::open(cpuinfo_filepath)?;
-        let reader = io::BufReader::new(file);
-
         let mut attributes: HashMap<&str, &str> = HashMap::new();
         let mut cores_count = 0;
 
-        let mut buffer = String::new();
+        let raw_cpuinfo = read_to_string(cpuinfo_filepath)?;
 
-        for line in reader.lines() {
-            let line = line?;
-            buffer.push_str(&line);
-            buffer.push('\n');
-        }
-
-        for line in buffer.lines() {
+        for line in raw_cpuinfo.lines() {
             if line.trim().is_empty() {
                 continue;
             }
 
-            let parts: Vec<&str> = line.split(':').collect();
-            if parts.len() == 2 {
-                let key = parts[0].trim();
-                let value = parts[1].trim();
-
+            let parts: Option<(_, _)> = line.split(':').collect_tuple();
+            if let Some((key, value)) = parts {
+                let key = key.trim();
+                let value = value.trim();
                 if key == "processor" {
                     cores_count += 1;
                 }
-
                 attributes.insert(key, value);
             }
         }
 
         let arch = std::env::consts::ARCH;
-        let speed = CpuSpeed::from_str(attributes.get("cpu MHz").unwrap_or(&"0"))?.mHz();
+        let speed_str = attributes.get("cpu MHz").copied();
+        let speed = CpuSpeed::try_from(speed_str)?.m_hz();
 
+        let platform = arch.to_string();
         let model = attributes
             .get("Model")
             .or_else(|| attributes.get("model name"))
@@ -99,8 +90,8 @@ impl CpuInfo {
             .unwrap_or_default()
             .to_string();
 
-        let cpu_info = CpuInfo {
-            platform: arch.to_string(),
+        Ok(CpuInfo {
+            platform,
             cores_count,
             cpu_type,
             model,
@@ -111,51 +102,57 @@ impl CpuInfo {
             bogomips,
             speed,
             other,
-        };
-
-        Ok(cpu_info)
+        })
     }
 }
 
-pub struct CpuFrequency(u64);
+pub struct CpuFrequency {
+    pub m_hz: u64,
+}
 
 impl CpuFrequency {
-    /// Read max CPU frequency fromf file and parse it in MHz as it's done in checkbox
-    /// https://github.com/canonical/checkbox/blob/a8d5e9/providers/resource/bin/cpuinfo_resource.py#L56-L63
-    pub fn from_file(
-        max_cpu_frequency_filepath: &'static str,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
-        let file = File::open(max_cpu_frequency_filepath)?;
-        let mut reader = io::BufReader::new(file);
-        let mut buffer = String::new();
-        reader.read_line(&mut buffer)?;
-        let k_hz: u64 = buffer.trim().parse()?;
-        Ok(Self::from_kHz(k_hz))
+    /// CPU frequency in MHz
+    pub const MHZ: CpuFrequency = CpuFrequency::from_m_hz(1);
+    pub const KHZ: CpuFrequency = CpuFrequency::from_k_hz(1000);
+
+    /// Read max CPU frequency from file and parse it in MHz as it's done in checkbox.
+    /// https://github.com/canonical/checkbox/blob/3789fdd/providers/resource/bin/cpuinfo_resource.py#L56-L63
+    pub fn from_file(max_cpu_frequency_filepath: &'static str) -> Result<Self> {
+        let raw_freq = fs::read_to_string(max_cpu_frequency_filepath)?;
+        let k_hz: u64 = raw_freq.trim().parse()?;
+        Ok(Self::from_k_hz(k_hz))
     }
 
-    #[allow(non_snake_case)]
     /// Create a CpuFrequency from a frequency in kHz
-    fn from_kHz(freq: u64) -> Self {
-        Self(freq / 1000) // Convert kHz to MHz
+    pub const fn from_k_hz(freq_khz: u64) -> Self {
+        Self {
+            m_hz: freq_khz / 1000,
+        } // Convert kHz to MHz
     }
 
-    #[allow(non_snake_case)]
-    /// Get the frequency in MHz
-    pub fn mHz(&self) -> u64 {
-        self.0
+    /// Create a CpuFrequency from a frequency in MHz
+    pub const fn from_m_hz(freq_mhz: u64) -> Self {
+        Self { m_hz: freq_mhz }
     }
 }
 
 struct CpuSpeed(f64);
 
 impl CpuSpeed {
-    fn from_str(speed: &&str) -> Result<Self> {
-        Ok(Self(speed.parse::<f64>()?))
-    }
-
-    #[allow(non_snake_case)]
-    fn mHz(&self) -> u64 {
+    /// Get the frequency in MHz as a rounded integer
+    fn m_hz(&self) -> u64 {
         self.0.round() as u64
+    }
+}
+
+impl TryFrom<Option<&str>> for CpuSpeed {
+    type Error = Error;
+
+    fn try_from(raw: Option<&str>) -> Result<Self> {
+        match raw {
+            Some(s) => Ok(CpuSpeed(s.parse::<f64>()?)),
+            None => Ok(CpuSpeed(0.0)), // Default to 0.0 if None
+        }
     }
 }
 
@@ -205,7 +202,6 @@ mod tests {
     fn test_read_max_cpu_frequency() {
         let cpu_freq_result = CpuFrequency::from_file(get_test_filepath("cpuinfo_max_freq"));
         assert!(cpu_freq_result.is_ok());
-        let cpu_freq = cpu_freq_result.unwrap().mHz();
-        assert_eq!(cpu_freq, 1800);
+        assert_eq!(cpu_freq_result.unwrap().m_hz, 1800);
     }
 }
