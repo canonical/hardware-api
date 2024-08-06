@@ -115,9 +115,9 @@ impl TryFrom<&SMBiosSystemChassisInformation<'_>> for Chassis {
             .ok_or("failed to get chassis type")
             .unwrap()
             .to_string();
-        let manufacturer = chassis_info.manufacturer().to_string();
-        let sku = chassis_info.sku_number().to_string();
-        let version = chassis_info.version().to_string();
+        let manufacturer = chassis_info.manufacturer().ok().unwrap_or_default();
+        let sku = chassis_info.sku_number().ok().unwrap_or_default();
+        let version = chassis_info.version().ok().unwrap_or_default();
         Ok(Chassis {
             chassis_type,
             manufacturer,
@@ -148,15 +148,17 @@ impl TryFrom<&'static str> for Board {
     fn try_from(device_tree_filepath: &'static str) -> Result<Self> {
         let base_path = std::path::Path::new(device_tree_filepath);
         let try_read = |file| {
-            fs::read_to_string(base_path.join(file))
+            fs::read_to_string(file)
                 .as_ref()
                 .map(|s| s.trim())
                 .unwrap_or("Unknown")
                 .to_string()
         };
-        let manufacturer = try_read("model");
-        let product_name = try_read("compatible");
-        let version = try_read("model");
+        // Since it's still not clear how to fetch the manufacturer in such case,
+        // we set the 'Unknown' value to it.
+        let manufacturer = String::from("Unknown");
+        let product_name = try_read(base_path.join("model"));
+        let version = try_read(base_path.join("compatible"));
         Ok(Board {
             manufacturer,
             product_name,
@@ -304,8 +306,9 @@ mod tests {
     fn test_collect_motherboard_info_from_device_tree() {
         let board = Board::try_from(get_test_filepath("device-tree")).unwrap();
 
-        assert_eq!(board.manufacturer, "Raspberry Pi 4 Model B Rev 1.5");
-        assert_eq!(board.product_name, "raspberrypi,4-model-bbrcm,bcm2711");
+        assert_eq!(board.manufacturer, "Unknown");
+        assert_eq!(board.product_name, "Raspberry Pi 4 Model B Rev 1.5");
+        assert_eq!(board.version, "raspberrypi,4-model-bbrcm,bcm2711");
     }
 
     #[test]
