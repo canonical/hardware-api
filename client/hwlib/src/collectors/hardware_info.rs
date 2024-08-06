@@ -149,8 +149,10 @@ impl TryFrom<&'static str> for Board {
         let base_path = std::path::Path::new(device_tree_filepath);
         let try_read = |file| {
             fs::read_to_string(base_path.join(file))
-                .map(|s| s.trim().to_string())
-                .unwrap_or("Unknown".to_string())
+                .as_ref()
+                .map(|s| s.trim())
+                .unwrap_or("Unknown")
+                .to_string()
         };
         let manufacturer = try_read("model");
         let product_name = try_read("compatible");

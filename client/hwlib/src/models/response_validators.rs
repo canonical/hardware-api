@@ -18,7 +18,6 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::Result;
 use serde::{Deserialize, Serialize};
 
 use super::devices::{
@@ -28,34 +27,43 @@ use super::devices::{
 use super::software::OS;
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct RawCertificationStatusResponse {
-    status: CertificationStatus,
-    #[serde(flatten)]
-    data: serde_json::Value,
+#[serde(tag = "status")]
+pub enum CertificationStatusResponse {
+    Certified {
+        architecture: String,
+        available_releases: Vec<OS>,
+        bios: Bios,
+        board: Board,
+        chassis: Option<Chassis>,
+    },
+    #[serde(rename = "Not Seen")]
+    NotSeen,
+    #[serde(rename = "Certified Image Exists")]
+    CertifiedImageExists {
+        architecture: String,
+        bios: Bios,
+        board: Board,
+        available_releases: Vec<OS>,
+        chassis: Option<Chassis>,
+    },
+    #[serde(rename = "Related Certified System Exists")]
+    RelatedCertifiedSystemExists {
+        architecture: String,
+        board: Board,
+        bios: Bios,
+        chassis: Option<Chassis>,
+        gpu: Option<Vec<GPU>>,
+        audio: Option<Vec<Audio>>,
+        video: Option<Vec<VideoCapture>>,
+        network: Option<Vec<NetworkAdapter>>,
+        wireless: Option<Vec<WirelessAdapter>>,
+        pci_peripherals: Vec<PCIPeripheral>,
+        usb_peripherals: Vec<USBPeripheral>,
+        available_releases: Vec<OS>,
+    },
 }
 
-impl TryFrom<RawCertificationStatusResponse> for CertificationStatusResponse {
-    type Error = anyhow::Error;
-    fn try_from(raw: RawCertificationStatusResponse) -> Result<Self> {
-        match raw.status {
-            CertificationStatus::Certified => Ok(CertificationStatusResponse::Certified(
-                serde_json::from_value(raw.data)?,
-            )),
-            CertificationStatus::NotSeen => Ok(CertificationStatusResponse::NotSeen),
-            CertificationStatus::CertifiedImageExists => {
-                Ok(CertificationStatusResponse::CertifiedImageExists(
-                    serde_json::from_value(raw.data)?,
-                ))
-            }
-            CertificationStatus::RelatedCertifiedSystemExists => {
-                Ok(CertificationStatusResponse::RelatedCertifiedSystemExists(
-                    serde_json::from_value(raw.data)?,
-                ))
-            }
-        }
-    }
-}
-
+// This enum is not strictly necessary anymore, but if needed for other parts of the code, keep it.
 #[derive(Debug, Deserialize, Serialize)]
 enum CertificationStatus {
     Certified,
@@ -67,48 +75,9 @@ enum CertificationStatus {
     RelatedCertifiedSystemExists,
 }
 
+// The following struct is not necessary with the new design.
 #[derive(Serialize, Deserialize, Debug)]
-#[serde(tag = "status")]
-pub enum CertificationStatusResponse {
-    Certified(CertifiedResponse),
-    #[serde(rename = "Not Seen")]
-    NotSeen,
-    #[serde(rename = "Certified Image Exists")]
-    CertifiedImageExists(CertifiedImageExistsResponse),
-    #[serde(rename = "Related Certified System Exists")]
-    RelatedCertifiedSystemExists(RelatedCertifiedSystemExistsResponse),
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct CertifiedResponse {
-    pub architecture: String,
-    pub available_releases: Vec<OS>,
-    pub bios: Bios,
-    pub board: Board,
-    pub chassis: Option<Chassis>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct RelatedCertifiedSystemExistsResponse {
-    pub architecture: String,
-    pub board: Board,
-    pub bios: Bios,
-    pub chassis: Option<Chassis>,
-    pub gpu: Option<Vec<GPU>>,
-    pub audio: Option<Vec<Audio>>,
-    pub video: Option<Vec<VideoCapture>>,
-    pub network: Option<Vec<NetworkAdapter>>,
-    pub wireless: Option<Vec<WirelessAdapter>>,
-    pub pci_peripherals: Vec<PCIPeripheral>,
-    pub usb_peripherals: Vec<USBPeripheral>,
-    pub available_releases: Vec<OS>,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct CertifiedImageExistsResponse {
-    pub architecture: String,
-    pub bios: Bios,
-    pub board: Board,
-    pub available_releases: Vec<OS>,
-    pub chassis: Option<Chassis>,
+pub struct RawCertificationStatusResponse {
+    #[serde(flatten)]
+    status_response: CertificationStatusResponse,
 }

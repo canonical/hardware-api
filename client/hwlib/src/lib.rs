@@ -31,7 +31,7 @@ use reqwest::Client;
 
 use constants::CERT_STATUS_ENDPOINT;
 use models::request_validators::CertificationStatusRequest;
-use models::response_validators::{CertificationStatusResponse, RawCertificationStatusResponse};
+use models::response_validators::CertificationStatusResponse;
 
 pub async fn send_certification_status_request(
     url: String,
@@ -41,10 +41,8 @@ pub async fn send_certification_status_request(
     let mut server_url = url.clone();
     server_url.push_str(CERT_STATUS_ENDPOINT);
     let response = client.post(server_url).json(request).send().await?;
-
     let response_text = response.text().await?;
-    let raw_response: RawCertificationStatusResponse = serde_json::from_str(&response_text)?;
-    let typed_response: CertificationStatusResponse = raw_response.try_into()?;
+    let typed_response: CertificationStatusResponse = serde_json::from_str(&response_text)?;
 
     Ok(typed_response)
 }
