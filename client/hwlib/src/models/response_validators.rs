@@ -89,9 +89,6 @@ pub struct CertifiedResponse {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-pub struct NotSeenResponse {}
-
-#[derive(Serialize, Deserialize, Debug)]
 pub struct RelatedCertifiedSystemExistsResponse {
     pub architecture: String,
     pub board: Board,
