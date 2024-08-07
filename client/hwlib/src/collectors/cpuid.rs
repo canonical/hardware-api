@@ -16,35 +16,25 @@
  */
 
 use anyhow::{anyhow, Result};
-use itertools::Itertools;
 use smbioslib;
 use std::fmt::{self, Display};
 
 #[derive(Clone, Debug)]
-pub struct CpuId(String);
+pub struct CpuId([u8; 8]);
 
 impl CpuId {
-    pub fn new(proc_info: &smbioslib::SMBiosProcessorInformation) -> Result<Self> {
+    pub fn from_smbios(proc_info: &smbioslib::SMBiosProcessorInformation) -> Result<Self> {
         let cpu_id = proc_info
             .processor_id()
-            .map(|id| format!("{:x?}", id))
             .ok_or_else(|| anyhow!("processor ID not found"))?;
-        Ok(Self(cpu_id))
+        Ok(Self(*cpu_id))
     }
 
     pub fn codename(&self) -> Option<String> {
         if self.0.is_empty() {
             return None;
         }
-
-        let cpu_id_parts = self
-            .0
-            .split_whitespace()
-            .take(3)
-            .collect_tuple::<(_, _, _)>();
-
-        let (byte_1, byte_2, byte_3) = cpu_id_parts?;
-        let cpu_id_hex = format!("0x{byte_3}{byte_2}{byte_1}");
+        let cpu_id_hex = format!("0x{:x}{:02x}{:02x}", self.0[2], self.0[1], self.0[0]);
         Some(
             self.to_human_friendly(&cpu_id_hex)
                 .unwrap_or("Unknown")
@@ -52,8 +42,8 @@ impl CpuId {
         )
     }
 
-    /// Implement the same logic as used in C3 to get CPU codename
-    /// https://github.com/canonical/hexr/blob/0d6726f/apps/hardware/parsers/cpuid.py#L29
+    /// Implement the same logic as used in checkbox to get CPU codename
+    /// https://github.com/canonical/checkbox/blob/904692d/providers/base/bin/cpuid.py
     fn to_human_friendly(&self, cpu_id_hex: &str) -> Option<&'static str> {
         let cpuid_map: &[(&str, &[&str])] = &[
             ("Amber Lake", &["0x806e9"]),
@@ -67,6 +57,7 @@ impl CpuId {
             ("AMD Ryzen", &["0x810f81"]),
             ("AMD Bergamo", &["0xaa0f01"]),
             ("AMD Siena SP6", &["0xaa0f02"]),
+            ("AMD Raphael", &["0xa60f12"]),
             ("Broadwell", &["0x4067", "0x306d4", "0x5066", "0x406f"]),
             ("Canon Lake", &["0x6066"]),
             ("Cascade Lake", &["0x50655", "0x50656", "0x50657"]),
@@ -103,7 +94,7 @@ impl CpuId {
 
         for (name, ids) in cpuid_map {
             for id in *ids {
-                if id.eq_ignore_ascii_case(cpu_id_hex) {
+                if cpu_id_hex.contains(id) {
                     return Some(name);
                 }
             }
@@ -115,5 +106,38 @@ impl CpuId {
 impl Display for CpuId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         write!(f, "{}", self.codename().unwrap_or("Unknown".to_string()))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_cpu_id_codename() {
+        assert_eq!(
+            CpuId([0xE9, 0x06, 0x08, 0x00, 0xFF, 0xFB, 0xEB, 0xBF])
+                .codename()
+                .unwrap(),
+            "Amber Lake"
+        );
+        assert_eq!(
+            CpuId([0x11, 0x0F, 0xA1, 0x00, 0xFF, 0xFB, 0x8B, 0x17])
+                .codename()
+                .unwrap(),
+            "AMD Genoa"
+        );
+        assert_eq!(
+            CpuId([0x71, 0x06, 0x05, 0x00, 0xFF, 0xFB, 0xEB, 0xBF])
+                .codename()
+                .unwrap(),
+            "Knights Landing"
+        );
+        assert_eq!(
+            CpuId([0x71, 0x06, 0x0B, 0x00, 0xFF, 0xFB, 0xEB, 0xBF])
+                .codename()
+                .unwrap(),
+            "Raptor Lake"
+        );
     }
 }

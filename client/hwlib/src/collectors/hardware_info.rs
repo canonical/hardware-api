@@ -78,7 +78,7 @@ impl TryFrom<(&SMBiosProcessorInformation<'_>, &'static str)> for Processor {
 
     fn try_from(value: (&SMBiosProcessorInformation, &'static str)) -> Result<Self> {
         let (processor_info, max_cpu_frequency_filepath) = value;
-        let cpu_id = CpuId::new(processor_info)?;
+        let cpu_id = CpuId::from_smbios(processor_info)?;
         let cpu_freq = CpuFrequency::from_file(max_cpu_frequency_filepath)?.m_hz;
         Ok(Processor {
             codename: cpu_id.codename().unwrap_or_else(|| "Unknown".to_string()),
@@ -261,7 +261,7 @@ mod tests {
         let processor =
             Processor::try_from((processor_info, get_test_filepath("cpuinfo_max_freq"))).unwrap();
 
-        assert_eq!(processor.codename, "Unknown");
+        assert_eq!(processor.codename, "Tiger Lake");
         assert_eq!(processor.frequency, 1800);
         assert_eq!(processor.manufacturer, "Intel(R) Corporation");
         assert_eq!(processor.version, "Intel(R) Celeron(R) 6305E @ 1.80GHz");
