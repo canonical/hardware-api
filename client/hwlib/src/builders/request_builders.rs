@@ -91,31 +91,25 @@ fn build_certification_request_from_smbios_data(
         proc_version_filepath,
         ..
     } = paths;
-
     let bios_info_vec = data.collect::<SMBiosInformation>();
     let bios_info = bios_info_vec
         .first()
         .ok_or_else(|| anyhow!("failed to load BIOS data"))?;
-
     let processor_info_vec = data.collect::<SMBiosProcessorInformation>();
     let processor_info = processor_info_vec
         .first()
         .ok_or_else(|| anyhow!("failed to load processor data"))?;
-
     let chassis_info_vec = data.collect::<SMBiosSystemChassisInformation>();
     let chassis_info = chassis_info_vec
         .first()
         .ok_or_else(|| anyhow!("failed to load chassis data"))?;
-
     let board_info_vec = data.collect::<SMBiosBaseboardInformation>();
     let board_info = board_info_vec
         .first()
         .ok_or_else(|| anyhow!("failed to load board data"))?;
-
     let system_data_vec = data.collect::<SMBiosSystemInformation>();
     let system_data = system_data_vec.first().unwrap();
     let system_info = SystemInfo::try_from_smbios(system_data)?;
-
     Ok(CertificationStatusRequest {
         architecture: get_architecture()?,
         bios: Some(Bios::try_from(bios_info)?),
@@ -138,7 +132,6 @@ fn build_certification_request_from_defaults(paths: Paths) -> Result<Certificati
         proc_version_filepath,
         ..
     } = paths;
-
     let cpu_info = CpuInfo::from_file(cpuinfo_filepath)?;
     let architecture = get_architecture()?;
     let bios = None;
