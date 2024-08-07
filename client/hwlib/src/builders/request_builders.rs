@@ -91,6 +91,7 @@ fn build_certification_request_from_smbios_data(
         proc_version_filepath,
         ..
     } = paths;
+
     let bios_info_vec = data.collect::<SMBiosInformation>();
     let bios_info = bios_info_vec
         .first()
@@ -140,20 +141,25 @@ fn build_certification_request_from_defaults(paths: Paths) -> Result<Certificati
 
     let cpu_info = CpuInfo::from_file(cpuinfo_filepath)?;
     let architecture = get_architecture()?;
+    let bios = None;
     let board = Board::try_from(device_tree_dirpath)?;
+    let chassis = None;
+    let model = cpu_info.model;
     let os = OS::try_from(proc_version_filepath)?;
+    let pci_peripherals = Vec::new();
     let processor = Processor::try_from((cpuinfo_filepath, max_cpu_frequency_filepath))?;
-
+    let usb_peripherals = Vec::new();
+    let vendor = String::from("Unknown");
     Ok(CertificationStatusRequest {
         architecture,
-        bios: None,
+        bios,
         board,
-        chassis: None,
-        model: cpu_info.model,
+        chassis,
+        model,
         os,
-        pci_peripherals: Vec::new(),
+        pci_peripherals,
         processor,
-        usb_peripherals: Vec::new(),
-        vendor: String::from("Unknown"),
+        usb_peripherals,
+        vendor,
     })
 }
