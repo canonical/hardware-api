@@ -18,7 +18,4 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-pub mod devices;
-pub mod request_validators;
-pub mod response_validators;
-pub mod software;
+pub mod request_builders;

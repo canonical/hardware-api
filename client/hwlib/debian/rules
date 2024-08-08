@@ -6,4 +6,4 @@ export CARGO_HOME=$(CURDIR)/debian/
 	dh $@ --buildsystem cargo
 
 override_dh_auto_test:
-	/usr/share/cargo/bin/cargo test -- --test-threads=1
+	/usr/share/cargo/bin/cargo test --offline

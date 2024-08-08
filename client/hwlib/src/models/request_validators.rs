@@ -18,7 +18,20 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-pub mod devices;
-pub mod request_validators;
-pub mod response_validators;
-pub mod software;
+use super::devices::{Bios, Board, Chassis, PCIPeripheral, Processor, USBPeripheral};
+use super::software::OS;
+use serde::{Deserialize, Serialize};
+
+#[derive(Serialize, Deserialize, Debug)]
+pub struct CertificationStatusRequest {
+    pub architecture: String,
+    pub bios: Option<Bios>,
+    pub board: Board,
+    pub chassis: Option<Chassis>,
+    pub model: String,
+    pub os: OS,
+    pub pci_peripherals: Vec<PCIPeripheral>,
+    pub processor: Processor,
+    pub usb_peripherals: Vec<USBPeripheral>,
+    pub vendor: String,
+}
