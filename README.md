@@ -107,7 +107,7 @@ sudo HW_API_URL=https://your.server.url ./target/debug/hwctl
 
 This is the output should look a similar way:
 
-```json
+```
 Request:
 {
   "architecture": "amd64",
