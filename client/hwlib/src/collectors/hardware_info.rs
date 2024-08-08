@@ -222,7 +222,6 @@ mod tests {
             get_test_filepath("smbios_entry_point"),
             get_test_filepath("DMI"),
         );
-
         assert!(result.is_some());
     }
 
@@ -235,9 +234,7 @@ mod tests {
         .unwrap();
         let bios_info_vec = smbios_data.collect::<SMBiosInformation>();
         let bios_info = bios_info_vec.first().unwrap();
-
         let bios = Bios::try_from(bios_info).unwrap();
-
         assert!(bios.firmware_revision.is_some());
         assert!(bios.release_date.is_some());
         assert!(bios.revision.is_some());
@@ -257,10 +254,8 @@ mod tests {
         .unwrap();
         let processor_info_vec = smbios_data.collect::<SMBiosProcessorInformation>();
         let processor_info = processor_info_vec.first().unwrap();
-
         let processor =
             Processor::try_from((processor_info, get_test_filepath("cpuinfo_max_freq"))).unwrap();
-
         assert_eq!(processor.codename, "Tiger Lake");
         assert_eq!(processor.frequency, 1800);
         assert_eq!(processor.manufacturer, "Intel(R) Corporation");
@@ -276,9 +271,7 @@ mod tests {
         .unwrap();
         let chassis_info_vec = smbios_data.collect::<SMBiosSystemChassisInformation>();
         let chassis_info = chassis_info_vec.first().unwrap();
-
         let chassis = Chassis::try_from(chassis_info).unwrap();
-
         assert_eq!(chassis.chassis_type, "Desktop");
         assert_eq!(chassis.manufacturer, "AAEON");
         assert_eq!(chassis.sku, "Default string");
@@ -294,9 +287,7 @@ mod tests {
         .unwrap();
         let board_info_vec = smbios_data.collect::<SMBiosBaseboardInformation>();
         let board_info = board_info_vec.first().unwrap();
-
         let board = Board::try_from(board_info).unwrap();
-
         assert_eq!(board.manufacturer, "AAEON");
         assert_eq!(board.product_name, "UPX-TGL01");
         assert_eq!(board.version, "V1.0");
@@ -305,7 +296,6 @@ mod tests {
     #[test]
     fn test_collect_motherboard_info_from_device_tree() {
         let board = Board::try_from(get_test_filepath("device-tree")).unwrap();
-
         assert_eq!(board.manufacturer, "Unknown");
         assert_eq!(board.product_name, "Raspberry Pi 4 Model B Rev 1.5");
         assert_eq!(board.version, "raspberrypi,4-model-bbrcm,bcm2711");
@@ -320,9 +310,7 @@ mod tests {
         .unwrap();
         let system_data_vec = smbios_data.collect::<SMBiosSystemInformation>();
         let system_data = system_data_vec.first().unwrap();
-
         let system_info = SystemInfo::try_from_smbios(system_data).unwrap();
-
         assert_eq!(system_info.product_name, "UPX-TGL01");
         assert_eq!(system_info.manufacturer, "AAEON");
     }

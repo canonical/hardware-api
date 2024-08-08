@@ -62,22 +62,3 @@ pub enum CertificationStatusResponse {
         available_releases: Vec<OS>,
     },
 }
-
-// This enum is not strictly necessary anymore, but if needed for other parts of the code, keep it.
-#[derive(Debug, Deserialize, Serialize)]
-enum CertificationStatus {
-    Certified,
-    #[serde(rename = "Not Seen")]
-    NotSeen,
-    #[serde(rename = "Certified Image Exists")]
-    CertifiedImageExists,
-    #[serde(rename = "Related Certified System Exists")]
-    RelatedCertifiedSystemExists,
-}
-
-// The following struct is not necessary with the new design.
-#[derive(Serialize, Deserialize, Debug)]
-pub struct RawCertificationStatusResponse {
-    #[serde(flatten)]
-    status_response: CertificationStatusResponse,
-}

@@ -101,7 +101,8 @@ sudo ./target/debug/hwctl
 To send the request to a different server, run the tool the following way:
 
 ```bash
-sudo HW_API_URL=https://your.server.url cargo run
+cargo build
+sudo HW_API_URL=https://your.server.url ./target/debug/hwctl
 ```
 
 This is the output should look a similar way:
