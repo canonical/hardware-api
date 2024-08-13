@@ -83,8 +83,7 @@ impl CertificationStatusRequest {
             smbios_table_filepath,
             ..
         } = &paths;
-        if let Some(smbios_data) = load_smbios_data(smbios_entry_filepath, smbios_table_filepath)
-        {
+        if let Some(smbios_data) = load_smbios_data(smbios_entry_filepath, smbios_table_filepath) {
             Self::from_smbios_data(&smbios_data, paths)
         } else {
             Self::from_defaults(paths)

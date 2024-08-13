@@ -22,7 +22,7 @@ use crate::{
     models::request_validators::{CertificationStatusRequest, Paths},
     send_certification_status_request as native_send_certification_status_request,
 };
-use once_cell::sync::Lazy;
+use lazy_static::lazy_static;
 use pyo3::{
     exceptions::PyRuntimeError,
     prelude::*,
@@ -32,7 +32,9 @@ use pyo3::{
 use serde_json;
 use tokio::runtime::Runtime;
 
-static RT: Lazy<Runtime> = Lazy::new(|| Runtime::new().expect("failed to create Tokio runtime"));
+lazy_static! {
+    static ref RT: Runtime = Runtime::new().expect("failed to create Tokio runtime");
+}
 
 /// This function creates and sends the certification status request to the specified
 /// hardware-api server URL.
