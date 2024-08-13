@@ -49,8 +49,9 @@ jobs:
       - run: |
           rustup component add clippy
           cargo clippy --all-features --verbose
+      - run: cargo clippy --tests --verbose
       - name: Run cargo test
-        run: cargo test -- --test-threads=1
+        run: cargo test
 
   py-bindings-test:
     runs-on: [self-hosted, linux, large, jammy, x64]

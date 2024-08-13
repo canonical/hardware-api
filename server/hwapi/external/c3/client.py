@@ -112,8 +112,11 @@ class C3Client:
                     # Without this the sqlalchemy.exc.PendingRollbackError exception occurs
                     self.db.rollback()
                     continue
-                except ValueError as exc:
-                    logging.error("Value error occured: %s", str(exc))
+                except Exception as exc:
+                    logging.error(
+                        "An error occured while importing the data from C3: %s",
+                        str(exc),
+                    )
                     continue
 
     def _load_certified_configurations_from_response(

@@ -19,7 +19,7 @@
 
 
 from typing import Any
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, null
 from sqlalchemy.orm import Session, selectinload
 
 from hwapi.data_models import models
@@ -86,7 +86,7 @@ def get_board(
         .join(models.Vendor)
         .where(
             and_(
-                models.Vendor.name.ilike(vendor_name),
+                models.Vendor.name.ilike(_clean_vendor_name(vendor_name)),
                 models.Device.name.ilike(product_name),
                 models.Device.version.ilike(version),
                 models.Device.category.in_(
@@ -107,12 +107,15 @@ def get_bios(
         .join(models.Vendor)
         .where(
             and_(
-                models.Vendor.name.ilike(vendor_name),
+                models.Vendor.name.ilike(_clean_vendor_name(vendor_name)),
                 models.Bios.version.ilike(version),
-                models.Bios.firmware_revision == firmware_revision,
             )
         )
     )
+
+    if firmware_revision:
+        stmt = stmt.filter(models.Bios.firmware_revision.ilike(firmware_revision))
+
     return db.execute(stmt).scalars().first()
 
 
@@ -135,6 +138,8 @@ def get_machine_with_same_hardware_params(
         stmt = stmt.join(models.Bios, models.Report.bios_id == models.Bios.id).filter(
             models.Bios.id == bios.id
         )
+    else:
+        stmt = stmt.filter(models.Report.bios_id.is_(null()))
 
     machine = db.execute(stmt.distinct()).scalars().first()
     return machine
