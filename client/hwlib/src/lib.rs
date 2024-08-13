@@ -30,8 +30,10 @@ use anyhow::Result;
 use reqwest::Client;
 
 use constants::CERT_STATUS_ENDPOINT;
-use models::request_validators::CertificationStatusRequest;
-use models::response_validators::CertificationStatusResponse;
+use models::{
+    request_validators::CertificationStatusRequest,
+    response_validators::CertificationStatusResponse,
+};
 
 pub async fn send_certification_status_request(
     url: String,

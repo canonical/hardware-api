@@ -22,9 +22,7 @@
 pub(crate) mod test_utils {
     use anyhow::{bail, Result};
     use once_cell::sync::Lazy;
-    use std::env;
-    use std::fs::read_dir;
-    use std::path::PathBuf;
+    use std::{env, fs::read_dir, path::PathBuf};
 
     pub(crate) fn get_test_filepath(file_name: &str) -> &'static str {
         fn build_test_filepath(file_name: &str) -> String {

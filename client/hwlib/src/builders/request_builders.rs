@@ -24,13 +24,19 @@ use smbioslib::{
     SMBiosSystemChassisInformation, SMBiosSystemInformation,
 };
 
-use crate::collectors::cpuinfo::CpuInfo;
-use crate::collectors::hardware_info::{load_smbios_data, SystemInfo};
-use crate::collectors::os_info::get_architecture;
-use crate::constants;
-use crate::models::devices::{Bios, Board, Chassis, Processor};
-use crate::models::request_validators::CertificationStatusRequest;
-use crate::models::software::OS;
+use crate::{
+    collectors::{
+        cpuinfo::CpuInfo,
+        hardware_info::{load_smbios_data, SystemInfo},
+        os_info::get_architecture,
+    },
+    constants,
+    models::{
+        devices::{Bios, Board, Chassis, Processor},
+        request_validators::CertificationStatusRequest,
+        software::OS,
+    },
+};
 
 pub struct Paths {
     pub smbios_entry_filepath: &'static str,

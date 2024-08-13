@@ -18,9 +18,12 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use super::devices::{Bios, Board, Chassis, PCIPeripheral, Processor, USBPeripheral};
-use super::software::OS;
 use serde::{Deserialize, Serialize};
+
+use super::{
+    devices::{Bios, Board, Chassis, PCIPeripheral, Processor, USBPeripheral},
+    software::OS,
+};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CertificationStatusRequest {

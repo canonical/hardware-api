@@ -20,11 +20,13 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::devices::{
-    Audio, Bios, Board, Chassis, NetworkAdapter, PCIPeripheral, USBPeripheral, VideoCapture,
-    WirelessAdapter, GPU,
+use super::{
+    devices::{
+        Audio, Bios, Board, Chassis, NetworkAdapter, PCIPeripheral, USBPeripheral, VideoCapture,
+        WirelessAdapter, GPU,
+    },
+    software::OS,
 };
-use super::software::OS;
 
 #[derive(Serialize, Deserialize, Debug)]
 #[serde(tag = "status")]

@@ -21,11 +21,12 @@
 use crate::builders::request_builders::{create_certification_status_request, Paths};
 use crate::send_certification_status_request as native_send_certification_status_request;
 use once_cell::sync::Lazy;
-use pyo3::exceptions::PyRuntimeError;
-use pyo3::prelude::*;
-use pyo3::types::PyString;
-use pyo3::wrap_pyfunction;
-use pyo3::{PyObject, PyResult, Python};
+use pyo3::{
+    exceptions::PyRuntimeError,
+    prelude::*,
+    types::PyString,
+    wrap_pyfunction, {PyObject, PyResult, Python},
+};
 use serde_json;
 use tokio::runtime::Runtime;
 

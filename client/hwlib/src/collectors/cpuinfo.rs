@@ -20,8 +20,7 @@
 
 use anyhow::{Error, Result};
 use itertools::Itertools;
-use std::collections::HashMap;
-use std::fs::{self, read_to_string};
+use std::{collections::HashMap, fs::read_to_string};
 
 #[derive(Debug)]
 pub struct CpuInfo {
@@ -120,7 +119,7 @@ impl CpuFrequency {
     /// Read max CPU frequency from file and parse it in MHz as it's done in checkbox.
     /// https://github.com/canonical/checkbox/blob/3789fdd/providers/resource/bin/cpuinfo_resource.py#L56-L63
     pub fn from_file(max_cpu_frequency_filepath: &'static str) -> Result<Self> {
-        let raw_freq = fs::read_to_string(max_cpu_frequency_filepath)?;
+        let raw_freq = read_to_string(max_cpu_frequency_filepath)?;
         let k_hz: u64 = raw_freq.trim().parse()?;
         Ok(Self::from_k_hz(k_hz))
     }

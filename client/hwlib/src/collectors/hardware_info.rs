@@ -24,13 +24,13 @@ use smbioslib::{
     SMBiosInformation, SMBiosProcessorInformation, SMBiosSystemChassisInformation,
     SMBiosSystemInformation, SMBiosVersion,
 };
-use std::fs;
-use std::io::ErrorKind;
-use time::macros::format_description;
-use time::Date;
+use std::{fs::read_to_string, io::ErrorKind};
+use time::{macros::format_description, Date};
 
-use super::cpuid::CpuId;
-use super::cpuinfo::{CpuFrequency, CpuInfo};
+use super::{
+    cpuid::CpuId,
+    cpuinfo::{CpuFrequency, CpuInfo},
+};
 use crate::models::devices::{Bios, Board, Chassis, Processor};
 
 pub fn load_smbios_data(
@@ -148,7 +148,7 @@ impl TryFrom<&'static str> for Board {
     fn try_from(device_tree_filepath: &'static str) -> Result<Self> {
         let base_path = std::path::Path::new(device_tree_filepath);
         let try_read = |file| {
-            fs::read_to_string(file)
+            read_to_string(file)
                 .as_ref()
                 .map(|s| s.trim())
                 .unwrap_or("Unknown")

@@ -21,8 +21,7 @@
 use anyhow::{anyhow, Context, Result};
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::fs;
-use std::process::Command;
+use std::{fs::read_to_string, process::Command};
 
 use crate::models::software::{KernelPackage, OS};
 
@@ -47,7 +46,7 @@ impl TryFrom<&'static str> for KernelPackage {
     type Error = anyhow::Error;
 
     fn try_from(proc_version_filepath: &'static str) -> Result<Self> {
-        let kernel_version = fs::read_to_string(proc_version_filepath)?;
+        let kernel_version = read_to_string(proc_version_filepath)?;
         let kernel_version = kernel_version
             .split_whitespace()
             .nth(2)

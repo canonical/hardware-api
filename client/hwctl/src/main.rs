@@ -22,8 +22,10 @@
 use anyhow::Result;
 use std::process::exit;
 
-use hwlib::builders::request_builders::{create_certification_status_request, Paths};
-use hwlib::send_certification_status_request;
+use hwlib::{
+    builders::request_builders::{create_certification_status_request, Paths},
+    send_certification_status_request,
+};
 
 #[tokio::main]
 async fn main() -> Result<()> {
