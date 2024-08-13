@@ -21,14 +21,14 @@
 use anyhow::{anyhow, Context, Result};
 use lazy_static::lazy_static;
 use regex::Regex;
-use std::{fs::read_to_string, process::Command};
+use std::{fs::read_to_string, path::Path, process::Command};
 
 use crate::models::software::{KernelPackage, OS};
 
-impl TryFrom<&'static str> for OS {
+impl TryFrom<&Path> for OS {
     type Error = anyhow::Error;
 
-    fn try_from(proc_version_filepath: &'static str) -> Result<Self> {
+    fn try_from(proc_version_filepath: &Path) -> Result<Self> {
         let codename = get_codename()?;
         let distributor = get_distributor()?;
         let version = get_version()?;
@@ -42,10 +42,10 @@ impl TryFrom<&'static str> for OS {
     }
 }
 
-impl TryFrom<&'static str> for KernelPackage {
+impl TryFrom<&Path> for KernelPackage {
     type Error = anyhow::Error;
 
-    fn try_from(proc_version_filepath: &'static str) -> Result<Self> {
+    fn try_from(proc_version_filepath: &Path) -> Result<Self> {
         let kernel_version = read_to_string(proc_version_filepath)?;
         let kernel_version = kernel_version
             .split_whitespace()

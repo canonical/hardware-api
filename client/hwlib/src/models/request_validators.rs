@@ -24,6 +24,7 @@ use smbioslib::{
     self, SMBiosBaseboardInformation, SMBiosInformation, SMBiosProcessorInformation,
     SMBiosSystemChassisInformation, SMBiosSystemInformation,
 };
+use std::path::PathBuf;
 
 use crate::{
     collectors::{
@@ -40,23 +41,23 @@ use crate::{
 
 #[derive(Debug, Clone)]
 pub struct Paths {
-    pub smbios_entry_filepath: &'static str,
-    pub smbios_table_filepath: &'static str,
-    pub cpuinfo_filepath: &'static str,
-    pub max_cpu_frequency_filepath: &'static str,
-    pub device_tree_dirpath: &'static str,
-    pub proc_version_filepath: &'static str,
+    pub smbios_entry_filepath: PathBuf,
+    pub smbios_table_filepath: PathBuf,
+    pub cpuinfo_filepath: PathBuf,
+    pub max_cpu_frequency_filepath: PathBuf,
+    pub device_tree_dirpath: PathBuf,
+    pub proc_version_filepath: PathBuf,
 }
 
 impl Default for Paths {
     fn default() -> Self {
         Self {
-            smbios_entry_filepath: smbioslib::SYS_ENTRY_FILE,
-            smbios_table_filepath: smbioslib::SYS_TABLE_FILE,
-            cpuinfo_filepath: constants::PROC_CPUINFO_FILE_PATH,
-            max_cpu_frequency_filepath: constants::CPU_MAX_FREQ_FILE_PATH,
-            device_tree_dirpath: constants::PROC_DEVICE_TREE_DIR_PATH,
-            proc_version_filepath: constants::PROC_VERSION_FILE_PATH,
+            smbios_entry_filepath: PathBuf::from(smbioslib::SYS_ENTRY_FILE),
+            smbios_table_filepath: PathBuf::from(smbioslib::SYS_TABLE_FILE),
+            cpuinfo_filepath: PathBuf::from(constants::PROC_CPUINFO_FILE_PATH),
+            max_cpu_frequency_filepath: PathBuf::from(constants::CPU_MAX_FREQ_FILE_PATH),
+            device_tree_dirpath: PathBuf::from(constants::PROC_DEVICE_TREE_DIR_PATH),
+            proc_version_filepath: PathBuf::from(constants::PROC_VERSION_FILE_PATH),
         }
     }
 }
@@ -81,8 +82,9 @@ impl CertificationStatusRequest {
             smbios_entry_filepath,
             smbios_table_filepath,
             ..
-        } = paths;
-        if let Some(smbios_data) = load_smbios_data(smbios_entry_filepath, smbios_table_filepath) {
+        } = &paths;
+        if let Some(smbios_data) = load_smbios_data(smbios_entry_filepath, smbios_table_filepath)
+        {
             Self::from_smbios_data(&smbios_data, paths)
         } else {
             Self::from_defaults(paths)
@@ -120,9 +122,9 @@ impl CertificationStatusRequest {
             board: Board::try_from(board_info)?,
             chassis: Some(Chassis::try_from(chassis_info)?),
             model: system_info.product_name,
-            os: OS::try_from(proc_version_filepath)?,
+            os: OS::try_from(proc_version_filepath.as_path())?,
             pci_peripherals: Vec::new(),
-            processor: Processor::try_from((processor_info, max_cpu_frequency_filepath))?,
+            processor: Processor::try_from((processor_info, max_cpu_frequency_filepath.as_path()))?,
             usb_peripherals: Vec::new(),
             vendor: system_info.manufacturer,
         })
@@ -136,15 +138,18 @@ impl CertificationStatusRequest {
             proc_version_filepath,
             ..
         } = paths;
-        let cpu_info = CpuInfo::from_file(cpuinfo_filepath)?;
+        let cpu_info = CpuInfo::from_file(&cpuinfo_filepath.clone())?;
         let architecture = get_architecture()?;
         let bios = None;
-        let board = Board::try_from(device_tree_dirpath)?;
+        let board = Board::try_from(device_tree_dirpath.as_path())?;
         let chassis = None;
         let model = cpu_info.model;
-        let os = OS::try_from(proc_version_filepath)?;
+        let os = OS::try_from(proc_version_filepath.as_path())?;
         let pci_peripherals = Vec::new();
-        let processor = Processor::try_from((cpuinfo_filepath, max_cpu_frequency_filepath))?;
+        let processor = Processor::try_from((
+            cpuinfo_filepath.as_path(),
+            max_cpu_frequency_filepath.as_path(),
+        ))?;
         let usb_peripherals = Vec::new();
         let vendor = String::from("Unknown");
         Ok(Self {

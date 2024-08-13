@@ -18,42 +18,27 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
+use std::path::PathBuf;
+
+pub(crate) fn append_to_pathbuf(p: PathBuf, s: &str) -> PathBuf {
+    let mut p = p.into_os_string();
+    p.push(s);
+    p.into()
+}
+
 #[cfg(test)]
 pub(crate) mod test_utils {
     use anyhow::{bail, Result};
-    use once_cell::sync::Lazy;
     use std::{env, fs::read_dir, path::PathBuf};
 
-    pub(crate) fn get_test_filepath(file_name: &str) -> &'static str {
-        fn build_test_filepath(file_name: &str) -> String {
-            let mut path = get_project_root().unwrap();
-            if !path.to_str().unwrap().contains("hwlib") {
-                // If hwlib is not in the path, the project root is the monorepo root
-                path.extend(["client", "hwlib"]);
-            }
-            path.extend(["tests", "test_data", file_name]);
-            path.to_str().unwrap().to_string()
+    pub(crate) fn get_test_filepath(file_name: &str) -> PathBuf {
+        let mut path = get_project_root().unwrap();
+        if !path.to_str().unwrap().contains("hwlib") {
+            // If hwlib is not in the path, the project root is the monorepo root
+            path.extend(["client", "hwlib"]);
         }
-
-        static TEST_ENTRY_FILE: Lazy<String> =
-            Lazy::new(|| build_test_filepath("smbios_entry_point"));
-        static TEST_DMI_FILE: Lazy<String> = Lazy::new(|| build_test_filepath("DMI"));
-        static TEST_CPUINFO_FILE: Lazy<String> = Lazy::new(|| build_test_filepath("cpuinfo"));
-        static TEST_CPU_MAX_FREQ_FILE: Lazy<String> =
-            Lazy::new(|| build_test_filepath("cpuinfo_max_freq"));
-        static TEST_VERSION_FILE: Lazy<String> = Lazy::new(|| build_test_filepath("version"));
-        static TEST_DEVICE_TREE_DIR: Lazy<String> =
-            Lazy::new(|| build_test_filepath("device-tree"));
-
-        match file_name {
-            "smbios_entry_point" => &TEST_ENTRY_FILE,
-            "DMI" => &TEST_DMI_FILE,
-            "cpuinfo" => &TEST_CPUINFO_FILE,
-            "cpuinfo_max_freq" => &TEST_CPU_MAX_FREQ_FILE,
-            "version" => &TEST_VERSION_FILE,
-            "device-tree" => &TEST_DEVICE_TREE_DIR,
-            _ => panic!("Unsupported file name"),
-        }
+        path.extend(["tests", "test_data", file_name]);
+        path
     }
 
     fn get_project_root() -> Result<PathBuf> {
@@ -61,10 +46,10 @@ pub(crate) mod test_utils {
         let path_ancestors = path.as_path().ancestors();
 
         for p in path_ancestors {
-            let has_cargo = read_dir(p)?
+            let has_cargo_lock = read_dir(p)?
                 .flat_map(|entry| entry.ok())
                 .any(|entry| entry.file_name() == "Cargo.lock");
-            if has_cargo {
+            if has_cargo_lock {
                 return Ok(PathBuf::from(p));
             }
         }

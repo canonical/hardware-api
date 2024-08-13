@@ -24,7 +24,7 @@ use smbioslib::{
     SMBiosInformation, SMBiosProcessorInformation, SMBiosSystemChassisInformation,
     SMBiosSystemInformation, SMBiosVersion,
 };
-use std::{fs::read_to_string, io::ErrorKind};
+use std::{fs::read_to_string, io::ErrorKind, path::Path};
 use time::{macros::format_description, Date};
 
 use crate::{
@@ -32,13 +32,11 @@ use crate::{
         cpuid::CpuId,
         cpuinfo::{CpuFrequency, CpuInfo},
     },
+    helpers::append_to_pathbuf,
     models::devices::{Bios, Board, Chassis, Processor},
 };
 
-pub fn load_smbios_data(
-    entry_filepath: &'static str,
-    table_filepath: &'static str,
-) -> Option<SMBiosData> {
+pub fn load_smbios_data(entry_filepath: &Path, table_filepath: &Path) -> Option<SMBiosData> {
     match table_load_from_device(entry_filepath, table_filepath) {
         Ok(data) => Some(data),
         Err(e) => {
@@ -75,10 +73,10 @@ impl TryFrom<&SMBiosInformation<'_>> for Bios {
 }
 
 /// Retrieve CPU information from SMBIOS
-impl TryFrom<(&SMBiosProcessorInformation<'_>, &'static str)> for Processor {
+impl TryFrom<(&SMBiosProcessorInformation<'_>, &Path)> for Processor {
     type Error = anyhow::Error;
 
-    fn try_from(value: (&SMBiosProcessorInformation, &'static str)) -> Result<Self> {
+    fn try_from(value: (&SMBiosProcessorInformation, &Path)) -> Result<Self> {
         let (processor_info, max_cpu_frequency_filepath) = value;
         let cpu_id = CpuId::from_smbios(processor_info)?;
         let cpu_freq = CpuFrequency::from_k_hz_file(max_cpu_frequency_filepath)?.get_m_hz();
@@ -92,10 +90,10 @@ impl TryFrom<(&SMBiosProcessorInformation<'_>, &'static str)> for Processor {
 }
 
 /// Retrieve CPU information from cpuinfo file
-impl TryFrom<(&'static str, &'static str)> for Processor {
+impl TryFrom<(&Path, &Path)> for Processor {
     type Error = anyhow::Error;
 
-    fn try_from(value: (&'static str, &'static str)) -> Result<Self> {
+    fn try_from(value: (&Path, &Path)) -> Result<Self> {
         let (cpuinfo_filepath, max_cpu_frequency_filepath) = value;
         let cpu_info = CpuInfo::from_file(cpuinfo_filepath)?;
         let cpu_freq = CpuFrequency::from_k_hz_file(max_cpu_frequency_filepath)?.get_m_hz();
@@ -144,11 +142,10 @@ impl TryFrom<&SMBiosBaseboardInformation<'_>> for Board {
     }
 }
 
-impl TryFrom<&'static str> for Board {
+impl TryFrom<&Path> for Board {
     type Error = anyhow::Error;
 
-    fn try_from(device_tree_filepath: &'static str) -> Result<Self> {
-        let base_path = std::path::Path::new(device_tree_filepath);
+    fn try_from(device_tree_filepath: &Path) -> Result<Self> {
         let try_read = |file| {
             read_to_string(file)
                 .as_ref()
@@ -159,8 +156,14 @@ impl TryFrom<&'static str> for Board {
         // Since it's still not clear how to fetch the manufacturer in such case,
         // we set the 'Unknown' value to it.
         let manufacturer = String::from("Unknown");
-        let product_name = try_read(base_path.join("model"));
-        let version = try_read(base_path.join("compatible"));
+        let product_name = try_read(append_to_pathbuf(
+            device_tree_filepath.to_path_buf(),
+            "model",
+        ));
+        let version = try_read(append_to_pathbuf(
+            device_tree_filepath.to_path_buf(),
+            "compatible",
+        ));
         Ok(Board {
             manufacturer,
             product_name,
@@ -188,12 +191,10 @@ impl SystemInfo {
 /// so we can test our code without reading smbios data from the machine that
 /// runs the test.
 pub(crate) fn table_load_from_device(
-    entry_file: &'static str,
-    table_file: &'static str,
+    entry_file: &Path,
+    table_file: &Path,
 ) -> Result<SMBiosData, anyhow::Error> {
-    let entry_path = std::path::Path::new(entry_file);
-
-    let version = SMBiosEntryPoint64::try_load_from_file(entry_path)
+    let version = SMBiosEntryPoint64::try_load_from_file(entry_file)
         .map(|entry_point| SMBiosVersion {
             major: entry_point.major_version(),
             minor: entry_point.minor_version(),
@@ -203,14 +204,17 @@ pub(crate) fn table_load_from_device(
             if err.kind() != ErrorKind::InvalidData {
                 return Err(err);
             }
-            SMBiosEntryPoint32::try_load_from_file(entry_path).map(|entry_point| SMBiosVersion {
+            SMBiosEntryPoint32::try_load_from_file(entry_file).map(|entry_point| SMBiosVersion {
                 major: entry_point.major_version(),
                 minor: entry_point.minor_version(),
                 revision: 0,
             })
         })?;
 
-    Ok(SMBiosData::try_load_from_file(table_file, Some(version))?)
+    Ok(SMBiosData::try_load_from_file(
+        table_file.to_str().unwrap(),
+        Some(version),
+    )?)
 }
 
 #[cfg(test)]
@@ -221,8 +225,8 @@ mod tests {
     #[test]
     fn test_load_smbios_data() {
         let result = load_smbios_data(
-            get_test_filepath("smbios_entry_point"),
-            get_test_filepath("DMI"),
+            &get_test_filepath("smbios_entry_point"),
+            &get_test_filepath("DMI"),
         );
         assert!(result.is_some());
     }
@@ -230,8 +234,8 @@ mod tests {
     #[test]
     fn test_bios_from_smbios() {
         let smbios_data = load_smbios_data(
-            get_test_filepath("smbios_entry_point"),
-            get_test_filepath("DMI"),
+            &get_test_filepath("smbios_entry_point"),
+            &get_test_filepath("DMI"),
         )
         .unwrap();
         let bios_info_vec = smbios_data.collect::<SMBiosInformation>();
@@ -250,14 +254,17 @@ mod tests {
     #[test]
     fn test_processor_from_smbios() {
         let smbios_data = load_smbios_data(
-            get_test_filepath("smbios_entry_point"),
-            get_test_filepath("DMI"),
+            &get_test_filepath("smbios_entry_point"),
+            &get_test_filepath("DMI"),
         )
         .unwrap();
         let processor_info_vec = smbios_data.collect::<SMBiosProcessorInformation>();
         let processor_info = processor_info_vec.first().unwrap();
-        let processor =
-            Processor::try_from((processor_info, get_test_filepath("cpuinfo_max_freq"))).unwrap();
+        let processor = Processor::try_from((
+            processor_info,
+            get_test_filepath("cpuinfo_max_freq").as_path(),
+        ))
+        .unwrap();
         assert_eq!(processor.codename, "Tiger Lake");
         assert_eq!(processor.frequency, 1800);
         assert_eq!(processor.manufacturer, "Intel(R) Corporation");
@@ -267,8 +274,8 @@ mod tests {
     #[test]
     fn test_collect_chassis_info() {
         let smbios_data = load_smbios_data(
-            get_test_filepath("smbios_entry_point"),
-            get_test_filepath("DMI"),
+            &get_test_filepath("smbios_entry_point"),
+            &get_test_filepath("DMI"),
         )
         .unwrap();
         let chassis_info_vec = smbios_data.collect::<SMBiosSystemChassisInformation>();
@@ -283,8 +290,8 @@ mod tests {
     #[test]
     fn test_collect_motherboard_info() {
         let smbios_data = load_smbios_data(
-            get_test_filepath("smbios_entry_point"),
-            get_test_filepath("DMI"),
+            &get_test_filepath("smbios_entry_point"),
+            &get_test_filepath("DMI"),
         )
         .unwrap();
         let board_info_vec = smbios_data.collect::<SMBiosBaseboardInformation>();
@@ -297,7 +304,7 @@ mod tests {
 
     #[test]
     fn test_collect_motherboard_info_from_device_tree() {
-        let board = Board::try_from(get_test_filepath("device-tree")).unwrap();
+        let board = Board::try_from(get_test_filepath("device-tree/").as_path()).unwrap();
         assert_eq!(board.manufacturer, "Unknown");
         assert_eq!(board.product_name, "Raspberry Pi 4 Model B Rev 1.5");
         assert_eq!(board.version, "raspberrypi,4-model-bbrcm,bcm2711");
@@ -306,8 +313,8 @@ mod tests {
     #[test]
     fn test_get_system_info() {
         let smbios_data = load_smbios_data(
-            get_test_filepath("smbios_entry_point"),
-            get_test_filepath("DMI"),
+            &get_test_filepath("smbios_entry_point"),
+            &get_test_filepath("DMI"),
         )
         .unwrap();
         let system_data_vec = smbios_data.collect::<SMBiosSystemInformation>();
