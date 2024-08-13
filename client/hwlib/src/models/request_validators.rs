@@ -25,10 +25,6 @@ use smbioslib::{
     SMBiosSystemChassisInformation, SMBiosSystemInformation,
 };
 
-use super::{
-    devices::{Bios, Board, Chassis, PCIPeripheral, Processor, USBPeripheral},
-    software::OS,
-};
 use crate::{
     collectors::{
         cpuinfo::CpuInfo,
@@ -36,6 +32,10 @@ use crate::{
         os_info::get_architecture,
     },
     constants,
+    models::{
+        devices::{Bios, Board, Chassis, PCIPeripheral, Processor, USBPeripheral},
+        software::OS,
+    },
 };
 
 #[derive(Debug, Clone)]

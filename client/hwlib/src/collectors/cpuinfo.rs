@@ -187,12 +187,12 @@ mod tests {
         assert_eq!(cpuinfo.model_version, "140");
         assert_eq!(cpuinfo.model_revision, "1");
         assert_eq!(cpuinfo.cache.unwrap(), 4096);
-        assert_eq!(cpuinfo.bogomips.unzip(), 3610);
+        assert_eq!(cpuinfo.bogomips.unwrap(), 3610);
     }
 
     #[test]
     fn test_read_max_cpu_frequency() {
-        let cpu_freq = CpuFrequency::from_file(get_test_filepath("cpuinfo_max_freq")).unwrap();
+        let cpu_freq = CpuFrequency::from_k_hz_file(get_test_filepath("cpuinfo_max_freq")).unwrap();
         assert_eq!(cpu_freq.m_hz, 1800);
     }
 }

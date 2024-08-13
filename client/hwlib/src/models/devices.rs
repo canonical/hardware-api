@@ -111,7 +111,6 @@ pub struct WirelessAdapter {
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub enum DeviceStatus {
-    KnownWorking,
-    KnownBreaking,
-    Unknown,
+    Working,
+    Breaking,
 }

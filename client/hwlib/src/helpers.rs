@@ -29,12 +29,9 @@ pub(crate) mod test_utils {
             let mut path = get_project_root().unwrap();
             if !path.to_str().unwrap().contains("hwlib") {
                 // If hwlib is not in the path, the project root is the monorepo root
-                path.push("client");
-                path.push("hwlib");
+                path.extend(["client", "hwlib"]);
             }
-            path.push("tests");
-            path.push("test_data");
-            path.push(file_name);
+            path.extend(["tests", "test_data", file_name]);
             path.to_str().unwrap().to_string()
         }
 

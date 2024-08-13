@@ -27,11 +27,13 @@ use smbioslib::{
 use std::{fs::read_to_string, io::ErrorKind};
 use time::{macros::format_description, Date};
 
-use super::{
-    cpuid::CpuId,
-    cpuinfo::{CpuFrequency, CpuInfo},
+use crate::{
+    collectors::{
+        cpuid::CpuId,
+        cpuinfo::{CpuFrequency, CpuInfo},
+    },
+    models::devices::{Bios, Board, Chassis, Processor},
 };
-use crate::models::devices::{Bios, Board, Chassis, Processor};
 
 pub fn load_smbios_data(
     entry_filepath: &'static str,
@@ -131,9 +133,9 @@ impl TryFrom<&SMBiosBaseboardInformation<'_>> for Board {
     type Error = anyhow::Error;
 
     fn try_from(board_info: &SMBiosBaseboardInformation) -> Result<Self> {
-        let manufacturer = board_info.manufacturer().to_string();
-        let product_name = board_info.product().to_string();
-        let version = board_info.version().to_string();
+        let manufacturer = board_info.manufacturer().ok().unwrap_or_default();
+        let product_name = board_info.product().ok().unwrap_or_default();
+        let version = board_info.version().ok().unwrap_or_default();
         Ok(Board {
             manufacturer,
             product_name,
@@ -175,8 +177,8 @@ pub struct SystemInfo {
 impl SystemInfo {
     pub fn try_from_smbios(system_data: &SMBiosSystemInformation) -> Result<Self> {
         Ok(SystemInfo {
-            product_name: system_data.product_name().to_string(),
-            manufacturer: system_data.manufacturer().to_string(),
+            product_name: system_data.product_name().ok().unwrap_or_default(),
+            manufacturer: system_data.manufacturer().ok().unwrap_or_default(),
         })
     }
 }
@@ -188,7 +190,7 @@ impl SystemInfo {
 pub(crate) fn table_load_from_device(
     entry_file: &'static str,
     table_file: &'static str,
-) -> Result<SMBiosData, std::io::Error> {
+) -> Result<SMBiosData, anyhow::Error> {
     let entry_path = std::path::Path::new(entry_file);
 
     let version = SMBiosEntryPoint64::try_load_from_file(entry_path)
@@ -208,7 +210,7 @@ pub(crate) fn table_load_from_device(
             })
         })?;
 
-    SMBiosData::try_load_from_file(table_file, Some(version))
+    Ok(SMBiosData::try_load_from_file(table_file, Some(version))?)
 }
 
 #[cfg(test)]

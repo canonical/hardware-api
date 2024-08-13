@@ -20,7 +20,7 @@
 
 use serde::{Deserialize, Serialize};
 
-use super::{
+use crate::models::{
     devices::{
         Audio, Bios, Board, Chassis, NetworkAdapter, PCIPeripheral, USBPeripheral, VideoCapture,
         WirelessAdapter, GPU,
