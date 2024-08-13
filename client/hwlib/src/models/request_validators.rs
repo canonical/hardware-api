@@ -18,12 +18,48 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
+use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
+use smbioslib::{
+    self, SMBiosBaseboardInformation, SMBiosInformation, SMBiosProcessorInformation,
+    SMBiosSystemChassisInformation, SMBiosSystemInformation,
+};
 
 use super::{
     devices::{Bios, Board, Chassis, PCIPeripheral, Processor, USBPeripheral},
     software::OS,
 };
+use crate::{
+    collectors::{
+        cpuinfo::CpuInfo,
+        hardware_info::{load_smbios_data, SystemInfo},
+        os_info::get_architecture,
+    },
+    constants,
+};
+
+#[derive(Debug, Clone)]
+pub struct Paths {
+    pub smbios_entry_filepath: &'static str,
+    pub smbios_table_filepath: &'static str,
+    pub cpuinfo_filepath: &'static str,
+    pub max_cpu_frequency_filepath: &'static str,
+    pub device_tree_dirpath: &'static str,
+    pub proc_version_filepath: &'static str,
+}
+
+impl Default for Paths {
+    fn default() -> Self {
+        Self {
+            smbios_entry_filepath: smbioslib::SYS_ENTRY_FILE,
+            smbios_table_filepath: smbioslib::SYS_TABLE_FILE,
+            cpuinfo_filepath: constants::PROC_CPUINFO_FILE_PATH,
+            max_cpu_frequency_filepath: constants::CPU_MAX_FREQ_FILE_PATH,
+            device_tree_dirpath: constants::PROC_DEVICE_TREE_DIR_PATH,
+            proc_version_filepath: constants::PROC_VERSION_FILE_PATH,
+        }
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct CertificationStatusRequest {
@@ -37,4 +73,91 @@ pub struct CertificationStatusRequest {
     pub processor: Processor,
     pub usb_peripherals: Vec<USBPeripheral>,
     pub vendor: String,
+}
+
+impl CertificationStatusRequest {
+    pub fn new(paths: Paths) -> Result<Self> {
+        let Paths {
+            smbios_entry_filepath,
+            smbios_table_filepath,
+            ..
+        } = paths;
+        if let Some(smbios_data) = load_smbios_data(smbios_entry_filepath, smbios_table_filepath) {
+            Self::from_smbios_data(&smbios_data, paths)
+        } else {
+            Self::from_defaults(paths)
+        }
+    }
+
+    fn from_smbios_data(data: &smbioslib::SMBiosData, paths: Paths) -> Result<Self> {
+        let Paths {
+            max_cpu_frequency_filepath,
+            proc_version_filepath,
+            ..
+        } = paths;
+        let bios_info_vec = data.collect::<SMBiosInformation>();
+        let bios_info = bios_info_vec
+            .first()
+            .ok_or_else(|| anyhow!("failed to load BIOS data"))?;
+        let processor_info_vec = data.collect::<SMBiosProcessorInformation>();
+        let processor_info = processor_info_vec
+            .first()
+            .ok_or_else(|| anyhow!("failed to load processor data"))?;
+        let chassis_info_vec = data.collect::<SMBiosSystemChassisInformation>();
+        let chassis_info = chassis_info_vec
+            .first()
+            .ok_or_else(|| anyhow!("failed to load chassis data"))?;
+        let board_info_vec = data.collect::<SMBiosBaseboardInformation>();
+        let board_info = board_info_vec
+            .first()
+            .ok_or_else(|| anyhow!("failed to load board data"))?;
+        let system_data_vec = data.collect::<SMBiosSystemInformation>();
+        let system_data = system_data_vec.first().unwrap();
+        let system_info = SystemInfo::try_from_smbios(system_data)?;
+        Ok(Self {
+            architecture: get_architecture()?,
+            bios: Some(Bios::try_from(bios_info)?),
+            board: Board::try_from(board_info)?,
+            chassis: Some(Chassis::try_from(chassis_info)?),
+            model: system_info.product_name,
+            os: OS::try_from(proc_version_filepath)?,
+            pci_peripherals: Vec::new(),
+            processor: Processor::try_from((processor_info, max_cpu_frequency_filepath))?,
+            usb_peripherals: Vec::new(),
+            vendor: system_info.manufacturer,
+        })
+    }
+
+    fn from_defaults(paths: Paths) -> Result<Self> {
+        let Paths {
+            cpuinfo_filepath,
+            max_cpu_frequency_filepath,
+            device_tree_dirpath,
+            proc_version_filepath,
+            ..
+        } = paths;
+        let cpu_info = CpuInfo::from_file(cpuinfo_filepath)?;
+        let architecture = get_architecture()?;
+        let bios = None;
+        let board = Board::try_from(device_tree_dirpath)?;
+        let chassis = None;
+        let model = cpu_info.model;
+        let os = OS::try_from(proc_version_filepath)?;
+        let pci_peripherals = Vec::new();
+        let processor = Processor::try_from((cpuinfo_filepath, max_cpu_frequency_filepath))?;
+        let usb_peripherals = Vec::new();
+        let vendor = String::from("Unknown");
+        Ok(Self {
+            architecture,
+            bios,
+            board,
+            chassis,
+            model,
+            os,
+            pci_peripherals,
+            processor,
+            usb_peripherals,
+            vendor,
+        })
+    }
 }

@@ -23,13 +23,13 @@ use anyhow::Result;
 use std::process::exit;
 
 use hwlib::{
-    builders::request_builders::{create_certification_status_request, Paths},
+    models::request_validators::{CertificationStatusRequest, Paths},
     send_certification_status_request,
 };
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let cert_status_request = create_certification_status_request(Paths::default())?;
+    let cert_status_request = CertificationStatusRequest::new(Paths::default())?;
     println!(
         "Request:\n{}",
         serde_json::to_string_pretty(&cert_status_request)?

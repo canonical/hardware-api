@@ -19,7 +19,6 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-pub mod builders;
 pub mod collectors;
 mod constants;
 mod helpers;
