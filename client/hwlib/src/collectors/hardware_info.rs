@@ -79,7 +79,7 @@ impl TryFrom<(&SMBiosProcessorInformation<'_>, &'static str)> for Processor {
     fn try_from(value: (&SMBiosProcessorInformation, &'static str)) -> Result<Self> {
         let (processor_info, max_cpu_frequency_filepath) = value;
         let cpu_id = CpuId::from_smbios(processor_info)?;
-        let cpu_freq = CpuFrequency::from_file(max_cpu_frequency_filepath)?.m_hz;
+        let cpu_freq = CpuFrequency::from_k_hz_file(max_cpu_frequency_filepath)?.get_m_hz();
         Ok(Processor {
             codename: cpu_id.codename().unwrap_or_else(|| "Unknown".to_string()),
             frequency: cpu_freq,
@@ -96,7 +96,7 @@ impl TryFrom<(&'static str, &'static str)> for Processor {
     fn try_from(value: (&'static str, &'static str)) -> Result<Self> {
         let (cpuinfo_filepath, max_cpu_frequency_filepath) = value;
         let cpu_info = CpuInfo::from_file(cpuinfo_filepath)?;
-        let cpu_freq = CpuFrequency::from_file(max_cpu_frequency_filepath)?.m_hz;
+        let cpu_freq = CpuFrequency::from_k_hz_file(max_cpu_frequency_filepath)?.get_m_hz();
         Ok(Processor {
             codename: String::new(),
             frequency: cpu_freq,

@@ -18,7 +18,7 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::{Error, Result};
+use anyhow::Result;
 use itertools::Itertools;
 use std::{collections::HashMap, fs::read_to_string};
 
@@ -31,8 +31,8 @@ pub struct CpuInfo {
     pub model_number: String,
     pub model_version: String,
     pub model_revision: String,
-    pub cache: i64,
-    pub bogomips: i64,
+    pub cache: Option<u64>,
+    pub bogomips: Option<u64>,
     pub speed: u64,
 }
 
@@ -44,26 +44,28 @@ impl CpuInfo {
         let mut cores_count = 0;
 
         let raw_cpuinfo = read_to_string(cpuinfo_filepath)?;
-
         for line in raw_cpuinfo.lines() {
-            if line.trim().is_empty() {
+            let trimmed_line = line.trim();
+            if trimmed_line.is_empty() {
                 continue;
             }
 
-            let parts: Option<(_, _)> = line.split(':').collect_tuple();
-            if let Some((key, value)) = parts {
-                let key = key.trim();
-                let value = value.trim();
+            if let Some((key, value)) = trimmed_line.split(':').collect_tuple() {
+                let key = key.trim_end();
                 if key == "processor" {
                     cores_count += 1;
                 }
-                attributes.insert(key, value);
+                attributes.insert(key, value.trim_start());
             }
         }
 
         let arch = std::env::consts::ARCH;
         let speed_str = attributes.get("cpu MHz").copied();
-        let speed = CpuSpeed::try_from(speed_str)?.m_hz();
+        let speed = speed_str
+            .map(CpuSpeed::try_from)
+            .transpose()?
+            .unwrap_or_default()
+            .get_m_hz_as_int();
 
         let platform = arch.to_string();
         let model = attributes
@@ -82,15 +84,14 @@ impl CpuInfo {
             .remove("stepping")
             .unwrap_or_default()
             .to_string();
-        let cache = match attributes.remove("cache size") {
-            Some(data) => parse_cache_size(data)?,
-            None => -1,
-        };
-
-        let bogomips = match attributes.remove("bogomips") {
-            Some(data) => parse_bogomips(data)?,
-            None => -1,
-        };
+        let cache = attributes
+            .remove("cache size")
+            .map(parse_cache_size)
+            .transpose()?;
+        let bogomips = attributes
+            .remove("bogomips")
+            .map(parse_bogomips)
+            .transpose()?;
 
         Ok(CpuInfo {
             platform,
@@ -107,66 +108,67 @@ impl CpuInfo {
     }
 }
 
+#[derive(Debug, Default)]
 pub struct CpuFrequency {
-    pub m_hz: u64,
+    m_hz: u64,
 }
 
 impl CpuFrequency {
-    /// CPU frequency in MHz
-    pub const MHZ: CpuFrequency = CpuFrequency::from_m_hz(1);
-    pub const KHZ: CpuFrequency = CpuFrequency::from_k_hz(1000);
-
     /// Read max CPU frequency from file and parse it in MHz as it's done in checkbox.
     /// https://github.com/canonical/checkbox/blob/3789fdd/providers/resource/bin/cpuinfo_resource.py#L56-L63
-    pub fn from_file(max_cpu_frequency_filepath: &'static str) -> Result<Self> {
+    pub fn from_k_hz_file(max_cpu_frequency_filepath: &'static str) -> Result<Self> {
         let raw_freq = read_to_string(max_cpu_frequency_filepath)?;
         let k_hz: u64 = raw_freq.trim().parse()?;
         Ok(Self::from_k_hz(k_hz))
     }
 
     /// Create a CpuFrequency from a frequency in kHz
-    pub const fn from_k_hz(freq_khz: u64) -> Self {
-        Self {
-            m_hz: freq_khz / 1000,
-        } // Convert kHz to MHz
+    pub const fn from_k_hz(k_hz: u64) -> Self {
+        Self { m_hz: k_hz / 1000 } // Convert kHz to MHz
     }
 
     /// Create a CpuFrequency from a frequency in MHz
-    pub const fn from_m_hz(freq_mhz: u64) -> Self {
-        Self { m_hz: freq_mhz }
+    pub const fn from_m_hz(m_hz: u64) -> Self {
+        Self { m_hz }
+    }
+
+    pub const fn get_m_hz(&self) -> u64 {
+        self.m_hz
     }
 }
 
-struct CpuSpeed(f64);
+#[derive(Debug, Default)]
+struct CpuSpeed {
+    m_hz: f64,
+}
 
 impl CpuSpeed {
     /// Get the frequency in MHz as a rounded integer
-    fn m_hz(&self) -> u64 {
-        self.0.round() as u64
+    fn get_m_hz_as_int(&self) -> u64 {
+        self.m_hz.round() as u64
     }
 }
 
-impl TryFrom<Option<&str>> for CpuSpeed {
-    type Error = Error;
+impl TryFrom<&str> for CpuSpeed {
+    type Error = anyhow::Error;
 
-    fn try_from(raw: Option<&str>) -> Result<Self> {
-        match raw {
-            Some(s) => Ok(CpuSpeed(s.parse::<f64>()?)),
-            None => Ok(CpuSpeed(0.0)), // Default to 0.0 if None
-        }
+    fn try_from(raw: &str) -> Result<Self> {
+        Ok(CpuSpeed {
+            m_hz: raw.parse::<f64>()?,
+        })
     }
 }
 
-fn parse_cache_size(cache_size: &str) -> Result<i64> {
+fn parse_cache_size(cache_size: &str) -> Result<u64> {
     Ok(cache_size
         .strip_suffix(" KB")
         .unwrap_or(cache_size)
-        .parse::<i64>()?)
+        .parse::<u64>()?)
 }
 
-fn parse_bogomips(bogomips: &str) -> Result<i64> {
+fn parse_bogomips(bogomips: &str) -> Result<u64> {
     let bogo_str = bogomips.replace(' ', "");
-    Ok(bogo_str.parse::<f64>().map(|b| b.round() as i64)?)
+    Ok(bogo_str.parse::<f64>().map(|b| b.round() as u64)?)
 }
 
 #[cfg(test)]
@@ -184,8 +186,8 @@ mod tests {
         assert_eq!(cpuinfo.model_number, "6");
         assert_eq!(cpuinfo.model_version, "140");
         assert_eq!(cpuinfo.model_revision, "1");
-        assert_eq!(cpuinfo.cache, 4096);
-        assert_eq!(cpuinfo.bogomips, 3610);
+        assert_eq!(cpuinfo.cache.unwrap(), 4096);
+        assert_eq!(cpuinfo.bogomips.unzip(), 3610);
     }
 
     #[test]
