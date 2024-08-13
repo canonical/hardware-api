@@ -40,7 +40,7 @@ impl CpuId {
     /// Implement the same logic as used in checkbox to get CPU codename
     /// https://github.com/canonical/checkbox/blob/904692d/providers/base/bin/cpuid.py
     fn to_human_friendly(&self) -> Option<&'static str> {
-        let cpuid_map: &[(&str, &[&str])] = &[
+        const KNOWN_CPU_IDS: &[(&str, &[&str])] = &[
             ("Amber Lake", &["0x806e9"]),
             ("AMD EPYC", &["0x800f12"]),
             ("AMD Genoa", &["0xa10f11"]),
@@ -87,7 +87,7 @@ impl CpuId {
             ("Whisky Lake", &["0x806eb", "0x806ec"]),
         ];
         let cpu_id_hex = format!("0x{:x}{:02x}{:02x}", self.0[2], self.0[1], self.0[0]);
-        cpuid_map.iter().find_map(|(name, ids)| {
+        KNOWN_CPU_IDS.iter().find_map(|(name, ids)| {
             ids.iter()
                 .find(|&&id| cpu_id_hex.contains(id))
                 .map(|_| *name)
@@ -108,28 +108,34 @@ mod tests {
     #[test]
     fn test_cpu_id_codename() {
         assert_eq!(
-            CpuId([0xE9, 0x06, 0x08, 0x00, 0xFF, 0xFB, 0xEB, 0xBF])
+            CpuId([0xe9, 0x06, 0x08, 0x00, 0xff, 0xfb, 0xeb, 0xbf])
                 .codename()
                 .unwrap(),
             "Amber Lake"
         );
         assert_eq!(
-            CpuId([0x11, 0x0F, 0xA1, 0x00, 0xFF, 0xFB, 0x8B, 0x17])
+            CpuId([0x11, 0x0f, 0xa1, 0x00, 0xff, 0xfb, 0x8b, 0x17])
                 .codename()
                 .unwrap(),
             "AMD Genoa"
         );
         assert_eq!(
-            CpuId([0x71, 0x06, 0x05, 0x00, 0xFF, 0xFB, 0xEB, 0xBF])
+            CpuId([0x71, 0x06, 0x05, 0x00, 0xff, 0xfb, 0xeb, 0xbf])
                 .codename()
                 .unwrap(),
             "Knights Landing"
         );
         assert_eq!(
-            CpuId([0x71, 0x06, 0x0B, 0x00, 0xFF, 0xFB, 0xEB, 0xBF])
+            CpuId([0x71, 0x06, 0x0b, 0x00, 0xff, 0xfb, 0xeb, 0xbf])
                 .codename()
                 .unwrap(),
             "Raptor Lake"
         );
+    }
+
+    #[test]
+    fn test_unknown_cpuids() {
+        assert_eq!(CpuId(u64::MAX.to_be_bytes()).codename().unwrap(), "Unknown");
+        assert_eq!(CpuId(u64::MIN.to_be_bytes()).codename().unwrap(), "Unknown");
     }
 }
