@@ -34,17 +34,12 @@ impl CpuId {
         if self.0.is_empty() {
             return None;
         }
-        let cpu_id_hex = format!("0x{:x}{:02x}{:02x}", self.0[2], self.0[1], self.0[0]);
-        Some(
-            self.to_human_friendly(&cpu_id_hex)
-                .unwrap_or("Unknown")
-                .to_string(),
-        )
+        Some(self.to_human_friendly().unwrap_or("Unknown").to_string())
     }
 
     /// Implement the same logic as used in checkbox to get CPU codename
     /// https://github.com/canonical/checkbox/blob/904692d/providers/base/bin/cpuid.py
-    fn to_human_friendly(&self, cpu_id_hex: &str) -> Option<&'static str> {
+    fn to_human_friendly(&self) -> Option<&'static str> {
         let cpuid_map: &[(&str, &[&str])] = &[
             ("Amber Lake", &["0x806e9"]),
             ("AMD EPYC", &["0x800f12"]),
@@ -91,21 +86,18 @@ impl CpuId {
             ("Westmere", &["0x2065", "0x206c", "0x206f"]),
             ("Whisky Lake", &["0x806eb", "0x806ec"]),
         ];
-
-        for (name, ids) in cpuid_map {
-            for id in *ids {
-                if cpu_id_hex.contains(id) {
-                    return Some(name);
-                }
-            }
-        }
-        None
+        let cpu_id_hex = format!("0x{:x}{:02x}{:02x}", self.0[2], self.0[1], self.0[0]);
+        cpuid_map.iter().find_map(|(name, ids)| {
+            ids.iter()
+                .find(|&&id| cpu_id_hex.contains(id))
+                .map(|_| *name)
+        })
     }
 }
 
 impl Display for CpuId {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "{}", self.codename().unwrap_or("Unknown".to_string()))
+        write!(f, "{}", self.codename().unwrap_or_default())
     }
 }
 
