@@ -38,6 +38,7 @@ use crate::{
     },
 };
 
+#[derive(Debug, Clone)]
 pub struct Paths {
     pub smbios_entry_filepath: &'static str,
     pub smbios_table_filepath: &'static str,
@@ -60,19 +61,6 @@ impl Default for Paths {
     }
 }
 
-impl Clone for Paths {
-    fn clone(&self) -> Self {
-        Self {
-            smbios_entry_filepath: self.smbios_entry_filepath,
-            smbios_table_filepath: self.smbios_table_filepath,
-            cpuinfo_filepath: self.cpuinfo_filepath,
-            max_cpu_frequency_filepath: self.max_cpu_frequency_filepath,
-            device_tree_dirpath: self.device_tree_dirpath,
-            proc_version_filepath: self.proc_version_filepath,
-        }
-    }
-}
-
 /// The function to create certification status request body
 /// by collecting information about hardware and kernel
 /// using the crate::collectors module
@@ -82,10 +70,11 @@ pub fn create_certification_status_request(paths: Paths) -> Result<Certification
         smbios_table_filepath,
         ..
     } = paths;
-
-    load_smbios_data(smbios_entry_filepath, smbios_table_filepath)
-        .map(|data| build_certification_request_from_smbios_data(&data, paths.clone()))
-        .unwrap_or_else(|| build_certification_request_from_defaults(paths))
+    if let Some(data) = load_smbios_data(smbios_entry_filepath, smbios_table_filepath) {
+        build_certification_request_from_smbios_data(&data, paths)
+    } else {
+        build_certification_request_from_defaults(paths)
+    }
 }
 
 fn build_certification_request_from_smbios_data(
