@@ -31,4 +31,4 @@ def progress_bar(it: int, total: int):
     percent = f"{100 * (it / total):.{dec}f}"
     fill_length = int(leng * it // total)
     prog_bar = fillwith * fill_length + "-" * (leng - fill_length)
-    print(f"\rProgress |{prog_bar}| {percent}% Complete", end="\r")
+    print(f"\rProgress |{prog_bar}| {percent}% Complete", end="")
