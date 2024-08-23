@@ -57,7 +57,19 @@ def find_certified_machine(
 
 
 def check_cpu_compatibility(
-    db: Session, machine: models.Machine, target_codename: str
+    db: Session, machine: models.Machine, cpu_id: list[int]
 ) -> bool:
+    """
+    Check whether the machine has a CPU with the same codename as the cpu_id matching
+    codename
+    """
     cpu = repository.get_cpu_for_machine(db, machine.id)
-    return bool(cpu and cpu.codename.lower() == target_codename.lower())
+    if cpu is None:
+        return False
+    # CPU ID must be complete to check the compatibility
+    if len(cpu_id) < 3:
+        return False
+    cpu_id_hex = f"0x{cpu_id[2]:x}{cpu_id[1]:02x}{cpu_id[0]:02x}"
+    cpu_id_object = repository.get_cpu_id_object(db, cpu_id_hex)
+    target_codename = cpu_id_object.codename if cpu_id_object is not None else "Unknown"
+    return cpu.codename == target_codename

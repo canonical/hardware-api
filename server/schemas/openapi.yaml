@@ -352,9 +352,11 @@ components:
       type: object
     ProcessorValidator:
       properties:
-        codename:
-          title: Codename
-          type: string
+        cpu_id:
+          items:
+            type: integer
+          title: Cpu Id
+          type: array
         frequency:
           title: Frequency
           type: integer
@@ -365,7 +367,7 @@ components:
           title: Version
           type: string
       required:
-      - codename
+      - cpu_id
       - frequency
       - manufacturer
       - version

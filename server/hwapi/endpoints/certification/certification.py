@@ -76,7 +76,7 @@ def check_certification(
     )
     # Match against CPU codename
     if not logic.check_cpu_compatibility(
-        db, related_machine, system_info.processor.codename
+        db, related_machine, system_info.processor.cpu_id
     ):
         return response_builders.build_related_certified_response(
             db, related_machine, board, bios, related_releases, kernels

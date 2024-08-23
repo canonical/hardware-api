@@ -30,6 +30,7 @@ from tests.data_generator import DataGenerator
 
 def test_load_certificates(db_session: Session, requests_mock: Mocker):
     """Test that certificates and related hardware data are imported correctly."""
+    requests_mock.get("https://c3_url/api/v2/cpuids/", json={})
     requests_mock.get(
         "https://c3_url/api/v2/public-certificates/",
         json={
@@ -91,6 +92,7 @@ def test_load_certificates_with_missing_kernel_bios(
     db_session: Session, requests_mock: Mocker
 ):
     """Test handling of missing kernel or BIOS data."""
+    requests_mock.get("https://c3_url/api/v2/cpuids/", json={})
     requests_mock.get(
         "https://c3_url/api/v2/public-certificates/",
         json={
@@ -157,6 +159,7 @@ def test_load_devices(
         machine2, generator.gen_release(), name="2404-10612"
     )
 
+    requests_mock.get("https://c3_url/api/v2/cpuids/", json={})
     requests_mock.get(
         "https://c3_url/api/v2/public-certificates/",
         json={
@@ -284,6 +287,7 @@ def test_load_devices_duplicate_names(
         machine, generator.gen_release(), name="2204-10686"
     )
 
+    requests_mock.get("https://c3_url/api/v2/cpuids/", json={})
     requests_mock.get(
         "https://c3_url/api/v2/public-certificates/",
         json={
@@ -391,6 +395,8 @@ def test_load_devices_cpu_codename(
         machine, generator.gen_release(), name="2204-10681"
     )
 
+    requests_mock.get("https://c3_url/api/v2/cpuids/", json={})
+
     requests_mock.get(
         "https://c3_url/api/v2/public-certificates/",
         json={
@@ -438,3 +444,45 @@ def test_load_devices_cpu_codename(
 
     assert processor is not None
     assert processor.codename == "Skylake"
+
+
+def test_import_cpuids(
+    db_session: Session, requests_mock: Mocker, test_client: TestClient
+):
+    requests_mock.get(
+        "https://c3_url/api/v2/cpuids/",
+        json={"Coffee Lake": ["0x806ea", "0x906ea"]},
+    )
+
+    requests_mock.get(
+        "https://c3_url/api/v2/public-certificates/",
+        json={
+            "count": 0,
+            "next": None,
+            "previous": None,
+            "results": [],
+        },
+    )
+
+    requests_mock.get(
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        json={
+            "count": 1,
+            "next": None,
+            "previous": None,
+            "results": [],
+        },
+    )
+
+    c3_client = C3Client(db=db_session)
+    c3_client.load_hardware_data()
+
+    assert db_session.query(models.CpuId).count() == 2
+
+    cpu_id = db_session.query(models.CpuId).filter_by(id_pattern="0x806ea").first()
+    assert cpu_id is not None
+    assert cpu_id.codename == "Coffee Lake"
+
+    cpu_id = db_session.query(models.CpuId).filter_by(id_pattern="0x906ea").first()
+    assert cpu_id is not None
+    assert cpu_id.codename == "Coffee Lake"

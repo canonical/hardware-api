@@ -79,7 +79,7 @@ class PCIPeripheralValidator(BaseModel):
 
 
 class ProcessorValidator(BaseModel):
-    codename: str
+    cpu_id: list[int]
     frequency: int  # in MHz
     manufacturer: str
     version: str
