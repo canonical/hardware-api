@@ -50,7 +50,7 @@ def test_vendor_not_found(generator: DataGenerator, test_client: TestClient):
                 "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
             },
             "processor": {
-                "cpu_id": [],
+                "identifier": [],
                 "frequency": 2400,
                 "manufacturer": "AMD",
                 "version": "AMD EPYC 3251 8-Core Processor",
@@ -100,7 +100,7 @@ def test_hardware_mismatch(generator: DataGenerator, test_client: TestClient):
                 "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
             },
             "processor": {
-                "cpu_id": [],
+                "identifier": [],
                 "frequency": 2400,
                 "manufacturer": "AMD",
                 "version": "AMD EPYC 3251 8-Core Processor",
@@ -178,7 +178,7 @@ def test_disqualifying_hardware(generator: DataGenerator, test_client: TestClien
             },
             "processor": {
                 # Amber Lake CPU ID
-                "cpu_id": [0xE9, 0x06, 0x08, 0x00, 0xFF, 0xFB, 0xEB, 0xBF],
+                "identifier": [0xE9, 0x06, 0x08, 0x00, 0xFF, 0xFB, 0xEB, 0xBF],
                 "frequency": 2000,
                 "manufacturer": "Intel Corp.",
                 "version": "Intel(R) Xeon(R) CPU D-1548 @ 20000GHz",
@@ -292,7 +292,7 @@ def test_correct_hardware_incorrect_os(
             },
             "processor": {
                 # Knights Landing CPU ID
-                "cpu_id": [0x71, 0x06, 0x05, 0x00, 0xFF, 0xFB, 0xEB, 0xBF],
+                "identifier": [0x71, 0x06, 0x05, 0x00, 0xFF, 0xFB, 0xEB, 0xBF],
                 "frequency": 2000,
                 "manufacturer": "Intel Corp.",
                 "version": "Intel(R) Core(TM) i7-7600U CPU @ 24000GHz",
@@ -396,7 +396,7 @@ def test_all_criteria_matched(generator: DataGenerator, test_client: TestClient)
                 "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
             },
             "processor": {
-                "cpu_id": [0x71, 0x06, 0x0B, 0x00, 0xFF, 0xFB, 0xEB, 0xBF],
+                "identifier": [0x71, 0x06, 0x0B, 0x00, 0xFF, 0xFB, 0xEB, 0xBF],
                 "frequency": 2000,
                 "manufacturer": "Intel Corp.",
                 "version": "Intel(R) Core(TM) i7-7600U CPU @ 24000GHz",
@@ -493,7 +493,7 @@ def test_bios_is_none(generator: DataGenerator, test_client: TestClient):
                 "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
             },
             "processor": {
-                "cpu_id": [0x11, 0x0F, 0xA1, 0x00, 0xFF, 0xFB, 0x8B, 0x17],
+                "identifier": [0x11, 0x0F, 0xA1, 0x00, 0xFF, 0xFB, 0x8B, 0x17],
                 "frequency": 2000,
                 "manufacturer": "Intel Corp.",
                 "version": "Intel(R) Core(TM) i7-7600U CPU @ 24000GHz",

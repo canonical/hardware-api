@@ -18,7 +18,7 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::Result;
+use anyhow::{anyhow, Result};
 use smbioslib::{
     SMBiosBaseboardInformation, SMBiosData, SMBiosEntryPoint32, SMBiosEntryPoint64,
     SMBiosInformation, SMBiosProcessorInformation, SMBiosSystemChassisInformation,
@@ -28,10 +28,7 @@ use std::{fs::read_to_string, io::ErrorKind, path::Path};
 use time::{macros::format_description, Date};
 
 use crate::{
-    collectors::{
-        cpuid::CpuId,
-        cpuinfo::{CpuFrequency, CpuInfo},
-    },
+    collectors::cpuinfo::{CpuFrequency, CpuInfo},
     helpers::append_to_pathbuf,
     models::devices::{Bios, Board, Chassis, Processor},
 };
@@ -78,10 +75,12 @@ impl TryFrom<(&SMBiosProcessorInformation<'_>, &Path)> for Processor {
 
     fn try_from(value: (&SMBiosProcessorInformation, &Path)) -> Result<Self> {
         let (processor_info, max_cpu_frequency_filepath) = value;
-        let cpu_id = CpuId::from_smbios(processor_info)?;
+        let cpu_id = processor_info
+            .processor_id()
+            .ok_or_else(|| anyhow!("processor ID not found"))?;
         let cpu_freq = CpuFrequency::from_k_hz_file(max_cpu_frequency_filepath)?.get_m_hz();
         Ok(Processor {
-            codename: cpu_id.codename().unwrap_or_else(|| "Unknown".to_string()),
+            identifier: *cpu_id,
             frequency: cpu_freq,
             manufacturer: processor_info.processor_manufacturer().to_string(),
             version: processor_info.processor_version().to_string(),
@@ -98,7 +97,7 @@ impl TryFrom<(&Path, &Path)> for Processor {
         let cpu_info = CpuInfo::from_file(cpuinfo_filepath)?;
         let cpu_freq = CpuFrequency::from_k_hz_file(max_cpu_frequency_filepath)?.get_m_hz();
         Ok(Processor {
-            codename: String::new(),
+            identifier: [0; 8],
             frequency: cpu_freq,
             manufacturer: cpu_info.cpu_type,
             version: cpu_info.model,
@@ -265,7 +264,10 @@ mod tests {
             get_test_filepath("cpuinfo_max_freq").as_path(),
         ))
         .unwrap();
-        assert_eq!(processor.codename, "Tiger Lake");
+        assert_eq!(
+            processor.identifier,
+            [0xc1, 0x6, 0x8, 0x0, 0xff, 0xfb, 0xeb, 0xbf]
+        );
         assert_eq!(processor.frequency, 1800);
         assert_eq!(processor.manufacturer, "Intel(R) Corporation");
         assert_eq!(processor.version, "Intel(R) Celeron(R) 6305E @ 1.80GHz");
