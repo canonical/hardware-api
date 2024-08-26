@@ -396,6 +396,7 @@ def test_all_criteria_matched(generator: DataGenerator, test_client: TestClient)
                 "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
             },
             "processor": {
+                # Raptor Lake CPU ID
                 "identifier": [0x71, 0x06, 0x0B, 0x00, 0xFF, 0xFB, 0xEB, 0xBF],
                 "frequency": 2000,
                 "manufacturer": "Intel Corp.",
@@ -493,6 +494,7 @@ def test_bios_is_none(generator: DataGenerator, test_client: TestClient):
                 "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
             },
             "processor": {
+                # AMD Genoa CPU ID
                 "identifier": [0x11, 0x0F, 0xA1, 0x00, 0xFF, 0xFB, 0x8B, 0x17],
                 "frequency": 2000,
                 "manufacturer": "Intel Corp.",
