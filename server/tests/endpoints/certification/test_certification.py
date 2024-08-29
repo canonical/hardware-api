@@ -528,3 +528,94 @@ def test_bios_is_none(generator: DataGenerator, test_client: TestClient):
             }
         ],
     }
+
+
+def test_cpu_id_is_none(generator: DataGenerator, test_client: TestClient):
+    """
+    Test if CPU IS is not specified but the version matches, we get the certified response
+    """
+    vendor = generator.gen_vendor(name="Known Vendor")
+    release = generator.gen_release()
+    machine = generator.gen_machine(
+        canonical_id="202401-00001",
+        configuration=generator.gen_configuration(
+            name="config",
+            platform=generator.gen_platform(name="platform", vendor=vendor),
+        ),
+    )
+    certificate = generator.gen_certificate(machine, release)
+    report = generator.gen_report(
+        certificate,
+        generator.gen_kernel(),
+    )
+    processor = generator.gen_device(
+        vendor=generator.gen_vendor(name="Intel Corp."),
+        name="Intel(R) Core(TM) i5-7300U CPU @ 2.60GHz",
+        bus=BusType.dmi,
+        category=DeviceCategory.PROCESSOR,
+        identifier="dmi:1111",
+        codename="",
+        reports=[report],
+    )
+    board = generator.gen_device(
+        vendor,
+        identifier="dmi:0001",
+        name="Matching Board",
+        version="v1.0",
+        category=DeviceCategory.BOARD,
+        bus=BusType.dmi,
+        reports=[report],
+    )
+
+    response = test_client.post(
+        "/v1/certification/status",
+        json={
+            "vendor": vendor.name,
+            "model": "Model with Disqualifying Hardware",
+            "architecture": "amd64",
+            "board": {
+                "manufacturer": vendor.name,
+                "product_name": board.name,
+                "version": board.version,
+            },
+            "os": {
+                "distributor": "Canonical Ltd.",
+                "version": release.release,
+                "codename": release.codename,
+                "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
+            },
+            "processor": {
+                # AMD Genoa CPU ID
+                "identifier": None,
+                "frequency": 2000,
+                "manufacturer": "Intel Corp.",
+                "version": processor.version,
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "Certified",
+        "architecture": "amd64",
+        "bios": None,
+        "board": {
+            "manufacturer": "Known Vendor",
+            "product_name": "Matching Board",
+            "version": "v1.0",
+        },
+        "chassis": None,
+        "available_releases": [
+            {
+                "distributor": "Ubuntu",
+                "version": release.release,
+                "codename": release.codename,
+                "kernel": {
+                    "name": report.kernel.name,
+                    "version": report.kernel.version,
+                    "signature": report.kernel.signature,
+                    "loaded_modules": [],
+                },
+            }
+        ],
+    }

@@ -356,10 +356,12 @@ components:
           title: Frequency
           type: integer
         identifier:
-          items:
-            type: integer
+          anyOf:
+          - items:
+              type: integer
+            type: array
+          - type: 'null'
           title: Identifier
-          type: array
         manufacturer:
           title: Manufacturer
           type: string
