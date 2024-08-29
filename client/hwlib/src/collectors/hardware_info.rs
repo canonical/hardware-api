@@ -75,12 +75,12 @@ impl TryFrom<(&SMBiosProcessorInformation<'_>, &Path)> for Processor {
 
     fn try_from(value: (&SMBiosProcessorInformation, &Path)) -> Result<Self> {
         let (processor_info, max_cpu_frequency_filepath) = value;
-        let cpu_id = processor_info
+        let cpu_identifier = processor_info
             .processor_id()
-            .ok_or_else(|| anyhow!("processor ID not found"))?;
+            .ok_or_else(|| anyhow!("processor ID cannot be retrieved"))?;
         let cpu_freq = CpuFrequency::from_k_hz_file(max_cpu_frequency_filepath)?.get_m_hz();
         Ok(Processor {
-            identifier: *cpu_id,
+            identifier: Some(*cpu_identifier),
             frequency: cpu_freq,
             manufacturer: processor_info.processor_manufacturer().to_string(),
             version: processor_info.processor_version().to_string(),
@@ -97,7 +97,7 @@ impl TryFrom<(&Path, &Path)> for Processor {
         let cpu_info = CpuInfo::from_file(cpuinfo_filepath)?;
         let cpu_freq = CpuFrequency::from_k_hz_file(max_cpu_frequency_filepath)?.get_m_hz();
         Ok(Processor {
-            identifier: [0; 8],
+            identifier: None,
             frequency: cpu_freq,
             manufacturer: cpu_info.cpu_type,
             version: cpu_info.model,
@@ -266,7 +266,7 @@ mod tests {
         .unwrap();
         assert_eq!(
             processor.identifier,
-            [0xc1, 0x6, 0x8, 0x0, 0xff, 0xfb, 0xeb, 0xbf]
+            Some([0xc1, 0x6, 0x8, 0x0, 0xff, 0xfb, 0xeb, 0xbf]) // Tiger Lake ID
         );
         assert_eq!(processor.frequency, 1800);
         assert_eq!(processor.manufacturer, "Intel(R) Corporation");
