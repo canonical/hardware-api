@@ -189,5 +189,5 @@ class Device(Base):
 
 class CpuId(Base):
     __tablename__ = "cpu_id"
-    id_pattern: Mapped[str] = mapped_column(nullable=False, index=True)
+    id_pattern: Mapped[str] = mapped_column(nullable=False)
     codename: Mapped[str] = mapped_column(nullable=False)
