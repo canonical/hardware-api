@@ -166,3 +166,9 @@ class DataGenerator:
         self.db_session.add(device)
         self.db_session.commit()
         return device
+
+    def gen_cpuid_object(self, id_pattern: str, codename: str):
+        obj = models.CpuId(id_pattern=id_pattern, codename=codename)
+        self.db_session.add(obj)
+        self.db_session.commit()
+        return obj

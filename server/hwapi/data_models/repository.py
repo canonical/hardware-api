@@ -232,3 +232,18 @@ def get_releases_and_kernels_for_machine(
     releases = [release for release, _ in result]
     kernels = [kernel for _, kernel in result]
     return releases, kernels
+
+
+def get_cpu_id_object(db: Session, cpuid: str) -> models.CpuId | None:
+    """Find a CpuId record where id_pattern is a substring of the given cpuid"""
+    cpuid_lower = cpuid.lower()
+
+    stmt = select(models.CpuId)
+    cpuid_objects = db.execute(stmt).scalars()
+
+    # Iterate through the results and find a matching id_pattern
+    for cpuid_obj in cpuid_objects:
+        if cpuid_obj.id_pattern.lower() in cpuid_lower:
+            return cpuid_obj
+
+    return None

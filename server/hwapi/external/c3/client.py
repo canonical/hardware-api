@@ -49,6 +49,11 @@ class C3Client:
 
     def load_hardware_data(self):
         """Orchestrator that calls the loaders in the correct order"""
+        # Load CPU IDs
+        logger.info("Importing CPU IDs and codenames from %s", urls.C3_URL)
+        url = urls.CPU_IDS_URL
+        self._import_cpu_ids(url)
+
         # Load certified configurations
         logger.info(
             "Importing certified configurations and machines from %s", urls.C3_URL
@@ -69,6 +74,17 @@ class C3Client:
             self._load_devices_from_response,
             response_models.PublicDeviceInstance,
         )
+
+    def _import_cpu_ids(self, url: str):
+        response = requests.get(url, timeout=60)
+        response.raise_for_status()
+        response_json = response.json()
+        for codename, ids in response_json.items():
+            for cpu_id in ids:
+                get_or_create(
+                    self.db, models.CpuId, id_pattern=cpu_id, codename=codename
+                )
+        self.db.commit()
 
     def _import_from_c3(self, url: str, loader: Callable, resp_model: Type[BaseModel]):
         """

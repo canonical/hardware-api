@@ -50,7 +50,7 @@ def test_vendor_not_found(generator: DataGenerator, test_client: TestClient):
                 "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
             },
             "processor": {
-                "codename": "some codename",
+                "identifier": [],
                 "frequency": 2400,
                 "manufacturer": "AMD",
                 "version": "AMD EPYC 3251 8-Core Processor",
@@ -100,7 +100,7 @@ def test_hardware_mismatch(generator: DataGenerator, test_client: TestClient):
                 "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
             },
             "processor": {
-                "codename": "some codename",
+                "identifier": [],
                 "frequency": 2400,
                 "manufacturer": "AMD",
                 "version": "AMD EPYC 3251 8-Core Processor",
@@ -137,9 +137,11 @@ def test_disqualifying_hardware(generator: DataGenerator, test_client: TestClien
         bus=BusType.dmi,
         category=DeviceCategory.PROCESSOR,
         identifier="dmi:1111",
-        codename="Kaby Lake",
+        codename="Ivy Bridge",
         reports=[report],
     )
+    generator.gen_cpuid_object("0x306a", "Ivy Bridge")
+    generator.gen_cpuid_object("0x806e9", "Amber Lake")
     board = generator.gen_device(
         vendor,
         identifier="dmi:0001",
@@ -175,7 +177,8 @@ def test_disqualifying_hardware(generator: DataGenerator, test_client: TestClien
                 "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
             },
             "processor": {
-                "codename": "Broadwell",
+                # Amber Lake CPU ID
+                "identifier": [0xE9, 0x06, 0x08, 0x00, 0xFF, 0xFB, 0xEB, 0xBF],
                 "frequency": 2000,
                 "manufacturer": "Intel Corp.",
                 "version": "Intel(R) Xeon(R) CPU D-1548 @ 20000GHz",
@@ -249,9 +252,10 @@ def test_correct_hardware_incorrect_os(
         bus=BusType.dmi,
         category=DeviceCategory.PROCESSOR,
         identifier="dmi:1111",
-        codename="Kaby Lake",
+        codename="Knights Landing",
         reports=[report],
     )
+    generator.gen_cpuid_object("0x5067", processor.codename)
     board = generator.gen_device(
         vendor,
         identifier="dmi:0001",
@@ -287,7 +291,8 @@ def test_correct_hardware_incorrect_os(
                 "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
             },
             "processor": {
-                "codename": processor.codename,
+                # Knights Landing CPU ID
+                "identifier": [0x71, 0x06, 0x05, 0x00, 0xFF, 0xFB, 0xEB, 0xBF],
                 "frequency": 2000,
                 "manufacturer": "Intel Corp.",
                 "version": "Intel(R) Core(TM) i7-7600U CPU @ 24000GHz",
@@ -352,9 +357,10 @@ def test_all_criteria_matched(generator: DataGenerator, test_client: TestClient)
         bus=BusType.dmi,
         category=DeviceCategory.PROCESSOR,
         identifier="dmi:1111",
-        codename="Kaby Lake",
+        codename="Raptor Lake",
         reports=[report],
     )
+    generator.gen_cpuid_object("0xb0671", processor.codename)
     board = generator.gen_device(
         vendor,
         identifier="dmi:0001",
@@ -390,7 +396,8 @@ def test_all_criteria_matched(generator: DataGenerator, test_client: TestClient)
                 "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
             },
             "processor": {
-                "codename": processor.codename,
+                # Raptor Lake CPU ID
+                "identifier": [0x71, 0x06, 0x0B, 0x00, 0xFF, 0xFB, 0xEB, 0xBF],
                 "frequency": 2000,
                 "manufacturer": "Intel Corp.",
                 "version": "Intel(R) Core(TM) i7-7600U CPU @ 24000GHz",
@@ -455,7 +462,99 @@ def test_bios_is_none(generator: DataGenerator, test_client: TestClient):
         bus=BusType.dmi,
         category=DeviceCategory.PROCESSOR,
         identifier="dmi:1111",
-        codename="Kaby Lake",
+        codename="AMD Genoa",
+        reports=[report],
+    )
+    generator.gen_cpuid_object("0xa10f11", processor.codename)
+    board = generator.gen_device(
+        vendor,
+        identifier="dmi:0001",
+        name="Matching Board",
+        version="v1.0",
+        category=DeviceCategory.BOARD,
+        bus=BusType.dmi,
+        reports=[report],
+    )
+
+    response = test_client.post(
+        "/v1/certification/status",
+        json={
+            "vendor": vendor.name,
+            "model": "Model with Disqualifying Hardware",
+            "architecture": "amd64",
+            "board": {
+                "manufacturer": vendor.name,
+                "product_name": board.name,
+                "version": board.version,
+            },
+            "os": {
+                "distributor": "Canonical Ltd.",
+                "version": release.release,
+                "codename": release.codename,
+                "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
+            },
+            "processor": {
+                # AMD Genoa CPU ID
+                "identifier": [0x11, 0x0F, 0xA1, 0x00, 0xFF, 0xFB, 0x8B, 0x17],
+                "frequency": 2000,
+                "manufacturer": "Intel Corp.",
+                "version": "Intel(R) Core(TM) i7-7600U CPU @ 24000GHz",
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {
+        "status": "Certified",
+        "architecture": "amd64",
+        "bios": None,
+        "board": {
+            "manufacturer": "Known Vendor",
+            "product_name": "Matching Board",
+            "version": "v1.0",
+        },
+        "chassis": None,
+        "available_releases": [
+            {
+                "distributor": "Ubuntu",
+                "version": release.release,
+                "codename": release.codename,
+                "kernel": {
+                    "name": report.kernel.name,
+                    "version": report.kernel.version,
+                    "signature": report.kernel.signature,
+                    "loaded_modules": [],
+                },
+            }
+        ],
+    }
+
+
+def test_cpu_id_is_none(generator: DataGenerator, test_client: TestClient):
+    """
+    Test if CPU IS is not specified but the version matches, we get the certified response
+    """
+    vendor = generator.gen_vendor(name="Known Vendor")
+    release = generator.gen_release()
+    machine = generator.gen_machine(
+        canonical_id="202401-00001",
+        configuration=generator.gen_configuration(
+            name="config",
+            platform=generator.gen_platform(name="platform", vendor=vendor),
+        ),
+    )
+    certificate = generator.gen_certificate(machine, release)
+    report = generator.gen_report(
+        certificate,
+        generator.gen_kernel(),
+    )
+    processor = generator.gen_device(
+        vendor=generator.gen_vendor(name="Intel Corp."),
+        name="Intel(R) Core(TM) i5-7300U CPU @ 2.60GHz",
+        bus=BusType.dmi,
+        category=DeviceCategory.PROCESSOR,
+        identifier="dmi:1111",
+        codename="",
         reports=[report],
     )
     board = generator.gen_device(
@@ -486,10 +585,11 @@ def test_bios_is_none(generator: DataGenerator, test_client: TestClient):
                 "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
             },
             "processor": {
-                "codename": processor.codename,
+                # AMD Genoa CPU ID
+                "identifier": None,
                 "frequency": 2000,
                 "manufacturer": "Intel Corp.",
-                "version": "Intel(R) Core(TM) i7-7600U CPU @ 24000GHz",
+                "version": processor.version,
             },
         },
     )

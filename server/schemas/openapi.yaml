@@ -352,12 +352,16 @@ components:
       type: object
     ProcessorValidator:
       properties:
-        codename:
-          title: Codename
-          type: string
         frequency:
           title: Frequency
           type: integer
+        identifier:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+          - type: 'null'
+          title: Identifier
         manufacturer:
           title: Manufacturer
           type: string
@@ -365,7 +369,7 @@ components:
           title: Version
           type: string
       required:
-      - codename
+      - identifier
       - frequency
       - manufacturer
       - version
