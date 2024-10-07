@@ -172,5 +172,5 @@ sbuild /path/to/.dsc -d oracular
 After that, you can publish the package by rinning:
 
 ```sh
- dput ppa:<ppa_name> ../<package>_<version>_source.changes
+dput ppa:<ppa_name> ../<package>_<version>_source.changes
  ```

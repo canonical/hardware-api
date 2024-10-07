@@ -81,6 +81,7 @@ the machine hardware and OS, send the request to the server, and get the machine
 certification status.
 
 ```bash
+sudo apt-get install -y pkgconf libssl-dev  # Install the required debian dependencies
 cd client/hwlib
 cargo build
 ```
