@@ -9,12 +9,8 @@ cat > /tmp/.cargo/config.toml << EOL
 replace-with = "vendored-sources"
 
 [source.vendored-sources]
-directory = "/tmp/vendor"
+directory = "$(pwd)/rust-vendor"
 EOL
 
 # Run the actual test
-ls -la
-pwd
-CARGO_HOME=/tmp cargo test --offline \
-    --manifest-path ../../Cargo.toml \
-    --all-targets --all-features
+CARGO_HOME=/tmp/.cargo/ cargo test --offline --manifest-path Cargo.toml --all-targets --all-features
