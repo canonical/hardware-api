@@ -9,8 +9,8 @@ To generate the vendored dependencies, you can use the following command:
 ./debian/vendor-rust.sh
 ```
 
-`dh-cargo` requires the `debian/cargo-checksum.json` file to be present in the archive. Until the package
-is not published to crates.io, we need to generate it ourselves:
+`dh-cargo` requires the `debian/cargo-checksum.json` file to be present in the archive.
+Until the package is not published to crates.io, we need to generate it ourselves:
 
 ```bash
 ./debian/generate_checksums.py
