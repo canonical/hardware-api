@@ -169,7 +169,10 @@ Not you can build the binary itself:
 sbuild /path/to/.dsc -d oracular
 ```
 
-After that, you can publish the package by rinning:
+
+### Publishing the package
+
+After the archive is created and you've tested the build locally, you can publish the package by rinning:
 
 ```sh
 dput ppa:<ppa_name> ../<package>_<version>_source.changes
