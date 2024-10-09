@@ -1,4 +1,4 @@
-Test-Command: /usr/share/cargo/bin/cargo-auto-test hwlib 0.0.1-ppa1 --all-targets --all-features
+Test-Command: debian/tests/run-tests.sh
 Features: test-name=rust-hwlib:@
-Depends: dh-cargo (>= 23), cargo, rustc, libssl-dev, pkg-config, @
+Depends: @builddeps@
 Restrictions: allow-stderr

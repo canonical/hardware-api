@@ -113,7 +113,7 @@ Then you need to vendor the Rust dependencies:
 ```
 
 `dh-cargo` requires the `debian/cargo-checksum.json` file to be present in the archive. Until the package
-is not published to crates.io, we need to generate it manually:
+is not published to crates.io, we need to generate it ourselves:
 
 ```bash
 # under client/hwlib/ dir

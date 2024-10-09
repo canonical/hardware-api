@@ -2,7 +2,7 @@
 # Reference: https://github.com/ubuntu/authd/blob/86d9d82/debian/vendor-rust.sh
 set -eu
 
-CARGO_VENDOR_DIR="${CARGO_VENDOR_DIR:-vendor}"
+CARGO_VENDOR_DIR="${CARGO_VENDOR_DIR:-rust-vendor}"
 
 # We need a filtered vendored directory
 if [ ! $(which cargo-vendor-filterer) ]; then
@@ -10,6 +10,9 @@ if [ ! $(which cargo-vendor-filterer) ]; then
     echo "Please install cargo-vendor-filterer to run this script. More info at https://github.com/coreos/cargo-vendor-filterer." >&2
     exit 3
 fi
+
+[ -e /usr/bin/jq ] || (echo "jq is required to run this script. Try installing it with 'sudo apt install jq'" && exit 1);
+
 
 cargo vendor-filterer "$CARGO_VENDOR_DIR"
 
