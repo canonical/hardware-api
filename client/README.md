@@ -151,7 +151,7 @@ dpkg-buildpackage -S #-k=<key-to-sign> if you have more than one GPG key for the
 You can also `lintian --pedantic` to staticly check the files under
 the `debian/` dir.
 
-### Testing your package
+### Testing the package build
 
 You can test your package and build it with the
 [sbuild](https://wiki.debian.org/sbuild) tool.  In this example, we do
@@ -193,6 +193,22 @@ Not you can build the binary itself:
 sbuild /path/to/.dsc -d oracular
 ```
 
+
+### Running autopkgtests locally in lxd
+
+To run autopkgtests, first set up the environment. It can be set up by
+running the following command (the distro can be different):
+
+```sh
+autopkgtest-build-lxd ubuntu-daily:noble/amd64
+```
+
+Then, go to the `client/hwlib` directory and run the autopkgtests in
+`lxd`:
+
+```sh
+autopkgtest . -- lxd autopkgtest/ubuntu/noble/amd64
+```
 
 ### Publishing the package
 
