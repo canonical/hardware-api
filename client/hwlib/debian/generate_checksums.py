@@ -6,7 +6,7 @@ import json
 
 
 # Directories to exclude from the root dir
-DIRS_TO_EXCLUDE = ["debian", "vendor"]
+DIRS_TO_EXCLUDE = ["debian", "rust-vendor"]
 
 
 def calculate_sha256sum(file_path):
