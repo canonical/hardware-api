@@ -11,7 +11,7 @@ if [ ! $(which cargo-vendor-filterer) ]; then
     exit 3
 fi
 
-[ -e /usr/bin/jq ] || (echo "jq is required to run this script. Try installing it with 'sudo apt install jq'" && exit 1);
+test -n "$(command -v jq)" || (echo "jq is required to run this script. Try installing it with 'sudo apt install jq'" && exit 1);
 
 
 cargo vendor-filterer "$CARGO_VENDOR_DIR"
