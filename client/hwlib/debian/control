@@ -1,12 +1,12 @@
 Source: rust-hwlib
 Section: rust
 Priority: optional
-Build-Depends: debhelper (>= 12),
+Build-Depends: cargo:native,
+               debhelper (>= 12),
                dh-cargo (>= 23),
-               cargo:native,
-               rustc:native,
                libssl-dev,
-               pkgconf
+               pkgconf,
+               rustc:native
 Maintainer: Canonical Hardware Certification <canonical-hw-cert@lists.launchpad.net>
 Uploaders: Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 Standards-Version: 4.6.2
@@ -20,8 +20,7 @@ Rules-Requires-Root: no
 Package: librust-hwlib-dev
 Architecture: any
 Multi-Arch: same
-Depends: ${misc:Depends},
-         ${shlibs:Depends}
+Depends: libssl-dev, pkgconf, ${misc:Depends}, ${shlibs:Depends}
 Provides: librust-hwlib-dev (= ${binary:Version})
 Description: Collects and sends hardware information to hardware-api to find testing status of the machine
  This library is used for gathering hardware information from a device and sending it
