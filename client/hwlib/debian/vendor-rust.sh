@@ -1,7 +1,8 @@
 #!/bin/bash
+# Reference: https://github.com/ubuntu/authd/blob/86d9d82/debian/vendor-rust.sh
 set -eu
 
-CARGO_VENDOR_DIR="${CARGO_VENDOR_DIR:-vendor}"
+CARGO_VENDOR_DIR="${CARGO_VENDOR_DIR:-rust-vendor}"
 
 # We need a filtered vendored directory
 if [ ! $(which cargo-vendor-filterer) ]; then

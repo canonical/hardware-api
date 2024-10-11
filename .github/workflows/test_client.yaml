@@ -38,7 +38,7 @@ jobs:
           [source.crates-io]
           replace-with = "vendored-sources"
           [source.vendored-sources]
-          directory = "$PWD/vendor"
+          directory = "$PWD/rust-vendor"
           __CONFIG__
           cat ~/.cargo/config.toml
       - run: cargo build --offline

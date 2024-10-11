@@ -1,6 +1,7 @@
 #!/usr/bin/make -f
 
 export CARGO_HOME=$(CURDIR)/debian/
+export CARGO_VENDOR_DIR=$(CURDIR)/rust-vendor/
 
 %:
 	dh $@ --buildsystem cargo
