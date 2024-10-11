@@ -2,13 +2,15 @@
 
 The client contains of two modules:
 
-* [`hwlib`](./hwlib): Rust library for communicating with the API server
-* [`hwctl`](./hwctl): CLI tool (written in Rust) that provides a user with the CLI tool for the `hwlib`
+* [`hwlib`](./hwlib): Rust library for communicating with the API
+  server
+* [`hwctl`](./hwctl): CLI tool (written in Rust) that provides a user
+  with the CLI tool for the `hwlib`
 
 ## Build package in offline mode with vendored dependencies
 
-To build the package using the vendored dependencies and then run it in offline mode,
-execute the following commands:
+To build the package using the vendored dependencies and then run it
+in offline mode, execute the following commands:
 
 ```bash
 cd client/hwlib
@@ -16,8 +18,9 @@ cd client/hwlib
 ./debian/vendor-rust.sh
 ```
 
-Then, modify your `~/.cargo/config.toml` (or `~/.cargo/config` if you use an older cargo
-version) to use the vendored dependencies. Don't forget to specify the correct path:
+Then, modify your `~/.cargo/config.toml` (or `~/.cargo/config` if you
+use an older cargo version) to use the vendored dependencies. Don't
+forget to specify the correct path:
 
 ```toml
 [source.crates-io]
@@ -27,9 +30,10 @@ replace-with = "vendored-sources"
 directory = "/path/to/hardware-api/client/hwlib/vendor"
 ```
 
-Currently, there is no way to change these settings per project, so cargo will use
-these vendored dependencies for all your Rust projects. You can remove these lines
-after finishing the work on the `hwlib`.
+Currently, there is no way to change these settings per project, so
+cargo will use these vendored dependencies for all your Rust
+projects. You can remove these lines after finishing the work on the
+`hwlib`.
 
 Now you can build the project in offline mode:
 
@@ -40,9 +44,12 @@ cargo build --offline
 
 ## Use Python bindings
 
-The `hwlib` lib can be used in Python code as well. We're using [pyo3](https://github.com/PyO3/pyo3)
-lib for creating Python bindings, so to build them, you need to have [maturin](https://github.com/PyO3/maturin)
-on your system installed. It requires virtual environment to be configured to work with it:
+The `hwlib` lib can be used in Python code as well. We're using
+[pyo3](https://github.com/PyO3/pyo3) lib for creating Python bindings,
+so to build them, you need to have
+[maturin](https://github.com/PyO3/maturin) on your system
+installed. It requires virtual environment to be configured to work
+with it:
 
 ```bash
 $ virtualenv venv
@@ -57,9 +64,10 @@ $ cd hwlib
 $ maturin develop
 ```
 
-Now you can use the lib in your Python code. The library requires root access
-since we collect the hardware information using SMBIOS data. If you're running it
-on a device that doesn't have SMBIOS data available, root privileges are not required.
+Now you can use the lib in your Python code. The library requires root
+access since we collect the hardware information using SMBIOS data. If
+you're running it on a device that doesn't have SMBIOS data available,
+root privileges are not required.
 
 ```python
 $ sudo /path/to/venv/bin/python3  # or `python3`
@@ -70,17 +78,20 @@ $ sudo /path/to/venv/bin/python3  # or `python3`
 
 ## Run tests
 
-Since we're using python bindings, this library contains tests for both Rust and Python code.
-To execute them, run the following commands in the `hwlib/` directory:
+Since we're using python bindings, this library contains tests for
+both Rust and Python code.  To execute them, run the following
+commands in the `hwlib/` directory:
 
 * Run Rust tests: `$ cargo test`
-* For Python tests, you need to have `tox` on your system installed: `pip install tox`.
-Then, you can run Python tests with tox `$ tox`
+* For Python tests, you need to have `tox` on your system installed:
+`pip install tox`.  Then, you can run Python tests with tox `$ tox`
 
 
 ## Build deb package
 
-This section describes how to pack `hwlib` as a debian package. Before getting started, make sure that you have the following packages installed on your system:
+This section describes how to pack `hwlib` as a debian package. Before
+getting started, make sure that you have the following packages
+installed on your system:
 
 ```bash
 sudo apt-get install -y debhelper dh-cargo devscripts
@@ -98,8 +109,9 @@ dch -i  # increment release number
 dch -r  # create release
 ```
 
-Then copy the Cargo.lock file from the project root to `client/hwlib` dir, because the MIR policy
-requires the lock file to be included to the archive
+Then copy the Cargo.lock file from the project root to `client/hwlib`
+dir, because the MIR policy requires the lock file to be included to
+the archive
 
 ```bash
 cp ../../Cargo.lock ./
@@ -136,12 +148,14 @@ Then, build the source package:
 dpkg-buildpackage -S #-k=<key-to-sign> if you have more than one GPG key for the specified DEBEMAIL
 ```
 
-You can also `lintian --pedantic` to staticly check the files under the `debian/` dir.
+You can also `lintian --pedantic` to staticly check the files under
+the `debian/` dir.
 
-### Testing your package
+### Testing the package build
 
-You can test your package and build it with the [sbuild](https://wiki.debian.org/sbuild) tool.
-In this example, we do it for oracular distro, but you can replace it with the desired one:
+You can test your package and build it with the
+[sbuild](https://wiki.debian.org/sbuild) tool.  In this example, we do
+it for oracular distro, but you can replace it with the desired one:
 
 ```bash
 sudo apt install sbuild mmdebstrap uidmap
