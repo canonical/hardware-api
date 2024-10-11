@@ -169,8 +169,28 @@ Not you can build the binary itself:
 sbuild /path/to/.dsc -d oracular
 ```
 
-After that, you can publish the package by rinning:
+
+### Running autopkgtests locally in lxd
+
+To run autopkgtests, first set up the environment. It can be set up by
+running the following command (the distro can be different):
 
 ```sh
- dput ppa:<ppa_name> ../<package>_<version>_source.changes
+autopkgtest-build-lxd ubuntu-daily:noble/amd64
+```
+
+Then, go to the `client/hwlib` directory and run the autopkgtests in
+`lxd`:
+
+```sh
+autopkgtest . -- lxd autopkgtest/ubuntu/noble/amd64
+```
+
+### Publishing the package
+
+After the archive is created and you've tested the build locally, you
+can publish the package by running:
+
+```sh
+dput ppa:<ppa_name> ../<package>_<version>_source.changes
  ```
