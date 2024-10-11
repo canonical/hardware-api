@@ -112,8 +112,18 @@ Then you need to vendor the Rust dependencies:
 ./debian/vendor-rust.sh
 ```
 
-`dh-cargo` requires the `debian/cargo-checksum.json` file to be present in the archive. Until the package
-is not published to crates.io, we need to generate it manually:
+If the cargo dependencies got updated, you also need to update the
+`XS-Vendored-Sources-Rust` header. The value can be retrieved from the
+`expected` section of the output of this command:
+
+```sh
+export CARGO_VENDOR_DIR=$(pwd)/rust-vendor/
+/usr/share/cargo/bin/dh-cargo-vendored-sources
+```
+
+`dh-cargo` requires the `debian/cargo-checksum.json` file to be
+present in the archive. Until the package is not published to
+crates.io, we need to generate it ourselves:
 
 ```bash
 # under client/hwlib/ dir
