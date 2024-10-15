@@ -22,12 +22,16 @@
 from sqlalchemy.orm import Session
 
 from hwapi.data_models import repository, models
-from hwapi.data_models.data_validators import BoardValidator, BiosValidator
+from hwapi.data_models.data_validators import (
+    BoardValidator,
+    BiosValidator,
+    ProcessorValidator,
+)
 
 
 def find_main_hardware_components(
-    db: Session, board_data: BoardValidator, bios_data: BiosValidator
-) -> tuple[models.Device, models.Bios]:
+    db: Session, board_data: BoardValidator, bios_data: BiosValidator | None
+) -> tuple[models.Device, models.Bios | None]:
     """
     A function to get "main hardware components" like board and bios. Can be extended
     in future
@@ -35,16 +39,20 @@ def find_main_hardware_components(
     board = repository.get_board(
         db, board_data.manufacturer, board_data.product_name, board_data.version
     )
-    bios = repository.get_bios(
-        db, bios_data.vendor, bios_data.version, bios_data.firmware_revision
-    )
-    if not board or not bios:
+    if not board:
         raise ValueError("Hardware not certified")
-    return board, bios
+    if bios_data:
+        bios = repository.get_bios(
+            db, bios_data.vendor, bios_data.version, bios_data.firmware_revision
+        )
+        if not bios:
+            raise ValueError("Hardware not certified")
+        return board, bios
+    return board, None
 
 
 def find_certified_machine(
-    db: Session, arch: str, board: models.Device, bios: models.Bios
+    db: Session, arch: str, board: models.Device, bios: models.Bios | None
 ) -> models.Machine:
     machine = repository.get_machine_with_same_hardware_params(db, arch, board, bios)
     if not machine:
@@ -53,7 +61,27 @@ def find_certified_machine(
 
 
 def check_cpu_compatibility(
-    db: Session, machine: models.Machine, target_codename: str
+    db: Session, machine: models.Machine, cpu_from_request: ProcessorValidator
 ) -> bool:
+    """
+    Check whether the machine has a CPU with the same codename as the cpu_id matching
+    codename. If codename is not found, check if the CPU model (version) matches.
+    """
     cpu = repository.get_cpu_for_machine(db, machine.id)
-    return bool(cpu and cpu.codename.lower() == target_codename.lower())
+    if cpu is None:
+        return False
+
+    if cpu_from_request.identifier is None:
+        return cpu.version == cpu_from_request.version
+
+    # CPU ID must be complete to check the compatibility
+    if len(cpu_from_request.identifier) < 3:
+        return False
+    cpu_id_hex = (
+        f"0x{cpu_from_request.identifier[2]:x}"
+        f"{cpu_from_request.identifier[1]:02x}"
+        f"{cpu_from_request.identifier[0]:02x}"
+    )
+    cpu_id_object = repository.get_cpu_id_object(db, cpu_id_hex)
+    target_codename = cpu_id_object.codename if cpu_id_object is not None else "Unknown"
+    return cpu.codename == target_codename

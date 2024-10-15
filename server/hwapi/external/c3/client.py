@@ -49,6 +49,11 @@ class C3Client:
 
     def load_hardware_data(self):
         """Orchestrator that calls the loaders in the correct order"""
+        # Load CPU IDs
+        logger.info("Importing CPU IDs and codenames from %s", urls.C3_URL)
+        url = urls.CPU_IDS_URL
+        self._import_cpu_ids(url)
+
         # Load certified configurations
         logger.info(
             "Importing certified configurations and machines from %s", urls.C3_URL
@@ -70,6 +75,17 @@ class C3Client:
             response_models.PublicDeviceInstance,
         )
 
+    def _import_cpu_ids(self, url: str):
+        response = requests.get(url, timeout=60)
+        response.raise_for_status()
+        response_json = response.json()
+        for codename, ids in response_json.items():
+            for cpu_id in ids:
+                get_or_create(
+                    self.db, models.CpuId, id_pattern=cpu_id, codename=codename
+                )
+        self.db.commit()
+
     def _import_from_c3(self, url: str, loader: Callable, resp_model: Type[BaseModel]):
         """
         A general method to load some kind of data from the specified C3 endpoint
@@ -80,6 +96,7 @@ class C3Client:
         """
         next_url = url
         counter = 0
+        previous_ratio = -1
         while next_url is not None:
             logging.debug(f"Retrieving {next_url}")
             response = requests.get(next_url, timeout=90)
@@ -96,7 +113,13 @@ class C3Client:
                 try:
                     loader(instance)
                     counter += 1
-                    progress_bar(counter, total)
+                    # Don't print progress bar with the same percentage, because
+                    # it slows down the script
+                    if 1000 * counter // total != previous_ratio:
+                        progress_bar(counter, total)
+                        previous_ratio = 1000 * counter // total
+                    if total == counter:
+                        print()
                 except (IntegrityError, SQLite3IntegrityError):
                     logging.error(
                         "A DB error occurred while importing data from C3",
@@ -105,8 +128,11 @@ class C3Client:
                     # Without this the sqlalchemy.exc.PendingRollbackError exception occurs
                     self.db.rollback()
                     continue
-                except ValueError as exc:
-                    logging.error("Value error occured: %s", str(exc))
+                except Exception as exc:
+                    logging.error(
+                        "An error occured while importing the data from C3: %s",
+                        str(exc),
+                    )
                     continue
 
     def _load_certified_configurations_from_response(
@@ -242,6 +268,14 @@ class C3Client:
             created,
         )
 
+        if (
+            device.category == enums.DeviceCategory.PROCESSOR
+            and device_instance.cpu_codename
+        ):
+            # If there is already device.codename filled, don't overwrite it with Unknown value
+            if not (device_instance.cpu_codename == "Unknown" and device.codename):
+                device.codename = device_instance.cpu_codename
+
         report, created = get_or_create(
             self.db,
             models.Report,
@@ -250,4 +284,4 @@ class C3Client:
         )
         if created or device not in report.devices:
             report.devices.append(device)
-            self.db.commit()
+        self.db.commit()

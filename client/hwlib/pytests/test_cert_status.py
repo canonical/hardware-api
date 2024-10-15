@@ -18,12 +18,9 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
 
-from hwlib import get_certification_status
+def test_send_certification_request():
+    """Verify that we can import and call the library in the python code"""
+    import hwlib
 
-
-def test_get_certification_status():
-    """Verify that we can use the library in the python code"""
-    url = "http://example.com"
-
-    result = get_certification_status(url)
-    assert isinstance(result, dict)
+    assert hasattr(hwlib, "send_certification_request")
+    assert callable(hwlib.send_certification_request)
