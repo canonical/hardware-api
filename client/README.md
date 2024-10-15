@@ -148,7 +148,7 @@ Then, build the source package:
 dpkg-buildpackage -S #-k=<key-to-sign> if you have more than one GPG key for the specified DEBEMAIL
 ```
 
-You can also `lintian --pedantic` to staticly check the files under
+You can also `lintian --pedantic` to statically check the files under
 the `debian/` dir.
 
 ### Testing the package build
