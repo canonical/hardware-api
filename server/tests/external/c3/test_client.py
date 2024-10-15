@@ -30,6 +30,7 @@ from tests.data_generator import DataGenerator
 
 def test_load_certificates(db_session: Session, requests_mock: Mocker):
     """Test that certificates and related hardware data are imported correctly."""
+    requests_mock.get("https://c3_url/api/v2/cpuids/", json={})
     requests_mock.get(
         "https://c3_url/api/v2/public-certificates/",
         json={
@@ -91,6 +92,7 @@ def test_load_certificates_with_missing_kernel_bios(
     db_session: Session, requests_mock: Mocker
 ):
     """Test handling of missing kernel or BIOS data."""
+    requests_mock.get("https://c3_url/api/v2/cpuids/", json={})
     requests_mock.get(
         "https://c3_url/api/v2/public-certificates/",
         json={
@@ -157,6 +159,7 @@ def test_load_devices(
         machine2, generator.gen_release(), name="2404-10612"
     )
 
+    requests_mock.get("https://c3_url/api/v2/cpuids/", json={})
     requests_mock.get(
         "https://c3_url/api/v2/public-certificates/",
         json={
@@ -193,6 +196,7 @@ def test_load_devices(
                         "codename": "sample codfename",
                     },
                     "driver_name": "bnx2",
+                    "cpu_codename": "",
                 }
             ],
         },
@@ -223,6 +227,7 @@ def test_load_devices(
                         "codename": "",
                     },
                     "driver_name": "ohci-pci",
+                    "cpu_codename": "",
                 }
             ],
         },
@@ -282,6 +287,7 @@ def test_load_devices_duplicate_names(
         machine, generator.gen_release(), name="2204-10686"
     )
 
+    requests_mock.get("https://c3_url/api/v2/cpuids/", json={})
     requests_mock.get(
         "https://c3_url/api/v2/public-certificates/",
         json={
@@ -315,6 +321,7 @@ def test_load_devices_duplicate_names(
                         "codename": "",
                     },
                     "driver_name": "unknown",
+                    "cpu_codename": "",
                 },
                 {
                     "machine_canonical_id": machine.canonical_id,
@@ -332,6 +339,7 @@ def test_load_devices_duplicate_names(
                         "codename": "",
                     },
                     "driver_name": "unknown",
+                    "cpu_codename": "",
                 },
                 # different subsystem identifier
                 {
@@ -350,6 +358,7 @@ def test_load_devices_duplicate_names(
                         "codename": "",
                     },
                     "driver_name": "unknown",
+                    "cpu_codename": "",
                 },
             ],
         },
@@ -367,3 +376,113 @@ def test_load_devices_duplicate_names(
         db_session.query(models.Device).filter_by(subsystem="17aa:1036").first()
         is not None
     )
+
+
+def test_load_devices_cpu_codename(
+    db_session: Session,
+    requests_mock: Mocker,
+    test_client: TestClient,
+    generator: DataGenerator,
+):
+    """
+    Test that if a device has type PROCESSOR, we update device codename
+    """
+    vendor = generator.gen_vendor()
+    platform = generator.gen_platform(vendor, name="Precision 3690 (ik12)")
+    configuration = generator.gen_configuration(platform)
+    machine = generator.gen_machine(configuration, canonical_id="202106-8087")
+    certificate = generator.gen_certificate(
+        machine, generator.gen_release(), name="2204-10681"
+    )
+
+    requests_mock.get("https://c3_url/api/v2/cpuids/", json={})
+
+    requests_mock.get(
+        "https://c3_url/api/v2/public-certificates/",
+        json={
+            "count": 0,
+            "next": None,
+            "previous": None,
+            "results": [],
+        },
+    )
+
+    requests_mock.get(
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        json={
+            "count": 1,
+            "next": None,
+            "previous": None,
+            "results": [
+                {
+                    "machine_canonical_id": machine.canonical_id,
+                    "certificate_name": certificate.name,
+                    "device": {
+                        "name": "Intel CPU",
+                        "subproduct_name": None,
+                        "vendor": "Intel Corp.",
+                        "device_type": None,
+                        "bus": "pci",
+                        "identifier": "1111:2222",
+                        "subsystem": "102a:028c",
+                        "version": None,
+                        "category": "PROCESSOR",
+                        "codename": "",
+                    },
+                    "driver_name": "bnx2",
+                    "cpu_codename": "Skylake",
+                }
+            ],
+        },
+    )
+
+    c3_client = C3Client(db=db_session)
+    c3_client.load_hardware_data()
+    processor = (
+        db_session.query(models.Device).filter_by(identifier="1111:2222").first()
+    )
+
+    assert processor is not None
+    assert processor.codename == "Skylake"
+
+
+def test_import_cpuids(
+    db_session: Session, requests_mock: Mocker, test_client: TestClient
+):
+    requests_mock.get(
+        "https://c3_url/api/v2/cpuids/",
+        json={"Coffee Lake": ["0x806ea", "0x906ea"]},
+    )
+
+    requests_mock.get(
+        "https://c3_url/api/v2/public-certificates/",
+        json={
+            "count": 0,
+            "next": None,
+            "previous": None,
+            "results": [],
+        },
+    )
+
+    requests_mock.get(
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        json={
+            "count": 1,
+            "next": None,
+            "previous": None,
+            "results": [],
+        },
+    )
+
+    c3_client = C3Client(db=db_session)
+    c3_client.load_hardware_data()
+
+    assert db_session.query(models.CpuId).count() == 2
+
+    cpu_id = db_session.query(models.CpuId).filter_by(id_pattern="0x806ea").first()
+    assert cpu_id is not None
+    assert cpu_id.codename == "Coffee Lake"
+
+    cpu_id = db_session.query(models.CpuId).filter_by(id_pattern="0x906ea").first()
+    assert cpu_id is not None
+    assert cpu_id.codename == "Coffee Lake"

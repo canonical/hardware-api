@@ -2,13 +2,15 @@
 
 The client contains of two modules:
 
-* [`hwlib`](./hwlib): Rust library for communicating with the API server
-* [`hwctl`](./hwctl): CLI tool (written in Rust) that provides a user with the CLI tool for the `hwlib`
+* [`hwlib`](./hwlib): Rust library for communicating with the API
+  server
+* [`hwctl`](./hwctl): CLI tool (written in Rust) that provides a user
+  with the CLI tool for the `hwlib`
 
 ## Build package in offline mode with vendored dependencies
 
-To build the package using the vendored dependencies and then run it in offline mode,
-execute the following commands:
+To build the package using the vendored dependencies and then run it
+in offline mode, execute the following commands:
 
 ```bash
 cd client/hwlib
@@ -16,8 +18,9 @@ cd client/hwlib
 ./debian/vendor-rust.sh
 ```
 
-Then, modify your `~/.cargo/config.toml` (or `~/.cargo/config` if you use an older cargo
-version) to use the vendored dependencies. Don't forget to specify the correct path:
+Then, modify your `~/.cargo/config.toml` (or `~/.cargo/config` if you
+use an older cargo version) to use the vendored dependencies. Don't
+forget to specify the correct path:
 
 ```toml
 [source.crates-io]
@@ -27,9 +30,10 @@ replace-with = "vendored-sources"
 directory = "/path/to/hardware-api/client/hwlib/vendor"
 ```
 
-Currently, there is no way to change these settings per project, so cargo will use
-these vendored dependencies for all your Rust projects. You can remove these lines
-after finishing the work on the `hwlib`.
+Currently, there is no way to change these settings per project, so
+cargo will use these vendored dependencies for all your Rust
+projects. You can remove these lines after finishing the work on the
+`hwlib`.
 
 Now you can build the project in offline mode:
 
@@ -40,9 +44,12 @@ cargo build --offline
 
 ## Use Python bindings
 
-The `hwlib` lib can be used in Python code as well. We're using [pyo3](https://github.com/PyO3/pyo3)
-lib for creating Python bindings, so to build them, you need to have [maturin](https://github.com/PyO3/maturin)
-on your system installed. It requires virtual environment to be configured to work with it:
+The `hwlib` lib can be used in Python code as well. We're using
+[pyo3](https://github.com/PyO3/pyo3) lib for creating Python bindings,
+so to build them, you need to have
+[maturin](https://github.com/PyO3/maturin) on your system
+installed. It requires virtual environment to be configured to work
+with it:
 
 ```bash
 $ virtualenv venv
@@ -57,32 +64,34 @@ $ cd hwlib
 $ maturin develop
 ```
 
-Now you can use the lib in your Python code:
+Now you can use the lib in your Python code. The library requires root
+access since we collect the hardware information using SMBIOS data. If
+you're running it on a device that doesn't have SMBIOS data available,
+root privileges are not required.
 
 ```python
+$ sudo /path/to/venv/bin/python3  # or `python3`
 >>> import hwlib
->>> hwlib.get_certification_status("https://example.com")
-{'status':'Not Seen'}
->>> import os
->>> os.environ["CERTIFICATION_STATUS"] = "2"
->>> hwlib.get_certification_status("https://example.com")
-{'bios': {'firmware_revision': '1.0', 'release_date': '2020-01-01', 'revision': 'rev1', 'vendor': 'BIOSVendor', 'version': 'v1.0'}, 'os': {'codename': 'focal', 'description': 'Ubuntu 20.04.1 LTS', 'distributor': 'Ubuntu', 'kernel': {'name': 'Linux', 'signature': 'Sample Signature', 'version': '5.4.0-42-generic'}, 'loaded_modules': ['module1', 'module2'], 'version': '20.04'}, 'status': 'Certified'}
+>>> hwlib.get_certification_status("https://hw.ubuntu.com")
 ```
 
 
 ## Run tests
 
-Since we're using python bindings, this library contains tests for both Rust and Python code.
-To execute them, run the following commands in the `hwlib/` directory:
+Since we're using python bindings, this library contains tests for
+both Rust and Python code.  To execute them, run the following
+commands in the `hwlib/` directory:
 
-* Run Rust tests: `$ cargo test -- --test-threads=1`
-* For Python tests, you need to have `tox` on your system installed: `pip install tox`.
-Then, you can run Python tests with tox `$ tox`
+* Run Rust tests: `$ cargo test`
+* For Python tests, you need to have `tox` on your system installed:
+`pip install tox`.  Then, you can run Python tests with tox `$ tox`
 
 
 ## Build deb package
 
-This section describes how to pack `hwlib` as a debian package. Before getting started, make sure that you have the following packages installed on your system:
+This section describes how to pack `hwlib` as a debian package. Before
+getting started, make sure that you have the following packages
+installed on your system:
 
 ```bash
 sudo apt-get install -y debhelper dh-cargo devscripts
@@ -100,8 +109,9 @@ dch -i  # increment release number
 dch -r  # create release
 ```
 
-Then copy the Cargo.lock file from the project root to `client/hwlib` dir, because the MIR policy
-requires the lock file to be included to the archive
+Then copy the Cargo.lock file from the project root to `client/hwlib`
+dir, because the MIR policy requires the lock file to be included to
+the archive
 
 ```bash
 cp ../../Cargo.lock ./
@@ -114,8 +124,18 @@ Then you need to vendor the Rust dependencies:
 ./debian/vendor-rust.sh
 ```
 
-`dh-cargo` requires the `debian/cargo-checksum.json` file to be present in the archive. Until the package
-is not published to crates.io, we need to generate it manually:
+If the cargo dependencies got updated, you also need to update the
+`XS-Vendored-Sources-Rust` header. The value can be retrieved from the
+`expected` section of the output of this command:
+
+```sh
+export CARGO_VENDOR_DIR=$(pwd)/rust-vendor/
+/usr/share/cargo/bin/dh-cargo-vendored-sources
+```
+
+`dh-cargo` requires the `debian/cargo-checksum.json` file to be
+present in the archive. Until the package is not published to
+crates.io, we need to generate it ourselves:
 
 ```bash
 # under client/hwlib/ dir
@@ -128,12 +148,14 @@ Then, build the source package:
 dpkg-buildpackage -S #-k=<key-to-sign> if you have more than one GPG key for the specified DEBEMAIL
 ```
 
-You can also `lintian --pedantic` to staticly check the files under the `debian/` dir.
+You can also `lintian --pedantic` to statically check the files under
+the `debian/` dir.
 
-### Testing your package
+### Testing the package build
 
-You can test your package and build it with the [sbuild](https://wiki.debian.org/sbuild) tool.
-In this example, we do it for oracular distro, but you can replace it with the desired one:
+You can test your package and build it with the
+[sbuild](https://wiki.debian.org/sbuild) tool.  In this example, we do
+it for oracular distro, but you can replace it with the desired one:
 
 ```bash
 sudo apt install sbuild mmdebstrap uidmap
@@ -171,8 +193,28 @@ Not you can build the binary itself:
 sbuild /path/to/.dsc -d oracular
 ```
 
-After that, you can publish the package by rinning:
+
+### Running autopkgtests locally in lxd
+
+To run autopkgtests, first set up the environment. It can be set up by
+running the following command (the distro can be different):
 
 ```sh
- dput ppa:<ppa_name> ../<package>_<version>_source.changes
+autopkgtest-build-lxd ubuntu-daily:noble/amd64
+```
+
+Then, go to the `client/hwlib` directory and run the autopkgtests in
+`lxd`:
+
+```sh
+autopkgtest . -- lxd autopkgtest/ubuntu/noble/amd64
+```
+
+### Publishing the package
+
+After the archive is created and you've tested the build locally, you
+can publish the package by running:
+
+```sh
+dput ppa:<ppa_name> ../<package>_<version>_source.changes
  ```
