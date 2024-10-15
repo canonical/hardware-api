@@ -19,7 +19,7 @@
 
 
 from typing import Any
-from sqlalchemy import select, and_
+from sqlalchemy import select, and_, null
 from sqlalchemy.orm import Session, selectinload
 
 from hwapi.data_models import models
@@ -86,7 +86,7 @@ def get_board(
         .join(models.Vendor)
         .where(
             and_(
-                models.Vendor.name.ilike(vendor_name),
+                models.Vendor.name.ilike(_clean_vendor_name(vendor_name)),
                 models.Device.name.ilike(product_name),
                 models.Device.version.ilike(version),
                 models.Device.category.in_(
@@ -107,20 +107,23 @@ def get_bios(
         .join(models.Vendor)
         .where(
             and_(
-                models.Vendor.name.ilike(vendor_name),
+                models.Vendor.name.ilike(_clean_vendor_name(vendor_name)),
                 models.Bios.version.ilike(version),
-                models.Bios.firmware_revision == firmware_revision,
             )
         )
     )
+
+    if firmware_revision:
+        stmt = stmt.filter(models.Bios.firmware_revision.ilike(firmware_revision))
+
     return db.execute(stmt).scalars().first()
 
 
 def get_machine_with_same_hardware_params(
-    db: Session, arch: str, board: models.Device, bios: models.Bios
+    db: Session, arch: str, board: models.Device, bios: models.Bios | None
 ) -> models.Machine | None:
     """
-    Get a machines that have the given architecture, motherboard, bios
+    Get a machines that have the given architecture, motherboard, and optionally bios
     """
     stmt = (
         select(models.Machine)
@@ -128,17 +131,18 @@ def get_machine_with_same_hardware_params(
         .join(models.Certificate)
         .join(models.Report, models.Certificate.reports)
         .join(models.Device, models.Report.devices)
-        .join(models.Bios, models.Report.bios)
-        .filter(
-            and_(
-                models.Device.id == board.id,
-                models.Report.architecture == arch,
-                models.Bios.id == bios.id,
-            )
-        )
-        .distinct()
+        .filter(and_(models.Device.id == board.id, models.Report.architecture == arch))
     )
-    return db.execute(stmt).scalars().first()
+
+    if bios:
+        stmt = stmt.join(models.Bios, models.Report.bios_id == models.Bios.id).filter(
+            models.Bios.id == bios.id
+        )
+    else:
+        stmt = stmt.filter(models.Report.bios_id.is_(null()))
+
+    machine = db.execute(stmt.distinct()).scalars().first()
+    return machine
 
 
 def get_machine_by_canonical_id(
@@ -228,3 +232,18 @@ def get_releases_and_kernels_for_machine(
     releases = [release for release, _ in result]
     kernels = [kernel for _, kernel in result]
     return releases, kernels
+
+
+def get_cpu_id_object(db: Session, cpuid: str) -> models.CpuId | None:
+    """Find a CpuId record where id_pattern is a substring of the given cpuid"""
+    cpuid_lower = cpuid.lower()
+
+    stmt = select(models.CpuId)
+    cpuid_objects = db.execute(stmt).scalars()
+
+    # Iterate through the results and find a matching id_pattern
+    for cpuid_obj in cpuid_objects:
+        if cpuid_obj.id_pattern.lower() in cpuid_lower:
+            return cpuid_obj
+
+    return None

@@ -1,0 +1,4 @@
+Test-Command: debian/tests/run-tests.sh
+Features: test-name=rust-hwlib:@
+Depends: @builddeps@
+Restrictions: allow-stderr

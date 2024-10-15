@@ -18,24 +18,37 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use crate::get_certification_status as native_get_certification_status;
-use once_cell::sync::Lazy;
-use pyo3::exceptions::PyRuntimeError;
-use pyo3::prelude::*;
-use pyo3::types::PyString;
-use pyo3::wrap_pyfunction;
-use pyo3::{PyObject, PyResult, Python};
+use crate::{
+    models::request_validators::{CertificationStatusRequest, Paths},
+    send_certification_status_request as native_send_certification_status_request,
+};
+use lazy_static::lazy_static;
+use pyo3::{
+    exceptions::PyRuntimeError,
+    prelude::*,
+    types::PyString,
+    wrap_pyfunction, {PyObject, PyResult, Python},
+};
+use serde_json;
 use tokio::runtime::Runtime;
 
-static RT: Lazy<Runtime> = Lazy::new(|| Runtime::new().expect("Failed to create Tokio runtime"));
+lazy_static! {
+    static ref RT: Runtime = Runtime::new().expect("failed to create Tokio runtime");
+}
 
+/// This function creates and sends the certification status request to the specified
+/// hardware-api server URL.
 #[pyfunction]
-fn get_certification_status(py: Python, url: String) -> PyResult<PyObject> {
-    let response = RT.block_on(async { native_get_certification_status(&url).await });
+fn send_certification_request(py: Python, url: String) -> PyResult<PyObject> {
+    let request_body = CertificationStatusRequest::new(Paths::default())
+        .map_err(|e| PyRuntimeError::new_err(format!("failed to create request: {}", e)))?;
+
+    let response =
+        RT.block_on(async { native_send_certification_status_request(url, &request_body).await });
 
     match response {
         Ok(response_value) => {
-            let json_str = response_value.to_string();
+            let json_str = serde_json::json!(response_value).to_string();
             let json: PyObject = PyString::new_bound(py, &json_str).into();
             let json_module = py.import_bound("json")?;
             let json_object: PyObject = json_module.call_method1("loads", (json,))?.into();
@@ -51,6 +64,6 @@ fn get_certification_status(py: Python, url: String) -> PyResult<PyObject> {
 
 #[pymodule]
 fn hwlib(m: &Bound<'_, PyModule>) -> PyResult<()> {
-    m.add_function(wrap_pyfunction!(get_certification_status, m)?)?;
+    m.add_function(wrap_pyfunction!(send_certification_request, m)?)?;
     Ok(())
 }

@@ -123,7 +123,7 @@ class DataGenerator:
         self,
         certificate: models.Certificate,
         kernel: models.Kernel,
-        bios: models.Bios,
+        bios: models.Bios | None = None,
         architecture: str = "amd64",
     ) -> models.Report:
         report = models.Report(
@@ -166,3 +166,9 @@ class DataGenerator:
         self.db_session.add(device)
         self.db_session.commit()
         return device
+
+    def gen_cpuid_object(self, id_pattern: str, codename: str):
+        obj = models.CpuId(id_pattern=id_pattern, codename=codename)
+        self.db_session.add(obj)
+        self.db_session.commit()
+        return obj

@@ -1,9 +1,10 @@
 #!/usr/bin/make -f
 
 export CARGO_HOME=$(CURDIR)/debian/
+export CARGO_VENDOR_DIR=$(CURDIR)/rust-vendor/
 
 %:
 	dh $@ --buildsystem cargo
 
 override_dh_auto_test:
-	/usr/share/cargo/bin/cargo test -- --test-threads=1
+	/usr/share/cargo/bin/cargo test --offline
