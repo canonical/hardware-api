@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y pkg-config libssl-dev build-essential
+          sudo apt-get install -y pkgconf libssl-dev build-essential
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal
@@ -38,7 +38,7 @@ jobs:
           [source.crates-io]
           replace-with = "vendored-sources"
           [source.vendored-sources]
-          directory = "$PWD/vendor"
+          directory = "$PWD/rust-vendor"
           __CONFIG__
           cat ~/.cargo/config.toml
       - run: cargo build --offline
@@ -61,7 +61,7 @@ jobs:
       - name: Install system dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y pkg-config libssl-dev build-essential
+          sudo apt-get install -y pkgconf libssl-dev build-essential
       - uses: actions-rs/toolchain@v1
         with:
           profile: minimal

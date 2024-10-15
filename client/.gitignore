@@ -8,6 +8,7 @@ hwlib/debian/hwlib/
 cargo_home
 .cargo-checksum.json
 vendor/
+rust-vendor/
 __pycache__/
 
 # In a workspace, packages should share the same Cargo.lock file.

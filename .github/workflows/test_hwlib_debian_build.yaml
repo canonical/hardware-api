@@ -1,4 +1,4 @@
-name: Build hwlib Rust package with sbuild
+name: Test build hwlib Rust package with sbuild
 on:
   push:
     branches: [ main ]
