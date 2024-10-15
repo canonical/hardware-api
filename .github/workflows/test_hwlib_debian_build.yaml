@@ -1,4 +1,4 @@
-name: Build hwlib Rust package with sbuild
+name: Test build hwlib Rust package with sbuild
 on:
   push:
     branches: [ 22.04 ]
@@ -26,6 +26,12 @@ jobs:
     steps:
     - name: Checkout the repository
       uses: actions/checkout@v4
+    # Prevent lxd-agent from getting restarted on apt upgrades.
+    # https://warthogs.atlassian.net/browse/ISD-2139
+    - name: Disable lxd-agent restart
+      run: |
+        mkdir -p /etc/needrestart/conf.d
+        echo '$nrconf{override_rc}{qr(^lxd-agent.service$)} = 0;' | sudo tee /etc/needrestart/conf.d/lxdagent.conf
     - name: Download dependencies
       run: |
         set -xeu

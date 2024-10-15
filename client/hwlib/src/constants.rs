@@ -18,7 +18,9 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-pub mod devices;
-pub mod request_validators;
-pub mod response_validators;
-pub mod software;
+pub const CERT_STATUS_ENDPOINT: &str = "/v1/certification/status";
+
+pub const CPU_MAX_FREQ_FILE_PATH: &str = "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq";
+pub const PROC_CPUINFO_FILE_PATH: &str = "/proc/cpuinfo";
+pub const PROC_DEVICE_TREE_DIR_PATH: &str = "/proc/device-tree/";
+pub const PROC_VERSION_FILE_PATH: &str = "/proc/version";

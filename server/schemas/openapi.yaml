@@ -74,7 +74,9 @@ components:
           title: Architecture
           type: string
         bios:
-          $ref: '#/components/schemas/BiosValidator'
+          anyOf:
+          - $ref: '#/components/schemas/BiosValidator'
+          - type: 'null'
         board:
           $ref: '#/components/schemas/BoardValidator'
         chassis:
@@ -109,7 +111,6 @@ components:
       - architecture
       - board
       - os
-      - bios
       - processor
       title: CertificationStatusRequest
       type: object
@@ -124,7 +125,9 @@ components:
           title: Available Releases
           type: array
         bios:
-          $ref: '#/components/schemas/BiosValidator'
+          anyOf:
+          - $ref: '#/components/schemas/BiosValidator'
+          - type: 'null'
         board:
           $ref: '#/components/schemas/BoardValidator'
         chassis:
@@ -156,7 +159,9 @@ components:
           title: Available Releases
           type: array
         bios:
-          $ref: '#/components/schemas/BiosValidator'
+          anyOf:
+          - $ref: '#/components/schemas/BiosValidator'
+          - type: 'null'
         board:
           $ref: '#/components/schemas/BoardValidator'
         chassis:
@@ -347,12 +352,16 @@ components:
       type: object
     ProcessorValidator:
       properties:
-        codename:
-          title: Codename
-          type: string
         frequency:
           title: Frequency
-          type: number
+          type: integer
+        identifier:
+          anyOf:
+          - items:
+              type: integer
+            type: array
+          - type: 'null'
+          title: Identifier
         manufacturer:
           title: Manufacturer
           type: string
@@ -360,7 +369,7 @@ components:
           title: Version
           type: string
       required:
-      - codename
+      - identifier
       - frequency
       - manufacturer
       - version
@@ -384,7 +393,9 @@ components:
           title: Available Releases
           type: array
         bios:
-          $ref: '#/components/schemas/BiosValidator'
+          anyOf:
+          - $ref: '#/components/schemas/BiosValidator'
+          - type: 'null'
         board:
           $ref: '#/components/schemas/BoardValidator'
         chassis:
