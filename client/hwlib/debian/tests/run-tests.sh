@@ -2,10 +2,10 @@
 set -xeu
 
 # Create cargo config directory
-mkdir -p /tmp/.cargo-autopkgtest
+CARGO_TMP_DIR=$(mktemp -d)
 
 # Create config.toml
-cat > /tmp/.cargo-autopkgtest/config.toml << EOL
+cat > $CARGO_TMP_DIR/config.toml << EOL
 [source.crates-io]
 replace-with = "vendored-sources"
 
@@ -14,4 +14,6 @@ directory = "$(pwd)/rust-vendor"
 EOL
 
 # Run the actual test
-CARGO_HOME=/tmp/.cargo-autopkgtest/ cargo test --offline --manifest-path Cargo.toml --all-targets --all-features
+CARGO_HOME=$CARGO_TMP_DIR cargo test --offline --manifest-path Cargo.toml --all-targets --all-features
+
+rm -rf $CARGO_TMP_DIR
