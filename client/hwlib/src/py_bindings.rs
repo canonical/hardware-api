@@ -19,8 +19,7 @@
  */
 
 use crate::{
-    models::request_validators::{CertificationStatusRequest, Paths},
-    send_certification_status_request as native_send_certification_status_request,
+    models::request_validators::{CertificationStatusRequest, Paths}, send_certification_status_request as native_send_certification_status_request
 };
 use lazy_static::lazy_static;
 use pyo3::{
@@ -40,7 +39,7 @@ lazy_static! {
 /// hardware-api server URL.
 #[pyfunction]
 fn send_certification_request(py: Python, url: String) -> PyResult<PyObject> {
-    let request_body = CertificationStatusRequest::new(Paths::default())
+    let request_body = CertificationStatusRequest::new(Paths::default(), None)
         .map_err(|e| PyRuntimeError::new_err(format!("failed to create request: {}", e)))?;
 
     let response =

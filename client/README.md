@@ -154,7 +154,7 @@ the `debian/` dir.
 ### Testing the package build
 
 You can test your package and build it with the
-[sbuild](https://wiki.debian.org/sbuild) tool.  In this example, we do
+[sbuild](https://wiki.debian.org/sbuild) tool. In this example, we do
 it for oracular distro, but you can replace it with the desired one:
 
 ```bash
