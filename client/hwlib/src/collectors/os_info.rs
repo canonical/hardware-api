@@ -114,3 +114,57 @@ fn get_lsb_release_info(flag: &str, re: &Regex, runner: &dyn CommandRunner) -> R
         .map(|m| m.as_str().to_string())
         .ok_or_else(|| anyhow!("failed to capture information using regex"))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::helpers::test_utils::get_test_filepath;
+    use mockall::mock;
+
+    mock! {
+        CommandRunner {}
+        impl CommandRunner for CommandRunner {
+            fn run_command<'a>(&self, cmd: &str, args: &[&'a str]) -> Result<String>;
+        }
+    }
+
+    #[test]
+    fn test_os_try_from() {
+        let mut mock_runner = MockCommandRunner::new();
+
+        // Mock the get_codename command
+        mock_runner
+            .expect_run_command()
+            .withf(|cmd, args| cmd == "lsb_release" && args == ["-c"])
+            .returning(|_, _| Ok("Codename: focal\n".to_string()));
+
+        // Mock the get_distributor command
+        mock_runner
+            .expect_run_command()
+            .withf(|cmd, args| cmd == "lsb_release" && args == ["-i"])
+            .returning(|_, _| Ok("Distributor ID: Ubuntu\n".to_string()));
+
+        // Mock the get_version command
+        mock_runner
+            .expect_run_command()
+            .withf(|cmd, args| cmd == "lsb_release" && args == ["-r"])
+            .returning(|_, _| Ok("No LSB modules are available.\nRelease: 20.04\n".to_string()));
+
+        // Mock the lsmod command for kernel package
+        mock_runner
+            .expect_run_command()
+            .withf(|cmd, args| cmd == "lsmod" && args.is_empty())
+            .returning(|_, _| Ok("Module Size Used\nsnd 61440 1\n".to_string()));
+
+        let result = OS::try_from((
+            get_test_filepath("version").as_path(),
+            &mock_runner as &dyn CommandRunner,
+        ));
+        let os = result.unwrap();
+        assert_eq!(os.codename, "focal");
+        assert_eq!(os.distributor, "Ubuntu");
+        assert_eq!(os.version, "20.04");
+        assert_eq!(os.kernel.version, "5.4.0-196-generic");
+        assert_eq!(os.kernel.loaded_modules, vec!["snd".to_string()]);
+    }
+}

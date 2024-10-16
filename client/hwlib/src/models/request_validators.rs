@@ -91,7 +91,11 @@ impl CertificationStatusRequest {
         }
     }
 
-    fn from_smbios_data(data: &smbioslib::SMBiosData, paths: Paths, runner: &dyn CommandRunner) -> Result<Self> {
+    fn from_smbios_data(
+        data: &smbioslib::SMBiosData,
+        paths: Paths,
+        runner: &dyn CommandRunner,
+    ) -> Result<Self> {
         let Paths {
             max_cpu_frequency_filepath,
             proc_version_filepath,

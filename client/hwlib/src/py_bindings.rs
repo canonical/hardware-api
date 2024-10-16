@@ -19,7 +19,8 @@
  */
 
 use crate::{
-    models::request_validators::{CertificationStatusRequest, Paths}, send_certification_status_request as native_send_certification_status_request
+    models::request_validators::{CertificationStatusRequest, Paths},
+    send_certification_status_request as native_send_certification_status_request,
 };
 use lazy_static::lazy_static;
 use pyo3::{
