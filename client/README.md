@@ -130,7 +130,9 @@ If the cargo dependencies got updated, you also need to update the
 
 ```sh
 export CARGO_VENDOR_DIR=$(pwd)/rust-vendor/
+rm ../../Cargo.toml  # to avoid "current package believes it's in a workspace when it's not" error
 /usr/share/cargo/bin/dh-cargo-vendored-sources
+git restore ../../Cargo.toml
 ```
 
 `dh-cargo` requires the `debian/cargo-checksum.json` file to be
@@ -154,7 +156,7 @@ the `debian/` dir.
 ### Testing the package build
 
 You can test your package and build it with the
-[sbuild](https://wiki.debian.org/sbuild) tool.  In this example, we do
+[sbuild](https://wiki.debian.org/sbuild) tool. In this example, we do
 it for oracular distro, but you can replace it with the desired one:
 
 ```bash
