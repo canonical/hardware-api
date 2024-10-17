@@ -29,7 +29,7 @@ use hwlib::{
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    let cert_status_request = CertificationStatusRequest::new(Paths::default(), None)?;
+    let cert_status_request = CertificationStatusRequest::new(Paths::default())?;
     println!(
         "Request:\n{}",
         serde_json::to_string_pretty(&cert_status_request)?

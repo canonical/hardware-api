@@ -77,13 +77,16 @@ pub struct CertificationStatusRequest {
 }
 
 impl CertificationStatusRequest {
-    pub fn new(paths: Paths, runner: Option<&dyn CommandRunner>) -> Result<Self> {
+    pub fn new(paths: Paths) -> Result<Self> {
+        Self::new_with_runner(paths, &RealCommandRunner)
+    }
+
+    pub fn new_with_runner(paths: Paths, runner: &impl CommandRunner) -> Result<Self> {
         let Paths {
             smbios_entry_filepath,
             smbios_table_filepath,
             ..
         } = &paths;
-        let runner = runner.unwrap_or(&RealCommandRunner);
         if let Some(smbios_data) = load_smbios_data(smbios_entry_filepath, smbios_table_filepath) {
             Self::from_smbios_data(&smbios_data, paths, runner)
         } else {
@@ -94,7 +97,7 @@ impl CertificationStatusRequest {
     fn from_smbios_data(
         data: &smbioslib::SMBiosData,
         paths: Paths,
-        runner: &dyn CommandRunner,
+        runner: &impl CommandRunner,
     ) -> Result<Self> {
         let Paths {
             max_cpu_frequency_filepath,
@@ -126,7 +129,7 @@ impl CertificationStatusRequest {
             board: Board::try_from(board_info)?,
             chassis: Some(Chassis::try_from(chassis_info)?),
             model: system_info.product_name,
-            os: OS::try_from((proc_version_filepath.as_path(), runner))?,
+            os: OS::try_new(proc_version_filepath.as_path(), runner)?,
             pci_peripherals: Vec::new(),
             processor: Processor::try_from((processor_info, max_cpu_frequency_filepath.as_path()))?,
             usb_peripherals: Vec::new(),
@@ -134,7 +137,7 @@ impl CertificationStatusRequest {
         })
     }
 
-    fn from_defaults(paths: Paths, runner: &dyn CommandRunner) -> Result<Self> {
+    fn from_defaults(paths: Paths, runner: &impl CommandRunner) -> Result<Self> {
         let Paths {
             cpuinfo_filepath,
             max_cpu_frequency_filepath,
@@ -148,7 +151,7 @@ impl CertificationStatusRequest {
         let board = Board::try_from(device_tree_dirpath.as_path())?;
         let chassis = None;
         let model = cpu_info.model;
-        let os = OS::try_from((proc_version_filepath.as_path(), runner))?;
+        let os = OS::try_new(proc_version_filepath.as_path(), runner)?;
         let pci_peripherals = Vec::new();
         let processor = Processor::try_from((
             cpuinfo_filepath.as_path(),

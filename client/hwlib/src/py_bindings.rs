@@ -40,7 +40,7 @@ lazy_static! {
 /// hardware-api server URL.
 #[pyfunction]
 fn send_certification_request(py: Python, url: String) -> PyResult<PyObject> {
-    let request_body = CertificationStatusRequest::new(Paths::default(), None)
+    let request_body = CertificationStatusRequest::new(Paths::default())
         .map_err(|e| PyRuntimeError::new_err(format!("failed to create request: {}", e)))?;
 
     let response =
