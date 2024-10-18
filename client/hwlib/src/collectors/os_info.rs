@@ -29,9 +29,9 @@ pub trait CommandRunner {
     fn run_command(&self, cmd: &str, args: &[&str]) -> Result<String>;
 }
 
-pub(crate) struct RealCommandRunner;
+pub(crate) struct SystemCommandRunner;
 
-impl CommandRunner for RealCommandRunner {
+impl CommandRunner for SystemCommandRunner {
     fn run_command(&self, cmd: &str, args: &[&str]) -> Result<String> {
         let output = Command::new(cmd).args(args).output()?;
         let stdout = String::from_utf8(output.stdout)?;
@@ -127,11 +127,11 @@ mod tests {
     type CommandKey<'a> = (&'a str, Vec<&'a str>);
     type CommandResult<'a> = Result<&'a str>;
 
-    struct MockRunner<'a> {
+    struct MockCommandRunner<'a> {
         calls: HashMap<CommandKey<'a>, CommandResult<'a>>,
     }
 
-    impl<'a> MockRunner<'a> {
+    impl<'a> MockCommandRunner<'a> {
         fn new(calls: Vec<(CommandKey<'a>, CommandResult<'a>)>) -> Self {
             let calls = calls
                 .into_iter()
@@ -142,7 +142,7 @@ mod tests {
         }
     }
 
-    impl<'a> CommandRunner for MockRunner<'a> {
+    impl<'a> CommandRunner for MockCommandRunner<'a> {
         fn run_command(&self, cmd: &str, args: &[&str]) -> Result<String> {
             match self.calls.get(&(cmd, args.to_vec())) {
                 Some(res) => match res {
@@ -157,14 +157,14 @@ mod tests {
     #[test]
     fn test_get_architecture() {
         let mock_calls = vec![(("dpkg", vec!["--print-architecture"]), Ok("amd64\n"))];
-        let mock_runner = MockRunner::new(mock_calls);
+        let mock_runner = MockCommandRunner::new(mock_calls);
         let result = get_architecture(&mock_runner);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), "amd64");
     }
 
     #[test]
-    fn test_os_try_from() {
+    fn test_os_try_new() {
         let mock_calls = vec![
             (("lsb_release", vec!["-c"]), Ok("Codename: focal\n")),
             (("lsb_release", vec!["-i"]), Ok("Distributor ID: Ubuntu\n")),
@@ -174,7 +174,7 @@ mod tests {
             ),
             (("lsmod", vec![]), Ok("Module Size Used\nsnd 61440 1\n")),
         ];
-        let mock_runner = MockRunner::new(mock_calls);
+        let mock_runner = MockCommandRunner::new(mock_calls);
         let result = OS::try_new(get_test_filepath("version").as_path(), &mock_runner);
         let os = result.unwrap();
         assert_eq!(os.codename, "focal");

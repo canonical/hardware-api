@@ -30,7 +30,7 @@ use crate::{
     collectors::{
         cpuinfo::CpuInfo,
         hardware_info::{load_smbios_data, SystemInfo},
-        os_info::{get_architecture, CommandRunner, RealCommandRunner},
+        os_info::{get_architecture, CommandRunner, SystemCommandRunner},
     },
     constants,
     models::{
@@ -78,7 +78,7 @@ pub struct CertificationStatusRequest {
 
 impl CertificationStatusRequest {
     pub fn new(paths: Paths) -> Result<Self> {
-        Self::new_with_runner(paths, &RealCommandRunner)
+        Self::new_with_runner(paths, &SystemCommandRunner)
     }
 
     pub fn new_with_runner(paths: Paths, runner: &impl CommandRunner) -> Result<Self> {
