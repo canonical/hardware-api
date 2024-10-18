@@ -85,7 +85,7 @@ impl KernelPackage {
 
 pub(crate) fn get_architecture(runner: &impl CommandRunner) -> Result<String> {
     let arch = runner.run_command("dpkg", &["--print-architecture"])?;
-    Ok(arch.trim().to_string())
+    Ok(arch.trim().to_owned())
 }
 
 pub(super) fn get_codename(runner: &impl CommandRunner) -> Result<String> {
@@ -124,15 +124,15 @@ mod tests {
     use std::collections::HashMap;
 
     // Type aliases for better readability
-    type CommandKey<'a> = (&'a str, Vec<&'a str>);
-    type CommandResult<'a> = Result<&'a str>;
+    type CommandKey<'args> = (&'args str, Vec<&'args str>);
+    type CommandResult<'args> = Result<&'args str>;
 
-    struct MockCommandRunner<'a> {
-        calls: HashMap<CommandKey<'a>, CommandResult<'a>>,
+    struct MockCommandRunner<'args> {
+        calls: HashMap<CommandKey<'args>, CommandResult<'args>>,
     }
 
-    impl<'a> MockCommandRunner<'a> {
-        fn new(calls: Vec<(CommandKey<'a>, CommandResult<'a>)>) -> Self {
+    impl<'args> MockCommandRunner<'args> {
+        fn new(calls: Vec<(CommandKey<'args>, CommandResult<'args>)>) -> Self {
             let calls = calls
                 .into_iter()
                 .map(|((cmd, args), res)| ((cmd, args.to_vec()), res))
@@ -142,7 +142,7 @@ mod tests {
         }
     }
 
-    impl<'a> CommandRunner for MockCommandRunner<'a> {
+    impl<'args> CommandRunner for MockCommandRunner<'args> {
         fn run_command(&self, cmd: &str, args: &[&str]) -> Result<String> {
             match self.calls.get(&(cmd, args.to_vec())) {
                 Some(res) => match res {
