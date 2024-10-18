@@ -1,6 +1,6 @@
 [package]
 name = "hwctl"
-description = "hwlib backed CLI tool for collecting and sending hardware information to hi-api to find testing status of device models"
+description = "hwlib backed CLI tool for collecting and sending hardware information to hwapi to find testing status of device models"
 license = "GPL-3.0-only"
 version = "0.1.0"
 edition = "2021"
