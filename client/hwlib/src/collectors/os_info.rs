@@ -25,7 +25,7 @@ use std::{fs::read_to_string, path::Path, process::Command};
 
 use crate::models::software::{KernelPackage, OS};
 
-pub trait CommandRunner {
+pub(crate) trait CommandRunner {
     fn run_command(&self, cmd: &str, args: &[&str]) -> Result<String>;
 }
 

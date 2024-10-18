@@ -81,7 +81,7 @@ impl CertificationStatusRequest {
         Self::new_with_runner(paths, &SystemCommandRunner)
     }
 
-    pub fn new_with_runner(paths: Paths, runner: &impl CommandRunner) -> Result<Self> {
+    pub(crate) fn new_with_runner(paths: Paths, runner: &impl CommandRunner) -> Result<Self> {
         let Paths {
             smbios_entry_filepath,
             smbios_table_filepath,
