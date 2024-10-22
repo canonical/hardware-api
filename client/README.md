@@ -135,6 +135,10 @@ rm ../../Cargo.toml  # to avoid "current package believes it's in a workspace wh
 git restore ../../Cargo.toml
 ```
 
+If the exit code is not 0, update the `XS-Vendored-Sources-Rust`
+header in the `debian/control` with the value from the output.
+
+
 `dh-cargo` requires the `debian/cargo-checksum.json` file to be
 present in the archive. Until the package is not published to
 crates.io, we need to generate it ourselves:
