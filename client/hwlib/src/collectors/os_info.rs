@@ -40,10 +40,10 @@ impl CommandRunner for SystemCommandRunner {
 }
 
 impl OS {
-    pub(crate) fn try_new<C>(proc_version_filepath: &Path, runner: &C) -> Result<Self>
-    where
-        C: CommandRunner,
-    {
+    pub(crate) fn try_new(
+        proc_version_filepath: &Path,
+        runner: &impl CommandRunner,
+    ) -> Result<Self> {
         let codename = get_codename(runner)?;
         let distributor = get_distributor(runner)?;
         let version = get_version(runner)?;
@@ -58,10 +58,10 @@ impl OS {
 }
 
 impl KernelPackage {
-    pub(crate) fn try_new<C>(proc_version_filepath: &Path, runner: &C) -> Result<Self>
-    where
-        C: CommandRunner,
-    {
+    pub(crate) fn try_new(
+        proc_version_filepath: &Path,
+        runner: &impl CommandRunner,
+    ) -> Result<Self> {
         let kernel_version = read_to_string(proc_version_filepath)?;
         let kernel_version = kernel_version
             .split_whitespace()
@@ -123,16 +123,14 @@ mod tests {
     use crate::helpers::test_utils::get_test_filepath;
     use std::collections::HashMap;
 
-    // Type aliases for better readability
-    type CommandKey<'args> = (&'args str, Vec<&'args str>);
-    type CommandResult<'args> = Result<&'args str>;
+    type SystemCommand<'args> = (&'args str, Vec<&'args str>);
 
     struct MockCommandRunner<'args> {
-        calls: HashMap<CommandKey<'args>, CommandResult<'args>>,
+        calls: HashMap<SystemCommand<'args>, Result<&'args str>>,
     }
 
     impl<'args> MockCommandRunner<'args> {
-        fn new(calls: Vec<(CommandKey<'args>, CommandResult<'args>)>) -> Self {
+        fn new(calls: Vec<(SystemCommand<'args>, Result<&'args str>)>) -> Self {
             let calls = calls
                 .into_iter()
                 .map(|((cmd, args), res)| ((cmd, args.to_vec()), res))
