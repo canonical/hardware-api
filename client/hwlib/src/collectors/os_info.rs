@@ -18,21 +18,36 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Result};
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::{fs::read_to_string, path::Path, process::Command};
 
 use crate::models::software::{KernelPackage, OS};
 
-impl TryFrom<&Path> for OS {
-    type Error = anyhow::Error;
+pub(crate) trait CommandRunner {
+    fn run_command(&self, cmd: &str, args: &[&str]) -> Result<String>;
+}
 
-    fn try_from(proc_version_filepath: &Path) -> Result<Self> {
-        let codename = get_codename()?;
-        let distributor = get_distributor()?;
-        let version = get_version()?;
-        let kernel = KernelPackage::try_from(proc_version_filepath)?;
+pub(crate) struct SystemCommandRunner;
+
+impl CommandRunner for SystemCommandRunner {
+    fn run_command(&self, cmd: &str, args: &[&str]) -> Result<String> {
+        let output = Command::new(cmd).args(args).output()?;
+        let stdout = String::from_utf8(output.stdout)?;
+        Ok(stdout)
+    }
+}
+
+impl OS {
+    pub(crate) fn try_new(
+        proc_version_filepath: &Path,
+        runner: &impl CommandRunner,
+    ) -> Result<Self> {
+        let codename = get_codename(runner)?;
+        let distributor = get_distributor(runner)?;
+        let version = get_version(runner)?;
+        let kernel = KernelPackage::try_new(proc_version_filepath, runner)?;
         Ok(OS {
             codename,
             distributor,
@@ -42,18 +57,18 @@ impl TryFrom<&Path> for OS {
     }
 }
 
-impl TryFrom<&Path> for KernelPackage {
-    type Error = anyhow::Error;
-
-    fn try_from(proc_version_filepath: &Path) -> Result<Self> {
+impl KernelPackage {
+    pub(crate) fn try_new(
+        proc_version_filepath: &Path,
+        runner: &impl CommandRunner,
+    ) -> Result<Self> {
         let kernel_version = read_to_string(proc_version_filepath)?;
         let kernel_version = kernel_version
             .split_whitespace()
             .nth(2)
             .unwrap_or_default()
             .to_string();
-        let loaded_modules_output = Command::new("lsmod").output()?;
-        let loaded_modules_str = String::from_utf8(loaded_modules_output.stdout)?;
+        let loaded_modules_str = runner.run_command("lsmod", &[])?;
         let loaded_modules: Vec<String> = loaded_modules_str
             .lines()
             .skip(1) // skip the header
@@ -68,47 +83,102 @@ impl TryFrom<&Path> for KernelPackage {
     }
 }
 
-pub(crate) fn get_architecture() -> Result<String> {
-    let arch = Command::new("dpkg")
-        .arg("--print-architecture")
-        .output()?
-        .stdout;
-    Ok(String::from_utf8(arch)?.trim().to_string())
+pub(crate) fn get_architecture(runner: &impl CommandRunner) -> Result<String> {
+    let arch = runner.run_command("dpkg", &["--print-architecture"])?;
+    Ok(arch.trim().to_owned())
 }
 
-pub(super) fn get_codename() -> Result<String> {
+pub(super) fn get_codename(runner: &impl CommandRunner) -> Result<String> {
     lazy_static! {
         static ref CODENAME_RE: Regex = Regex::new(r"Codename:\s*(\S+)").unwrap();
     }
-    get_lsb_release_info("-c", &CODENAME_RE)
+    get_lsb_release_info("-c", &CODENAME_RE, runner)
 }
 
-pub(super) fn get_distributor() -> Result<String> {
+pub(super) fn get_distributor(runner: &impl CommandRunner) -> Result<String> {
     lazy_static! {
         static ref DISTRIBUTOR_RE: Regex = Regex::new(r"Distributor ID:\s*(\S+)").unwrap();
     }
-    get_lsb_release_info("-i", &DISTRIBUTOR_RE)
+    get_lsb_release_info("-i", &DISTRIBUTOR_RE, runner)
 }
 
-pub(super) fn get_version() -> Result<String> {
+pub(super) fn get_version(runner: &impl CommandRunner) -> Result<String> {
     lazy_static! {
         static ref VERSION_RE: Regex = Regex::new(r"Release:\s*(\S+)").unwrap();
     }
-    get_lsb_release_info("-r", &VERSION_RE)
+    get_lsb_release_info("-r", &VERSION_RE, runner)
 }
 
-fn get_lsb_release_info(flag: &str, re: &Regex) -> Result<String> {
-    let lsb_release_output = Command::new("lsb_release")
-        .arg(flag)
-        .output()
-        .context(format!(
-            "failed to execute lsb_release command with flag {}",
-            flag
-        ))?;
-    let output_str = String::from_utf8(lsb_release_output.stdout)
-        .context("failed to convert lsb_release output to UTF-8 string")?;
-    re.captures(&output_str)
+fn get_lsb_release_info(flag: &str, re: &Regex, runner: &impl CommandRunner) -> Result<String> {
+    let lsb_release_output = runner.run_command("lsb_release", &[flag])?;
+    re.captures(&lsb_release_output)
         .and_then(|caps| caps.get(1))
         .map(|m| m.as_str().to_string())
         .ok_or_else(|| anyhow!("failed to capture information using regex"))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::helpers::test_utils::get_test_filepath;
+    use std::collections::HashMap;
+
+    type SystemCommand<'args> = (&'args str, Vec<&'args str>);
+
+    struct MockCommandRunner<'args> {
+        calls: HashMap<SystemCommand<'args>, Result<&'args str>>,
+    }
+
+    impl<'args> MockCommandRunner<'args> {
+        fn new(calls: Vec<(SystemCommand<'args>, Result<&'args str>)>) -> Self {
+            let calls = calls
+                .into_iter()
+                .map(|((cmd, args), res)| ((cmd, args.to_vec()), res))
+                .collect();
+
+            Self { calls }
+        }
+    }
+
+    impl<'args> CommandRunner for MockCommandRunner<'args> {
+        fn run_command(&self, cmd: &str, args: &[&str]) -> Result<String> {
+            match self.calls.get(&(cmd, args.to_vec())) {
+                Some(res) => match res {
+                    Ok(output) => Ok(output.to_string()),
+                    Err(e) => Err(anyhow::anyhow!(e.to_string())),
+                },
+                None => panic!("missing mock: cmd={cmd:?} args={args:?}"),
+            }
+        }
+    }
+
+    #[test]
+    fn test_get_architecture() {
+        let mock_calls = vec![(("dpkg", vec!["--print-architecture"]), Ok("amd64\n"))];
+        let mock_runner = MockCommandRunner::new(mock_calls);
+        let result = get_architecture(&mock_runner);
+        assert!(result.is_ok());
+        assert_eq!(result.unwrap(), "amd64");
+    }
+
+    #[test]
+    fn test_os_try_new() {
+        let mock_calls = vec![
+            (("lsb_release", vec!["-c"]), Ok("Codename: focal\n")),
+            (("lsb_release", vec!["-i"]), Ok("Distributor ID: Ubuntu\n")),
+            (
+                ("lsb_release", vec!["-r"]),
+                Ok("No LSB modules are available.\nRelease: 20.04\n"),
+            ),
+            (("lsmod", vec![]), Ok("Module Size Used\nsnd 61440 1\n")),
+        ];
+        let mock_runner = MockCommandRunner::new(mock_calls);
+        let result = OS::try_new(get_test_filepath("version").as_path(), &mock_runner);
+        let os = result.unwrap();
+        assert_eq!(os.codename, "focal");
+        assert_eq!(os.distributor, "Ubuntu");
+        assert_eq!(os.version, "20.04");
+        assert_eq!(os.kernel.version, "5.4.0-196-generic");
+        assert_eq!(os.kernel.loaded_modules, vec!["snd".to_string()]);
+    }
 }
