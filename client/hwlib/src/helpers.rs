@@ -28,8 +28,38 @@ pub(crate) fn append_to_pathbuf(p: PathBuf, s: &str) -> PathBuf {
 
 #[cfg(test)]
 pub(crate) mod test_utils {
+    use crate::collectors::os_info::CommandRunner;
     use anyhow::{bail, Result};
-    use std::{env, fs::read_dir, path::PathBuf};
+    use std::{collections::HashMap, env, fs::read_dir, path::PathBuf};
+
+    type SystemCommand<'args> = (&'args str, Vec<&'args str>);
+
+    pub(crate) struct MockCommandRunner<'args> {
+        calls: HashMap<SystemCommand<'args>, Result<&'args str>>,
+    }
+
+    impl<'args> MockCommandRunner<'args> {
+        pub(crate) fn new(calls: Vec<(SystemCommand<'args>, Result<&'args str>)>) -> Self {
+            let calls = calls
+                .into_iter()
+                .map(|((cmd, args), res)| ((cmd, args.to_vec()), res))
+                .collect();
+
+            Self { calls }
+        }
+    }
+
+    impl<'args> CommandRunner for MockCommandRunner<'args> {
+        fn run_command(&self, cmd: &str, args: &[&str]) -> Result<String> {
+            match self.calls.get(&(cmd, args.to_vec())) {
+                Some(res) => match res {
+                    Ok(output) => Ok(output.to_string()),
+                    Err(e) => Err(anyhow::anyhow!(e.to_string())),
+                },
+                None => panic!("missing mock: cmd={cmd:?} args={args:?}"),
+            }
+        }
+    }
 
     pub(crate) fn get_test_filepath(file_name: &str) -> PathBuf {
         let mut path = get_project_root().unwrap();

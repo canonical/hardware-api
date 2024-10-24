@@ -120,37 +120,7 @@ fn get_lsb_release_info(flag: &str, re: &Regex, runner: &impl CommandRunner) -> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::helpers::test_utils::get_test_filepath;
-    use std::collections::HashMap;
-
-    type SystemCommand<'args> = (&'args str, Vec<&'args str>);
-
-    struct MockCommandRunner<'args> {
-        calls: HashMap<SystemCommand<'args>, Result<&'args str>>,
-    }
-
-    impl<'args> MockCommandRunner<'args> {
-        fn new(calls: Vec<(SystemCommand<'args>, Result<&'args str>)>) -> Self {
-            let calls = calls
-                .into_iter()
-                .map(|((cmd, args), res)| ((cmd, args.to_vec()), res))
-                .collect();
-
-            Self { calls }
-        }
-    }
-
-    impl<'args> CommandRunner for MockCommandRunner<'args> {
-        fn run_command(&self, cmd: &str, args: &[&str]) -> Result<String> {
-            match self.calls.get(&(cmd, args.to_vec())) {
-                Some(res) => match res {
-                    Ok(output) => Ok(output.to_string()),
-                    Err(e) => Err(anyhow::anyhow!(e.to_string())),
-                },
-                None => panic!("missing mock: cmd={cmd:?} args={args:?}"),
-            }
-        }
-    }
+    use crate::helpers::test_utils::{get_test_filepath, MockCommandRunner};
 
     #[test]
     fn test_get_architecture() {
