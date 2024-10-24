@@ -38,7 +38,7 @@ pub struct CpuInfo {
 
 impl CpuInfo {
     /// Parse cpuinfo file the same way it's done in checkbox:
-    /// https://github.com/canonical/checkbox/blob/3789fdd/checkbox-support/checkbox_support/parsers/cpuinfo.py
+    /// <https://github.com/canonical/checkbox/blob/3789fdd/checkbox-support/checkbox_support/parsers/cpuinfo.py>
     pub fn from_file(cpuinfo_filepath: &Path) -> Result<CpuInfo> {
         let mut attributes: HashMap<&str, &str> = HashMap::new();
         let mut cores_count = 0;
@@ -115,7 +115,7 @@ pub struct CpuFrequency {
 
 impl CpuFrequency {
     /// Read max CPU frequency from file and parse it in MHz as it's done in checkbox.
-    /// https://github.com/canonical/checkbox/blob/3789fdd/providers/resource/bin/cpuinfo_resource.py#L56-L63
+    /// <https://github.com/canonical/checkbox/blob/3789fdd/providers/resource/bin/cpuinfo_resource.py#L56-L63>
     pub fn from_k_hz_file(max_cpu_frequency_filepath: &Path) -> Result<Self> {
         let raw_freq = read_to_string(max_cpu_frequency_filepath)?;
         let k_hz: u64 = raw_freq.trim().parse()?;

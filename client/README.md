@@ -75,7 +75,6 @@ $ sudo /path/to/venv/bin/python3  # or `python3`
 >>> hwlib.get_certification_status("https://hw.ubuntu.com")
 ```
 
-
 ## Run tests
 
 Since we're using python bindings, this library contains tests for
@@ -85,7 +84,6 @@ commands in the `hwlib/` directory:
 * Run Rust tests: `$ cargo test`
 * For Python tests, you need to have `tox` on your system installed:
 `pip install tox`.  Then, you can run Python tests with tox `$ tox`
-
 
 ## Build deb package
 
@@ -137,7 +135,6 @@ git restore ../../Cargo.toml
 
 If the exit code is not 0, update the `XS-Vendored-Sources-Rust`
 header in the `debian/control` with the value from the output.
-
 
 `dh-cargo` requires the `debian/cargo-checksum.json` file to be
 present in the archive. Until the package is not published to
@@ -198,7 +195,6 @@ Not you can build the binary itself:
 ```bash
 sbuild /path/to/.dsc -d oracular
 ```
-
 
 ### Running autopkgtests locally in lxd
 
