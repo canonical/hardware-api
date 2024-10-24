@@ -33,12 +33,12 @@ pub(crate) mod test_utils {
 
     pub(crate) fn get_test_filepath(file_name: &str) -> PathBuf {
         let mut path = get_project_root().unwrap();
-        let test_data_path = path.join("tests").join("test_data");
+        let test_data_path = path.join("test_data");
         if !test_data_path.is_dir() {
-            // If tests/test_data is not found, we're in the monorepo root
+            // If test_data/ is not found, we're in the monorepo root
             path.extend(["client", "hwlib"]);
         }
-        path.extend(["tests", "test_data", file_name]);
+        path.extend(["test_data", file_name]);
         path
     }
 
