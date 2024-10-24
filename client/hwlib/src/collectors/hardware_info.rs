@@ -33,7 +33,7 @@ use crate::{
     models::devices::{Bios, Board, Chassis, Processor},
 };
 
-pub fn load_smbios_data(entry_filepath: &Path, table_filepath: &Path) -> Option<SMBiosData> {
+pub(crate) fn load_smbios_data(entry_filepath: &Path, table_filepath: &Path) -> Option<SMBiosData> {
     match table_load_from_device(entry_filepath, table_filepath) {
         Ok(data) => Some(data),
         Err(e) => {
