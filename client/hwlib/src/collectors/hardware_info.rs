@@ -224,8 +224,8 @@ mod tests {
     #[test]
     fn test_load_smbios_data() {
         let result = load_smbios_data(
-            &get_test_filepath("smbios_entry_point"),
-            &get_test_filepath("DMI"),
+            &get_test_filepath("amd64/generic/smbios_entry_point"),
+            &get_test_filepath("amd64/generic/DMI"),
         );
         assert!(result.is_some());
     }
@@ -233,8 +233,8 @@ mod tests {
     #[test]
     fn test_bios_from_smbios() {
         let smbios_data = load_smbios_data(
-            &get_test_filepath("smbios_entry_point"),
-            &get_test_filepath("DMI"),
+            &get_test_filepath("amd64/generic/smbios_entry_point"),
+            &get_test_filepath("amd64/generic/DMI"),
         )
         .unwrap();
         let bios_info_vec = smbios_data.collect::<SMBiosInformation>();
@@ -253,15 +253,15 @@ mod tests {
     #[test]
     fn test_processor_from_smbios() {
         let smbios_data = load_smbios_data(
-            &get_test_filepath("smbios_entry_point"),
-            &get_test_filepath("DMI"),
+            &get_test_filepath("amd64/generic/smbios_entry_point"),
+            &get_test_filepath("amd64/generic/DMI"),
         )
         .unwrap();
         let processor_info_vec = smbios_data.collect::<SMBiosProcessorInformation>();
         let processor_info = processor_info_vec.first().unwrap();
         let processor = Processor::try_from((
             processor_info,
-            get_test_filepath("cpuinfo_max_freq").as_path(),
+            get_test_filepath("amd64/generic/cpuinfo_max_freq").as_path(),
         ))
         .unwrap();
         assert_eq!(
@@ -276,8 +276,8 @@ mod tests {
     #[test]
     fn test_collect_chassis_info() {
         let smbios_data = load_smbios_data(
-            &get_test_filepath("smbios_entry_point"),
-            &get_test_filepath("DMI"),
+            &get_test_filepath("amd64/generic/smbios_entry_point"),
+            &get_test_filepath("amd64/generic/DMI"),
         )
         .unwrap();
         let chassis_info_vec = smbios_data.collect::<SMBiosSystemChassisInformation>();
@@ -292,8 +292,8 @@ mod tests {
     #[test]
     fn test_collect_motherboard_info() {
         let smbios_data = load_smbios_data(
-            &get_test_filepath("smbios_entry_point"),
-            &get_test_filepath("DMI"),
+            &get_test_filepath("amd64/generic/smbios_entry_point"),
+            &get_test_filepath("amd64/generic/DMI"),
         )
         .unwrap();
         let board_info_vec = smbios_data.collect::<SMBiosBaseboardInformation>();
@@ -306,7 +306,8 @@ mod tests {
 
     #[test]
     fn test_collect_motherboard_info_from_device_tree() {
-        let board = Board::try_from(get_test_filepath("device-tree/").as_path()).unwrap();
+        let board =
+            Board::try_from(get_test_filepath("generic/generic/device-tree/").as_path()).unwrap();
         assert_eq!(board.manufacturer, "Unknown");
         assert_eq!(board.product_name, "Raspberry Pi 4 Model B Rev 1.5");
         assert_eq!(board.version, "raspberrypi,4-model-bbrcm,bcm2711");
@@ -315,8 +316,8 @@ mod tests {
     #[test]
     fn test_get_system_info() {
         let smbios_data = load_smbios_data(
-            &get_test_filepath("smbios_entry_point"),
-            &get_test_filepath("DMI"),
+            &get_test_filepath("amd64/generic/smbios_entry_point"),
+            &get_test_filepath("amd64/generic/DMI"),
         )
         .unwrap();
         let system_data_vec = smbios_data.collect::<SMBiosSystemInformation>();

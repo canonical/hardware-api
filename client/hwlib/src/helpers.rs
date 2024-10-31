@@ -29,7 +29,7 @@ pub(crate) fn append_to_pathbuf(p: PathBuf, s: &str) -> PathBuf {
 #[cfg(test)]
 pub(crate) mod test_utils {
     use crate::collectors::os_info::CommandRunner;
-    use anyhow::{bail, Result};
+    use anyhow::{anyhow, bail, Result};
     use std::{collections::HashMap, env, fs::read_dir, path::PathBuf};
 
     type SystemCommand<'args> = (&'args str, Vec<&'args str>);
@@ -40,11 +40,7 @@ pub(crate) mod test_utils {
 
     impl<'args> MockCommandRunner<'args> {
         pub(crate) fn new(calls: Vec<(SystemCommand<'args>, Result<&'args str>)>) -> Self {
-            let calls = calls
-                .into_iter()
-                .map(|((cmd, args), res)| ((cmd, args.to_vec()), res))
-                .collect();
-
+            let calls = calls.into_iter().collect();
             Self { calls }
         }
     }
@@ -54,9 +50,9 @@ pub(crate) mod test_utils {
             match self.calls.get(&(cmd, args.to_vec())) {
                 Some(res) => match res {
                     Ok(output) => Ok(output.to_string()),
-                    Err(e) => Err(anyhow::anyhow!(e.to_string())),
+                    Err(e) => Err(anyhow!(e.to_string())),
                 },
-                None => panic!("missing mock: cmd={cmd:?} args={args:?}"),
+                None => Err(anyhow!("missing mock: cmd={cmd:?} args={args:?}")),
             }
         }
     }
@@ -85,5 +81,19 @@ pub(crate) mod test_utils {
             }
         }
         bail!("ran out of places to find Cargo.lock")
+    }
+
+    /// Reads data from the specified JSON file and substitutes
+    /// placeholders with actual values provided in
+    /// `vars`. Placeholders in the JSON file should follow the shell
+    /// vars style format, like `${FOO}`.
+    /// `vars is A list of key-value pairs, where each key corresponds
+    /// to a placeholder name, and each value is the replacement
+    /// string.
+    pub(crate) fn apply_vars(mut content: String, vars: &[(&str, &str)]) -> String {
+        for (k, v) in vars {
+            content = content.replace(&format!("${k}"), v);
+        }
+        content
     }
 }

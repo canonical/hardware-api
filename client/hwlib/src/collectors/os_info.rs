@@ -143,7 +143,10 @@ mod tests {
             (("lsmod", vec![]), Ok("Module Size Used\nsnd 61440 1\n")),
         ];
         let mock_runner = MockCommandRunner::new(mock_calls);
-        let result = OS::try_new(get_test_filepath("version").as_path(), &mock_runner);
+        let result = OS::try_new(
+            get_test_filepath("generic/generic/version").as_path(),
+            &mock_runner,
+        );
         let os = result.unwrap();
         assert_eq!(os.codename, "focal");
         assert_eq!(os.distributor, "Ubuntu");

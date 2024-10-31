@@ -23,7 +23,7 @@ all-features = false
 name = "hwlib"
 crate-type = [ "cdylib", "rlib",]
 
-[target.'cfg(all(target_os = "linux"))'.dependencies]
+[dependencies]
 serde_json = "~1.0.0"
 reqwest = { version = "0.12.0", features = ["json"] }
 serde = { version = "~1.0.0", features = ["derive"] }
@@ -35,6 +35,10 @@ time = { version = "~0.3.0", features = ["macros" ,"parsing", "formatting"]}
 anyhow = "~1.0.0"
 itertools = "0.13.0"
 lazy_static = "1.5.0"
+
+[dev-dependencies]
+simple_test_case = "1.2.0"
+pretty_assertions = "1.4.1"
 
 [package.metadata.deb]
 maintainer = "Canonical Hardware Certification <canonical-hw-cert@lists.launchpad.net>"

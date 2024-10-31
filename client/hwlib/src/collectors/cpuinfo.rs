@@ -178,7 +178,7 @@ mod tests {
 
     #[test]
     fn test_parsing_cpuinfo() {
-        let cpuinfo = CpuInfo::from_file(&get_test_filepath("cpuinfo")).unwrap();
+        let cpuinfo = CpuInfo::from_file(&get_test_filepath("generic/generic/cpuinfo")).unwrap();
         assert_eq!(cpuinfo.platform, std::env::consts::ARCH);
         assert_eq!(cpuinfo.cores_count, 2);
         assert_eq!(cpuinfo.cpu_type, "GenuineIntel");
@@ -193,7 +193,8 @@ mod tests {
     #[test]
     fn test_read_max_cpu_frequency() {
         let cpu_freq =
-            CpuFrequency::from_k_hz_file(&get_test_filepath("cpuinfo_max_freq")).unwrap();
+            CpuFrequency::from_k_hz_file(&get_test_filepath("generic/generic/cpuinfo_max_freq"))
+                .unwrap();
         assert_eq!(cpu_freq.m_hz, 1800);
     }
 }

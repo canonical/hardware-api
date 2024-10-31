@@ -176,167 +176,106 @@ impl CertificationStatusRequest {
 
 #[cfg(test)]
 mod tests {
-    use std::path::PathBuf;
-
     use crate::{
-        helpers::test_utils::{get_test_filepath, MockCommandRunner},
+        helpers::test_utils::{apply_vars, get_test_filepath, MockCommandRunner},
         models::request_validators::{CertificationStatusRequest, Paths},
     };
+    use serde_json::Value;
+    use simple_test_case::test_case;
+    use std::{fs::read_to_string, path::PathBuf};
 
     /// Test how certification request is prepared for the data collected
     /// from SMBios
+    #[test_case(
+        "amd64/dell_xps13",
+        "noble",
+        "24.04",
+        "6.8.0-1013-oem",
+        &["zfs", "spl", "nvme_tcp"];
+        "noble_dell_xps13"
+    )]
+    #[test_case(
+        "amd64/generic",
+        "jammy",
+        "22.04",
+        "5.4.0-196-generic",
+        &["nvme", "intel_lpss_pci", "intel_ish_ipc", "idma64"];
+        "jammy_generic"
+    )]
+    #[test_case(
+        "amd64/thinkstation_p620",
+        "focal",
+        "20.04",
+        "5.15.0-125-generic",
+        &["xt_tcpudp", "nft_chain_nat"];
+        "focal_thinkstation"
+    )]
     #[test]
-    fn test_smbios_certification_request() {
+    fn test_smbios_certification_request(
+        dir_path: &str,
+        codename: &str,
+        release: &str,
+        kernel_version: &str,
+        kernel_modules: &[&str],
+    ) {
         let paths = Paths {
-            smbios_entry_filepath: get_test_filepath("smbios_entry_point"),
-            smbios_table_filepath: get_test_filepath("DMI"),
-            cpuinfo_filepath: get_test_filepath("cpuinfo"),
-            max_cpu_frequency_filepath: get_test_filepath("cpuinfo_max_freq"),
-            // Since /proc/device-tree doesn't exist on amd64 architectures where
-            // SMBios is available, here we also specify unexisting path.
+            smbios_entry_filepath: get_test_filepath(
+                format!("{dir_path}/smbios_entry_point").as_str(),
+            ),
+            smbios_table_filepath: get_test_filepath(format!("{dir_path}/DMI").as_str()),
+            max_cpu_frequency_filepath: get_test_filepath(
+                format!("{dir_path}/cpuinfo_max_freq").as_str(),
+            ),
+            proc_version_filepath: get_test_filepath(format!("{dir_path}/version").as_str()),
+            cpuinfo_filepath: PathBuf::from("./none"),
             device_tree_dirpath: PathBuf::from("./none"),
-            proc_version_filepath: get_test_filepath("version"),
         };
+
+        let codename_str = format!("Codename: {codename}\n");
+        let release_str = format!("No LSB modules are available.\nRelease: {release}\n");
+        let lsmod_output: String = std::iter::once("Module Size Used by\n".to_owned())
+            .chain(
+                kernel_modules
+                    .iter()
+                    .map(|module| format!("{module} 456092 0\n")),
+            )
+            .collect::<String>();
+
         let mock_calls = vec![
-            (("dpkg", vec!["--print-architecture"]), Ok("amd64\n")),
-            (("lsb_release", vec!["-c"]), Ok("Codename: noble\n")),
+            (("dpkg", vec!["--print-architecture"]), Ok("amd64")),
+            (("lsb_release", vec!["-c"]), Ok(codename_str.as_str())),
             (("lsb_release", vec!["-i"]), Ok("Distributor ID: Ubuntu\n")),
-            (
-                ("lsb_release", vec!["-r"]),
-                Ok("No LSB modules are available.\nRelease: 24.04\n"),
-            ),
-            (("lsmod", vec![]), Ok("Module Size Used\nxt_nat 12288 10\nxt_tcpudp 16384 0\nveth 45056 0\nxt_conntrack 12288 3\n")),
+            (("lsb_release", vec!["-r"]), Ok(release_str.as_str())),
+            (("lsmod", vec![]), Ok(lsmod_output.as_str())),
         ];
         let mock_runner = MockCommandRunner::new(mock_calls);
+
+        let quoted_kernel_modules: Vec<_> = kernel_modules
+            .iter()
+            .map(|&module| format!("\"{module}\""))
+            .collect();
+        let kernel_modules_str = format!("[{}]", quoted_kernel_modules.join(", "));
+
+        let content = read_to_string(get_test_filepath(
+            format!("{dir_path}/expected.json").as_str(),
+        ))
+        .unwrap();
+        let expected_result = apply_vars(
+            content,
+            &[
+                ("CODENAME", codename),
+                ("KERNEL_VERSION", kernel_version),
+                ("KERNEL_MODULES", kernel_modules_str.as_str()),
+                ("RELEASE", release),
+            ],
+        );
 
         let cert_status_request_json = serde_json::to_value(
             CertificationStatusRequest::new_with_runner(paths, &mock_runner).unwrap(),
         )
         .unwrap();
-        let expected_json = serde_json::json!({
-            "architecture": "amd64",
-            "bios": {
-                "firmware_revision": "5.19",
-                "release_date": "2021-05-14",
-                "revision": "5.19",
-                "vendor": "American Megatrends International, LLC.",
-                "version": "5.19"
-            },
-            "board": {
-                "manufacturer": "AAEON",
-                "product_name": "UPX-TGL01",
-                "version": "V1.0"
-            },
-            "chassis": {
-                "chassis_type": "Desktop",
-                "manufacturer": "AAEON",
-                "sku": "Default string",
-                "version": "V1.0"
-            },
-            "model": "UPX-TGL01",
-            "os": {
-                "codename": "noble",
-                "distributor": "Ubuntu",
-                "version": "24.04",
-                "kernel": {
-                    "name": "Linux",
-                    "version": "5.4.0-196-generic",
-                    "signature": null,
-                    "loaded_modules": [
-                        "xt_nat",
-                        "xt_tcpudp",
-                        "veth",
-                        "xt_conntrack",
-                    ]
-                }
-            },
-            "pci_peripherals": [],
-            "processor": {
-                "identifier": [
-                    193,
-                    6,
-                    8,
-                    0,
-                    255,
-                    251,
-                    235,
-                    191
-                ],
-                "frequency": 1800,
-                "manufacturer": "Intel(R) Corporation",
-                "version": "Intel(R) Celeron(R) 6305E @ 1.80GHz"
-            },
-            "usb_peripherals": [],
-            "vendor": "AAEON"
-        });
-
-        assert_eq!(cert_status_request_json, expected_json);
-    }
-
-    /// Test how certification request is prepared for the data collected
-    /// when SMBios is not available
-    #[test]
-    fn test_device_tree_certification_request() {
-        let paths = Paths {
-            smbios_entry_filepath: PathBuf::from("./none"),
-            smbios_table_filepath: PathBuf::from("./none"),
-            cpuinfo_filepath: get_test_filepath("cpuinfo"),
-            max_cpu_frequency_filepath: get_test_filepath("cpuinfo_max_freq"),
-            device_tree_dirpath: get_test_filepath("device-tree"),
-            proc_version_filepath: get_test_filepath("version"),
-        };
-        let mock_calls = vec![
-            (("dpkg", vec!["--print-architecture"]), Ok("arm64\n")),
-            (("lsb_release", vec!["-c"]), Ok("Codename: jammy\n")),
-            (("lsb_release", vec!["-i"]), Ok("Distributor ID: Ubuntu\n")),
-            (
-                ("lsb_release", vec!["-r"]),
-                Ok("Release: 22.04\n"),
-            ),
-            (("lsmod", vec![]), Ok("Module Size Used\ntun 98304 2\nrfcomm 81920 4\nsnd_seq_dummy 49152 0\nsnd_hrtimer 49152 1\n")),
-        ];
-        let mock_runner = MockCommandRunner::new(mock_calls);
-
-        let cert_status_request_json = serde_json::to_value(
-            CertificationStatusRequest::new_with_runner(paths, &mock_runner).unwrap(),
-        )
-        .unwrap();
-        let expected_json = serde_json::json!({
-            "architecture": "arm64",
-            "bios": null,
-            "board": {
-                "manufacturer": "Unknown",
-                "product_name": "Unknown",
-                "version": "Unknown",
-            },
-            "chassis": null,
-            "model": "Intel(R) Celeron(R) 6305E @ 1.80GHz",
-             "os": {
-                "codename": "jammy",
-                "distributor": "Ubuntu",
-                "version": "22.04",
-                "kernel": {
-                    "name": "Linux",
-                    "version": "5.4.0-196-generic",
-                    "signature": null,
-                    "loaded_modules": [
-                        "tun",
-                        "rfcomm",
-                        "snd_seq_dummy",
-                        "snd_hrtimer",
-                    ]
-                }
-            },
-            "pci_peripherals": [],
-            "processor": {
-                "identifier": null,
-                "frequency": 1800,
-                "manufacturer": "GenuineIntel",
-                "version": "Intel(R) Celeron(R) 6305E @ 1.80GHz"
-            },
-            "usb_peripherals": [],
-            "vendor": "Unknown"
-        });
+        let expected_json: Value =
+            serde_json::from_str(expected_result.as_str()).expect("JSON was not well formatted");
 
         assert_eq!(cert_status_request_json, expected_json);
     }
