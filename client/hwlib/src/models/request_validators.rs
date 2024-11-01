@@ -173,3 +173,110 @@ impl CertificationStatusRequest {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        helpers::test_utils::{apply_vars, get_test_filepath, MockCommandRunner},
+        models::request_validators::{CertificationStatusRequest, Paths},
+    };
+    use serde_json::Value;
+    use simple_test_case::test_case;
+    use std::{fs::read_to_string, path::PathBuf};
+
+    /// Test how certification request is prepared for the data collected
+    /// from SMBios
+    #[test_case(
+        "amd64/dgx_station",
+        "jammy",
+        "22.04",
+        "5.4.0-192-generic",
+        &["nvme", "intel_lpss_pci", "intel_ish_ipc", "idma64"];
+        "jammy_dgx_station"
+    )]
+    #[test_case(
+        "amd64/dell_xps13",
+        "noble",
+        "24.04",
+        "6.8.0-1013-oem",
+        &["zfs", "spl", "nvme_tcp"];
+        "noble_dell_xps13"
+    )]
+    #[test_case(
+        "amd64/thinkstation_p620",
+        "focal",
+        "20.04",
+        "5.15.0-125-generic",
+        &["xt_tcpudp", "nft_chain_nat"];
+        "focal_thinkstation"
+    )]
+    #[test]
+    fn test_smbios_certification_request(
+        dir_path: &str,
+        codename: &str,
+        release: &str,
+        kernel_version: &str,
+        kernel_modules: &[&str],
+    ) {
+        let paths = Paths {
+            smbios_entry_filepath: get_test_filepath(
+                format!("{dir_path}/smbios_entry_point").as_str(),
+            ),
+            smbios_table_filepath: get_test_filepath(format!("{dir_path}/DMI").as_str()),
+            max_cpu_frequency_filepath: get_test_filepath(
+                format!("{dir_path}/cpuinfo_max_freq").as_str(),
+            ),
+            proc_version_filepath: get_test_filepath(format!("{dir_path}/version").as_str()),
+            cpuinfo_filepath: PathBuf::from("./none"),
+            device_tree_dirpath: PathBuf::from("./none"),
+        };
+
+        let codename_str = format!("Codename: {codename}\n");
+        let release_str = format!("No LSB modules are available.\nRelease: {release}\n");
+        let lsmod_output: String = std::iter::once("Module Size Used by\n".to_owned())
+            .chain(
+                kernel_modules
+                    .iter()
+                    .map(|module| format!("{module} 456092 0\n")),
+            )
+            .collect::<String>();
+
+        let mock_calls = vec![
+            (("dpkg", vec!["--print-architecture"]), Ok("amd64")),
+            (("lsb_release", vec!["-c"]), Ok(codename_str.as_str())),
+            (("lsb_release", vec!["-i"]), Ok("Distributor ID: Ubuntu\n")),
+            (("lsb_release", vec!["-r"]), Ok(release_str.as_str())),
+            (("lsmod", vec![]), Ok(lsmod_output.as_str())),
+        ];
+        let mock_runner = MockCommandRunner::new(mock_calls);
+
+        let quoted_kernel_modules: Vec<_> = kernel_modules
+            .iter()
+            .map(|module| format!("\"{module}\""))
+            .collect();
+        let kernel_modules_str = format!("[{}]", quoted_kernel_modules.join(", "));
+
+        let content = read_to_string(get_test_filepath(
+            format!("{dir_path}/expected.json").as_str(),
+        ))
+        .unwrap();
+        let expected_result = apply_vars(
+            content,
+            &[
+                ("CODENAME", codename),
+                ("KERNEL_VERSION", kernel_version),
+                ("KERNEL_MODULES", kernel_modules_str.as_str()),
+                ("RELEASE", release),
+            ],
+        );
+
+        let cert_status_request_json = serde_json::to_value(
+            CertificationStatusRequest::new_with_runner(paths, &mock_runner).unwrap(),
+        )
+        .unwrap();
+        let expected_json: Value =
+            serde_json::from_str(expected_result.as_str()).expect("JSON was not well formatted");
+
+        assert_eq!(cert_status_request_json, expected_json);
+    }
+}

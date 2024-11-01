@@ -33,7 +33,7 @@ use crate::{
     models::devices::{Bios, Board, Chassis, Processor},
 };
 
-pub fn load_smbios_data(entry_filepath: &Path, table_filepath: &Path) -> Option<SMBiosData> {
+pub(crate) fn load_smbios_data(entry_filepath: &Path, table_filepath: &Path) -> Option<SMBiosData> {
     match table_load_from_device(entry_filepath, table_filepath) {
         Ok(data) => Some(data),
         Err(e) => {
@@ -224,8 +224,8 @@ mod tests {
     #[test]
     fn test_load_smbios_data() {
         let result = load_smbios_data(
-            &get_test_filepath("smbios_entry_point"),
-            &get_test_filepath("DMI"),
+            &get_test_filepath("amd64/dgx_station/smbios_entry_point"),
+            &get_test_filepath("amd64/dgx_station/DMI"),
         );
         assert!(result.is_some());
     }
@@ -233,8 +233,8 @@ mod tests {
     #[test]
     fn test_bios_from_smbios() {
         let smbios_data = load_smbios_data(
-            &get_test_filepath("smbios_entry_point"),
-            &get_test_filepath("DMI"),
+            &get_test_filepath("amd64/dgx_station/smbios_entry_point"),
+            &get_test_filepath("amd64/dgx_station/DMI"),
         )
         .unwrap();
         let bios_info_vec = smbios_data.collect::<SMBiosInformation>();
@@ -243,70 +243,74 @@ mod tests {
         assert!(bios.firmware_revision.is_some());
         assert!(bios.release_date.is_some());
         assert!(bios.revision.is_some());
-        assert_eq!(bios.vendor, "American Megatrends International, LLC.");
-        assert_eq!(bios.version, "5.19");
-        assert_eq!(bios.release_date.unwrap(), "2021-05-14");
-        assert_eq!(bios.firmware_revision.unwrap(), "5.19");
-        assert_eq!(bios.revision.unwrap(), "5.19");
+        assert_eq!(bios.vendor, "American Megatrends Inc.");
+        assert_eq!(bios.version, "0406");
+        assert_eq!(bios.release_date.unwrap(), "2018-08-27");
+        assert_eq!(bios.firmware_revision.unwrap(), "5.11");
+        assert_eq!(bios.revision.unwrap(), "0406");
     }
 
     #[test]
     fn test_processor_from_smbios() {
         let smbios_data = load_smbios_data(
-            &get_test_filepath("smbios_entry_point"),
-            &get_test_filepath("DMI"),
+            &get_test_filepath("amd64/dgx_station/smbios_entry_point"),
+            &get_test_filepath("amd64/dgx_station/DMI"),
         )
         .unwrap();
         let processor_info_vec = smbios_data.collect::<SMBiosProcessorInformation>();
         let processor_info = processor_info_vec.first().unwrap();
         let processor = Processor::try_from((
             processor_info,
-            get_test_filepath("cpuinfo_max_freq").as_path(),
+            get_test_filepath("amd64/dgx_station/cpuinfo_max_freq").as_path(),
         ))
         .unwrap();
         assert_eq!(
             processor.identifier,
-            Some([0xc1, 0x6, 0x8, 0x0, 0xff, 0xfb, 0xeb, 0xbf]) // Tiger Lake ID
+            Some([0xf1, 0x6, 0x4, 0x0, 0xff, 0xfb, 0xeb, 0xbf]) // Broadwell ID
         );
-        assert_eq!(processor.frequency, 1800);
-        assert_eq!(processor.manufacturer, "Intel(R) Corporation");
-        assert_eq!(processor.version, "Intel(R) Celeron(R) 6305E @ 1.80GHz");
+        assert_eq!(processor.frequency, 800);
+        assert_eq!(processor.manufacturer, "Intel");
+        assert_eq!(
+            processor.version,
+            "Intel(R) Xeon(R) CPU E5-2698 v4 @ 2.20GHz"
+        );
     }
 
     #[test]
     fn test_collect_chassis_info() {
         let smbios_data = load_smbios_data(
-            &get_test_filepath("smbios_entry_point"),
-            &get_test_filepath("DMI"),
+            &get_test_filepath("amd64/dgx_station/smbios_entry_point"),
+            &get_test_filepath("amd64/dgx_station/DMI"),
         )
         .unwrap();
         let chassis_info_vec = smbios_data.collect::<SMBiosSystemChassisInformation>();
         let chassis_info = chassis_info_vec.first().unwrap();
         let chassis = Chassis::try_from(chassis_info).unwrap();
         assert_eq!(chassis.chassis_type, "Desktop");
-        assert_eq!(chassis.manufacturer, "AAEON");
+        assert_eq!(chassis.manufacturer, "EMPTY");
         assert_eq!(chassis.sku, "Default string");
-        assert_eq!(chassis.version, "V1.0");
+        assert_eq!(chassis.version, "Default string");
     }
 
     #[test]
     fn test_collect_motherboard_info() {
         let smbios_data = load_smbios_data(
-            &get_test_filepath("smbios_entry_point"),
-            &get_test_filepath("DMI"),
+            &get_test_filepath("amd64/dgx_station/smbios_entry_point"),
+            &get_test_filepath("amd64/dgx_station/DMI"),
         )
         .unwrap();
         let board_info_vec = smbios_data.collect::<SMBiosBaseboardInformation>();
         let board_info = board_info_vec.first().unwrap();
         let board = Board::try_from(board_info).unwrap();
-        assert_eq!(board.manufacturer, "AAEON");
-        assert_eq!(board.product_name, "UPX-TGL01");
-        assert_eq!(board.version, "V1.0");
+        assert_eq!(board.manufacturer, "EMPTY");
+        assert_eq!(board.product_name, "X99-E-10G WS");
+        assert_eq!(board.version, "Rev 1.xx");
     }
 
     #[test]
     fn test_collect_motherboard_info_from_device_tree() {
-        let board = Board::try_from(get_test_filepath("device-tree/").as_path()).unwrap();
+        let board =
+            Board::try_from(get_test_filepath("arm64/rpi4b8g/device-tree/").as_path()).unwrap();
         assert_eq!(board.manufacturer, "Unknown");
         assert_eq!(board.product_name, "Raspberry Pi 4 Model B Rev 1.5");
         assert_eq!(board.version, "raspberrypi,4-model-bbrcm,bcm2711");
@@ -315,14 +319,14 @@ mod tests {
     #[test]
     fn test_get_system_info() {
         let smbios_data = load_smbios_data(
-            &get_test_filepath("smbios_entry_point"),
-            &get_test_filepath("DMI"),
+            &get_test_filepath("amd64/dgx_station/smbios_entry_point"),
+            &get_test_filepath("amd64/dgx_station/DMI"),
         )
         .unwrap();
         let system_data_vec = smbios_data.collect::<SMBiosSystemInformation>();
         let system_data = system_data_vec.first().unwrap();
         let system_info = SystemInfo::try_from_smbios(system_data).unwrap();
-        assert_eq!(system_info.product_name, "UPX-TGL01");
-        assert_eq!(system_info.manufacturer, "AAEON");
+        assert_eq!(system_info.product_name, "DGX Station");
+        assert_eq!(system_info.manufacturer, "NVIDIA");
     }
 }

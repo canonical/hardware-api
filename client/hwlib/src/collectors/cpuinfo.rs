@@ -38,7 +38,7 @@ pub struct CpuInfo {
 
 impl CpuInfo {
     /// Parse cpuinfo file the same way it's done in checkbox:
-    /// https://github.com/canonical/checkbox/blob/3789fdd/checkbox-support/checkbox_support/parsers/cpuinfo.py
+    /// <https://github.com/canonical/checkbox/blob/3789fdd/checkbox-support/checkbox_support/parsers/cpuinfo.py>
     pub fn from_file(cpuinfo_filepath: &Path) -> Result<CpuInfo> {
         let mut attributes: HashMap<&str, &str> = HashMap::new();
         let mut cores_count = 0;
@@ -115,7 +115,7 @@ pub struct CpuFrequency {
 
 impl CpuFrequency {
     /// Read max CPU frequency from file and parse it in MHz as it's done in checkbox.
-    /// https://github.com/canonical/checkbox/blob/3789fdd/providers/resource/bin/cpuinfo_resource.py#L56-L63
+    /// <https://github.com/canonical/checkbox/blob/3789fdd/providers/resource/bin/cpuinfo_resource.py#L56-L63>
     pub fn from_k_hz_file(max_cpu_frequency_filepath: &Path) -> Result<Self> {
         let raw_freq = read_to_string(max_cpu_frequency_filepath)?;
         let k_hz: u64 = raw_freq.trim().parse()?;
@@ -178,22 +178,18 @@ mod tests {
 
     #[test]
     fn test_parsing_cpuinfo() {
-        let cpuinfo = CpuInfo::from_file(&get_test_filepath("cpuinfo")).unwrap();
+        let cpuinfo = CpuInfo::from_file(&get_test_filepath("arm64/rpi4b8g/cpuinfo")).unwrap();
         assert_eq!(cpuinfo.platform, std::env::consts::ARCH);
-        assert_eq!(cpuinfo.cores_count, 2);
-        assert_eq!(cpuinfo.cpu_type, "GenuineIntel");
-        assert_eq!(cpuinfo.model, "Intel(R) Celeron(R) 6305E @ 1.80GHz");
-        assert_eq!(cpuinfo.model_number, "6");
-        assert_eq!(cpuinfo.model_version, "140");
-        assert_eq!(cpuinfo.model_revision, "1");
-        assert_eq!(cpuinfo.cache.unwrap(), 4096);
-        assert_eq!(cpuinfo.bogomips.unwrap(), 3610);
+        assert_eq!(cpuinfo.cores_count, 4);
+        assert_eq!(cpuinfo.cpu_type, std::env::consts::ARCH);
+        assert_eq!(cpuinfo.model, "Raspberry Pi 4 Model B Rev 1.4");
     }
 
     #[test]
     fn test_read_max_cpu_frequency() {
         let cpu_freq =
-            CpuFrequency::from_k_hz_file(&get_test_filepath("cpuinfo_max_freq")).unwrap();
-        assert_eq!(cpu_freq.m_hz, 1800);
+            CpuFrequency::from_k_hz_file(&get_test_filepath("arm64/rpi4b8g/cpuinfo_max_freq"))
+                .unwrap();
+        assert_eq!(cpu_freq.m_hz, 600);
     }
 }
