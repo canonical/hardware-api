@@ -187,20 +187,20 @@ mod tests {
     /// Test how certification request is prepared for the data collected
     /// from SMBios
     #[test_case(
+        "amd64/dgx_station",
+        "jammy",
+        "22.04",
+        "5.4.0-192-generic",
+        &["nvme", "intel_lpss_pci", "intel_ish_ipc", "idma64"];
+        "jammy_dgx_station"
+    )]
+    #[test_case(
         "amd64/dell_xps13",
         "noble",
         "24.04",
         "6.8.0-1013-oem",
         &["zfs", "spl", "nvme_tcp"];
         "noble_dell_xps13"
-    )]
-    #[test_case(
-        "amd64/generic",
-        "jammy",
-        "22.04",
-        "5.4.0-196-generic",
-        &["nvme", "intel_lpss_pci", "intel_ish_ipc", "idma64"];
-        "jammy_generic"
     )]
     #[test_case(
         "amd64/thinkstation_p620",
@@ -252,7 +252,7 @@ mod tests {
 
         let quoted_kernel_modules: Vec<_> = kernel_modules
             .iter()
-            .map(|&module| format!("\"{module}\""))
+            .map(|module| format!("\"{module}\""))
             .collect();
         let kernel_modules_str = format!("[{}]", quoted_kernel_modules.join(", "));
 

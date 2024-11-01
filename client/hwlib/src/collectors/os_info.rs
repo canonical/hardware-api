@@ -144,14 +144,14 @@ mod tests {
         ];
         let mock_runner = MockCommandRunner::new(mock_calls);
         let result = OS::try_new(
-            get_test_filepath("generic/generic/version").as_path(),
+            get_test_filepath("arm64/rpi4b8g/version").as_path(),
             &mock_runner,
         );
         let os = result.unwrap();
         assert_eq!(os.codename, "focal");
         assert_eq!(os.distributor, "Ubuntu");
         assert_eq!(os.version, "20.04");
-        assert_eq!(os.kernel.version, "5.4.0-196-generic");
+        assert_eq!(os.kernel.version, "5.4.0-1119-raspi");
         assert_eq!(os.kernel.loaded_modules, vec!["snd".to_string()]);
     }
 }

@@ -178,23 +178,18 @@ mod tests {
 
     #[test]
     fn test_parsing_cpuinfo() {
-        let cpuinfo = CpuInfo::from_file(&get_test_filepath("generic/generic/cpuinfo")).unwrap();
+        let cpuinfo = CpuInfo::from_file(&get_test_filepath("arm64/rpi4b8g/cpuinfo")).unwrap();
         assert_eq!(cpuinfo.platform, std::env::consts::ARCH);
-        assert_eq!(cpuinfo.cores_count, 2);
-        assert_eq!(cpuinfo.cpu_type, "GenuineIntel");
-        assert_eq!(cpuinfo.model, "Intel(R) Celeron(R) 6305E @ 1.80GHz");
-        assert_eq!(cpuinfo.model_number, "6");
-        assert_eq!(cpuinfo.model_version, "140");
-        assert_eq!(cpuinfo.model_revision, "1");
-        assert_eq!(cpuinfo.cache.unwrap(), 4096);
-        assert_eq!(cpuinfo.bogomips.unwrap(), 3610);
+        assert_eq!(cpuinfo.cores_count, 4);
+        assert_eq!(cpuinfo.cpu_type, std::env::consts::ARCH);
+        assert_eq!(cpuinfo.model, "Raspberry Pi 4 Model B Rev 1.4");
     }
 
     #[test]
     fn test_read_max_cpu_frequency() {
         let cpu_freq =
-            CpuFrequency::from_k_hz_file(&get_test_filepath("generic/generic/cpuinfo_max_freq"))
+            CpuFrequency::from_k_hz_file(&get_test_filepath("arm64/rpi4b8g/cpuinfo_max_freq"))
                 .unwrap();
-        assert_eq!(cpu_freq.m_hz, 1800);
+        assert_eq!(cpu_freq.m_hz, 600);
     }
 }

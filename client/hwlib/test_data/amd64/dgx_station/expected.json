@@ -1,24 +1,24 @@
 {
   "architecture": "amd64",
   "bios": {
-    "firmware_revision": "5.19",
-    "release_date": "2021-05-14",
-    "revision": "5.19",
-    "vendor": "American Megatrends International, LLC.",
-    "version": "5.19"
+    "firmware_revision": "5.11",
+    "release_date": "2018-08-27",
+    "revision": "0406",
+    "vendor": "American Megatrends Inc.",
+    "version": "0406"
   },
   "board": {
-    "manufacturer": "AAEON",
-    "product_name": "UPX-TGL01",
-    "version": "V1.0"
+    "manufacturer": "EMPTY",
+    "product_name": "X99-E-10G WS",
+    "version": "Rev 1.xx"
   },
   "chassis": {
     "chassis_type": "Desktop",
-    "manufacturer": "AAEON",
+    "manufacturer": "EMPTY",
     "sku": "Default string",
-    "version": "V1.0"
+    "version": "Default string"
   },
-  "model": "UPX-TGL01",
+  "model": "DGX Station",
   "os": {
     "codename": "$CODENAME",
     "distributor": "Ubuntu",
@@ -32,20 +32,20 @@
   },
   "pci_peripherals": [],
   "processor": {
-    "frequency": 1800,
+    "frequency": 800,
     "identifier": [
-      193,
+      241,
       6,
-      8,
+      4,
       0,
       255,
       251,
       235,
       191
     ],
-    "manufacturer": "Intel(R) Corporation",
-    "version": "Intel(R) Celeron(R) 6305E @ 1.80GHz"
+    "manufacturer": "Intel",
+    "version": "Intel(R) Xeon(R) CPU E5-2698 v4 @ 2.20GHz"
   },
   "usb_peripherals": [],
-  "vendor": "AAEON"
+  "vendor": "NVIDIA"
 }
