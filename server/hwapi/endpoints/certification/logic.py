@@ -18,7 +18,7 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 """The algorithms for determining certification status"""
 
-
+from typing import Sequence
 from sqlalchemy.orm import Session
 
 from hwapi.data_models import repository, models
@@ -31,7 +31,7 @@ from hwapi.data_models.data_validators import (
 
 def find_main_hardware_components(
     db: Session, board_data: BoardValidator, bios_data: BiosValidator | None
-) -> tuple[models.Device, models.Bios | None]:
+) -> tuple[models.Device, Sequence[models.Bios]]:
     """
     A function to get "main hardware components" like board and bios. Can be extended
     in future
@@ -42,19 +42,20 @@ def find_main_hardware_components(
     if not board:
         raise ValueError("Hardware not certified")
     if bios_data:
-        bios = repository.get_bios(
-            db, bios_data.vendor, bios_data.version, bios_data.firmware_revision
-        )
-        if not bios:
+        bios_list = repository.get_bios_list(db, bios_data.vendor, bios_data.version)
+        if not bios_list:
             raise ValueError("Hardware not certified")
-        return board, bios
-    return board, None
+        return board, bios_list
+    return board, []
 
 
 def find_certified_machine(
-    db: Session, arch: str, board: models.Device, bios: models.Bios | None
+    db: Session, arch: str, board: models.Device, bios_list: Sequence[models.Bios]
 ) -> models.Machine:
-    machine = repository.get_machine_with_same_hardware_params(db, arch, board, bios)
+    bios_ids = [bios.id for bios in bios_list] if bios_list else []
+    machine = repository.get_machine_with_same_hardware_params(
+        db, arch, board, bios_ids
+    )
     if not machine:
         raise ValueError("No certified machine matches the hardware specifications")
     return machine

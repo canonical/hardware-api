@@ -63,14 +63,15 @@ def check_certification(
         return NotCertifiedResponse()
     # Match against board and bios
     try:
-        board, bios = logic.find_main_hardware_components(
+        board, bios_list = logic.find_main_hardware_components(
             db, system_info.board, system_info.bios
         )
         related_machine = logic.find_certified_machine(
-            db, system_info.architecture, board, bios
+            db, system_info.architecture, board, bios_list
         )
     except ValueError:
         return NotCertifiedResponse()
+    bios = repository.get_machine_bios(db, related_machine.id)
     related_releases, kernels = repository.get_releases_and_kernels_for_machine(
         db, related_machine.id
     )
