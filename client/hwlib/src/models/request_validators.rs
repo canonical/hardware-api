@@ -20,15 +20,10 @@
 
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
-use smbioslib::{
-    self, SMBiosBaseboardInformation, SMBiosInformation, SMBiosProcessorInformation,
-    SMBiosSystemChassisInformation, SMBiosSystemInformation,
-};
 use std::path::PathBuf;
 
 use crate::{
     collectors::{
-        cpuinfo::CpuInfo,
         hardware_info::{load_smbios_data, SystemInfo},
         os_info::{get_architecture, CommandRunner, SystemCommandRunner},
     },
@@ -38,6 +33,15 @@ use crate::{
         software::OS,
     },
 };
+
+#[cfg(target_arch = "x86_64")]
+use smbioslib::{
+    SMBiosBaseboardInformation, SMBiosInformation, SMBiosProcessorInformation,
+    SMBiosSystemChassisInformation, SMBiosSystemInformation,
+};
+
+#[cfg(not(target_arch = "x86_64"))]
+use crate::collectors::cpuinfo::CpuInfo;
 
 #[derive(Debug, Clone)]
 pub struct Paths {
@@ -82,28 +86,19 @@ impl CertificationStatusRequest {
     }
 
     pub(crate) fn new_with_runner(paths: Paths, runner: &impl CommandRunner) -> Result<Self> {
+        Self::from(paths, runner)
+    }
+
+    #[cfg(target_arch = "x86_64")]
+    fn from(paths: Paths, runner: &impl CommandRunner) -> Result<Self> {
         let Paths {
             smbios_entry_filepath,
             smbios_table_filepath,
-            ..
-        } = &paths;
-        if let Some(smbios_data) = load_smbios_data(smbios_entry_filepath, smbios_table_filepath) {
-            Self::from_smbios_data(&smbios_data, paths, runner)
-        } else {
-            Self::from_defaults(paths, runner)
-        }
-    }
-
-    fn from_smbios_data(
-        data: &smbioslib::SMBiosData,
-        paths: Paths,
-        runner: &impl CommandRunner,
-    ) -> Result<Self> {
-        let Paths {
             max_cpu_frequency_filepath,
             proc_version_filepath,
             ..
         } = paths;
+        let data = load_smbios_data(&smbios_entry_filepath, &smbios_table_filepath).unwrap();
         let bios_info_vec = data.collect::<SMBiosInformation>();
         let bios_info = bios_info_vec
             .first()
@@ -137,7 +132,8 @@ impl CertificationStatusRequest {
         })
     }
 
-    fn from_defaults(paths: Paths, runner: &impl CommandRunner) -> Result<Self> {
+    #[cfg(not(target_arch = "x86_64"))]
+    fn from(paths: Paths, runner: &impl CommandRunner) -> Result<Self> {
         let Paths {
             cpuinfo_filepath,
             max_cpu_frequency_filepath,
