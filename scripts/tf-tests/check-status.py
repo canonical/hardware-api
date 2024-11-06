@@ -1,0 +1,107 @@
+#!/usr/bin/env python3
+
+import subprocess
+from time import sleep
+from pathlib import Path
+import re
+
+OUTPUT_DIR = Path("job_outputs")
+POLL_INTERVAL = 30  # Time delay between status checks (in seconds)
+
+
+def load_jobs(output_dir):
+    """Load job IDs and directories from the job_outputs directory."""
+    jobs = []
+    for id_dir in output_dir.iterdir():
+        if id_dir.is_dir():
+            job_id_file = id_dir / "tf_job_id.txt"
+            with open(job_id_file, "r") as file:
+                job_id = file.read().strip()
+            jobs.append((job_id, id_dir))
+    return {job_id: id_dir for job_id, id_dir in jobs}
+
+
+def check_job_status(job_id):
+    """Check the status of a job by its job ID."""
+    try:
+        status_result = subprocess.run(
+            ["testflinger", "status", job_id],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+        return status_result.stdout.strip()
+    except subprocess.CalledProcessError as e:
+        print(f"Error checking status for job {job_id}: {e.stderr}")
+        return None
+
+
+def extract_status_from_output(test_output):
+    """Extracts the status value from the test output string."""
+    match = re.search(r'"status":\s*"([^"]+)"', test_output)
+    return match.group(1) if match else "Unknown"
+
+
+def retrieve_job_results(job_id, id_dir):
+    """Retrieve and save the results of a completed job, including extracting and saving the status."""
+    try:
+        results_result = subprocess.run(
+            ["testflinger-cli", "results", job_id],
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+
+        # Extract test output using jq
+        test_output = subprocess.run(
+            ["jq", "-r", ".test_output"],
+            input=results_result.stdout,
+            text=True,
+            capture_output=True,
+        ).stdout
+
+        # Write test output to output.txt in the Canonical ID directory
+        with open(id_dir / "output.txt", "w") as file:
+            file.write(test_output)
+
+        # Extract the "status" field and write to hw_status.txt
+        status = extract_status_from_output(test_output)
+        with open(id_dir / "hw_status.txt", "w") as status_file:
+            status_file.write(status)
+
+        print(f"Results saved for job {job_id} in {id_dir.name}/output.txt and status in hw_status.txt")
+
+    except subprocess.CalledProcessError as e:
+        print(f"Error fetching results for job {job_id}: {e.stderr}")
+
+
+def monitor_jobs(remaining_jobs):
+    """Monitor jobs until all are completed, fetching results as jobs finish."""
+    while remaining_jobs:
+        for job_id, id_dir in list(remaining_jobs.items()):
+            job_status = check_job_status(job_id)
+
+            if job_status:
+                print(f"Status for job {job_id} (Canonical ID: {id_dir.name}): {job_status}")
+
+                # Retrieve results if the job is complete
+                if job_status == "complete":
+                    retrieve_job_results(job_id, id_dir)
+                    del remaining_jobs[job_id]
+
+        # Wait before the next round of checks if there are still jobs left
+        if remaining_jobs:
+            print(f"Waiting {POLL_INTERVAL} seconds before checking again...")
+            sleep(POLL_INTERVAL)
+
+    print("All jobs complete and results retrieved.")
+
+
+def main():
+    """Main function to load jobs and monitor their status."""
+    remaining_jobs = load_jobs(OUTPUT_DIR)
+    monitor_jobs(remaining_jobs)
+
+
+if __name__ == "__main__":
+    main()

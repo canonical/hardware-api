@@ -1,0 +1,11 @@
+job_queue: "$CANONICAL_ID"
+provision_data:
+  distro: jammy
+test_data:
+  attachments:
+    - local: hwctl
+  test_cmds: |
+    scp attachments/test/hwctl $DEVICE_IP:
+    ssh $DEVICE_IP "sudo apt-get update && sudo apt install -y pkgconf libssl-dev"
+    ssh $DEVICE_IP "sudo dmidecode"
+    ssh $DEVICE_IP "sudo HW_API_URL=https://hw.staging.ubuntu.com ./hwctl"
