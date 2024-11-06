@@ -36,9 +36,7 @@ def find_main_hardware_components(
     A function to get "main hardware components" like board and bios. Can be extended
     in future
     """
-    board = repository.get_board(
-        db, board_data.manufacturer, board_data.product_name, board_data.version
-    )
+    board = repository.get_board(db, board_data.manufacturer, board_data.product_name)
     if not board:
         raise ValueError("Hardware not certified")
     if bios_data:

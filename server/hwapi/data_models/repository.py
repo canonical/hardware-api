@@ -77,9 +77,7 @@ def get_vendor_by_name(db: Session, name: str) -> models.Vendor | None:
     return db.execute(stmt).scalars().first()
 
 
-def get_board(
-    db: Session, vendor_name: str, product_name: str, version: str
-) -> models.Device | None:
+def get_board(db: Session, vendor_name: str, product_name: str) -> models.Device | None:
     """Return device object (category==BOARD) matching given board data"""
     stmt = (
         select(models.Device)
@@ -88,7 +86,6 @@ def get_board(
             and_(
                 models.Vendor.name.ilike(_clean_vendor_name(vendor_name)),
                 models.Device.name.ilike(product_name),
-                models.Device.version.ilike(version),
                 models.Device.category.in_(
                     [DeviceCategory.BOARD.value, DeviceCategory.OTHER.value]
                 ),
