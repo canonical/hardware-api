@@ -17,6 +17,7 @@
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
+import re
 
 from typing import Any, Sequence
 from sqlalchemy import select, and_, null
@@ -29,6 +30,19 @@ from hwapi.data_models.enums import DeviceCategory
 def _clean_vendor_name(name: str):
     """Remove "Inc"/"Inc." substring from vendor name and leading whitespaces"""
     return name.replace("Inc.", "").replace("Inc", "").strip()
+
+
+def _format_os_version(os_version: str) -> str:
+    """
+    Format the OS version to include ' LTS' if it follows the pattern 'X.04'
+    where X is an even number.
+    """
+    pattern = r"^\d+\.\d+$"
+    if re.fullmatch(pattern, os_version):
+        ver_major, ver_minor = os_version.split(".")
+        if int(ver_major) % 2 == 0 and ver_minor == "04":
+            return f"{os_version} LTS"
+    return os_version
 
 
 def get_or_create(
@@ -66,6 +80,7 @@ def get_or_create(
 
 def get_release_object(db: Session, os_version, os_codename) -> models.Release | None:
     """Return release object matching given codename and version"""
+    os_version = _format_os_version(os_version)
     stmt = select(models.Release).filter_by(release=os_version, codename=os_codename)
     return db.execute(stmt).scalars().first()
 
