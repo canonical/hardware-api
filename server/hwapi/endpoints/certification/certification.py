@@ -18,7 +18,7 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 """The endpoints for working with certification status"""
 
-
+import logging
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -61,6 +61,7 @@ def check_certification(
     vendor = repository.get_vendor_by_name(db, system_info.vendor)
     if not vendor:
         return NotCertifiedResponse()
+
     # Match against board and bios
     try:
         board, bios_list = logic.find_main_hardware_components(
@@ -70,16 +71,30 @@ def check_certification(
             db, system_info.architecture, board, bios_list
         )
     except ValueError:
+        logging.error(
+            (
+                "Hardware cannot be found. Machine vendor: %s, model: %s"
+                ", board model: %s, board version: %s, bios version: %s"
+            ),
+            system_info.vendor,
+            system_info.model,
+            system_info.board.product_name,
+            system_info.board.version,
+            system_info.bios.version if system_info.bios else None,
+        )
         return NotCertifiedResponse()
+
     bios = repository.get_machine_bios(db, related_machine.id)
     related_releases, kernels = repository.get_releases_and_kernels_for_machine(
         db, related_machine.id
     )
+
     # Match against CPU codename
     if not logic.check_cpu_compatibility(db, related_machine, system_info.processor):
         return response_builders.build_related_certified_response(
             db, related_machine, board, bios, related_releases, kernels
         )
+
     # Check OS release
     release_from_request = repository.get_release_object(
         db, system_info.os.version, system_info.os.codename
