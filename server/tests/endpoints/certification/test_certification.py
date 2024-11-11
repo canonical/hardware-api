@@ -454,9 +454,6 @@ def test_all_criteria_matched(generator: DataGenerator, test_client: TestClient)
             },
             "os": {
                 "distributor": "Ubuntu",
-                # The `lsb_release` retuns version without "LTS" suffix, but C3 DB stores
-                # with the suffix. Regardless of this, we should get the OS version match and
-                # Certified status response
                 "version": "22.04",
                 "codename": "jammy",
                 "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
@@ -648,7 +645,7 @@ def test_hardware_matches_multiple_bios(
     but only one of them corresponds the machine with the matching board
     """
     vendor = generator.gen_vendor(name="Known Vendor")
-    release = generator.gen_release(release="24.04 LTS", codename="noble")
+    release = generator.gen_release(release="24.04", codename="noble")
     machine = generator.gen_machine(
         canonical_id="202401-00001",
         configuration=generator.gen_configuration(
