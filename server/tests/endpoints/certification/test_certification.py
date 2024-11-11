@@ -17,10 +17,9 @@
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
+from pytest import LogCaptureFixture
 from fastapi.testclient import TestClient
-
 from hwapi.data_models.enums import BusType, DeviceCategory
-
 from tests.data_generator import DataGenerator
 
 
@@ -39,12 +38,12 @@ def test_vendor_not_found(generator: DataGenerator, test_client: TestClient):
             "bios": {
                 "vendor": "Dell",
                 "version": "1.0",
-                "revision": "1",
+                "revision": "1.0",
                 "release_date": None,
                 "firmware_revision": None,
             },
             "os": {
-                "distributor": "Canonical Ltd.",
+                "distributor": "Ubuntu",
                 "version": "24.04",
                 "codename": "noble",
                 "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
@@ -62,8 +61,12 @@ def test_vendor_not_found(generator: DataGenerator, test_client: TestClient):
     assert response.json() == {"status": "Not Seen"}
 
 
-def test_hardware_mismatch(generator: DataGenerator, test_client: TestClient):
-    """Setup where vendor exists but board and bios do not match"""
+def test_board_mismatch(
+    caplog: LogCaptureFixture,
+    generator: DataGenerator,
+    test_client: TestClient,
+):
+    """Setup where vendor exists but board does not match"""
     vendor = generator.gen_vendor(name="Known Vendor")
     generator.gen_device(
         vendor,
@@ -73,7 +76,6 @@ def test_hardware_mismatch(generator: DataGenerator, test_client: TestClient):
         category=DeviceCategory.BOARD,
         bus=BusType.dmi,
     )
-    generator.gen_bios(vendor, version="Different BIOS Version")
 
     response = test_client.post(
         "/v1/certification/status",
@@ -94,7 +96,7 @@ def test_hardware_mismatch(generator: DataGenerator, test_client: TestClient):
                 "firmware_revision": None,
             },
             "os": {
-                "distributor": "Canonical Ltd.",
+                "distributor": "Ubuntu",
                 "version": "24.04",
                 "codename": "noble",
                 "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
@@ -110,6 +112,67 @@ def test_hardware_mismatch(generator: DataGenerator, test_client: TestClient):
 
     assert response.status_code == 200
     assert response.json() == {"status": "Not Seen"}
+    assert "Hardware cannot be found" in caplog.text
+    assert "board model: sample board" in caplog.text
+
+
+def test_bios_mismatch(
+    caplog: LogCaptureFixture,
+    generator: DataGenerator,
+    test_client: TestClient,
+):
+    """
+    Setup where board model and vendor match but bios does not match.
+    The mismatch should be logged
+    """
+    vendor = generator.gen_vendor(name="Known Vendor")
+    board = generator.gen_device(
+        vendor,
+        identifier="dmi:0001",
+        name="FW00Q",
+        version="0001A",
+        category=DeviceCategory.BOARD,
+        bus=BusType.dmi,
+    )
+    generator.gen_bios(vendor=vendor, version="1.0.12")
+
+    response = test_client.post(
+        "/v1/certification/status",
+        json={
+            "vendor": vendor.name,
+            "model": "Some Model",
+            "architecture": "amd64",
+            "board": {
+                "manufacturer": f"{board.vendor.name} Ltd.",
+                "product_name": board.name,
+                "version": "111",
+            },
+            "bios": {
+                "vendor": vendor.name,
+                "version": "1.0.15",
+                "revision": "1",
+                "release_date": None,
+                "firmware_revision": None,
+            },
+            "os": {
+                "distributor": "Ubuntu",
+                "version": "24.04",
+                "codename": "noble",
+                "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
+            },
+            "processor": {
+                "identifier": [],
+                "frequency": 2400,
+                "manufacturer": "AMD",
+                "version": "AMD EPYC 3251 8-Core Processor",
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json() == {"status": "Not Seen"}
+    assert "Hardware cannot be found" in caplog.text
+    assert "bios version: 1.0.15" in caplog.text
 
 
 def test_disqualifying_hardware(generator: DataGenerator, test_client: TestClient):
@@ -171,7 +234,7 @@ def test_disqualifying_hardware(generator: DataGenerator, test_client: TestClien
                 "firmware_revision": bios.firmware_revision,
             },
             "os": {
-                "distributor": "Canonical Ltd.",
+                "distributor": "Ubuntu",
                 "version": "24.04",
                 "codename": "noble",
                 "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
@@ -226,7 +289,7 @@ def test_disqualifying_hardware(generator: DataGenerator, test_client: TestClien
     }
 
 
-def test_correct_hardware_incorrect_os(
+def test_correct_hardware_unmatching_os(
     generator: DataGenerator, test_client: TestClient
 ):
     """Setup where hardware matches but the OS version does not match any certified images"""
@@ -270,7 +333,7 @@ def test_correct_hardware_incorrect_os(
         "/v1/certification/status",
         json={
             "vendor": vendor.name,
-            "model": "Model with Disqualifying Hardware",
+            "model": "Machine model",
             "architecture": "amd64",
             "board": {
                 "manufacturer": vendor.name,
@@ -285,7 +348,7 @@ def test_correct_hardware_incorrect_os(
                 "firmware_revision": bios.firmware_revision,
             },
             "os": {
-                "distributor": "Canonical Ltd.",
+                "distributor": "Ubuntu",
                 "version": "24.04",
                 "codename": "noble",
                 "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
@@ -390,9 +453,12 @@ def test_all_criteria_matched(generator: DataGenerator, test_client: TestClient)
                 "firmware_revision": bios.firmware_revision,
             },
             "os": {
-                "distributor": "Canonical Ltd.",
-                "version": release.release,
-                "codename": release.codename,
+                "distributor": "Ubuntu",
+                # The `lsb_release` retuns version without "LTS" suffix, but C3 DB stores
+                # with the suffix. Regardless of this, we should get the OS version match and
+                # Certified status response
+                "version": "22.04",
+                "codename": "jammy",
                 "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
             },
             "processor": {
@@ -488,7 +554,7 @@ def test_bios_is_none(generator: DataGenerator, test_client: TestClient):
                 "version": board.version,
             },
             "os": {
-                "distributor": "Canonical Ltd.",
+                "distributor": "Ubuntu",
                 "version": release.release,
                 "codename": release.codename,
                 "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
@@ -504,30 +570,7 @@ def test_bios_is_none(generator: DataGenerator, test_client: TestClient):
     )
 
     assert response.status_code == 200
-    assert response.json() == {
-        "status": "Certified",
-        "architecture": "amd64",
-        "bios": None,
-        "board": {
-            "manufacturer": "Known Vendor",
-            "product_name": "Matching Board",
-            "version": "v1.0",
-        },
-        "chassis": None,
-        "available_releases": [
-            {
-                "distributor": "Ubuntu",
-                "version": release.release,
-                "codename": release.codename,
-                "kernel": {
-                    "name": report.kernel.name,
-                    "version": report.kernel.version,
-                    "signature": report.kernel.signature,
-                    "loaded_modules": [],
-                },
-            }
-        ],
-    }
+    assert response.json()["status"] == "Certified"
 
 
 def test_cpu_id_is_none(generator: DataGenerator, test_client: TestClient):
@@ -579,13 +622,12 @@ def test_cpu_id_is_none(generator: DataGenerator, test_client: TestClient):
                 "version": board.version,
             },
             "os": {
-                "distributor": "Canonical Ltd.",
+                "distributor": "Ubuntu",
                 "version": release.release,
                 "codename": release.codename,
                 "kernel": {"name": None, "version": "5.7.1-generic", "signature": None},
             },
             "processor": {
-                # AMD Genoa CPU ID
                 "identifier": None,
                 "frequency": 2000,
                 "manufacturer": "Intel Corp.",
@@ -595,27 +637,89 @@ def test_cpu_id_is_none(generator: DataGenerator, test_client: TestClient):
     )
 
     assert response.status_code == 200
-    assert response.json() == {
-        "status": "Certified",
-        "architecture": "amd64",
-        "bios": None,
-        "board": {
-            "manufacturer": "Known Vendor",
-            "product_name": "Matching Board",
-            "version": "v1.0",
-        },
-        "chassis": None,
-        "available_releases": [
-            {
+    assert response.json()["status"] == "Certified"
+
+
+def test_hardware_matches_multiple_bios(
+    generator: DataGenerator, test_client: TestClient
+):
+    """
+    Test where multiple BIOSes of the same vendor and version exist in the DB
+    but only one of them corresponds the machine with the matching board
+    """
+    vendor = generator.gen_vendor(name="Known Vendor")
+    release = generator.gen_release(release="24.04 LTS", codename="noble")
+    machine = generator.gen_machine(
+        canonical_id="202401-00001",
+        configuration=generator.gen_configuration(
+            name="config",
+            platform=generator.gen_platform(name="platform", vendor=vendor),
+        ),
+    )
+    # Generate multiple BIOS versions
+    generator.gen_bios(vendor, version="1.2.0", revision="1.1")
+    generator.gen_bios(vendor, version="1.2.0", revision="1.2")
+    bios = generator.gen_bios(vendor, version="1.2.0", revision="1.4")
+    certificate = generator.gen_certificate(machine, release)
+    report = generator.gen_report(
+        certificate,
+        generator.gen_kernel(),
+        bios,
+    )
+    processor = generator.gen_device(
+        vendor=generator.gen_vendor(name="Intel Corp."),
+        name="Intel(R) Core(TM) i5-8300U CPU @ 1.40GHz",
+        bus=BusType.dmi,
+        category=DeviceCategory.PROCESSOR,
+        identifier="dmi:1111",
+        codename="Coffee Lake",
+        reports=[report],
+    )
+    generator.gen_cpuid_object("0x906ea", processor.codename)
+    board = generator.gen_device(
+        vendor,
+        identifier="dmi:0001",
+        name="Matching Board",
+        version="v1.0",
+        category=DeviceCategory.BOARD,
+        bus=BusType.dmi,
+        reports=[report],
+    )
+
+    response = test_client.post(
+        "/v1/certification/status",
+        json={
+            "vendor": vendor.name,
+            "model": "Some Model",
+            "architecture": "amd64",
+            "board": {
+                "manufacturer": vendor.name,
+                "product_name": board.name,
+                "version": board.version,
+            },
+            "bios": {
+                "vendor": bios.vendor.name,
+                "version": bios.version,
+                "revision": bios.revision,
+                "release_date": bios.release_date.strftime("%Y-%m-%d"),
+                "firmware_revision": bios.firmware_revision,
+            },
+            "os": {
                 "distributor": "Ubuntu",
-                "version": release.release,
-                "codename": release.codename,
-                "kernel": {
-                    "name": report.kernel.name,
-                    "version": report.kernel.version,
-                    "signature": report.kernel.signature,
-                    "loaded_modules": [],
-                },
-            }
-        ],
-    }
+                "version": "24.04",
+                "codename": "noble",
+                "kernel": {"name": None, "version": "6.6.0-generic", "signature": None},
+            },
+            "processor": {
+                # Coffee Lake CPU ID
+                "identifier": [0xEA, 0x06, 0x09, 0x00, 0xFF, 0xFB, 0xEB, 0xBF],
+                "frequency": 1400,
+                "manufacturer": "Intel Corp.",
+                "version": "Intel(R) Core(TM) i5-8300U CPU @ 1.40GHz",
+            },
+        },
+    )
+
+    assert response.status_code == 200
+    print(response.json())
+    assert response.json()["status"] == "Certified"

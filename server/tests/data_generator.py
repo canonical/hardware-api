@@ -62,7 +62,7 @@ class DataGenerator:
     def gen_release(
         self,
         codename: str = "jammy",
-        release: str = "22.04",
+        release: str = "22.04 LTS",
         release_date: date = datetime.now().date() - timedelta(days=365),
         supported_until: date = datetime.now().date() + timedelta(days=3650),
     ) -> models.Release:
