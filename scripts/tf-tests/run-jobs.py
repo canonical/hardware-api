@@ -2,10 +2,30 @@
 
 import subprocess
 from pathlib import Path
+import argparse
 
-MACHINES_FILE = "machines.txt"
-TEMPLATE_FILE = "tf-job.yaml"
-OUTPUT_DIR = Path("job_outputs")
+
+def parse_arguments():
+    parser = argparse.ArgumentParser(description="Submit jobs to testflinger")
+    parser.add_argument(
+        "--machines-file",
+        type=Path,
+        default="machines.txt",
+        help="Path to the file with machines Canonical IDs",
+    )
+    parser.add_argument(
+        "--template-file",
+        type=Path,
+        default="tf-job.yaml",
+        help="Path to Testflinger job template file",
+    )
+    parser.add_argument(
+        "--output-dir",
+        type=Path,
+        default="job_outputs",
+        help="Path to job outputs directory",
+    )
+    return parser.parse_args()
 
 
 def load_canonical_ids(filename):
@@ -69,18 +89,20 @@ def clean_temp_file(temp_job_file):
 
 def main():
     """Main function to execute job submission workflow."""
+    args = parse_arguments()
+
     # Load canonical IDs
-    canonical_ids = load_canonical_ids(MACHINES_FILE)
-    prepare_output_directory(OUTPUT_DIR)
+    canonical_ids = load_canonical_ids(args.machines_file)
+    prepare_output_directory(args.output_dir)
 
     # Submit each job
     for canonical_id in canonical_ids:
-        job_yaml = create_job_yaml(TEMPLATE_FILE, canonical_id)
-        temp_job_file = write_temp_job_file(job_yaml, OUTPUT_DIR, canonical_id)
+        job_yaml = create_job_yaml(args.template_file, canonical_id)
+        temp_job_file = write_temp_job_file(job_yaml, args.output_dir, canonical_id)
 
         job_uuid = submit_job(temp_job_file, canonical_id)
         if job_uuid:
-            save_job_uuid(job_uuid, OUTPUT_DIR, canonical_id)
+            save_job_uuid(job_uuid, args.output_dir, canonical_id)
 
         clean_temp_file(temp_job_file)
 
