@@ -1,7 +1,7 @@
 # Manual integration tests using Testflinger
 
-The purpose of these scripts is to test hardware-api client and server
-on the machines that are accessible via
+The purpose of the `run-jobs.py` script is to test hardware-api client
+and server on the machines that are accessible via
 [Testflinger](https://github.com/canonical/testflinger). It allows us
 to test the project components on multiple machines automatically.
 
@@ -15,7 +15,8 @@ installed on your system:
 sudo snap install testflinger-cli
 ```
 
-Also, the following files are required to be present in this directory:
+Also, the following files are required to be present in this
+directory:
 
 - `machines.txt`: This file lists the Canonical IDs of the machines on
   which jobs will be run. Each Canonical ID should be on a separate
@@ -42,76 +43,87 @@ Also, the following files are required to be present in this directory:
   Then copy the created file to this directory:
 
   ```sh
-  cp  target/release/hwctl scripts/tf-tests/
+  cp target/release/hwctl scripts/tf-tests/
   ```
 
-## Running the scripts
+## Running the script
 
-After you meel the described requirements, make sure you have access
+After you meet the described requirements, make sure you have access
 to
 [https://testflinger.canonical.com](https://testflinger.canonical.com).
 
-These scripts are designed to work sequentially, where `run-jobs.py`
-must be executed first to submit jobs and create job directories,
-followed by `check-status.py` to monitor and fetch job results.
+The script `run-jobs.py` can be used to submit jobs, monitor their
+status, or both, depending on the options you provide.
 
 ```sh
-./run-jobs.py
-# wait until the script is completed
-./check-status.py
+../tf_test.py [options]
 ```
 
-## Scripts overview
+Examples:
 
-### `run-jobs.py`
+* Submit Jobs and Monitor Statuses Sequentially: `./tf_test.py`
+* Only Submit Jobs: `./tf_test.py --send-jobs`
+* Only Monitor Job Statuses: `./tf_test.py --check-status`
+* Custom Machines File and Poll Interval: `./tf_test.py
+  --machines-file custom_machines.txt --poll-interval 60`
 
-This script submits jobs based on the Canonical IDs listed in machines.txt and generates directories for each ID.
-How it works:
 
-1. Reads each Canonical ID from machines.txt.
-2. Replaces `$CANONICAL_ID` in `tf-job.yaml` with the actual ID.
+## Script overview
+
+The script performs two main functions:
+
+- Job Submission
+- Job Monitoring
+
+### Job Submission
+
+When submitting jobs, the script:
+
+1. Reads each Canonical ID from `machines.txt` (or the file specified
+   with `--machines-file`).
+2. Replaces `$CANONICAL_ID` in `tf-job.yaml` (or the file specified
+   with `--template-file`) with the actual ID.
 3. Submits the job with `testflinger submit <job.yaml>`.
 4. Captures the job UUID returned after submission.
-5. Creates a directory for each Canonical ID in `job_outputs/` and saves
-   the job UUID in a file named `tf_job_id.txt` within that directory.
+5. Creates a directory for each Canonical ID in `job_outputs/` (or the
+   directory specified with `--output-dir`) and saves the job UUID in
+   a file named `tf_job_id.txt` within that directory.
 
-It creates a directory with the following structure:
+Example directory structure after job submission:
 
 ```
 job_outputs/
 ├── 202101-28595/
-│   ├── tf_job_id.txt  # Contains the job UUID
+│   └── tf_job_id.txt  # Contains the job UUID
 ├── 202012-28526/
-│   ├── tf_job_id.txt
+│   └── tf_job_id.txt
 ```
 
-Each `tf_job_id.txt` file will contain the job UUID for the respective Canonical ID.
+### Job Monitoring
 
-### `check-status.py`
-
-This script monitors the status of each job until all jobs are
-completed. For each completed job, it retrieves the test results and
-saves them in the corresponding directory.
-
-How it works:
+When monitoring jobs, the script:
 
 1. Reads `tf_job_id.txt` files in `job_outputs/` to get the job UUIDs.
-2. Enters a loop, checking the status of each job using `testflinger status <job_id>`.
-3. For jobs with status "complete", retrieves results using `testflinger-cli results <job_id> | jq -r .test_output`.
-4. Saves the test output to `output.txt` within the respective Canonical ID’s directory.
-5. Extracts `hwapi` status and writes it to the `hw_status.txt`
+2. Enters a loop, checking the status of each job using `testflinger
+   status <job_id>`.
+3. For jobs with status "complete", retrieves results using
+   `testflinger-cli results <job_id>`.
+4. Saves the test output to `output.txt` within the respective
+   Canonical ID’s directory.
+5. Extracts the status field from the test output and writes it to
+   `hw_status.txt`.
 6. Continues monitoring until all jobs are completed.
 
-Each Canonical ID directory will contain output.txt with the test results.
+Example directory structure after job monitoring:
 
 ```
 job_outputs/
 ├── 202101-28595/
 │   ├── tf_job_id.txt
 │   ├── output.txt     # Contains test output
-|   ├── hw_status.txt  # hwapi status
+│   └── hw_status.txt  # Contains the hardware API status
 ├── 202012-28526/
 │   ├── tf_job_id.txt
 │   ├── output.txt
-│   ├── hw_status.txt
+│   └── hw_status.txt
 ```
