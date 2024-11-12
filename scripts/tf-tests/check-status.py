@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
+import re
 import subprocess
+import json
 from time import sleep
 from pathlib import Path
-import re
 
 OUTPUT_DIR = Path("job_outputs")
 POLL_INTERVAL = 30  # Time delay between status checks (in seconds)
@@ -37,9 +38,9 @@ def check_job_status(job_id):
 
 
 def extract_status_from_output(test_output):
-    """Extracts the status value from the test output string."""
-    match = re.search(r'"status":\s*"([^"]+)"', test_output)
-    return match.group(1) if match else "Unknown"
+    """Extracts the status value from the test output JSON."""
+    match_ = re.search(r'"status":\s*"([^"]+)"', test_output)
+    return match_.group(1) if match_ else "Unknown"
 
 
 def retrieve_job_results(job_id, id_dir):
@@ -52,19 +53,14 @@ def retrieve_job_results(job_id, id_dir):
             check=True,
         )
 
-        # Extract test output using jq
-        test_output = subprocess.run(
-            ["jq", "-r", ".test_output"],
-            input=results_result.stdout,
-            text=True,
-            capture_output=True,
-        ).stdout
+        results_data = json.loads(results_result.stdout)
+        test_output = results_data.get("test_output", "")
 
         # Write test output to output.txt in the Canonical ID directory
         with open(id_dir / "output.txt", "w") as file:
             file.write(test_output)
 
-        # Extract the "status" field and write to hw_status.txt
+        # Extract the "status" field from the test output and write to hw_status.txt
         status = extract_status_from_output(test_output)
         with open(id_dir / "hw_status.txt", "w") as status_file:
             status_file.write(status)
@@ -73,6 +69,8 @@ def retrieve_job_results(job_id, id_dir):
 
     except subprocess.CalledProcessError as e:
         print(f"Error fetching results for job {job_id}: {e.stderr}")
+    except json.JSONDecodeError:
+        print(f"Error decoding JSON for job {job_id} results.")
 
 
 def monitor_jobs(remaining_jobs):
