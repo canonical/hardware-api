@@ -5,11 +5,13 @@ on:
     paths:
       - client/**
       - Cargo.*
+      - ".github/workflows/test_client.yaml"
   pull_request:
     branches: [ main ]
     paths:
       - client/**
       - Cargo.*
+      - ".github/workflows/test_client.yaml"
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
