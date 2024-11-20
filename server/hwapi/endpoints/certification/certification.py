@@ -64,11 +64,10 @@ def check_certification(
 
     # Match against board and bios
     try:
-        board, bios_list = logic.find_main_hardware_components(
-            db, system_info.board, system_info.bios
-        )
+        board = logic.find_board(db, system_info.board)
+        bioses = logic.find_bioses(db, system_info.bios) if system_info.bios else []
         related_machine = logic.find_certified_machine(
-            db, system_info.architecture, board, bios_list
+            db, system_info.architecture, board, bioses
         )
     except ValueError:
         logging.error(
