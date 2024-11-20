@@ -1,0 +1,41 @@
+name: Run integration tests
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - server/**
+      - client/**
+      - tests/**
+      - ".github/workflows/run_integration_tests.yaml"
+  pull_request:
+    branches: [ main ]
+    paths:
+      - server/**
+      - client/**
+      - tests/**
+      - ".github/workflows/run_integration_tests.yaml"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: [self-hosted, linux, large, jammy, x64]
+    defaults:
+      run:
+        working-directory: tests
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up docker buildx
+      uses: docker/setup-buildx-action@v3
+      with:
+        config-inline: |
+          [registry."docker.io"]
+          mirrors = ["https://github-runner-dockerhub-cache.canonical.com:5000"]
+    - name: Install docker compose
+      run: |
+        sudo apt update
+        sudo apt install -y docker-compose-v2
+    - name: Build and run integration tests
+      run: |
+        docker compose up --build --abort-on-container-exit

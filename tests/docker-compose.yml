@@ -1,0 +1,22 @@
+services:
+  hwapi-server-integration:
+    build:
+      context: ../server
+      dockerfile: Dockerfile
+      args:
+        IMPORT_TOOL_PATH: ""
+        C3_URL: https://c3_url
+        DB_URL: sqlite:////home/server/test-integration.db
+    ports:
+      - "8080:8080"
+
+  integration-tests:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      - hwapi-server-integration
+    volumes:
+      - ../client:/app/client
+    environment:
+      - API_URL=http://hwapi-server-integration:8080

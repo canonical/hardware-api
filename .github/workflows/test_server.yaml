@@ -4,10 +4,12 @@ on:
     branches: [ main ]
     paths:
       - server/**
+      - ".github/workflows/test_server.yaml"
   pull_request:
     branches: [ main ]
     paths:
       - server/**
+      - ".github/workflows/test_server.yaml"
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
