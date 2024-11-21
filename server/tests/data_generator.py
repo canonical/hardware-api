@@ -210,7 +210,7 @@ class DataGenerator:
         )
 
 
-class CertificationRequest:
+class CertificationStatusTestHelper:
     @staticmethod
     def create_default_request(
         vendor_name: str = "Dell",
@@ -261,3 +261,139 @@ class CertificationRequest:
             }
 
         return request
+
+    @staticmethod
+    def assert_not_seen_response(response) -> None:
+        assert response.status_code == 200
+        assert response.json() == {"status": "Not Seen"}
+
+    @staticmethod
+    def assert_certified_response(
+        response,
+        board: models.Device,
+        bios: models.Bios | None,
+        release: models.Release,
+        kernel: models.Kernel,
+    ) -> None:
+        assert response.status_code == 200
+        assert response.json() == {
+            "status": "Certified",
+            "architecture": "amd64",
+            "board": {
+                "manufacturer": board.vendor.name,
+                "product_name": board.name,
+                "version": board.version,
+            },
+            "bios": (
+                CertificationStatusTestHelper._create_bios_response(bios)
+                if bios
+                else None
+            ),
+            "chassis": None,
+            "available_releases": [
+                {
+                    "distributor": "Ubuntu",
+                    "version": release.release,
+                    "codename": release.codename,
+                    "kernel": {
+                        "name": kernel.name,
+                        "version": kernel.version,
+                        "signature": kernel.signature,
+                        "loaded_modules": [],
+                    },
+                }
+            ],
+        }
+
+    @staticmethod
+    def assert_certified_image_exists_response(
+        response,
+        board: models.Device,
+        bios: models.Bios | None,
+        release: models.Release,
+        kernel: models.Kernel,
+    ) -> None:
+        assert response.status_code == 200
+        assert response.json() == {
+            "status": "Certified Image Exists",
+            "architecture": "amd64",
+            "board": {
+                "manufacturer": board.vendor.name,
+                "product_name": board.name,
+                "version": board.version,
+            },
+            "bios": (
+                CertificationStatusTestHelper._create_bios_response(bios)
+                if bios
+                else None
+            ),
+            "chassis": None,
+            "available_releases": [
+                {
+                    "distributor": "Ubuntu",
+                    "version": release.release,
+                    "codename": release.codename,
+                    "kernel": {
+                        "name": kernel.name,
+                        "version": kernel.version,
+                        "signature": kernel.signature,
+                        "loaded_modules": [],
+                    },
+                }
+            ],
+        }
+
+    @staticmethod
+    def assert_related_certified_system_exists_response(
+        response,
+        board: models.Device,
+        bios: models.Bios | None,
+        release: models.Release,
+        kernel: models.Kernel,
+    ) -> None:
+        assert response.status_code == 200
+        assert response.json() == {
+            "status": "Related Certified System Exists",
+            "architecture": "amd64",
+            "board": {
+                "manufacturer": board.vendor.name,
+                "product_name": board.name,
+                "version": board.version,
+            },
+            "bios": (
+                CertificationStatusTestHelper._create_bios_response(bios)
+                if bios
+                else None
+            ),
+            "chassis": None,
+            "gpu": None,
+            "audio": None,
+            "video": None,
+            "network": None,
+            "wireless": None,
+            "pci_peripherals": [],
+            "usb_peripherals": [],
+            "available_releases": [
+                {
+                    "distributor": "Ubuntu",
+                    "version": release.release,
+                    "codename": release.codename,
+                    "kernel": {
+                        "name": kernel.name,
+                        "version": kernel.version,
+                        "signature": kernel.signature,
+                        "loaded_modules": [],
+                    },
+                }
+            ],
+        }
+
+    @staticmethod
+    def _create_bios_response(bios: models.Bios) -> dict[str, str | None]:
+        return {
+            "vendor": bios.vendor.name,
+            "version": bios.version,
+            "revision": bios.revision,
+            "release_date": bios.release_date.strftime("%Y-%m-%d"),
+            "firmware_revision": bios.firmware_revision,
+        }

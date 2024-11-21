@@ -19,11 +19,13 @@
 
 from pytest import LogCaptureFixture
 from fastapi.testclient import TestClient
-from tests.data_generator import DataGenerator, CertificationRequest
+from tests.data_generator import DataGenerator, CertificationStatusTestHelper
 
 
 def test_vendor_not_found(generator: DataGenerator, test_client: TestClient):
-    request = CertificationRequest.create_default_request(vendor_name="Unknown vendor")
+    request = CertificationStatusTestHelper.create_default_request(
+        vendor_name="Unknown vendor"
+    )
     response = test_client.post("/v1/certification/status", json=request)
 
     assert response.status_code == 200
@@ -44,11 +46,10 @@ def test_board_mismatch(
         version="Different Version",
     )
 
-    request = CertificationRequest.create_default_request()
+    request = CertificationStatusTestHelper.create_default_request()
     response = test_client.post("/v1/certification/status", json=request)
 
-    assert response.status_code == 200
-    assert response.json() == {"status": "Not Seen"}
+    CertificationStatusTestHelper.assert_not_seen_response(response)
     assert "Hardware cannot be found" in caplog.text
     assert f"board model: {request['board']['product_name']}" in caplog.text
 
@@ -71,7 +72,7 @@ def test_bios_mismatch(
     )
     generator.gen_bios(vendor=vendor, version="1.0.12")
 
-    request = CertificationRequest.create_default_request(
+    request = CertificationStatusTestHelper.create_default_request(
         vendor_name=vendor.name,
         board_name=f"{board.vendor.name} Ltd.",
         bios_vendor=vendor.name,
@@ -80,8 +81,7 @@ def test_bios_mismatch(
     )
     response = test_client.post("/v1/certification/status", json=request)
 
-    assert response.status_code == 200
-    assert response.json() == {"status": "Not Seen"}
+    CertificationStatusTestHelper.assert_not_seen_response(response)
     assert "Hardware cannot be found" in caplog.text
     assert f"bios version: {request['bios']['version']}" in caplog.text
 
@@ -109,7 +109,7 @@ def test_disqualifying_hardware(generator: DataGenerator, test_client: TestClien
     generator.gen_cpuid_object("0x806e9", "Amber Lake")
     board = generator.gen_board(vendor, reports=[report])
 
-    request = CertificationRequest.create_default_request(
+    request = CertificationStatusTestHelper.create_default_request(
         bios_vendor=vendor.name,
         bios_version=bios.version,
         bios_revision=bios.revision,
@@ -117,47 +117,11 @@ def test_disqualifying_hardware(generator: DataGenerator, test_client: TestClien
         processor_id=[0xE9, 0x06, 0x08, 0x00, 0xFF, 0xFB, 0xEB, 0xBF],
         processor_version="Intel(R) Xeon(R) CPU D-1548 @ 1.40GHz",
     )
-
     response = test_client.post("/v1/certification/status", json=request)
 
-    assert response.status_code == 200
-    assert response.json() == {
-        "status": "Related Certified System Exists",
-        "architecture": "amd64",
-        "board": {
-            "manufacturer": board.vendor.name,
-            "product_name": board.name,
-            "version": board.version,
-        },
-        "bios": {
-            "vendor": bios.vendor.name,
-            "version": bios.version,
-            "revision": bios.revision,
-            "firmware_revision": bios.firmware_revision,
-            "release_date": bios.release_date.strftime("%Y-%m-%d"),
-        },
-        "chassis": None,
-        "gpu": None,
-        "audio": None,
-        "video": None,
-        "network": None,
-        "wireless": None,
-        "pci_peripherals": [],
-        "usb_peripherals": [],
-        "available_releases": [
-            {
-                "distributor": "Ubuntu",
-                "version": release.release,
-                "codename": release.codename,
-                "kernel": {
-                    "name": report.kernel.name,
-                    "version": report.kernel.version,
-                    "signature": report.kernel.signature,
-                    "loaded_modules": [],
-                },
-            }
-        ],
-    }
+    CertificationStatusTestHelper.assert_related_certified_system_exists_response(
+        response, board, bios, release, report.kernel
+    )
 
 
 def test_correct_hardware_unmatching_os(
@@ -182,7 +146,7 @@ def test_correct_hardware_unmatching_os(
     generator.gen_cpuid_object("0x5067", processor.codename)
     board = generator.gen_board(vendor, reports=[report])
 
-    request = CertificationRequest.create_default_request(
+    request = CertificationStatusTestHelper.create_default_request(
         bios_vendor=bios.vendor.name,
         bios_version=bios.version,
         bios_revision=bios.revision,
@@ -191,37 +155,9 @@ def test_correct_hardware_unmatching_os(
     )
     response = test_client.post("/v1/certification/status", json=request)
 
-    assert response.status_code == 200
-    assert response.json() == {
-        "status": "Certified Image Exists",
-        "architecture": "amd64",
-        "bios": {
-            "vendor": bios.vendor.name,
-            "version": bios.version,
-            "revision": bios.revision,
-            "release_date": bios.release_date.strftime("%Y-%m-%d"),
-            "firmware_revision": bios.firmware_revision,
-        },
-        "board": {
-            "manufacturer": board.vendor.name,
-            "product_name": board.name,
-            "version": board.version,
-        },
-        "chassis": None,
-        "available_releases": [
-            {
-                "distributor": "Ubuntu",
-                "version": focal.release,
-                "codename": focal.codename,
-                "kernel": {
-                    "name": report.kernel.name,
-                    "version": report.kernel.version,
-                    "signature": report.kernel.signature,
-                    "loaded_modules": [],
-                },
-            }
-        ],
-    }
+    CertificationStatusTestHelper.assert_certified_image_exists_response(
+        response, board, bios, focal, report.kernel
+    )
 
 
 def test_all_criteria_matched(generator: DataGenerator, test_client: TestClient):
@@ -242,7 +178,7 @@ def test_all_criteria_matched(generator: DataGenerator, test_client: TestClient)
     generator.gen_cpuid_object("0xb0671", processor.codename)
     board = generator.gen_board(vendor, reports=[report])
 
-    request = CertificationRequest.create_default_request(
+    request = CertificationStatusTestHelper.create_default_request(
         bios_vendor=bios.vendor.name,
         bios_version=bios.version,
         bios_revision=bios.revision,
@@ -253,37 +189,9 @@ def test_all_criteria_matched(generator: DataGenerator, test_client: TestClient)
     )
     response = test_client.post("/v1/certification/status", json=request)
 
-    assert response.status_code == 200
-    assert response.json() == {
-        "status": "Certified",
-        "architecture": "amd64",
-        "bios": {
-            "vendor": bios.vendor.name,
-            "version": bios.version,
-            "revision": bios.revision,
-            "release_date": bios.release_date.strftime("%Y-%m-%d"),
-            "firmware_revision": bios.firmware_revision,
-        },
-        "board": {
-            "manufacturer": board.vendor.name,
-            "product_name": board.name,
-            "version": board.version,
-        },
-        "chassis": None,
-        "available_releases": [
-            {
-                "distributor": "Ubuntu",
-                "version": release.release,
-                "codename": release.codename,
-                "kernel": {
-                    "name": report.kernel.name,
-                    "version": report.kernel.version,
-                    "signature": report.kernel.signature,
-                    "loaded_modules": [],
-                },
-            }
-        ],
-    }
+    CertificationStatusTestHelper.assert_certified_response(
+        response, board, bios, release, report.kernel
+    )
 
 
 def test_bios_is_none(generator: DataGenerator, test_client: TestClient):
@@ -305,7 +213,7 @@ def test_bios_is_none(generator: DataGenerator, test_client: TestClient):
     generator.gen_cpuid_object("0xa10f11", processor.codename)
     board = generator.gen_board(vendor, reports=[report])
 
-    request = CertificationRequest.create_default_request(
+    request = CertificationStatusTestHelper.create_default_request(
         # AMD Genoa CPU ID
         processor_id=[0x11, 0x0F, 0xA1, 0x00, 0xFF, 0xFB, 0x8B, 0x17],
         processor_version="4th Gen AMD EPYC 9354 / 9124",
@@ -313,31 +221,9 @@ def test_bios_is_none(generator: DataGenerator, test_client: TestClient):
     )
     response = test_client.post("/v1/certification/status", json=request)
 
-    assert response.status_code == 200
-    assert response.json() == {
-        "status": "Certified",
-        "architecture": "amd64",
-        "bios": None,
-        "board": {
-            "manufacturer": board.vendor.name,
-            "product_name": board.name,
-            "version": board.version,
-        },
-        "chassis": None,
-        "available_releases": [
-            {
-                "distributor": "Ubuntu",
-                "version": release.release,
-                "codename": release.codename,
-                "kernel": {
-                    "name": report.kernel.name,
-                    "version": report.kernel.version,
-                    "signature": report.kernel.signature,
-                    "loaded_modules": [],
-                },
-            }
-        ],
-    }
+    CertificationStatusTestHelper.assert_certified_response(
+        response, board, bios=None, release=release, kernel=report.kernel
+    )
 
 
 def test_cpu_id_is_none(generator: DataGenerator, test_client: TestClient):
@@ -358,36 +244,14 @@ def test_cpu_id_is_none(generator: DataGenerator, test_client: TestClient):
     )
     board = generator.gen_board(vendor, reports=[report])
 
-    request = CertificationRequest.create_default_request(
+    request = CertificationStatusTestHelper.create_default_request(
         processor_version=processor.version
     )
     response = test_client.post("/v1/certification/status", json=request)
 
-    assert response.status_code == 200
-    assert response.json() == {
-        "status": "Certified",
-        "architecture": "amd64",
-        "bios": None,
-        "board": {
-            "manufacturer": board.vendor.name,
-            "product_name": board.name,
-            "version": board.version,
-        },
-        "chassis": None,
-        "available_releases": [
-            {
-                "distributor": "Ubuntu",
-                "version": release.release,
-                "codename": release.codename,
-                "kernel": {
-                    "name": report.kernel.name,
-                    "version": report.kernel.version,
-                    "signature": report.kernel.signature,
-                    "loaded_modules": [],
-                },
-            }
-        ],
-    }
+    CertificationStatusTestHelper.assert_certified_response(
+        response, board, bios=None, release=release, kernel=report.kernel
+    )
 
 
 def test_hardware_matches_multiple_bios(
@@ -418,7 +282,7 @@ def test_hardware_matches_multiple_bios(
     generator.gen_cpuid_object("0x906ea", processor.codename)
     board = generator.gen_board(vendor, reports=[report])
 
-    request = CertificationRequest.create_default_request(
+    request = CertificationStatusTestHelper.create_default_request(
         bios_vendor=bios.vendor.name,
         bios_version=bios.version,
         bios_revision=bios.revision,
@@ -427,34 +291,6 @@ def test_hardware_matches_multiple_bios(
     )
     response = test_client.post("/v1/certification/status", json=request)
 
-    assert response.status_code == 200
-    assert response.json() == {
-        "status": "Certified",
-        "architecture": "amd64",
-        "bios": {
-            "vendor": bios.vendor.name,
-            "version": bios.version,
-            "revision": bios.revision,
-            "release_date": bios.release_date.strftime("%Y-%m-%d"),
-            "firmware_revision": bios.firmware_revision,
-        },
-        "board": {
-            "manufacturer": board.vendor.name,
-            "product_name": board.name,
-            "version": board.version,
-        },
-        "chassis": None,
-        "available_releases": [
-            {
-                "distributor": "Ubuntu",
-                "version": release.release,
-                "codename": release.codename,
-                "kernel": {
-                    "name": report.kernel.name,
-                    "version": report.kernel.version,
-                    "signature": report.kernel.signature,
-                    "loaded_modules": [],
-                },
-            }
-        ],
-    }
+    CertificationStatusTestHelper.assert_certified_response(
+        response, board, bios, release, report.kernel
+    )
