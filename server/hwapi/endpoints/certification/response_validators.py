@@ -18,7 +18,6 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 """Validator models for request/response bodies"""
 
-
 from typing import Literal
 from pydantic import BaseModel
 

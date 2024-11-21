@@ -192,7 +192,7 @@ class C3Client:
             self.db,
             models.Release,
             codename=response.release.codename,
-            release=response.release.release,
+            release=response.release.release.replace("LTS", "").strip(),
             release_date=response.release.release_date,
             i_version=response.release.i_version,
             supported_until=response.release.supported_until,

@@ -16,9 +16,9 @@
 #
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
+"""Functions for working with the DB using SQLAlchemy ORM"""
 
-
-from typing import Any
+from typing import Any, Sequence
 from sqlalchemy import select, and_, null
 from sqlalchemy.orm import Session, selectinload
 
@@ -77,9 +77,7 @@ def get_vendor_by_name(db: Session, name: str) -> models.Vendor | None:
     return db.execute(stmt).scalars().first()
 
 
-def get_board(
-    db: Session, vendor_name: str, product_name: str, version: str
-) -> models.Device | None:
+def get_board(db: Session, vendor_name: str, product_name: str) -> models.Device | None:
     """Return device object (category==BOARD) matching given board data"""
     stmt = (
         select(models.Device)
@@ -88,7 +86,6 @@ def get_board(
             and_(
                 models.Vendor.name.ilike(_clean_vendor_name(vendor_name)),
                 models.Device.name.ilike(product_name),
-                models.Device.version.ilike(version),
                 models.Device.category.in_(
                     [DeviceCategory.BOARD.value, DeviceCategory.OTHER.value]
                 ),
@@ -98,32 +95,27 @@ def get_board(
     return db.execute(stmt).scalars().first()
 
 
-def get_bios(
-    db: Session, vendor_name: str, version: str, firmware_revision: str | None
-) -> models.Bios | None:
-    """Return bios object matching given bios data"""
+def get_bios_list(db: Session, vendor_name: str, version: str) -> Sequence[models.Bios]:
+    """Return a list of bios objects matching the given vendor name and version"""
     stmt = (
         select(models.Bios)
         .join(models.Vendor)
         .where(
             and_(
-                models.Vendor.name.ilike(_clean_vendor_name(vendor_name)),
+                models.Vendor.name.ilike(_clean_vendor_name(f"%{vendor_name}%")),
                 models.Bios.version.ilike(version),
             )
         )
     )
 
-    if firmware_revision:
-        stmt = stmt.filter(models.Bios.firmware_revision.ilike(firmware_revision))
-
-    return db.execute(stmt).scalars().first()
+    return db.execute(stmt).scalars().all()
 
 
 def get_machine_with_same_hardware_params(
-    db: Session, arch: str, board: models.Device, bios: models.Bios | None
+    db: Session, arch: str, board: models.Device, bios_ids: list[int]
 ) -> models.Machine | None:
     """
-    Get a machines that have the given architecture, motherboard, and optionally bios
+    Get a machine that has the given architecture, motherboard, and one of the specified BIOSes.
     """
     stmt = (
         select(models.Machine)
@@ -131,13 +123,16 @@ def get_machine_with_same_hardware_params(
         .join(models.Certificate)
         .join(models.Report, models.Certificate.reports)
         .join(models.Device, models.Report.devices)
-        .filter(and_(models.Device.id == board.id, models.Report.architecture == arch))
+        .filter(
+            and_(
+                models.Device.id == board.id,
+                models.Report.architecture == arch,
+            )
+        )
     )
 
-    if bios:
-        stmt = stmt.join(models.Bios, models.Report.bios_id == models.Bios.id).filter(
-            models.Bios.id == bios.id
-        )
+    if bios_ids:
+        stmt = stmt.filter(models.Report.bios_id.in_(bios_ids))
     else:
         stmt = stmt.filter(models.Report.bios_id.is_(null()))
 
@@ -169,6 +164,26 @@ def get_machine_architecture(db: Session, machine_id: int) -> str:
     )
     result = db.execute(stmt).scalars().first()
     return result if result else ""
+
+
+def get_machine_bios(db: Session, machine_id: int) -> models.Bios | None:
+    """
+    Retrieve the BIOS associated with a given machine.
+
+    :param db: Database session
+    :param machine_id: ID of the machine
+    :return: BIOS object if found, None otherwise
+    """
+    stmt = (
+        select(models.Bios)
+        .join(models.Report, models.Bios.id == models.Report.bios_id)
+        .join(models.Certificate, models.Report.certificate_id == models.Certificate.id)
+        .join(models.Machine, models.Certificate.machine_id == models.Machine.id)
+        .where(models.Machine.id == machine_id)
+        .order_by(models.Certificate.created_at.desc())
+    )
+
+    return db.execute(stmt).scalars().first()
 
 
 def get_certificate_by_name(
