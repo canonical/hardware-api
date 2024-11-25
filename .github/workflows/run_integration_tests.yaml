@@ -23,7 +23,7 @@ jobs:
     runs-on: [self-hosted, linux, large, jammy, x64]
     defaults:
       run:
-        working-directory: tests
+        working-directory: integration-tests
     steps:
     - uses: actions/checkout@v4
     - name: Set up docker buildx
