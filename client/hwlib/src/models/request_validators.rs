@@ -251,7 +251,7 @@ mod tests {
         let kernel_modules_str = format!("[{}]", quoted_kernel_modules.join(", "));
 
         let content = read_to_string(get_test_filepath(
-            format!("{dir_path}/expected.json").as_str(),
+            format!("{dir_path}/request.json").as_str(),
         ))
         .unwrap();
         let expected_result = apply_vars(

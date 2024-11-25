@@ -1,0 +1,30 @@
+{
+  "status": "Certified",
+  "architecture": "amd64",
+  "bios": {
+    "vendor": "Lenovo",
+    "version": "S07KT41A",
+    "revision": null,
+    "firmware_revision": "1.19",
+    "release_date": null
+  },
+  "board": {
+    "manufacturer": "Lenovo",
+    "product_name": "1046",
+    "version": "Not Defined"
+  },
+  "chassis": null,
+  "available_releases": [
+    {
+      "distributor": "Ubuntu",
+      "version": "20.04",
+      "codename": "focal",
+      "kernel": {
+        "name": null,
+        "version": "5.15.0-48-generic",
+        "signature": null,
+        "loaded_modules": []
+      }
+    }
+  ]
+}

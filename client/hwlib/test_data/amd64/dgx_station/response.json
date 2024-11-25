@@ -1,0 +1,52 @@
+{
+  "status": "Certified",
+  "architecture": "amd64",
+  "bios": {
+    "vendor": "American Megatrends Inc.",
+    "version": "0406",
+    "revision": null,
+    "firmware_revision": null,
+    "release_date": null
+  },
+  "board": {
+    "manufacturer": "empty",
+    "product_name": "X99-E-10G WS",
+    "version": "Rev 1.xx"
+  },
+  "chassis": null,
+  "available_releases": [
+    {
+      "distributor": "Ubuntu",
+      "version": "22.04",
+      "codename": "jammy",
+      "kernel": {
+        "name": null,
+        "version": "5.15.0-1028-nvidia",
+        "signature": null,
+        "loaded_modules": []
+      }
+    },
+    {
+      "distributor": "Ubuntu",
+      "version": "20.04",
+      "codename": "focal",
+      "kernel": {
+        "name": null,
+        "version": "5.4.0-26-generic",
+        "signature": null,
+        "loaded_modules": []
+      }
+    },
+    {
+      "distributor": "Ubuntu",
+      "version": "18.04",
+      "codename": "bionic",
+      "kernel": {
+        "name": null,
+        "version": "5.3.0-51-generic",
+        "signature": null,
+        "loaded_modules": []
+      }
+    }
+  ]
+}
