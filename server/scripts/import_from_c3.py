@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-if __name__ == "__main__":
+def main():
     session = Session(bind=engine)
     c3_client = C3Client(db=session)
     logger.info("Importing data from C3")
@@ -42,3 +42,7 @@ if __name__ == "__main__":
             exc.response.status_code,
         )
         raise
+
+
+if __name__ == "__main__":
+    main()

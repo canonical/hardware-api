@@ -4,7 +4,7 @@ services:
       context: ../server
       dockerfile: Dockerfile
       args:
-        IMPORT_TOOL_PATH: ""
+        IMPORT_TOOL_PATH: ./scripts/import_test_data.py
         C3_URL: https://c3_url
         DB_URL: sqlite:////home/server/test-integration.db
     ports:

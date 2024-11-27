@@ -26,7 +26,7 @@ from hwapi.data_models.enums import DeviceCategory
 
 def _clean_vendor_name(name: str):
     """Remove "Inc"/"Inc." substring from vendor name and leading whitespaces"""
-    return name.replace("Inc.", "").replace("Inc", "").strip()
+    return name.replace("Inc.", "").replace("Inc", "").strip().lower()
 
 
 def get_or_create(
@@ -70,7 +70,7 @@ def get_release_object(db: Session, os_version, os_codename) -> models.Release |
 
 def get_vendor_by_name(db: Session, name: str) -> models.Vendor | None:
     """Find vendor by name (cleaned-up)"""
-    clean_name = f"%{_clean_vendor_name(name).lower()}%"
+    clean_name = f"%{_clean_vendor_name(name)}%"
     stmt = select(models.Vendor).where(models.Vendor.name.ilike(clean_name))
     return db.execute(stmt).scalars().first()
 
@@ -82,7 +82,7 @@ def get_board(db: Session, vendor_name: str, product_name: str) -> models.Device
         .join(models.Vendor)
         .where(
             and_(
-                models.Vendor.name.ilike(_clean_vendor_name(vendor_name)),
+                models.Vendor.name.ilike(f"%{_clean_vendor_name(vendor_name)}%"),
                 models.Device.name.ilike(product_name),
                 models.Device.category.in_(
                     [DeviceCategory.BOARD.value, DeviceCategory.OTHER.value]
@@ -100,7 +100,7 @@ def get_bios_list(db: Session, vendor_name: str, version: str) -> Sequence[model
         .join(models.Vendor)
         .where(
             and_(
-                models.Vendor.name.ilike(_clean_vendor_name(f"%{vendor_name}%")),
+                models.Vendor.name.ilike(f"%{_clean_vendor_name(vendor_name)}%"),
                 models.Bios.version.ilike(version),
             )
         )

@@ -1,0 +1,132 @@
+{
+    "count": 5,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "canonical_id": "202405-34051",
+            "vendor": "Dell",
+            "platform": "XPS 13 9340",
+            "configuration": "XPS 13 9340 (3K OLED Touchscreen)",
+            "created_at": "2024-09-12T15:53:19.302798+01:00",
+            "completed": "2024-09-12T15:53:19.342086+01:00",
+            "name": "2409-16099",
+            "release": {
+                "codename": "noble",
+                "release": "24.04 LTS",
+                "release_date": "2024-04-09",
+                "supported_until": "2034-04-25",
+                "i_version": 2404
+            },
+            "architecture": "amd64",
+            "kernel_version": "6.8.0-1009-oem",
+            "bios": {
+                "name": "Dell Inc.: 1.7.0 (UEFI)",
+                "vendor": "Dell Inc.",
+                "version": "1.7.0",
+                "firmware_type": "UEFI"
+            },
+            "firmware_revision": "1.9"
+        },
+        {
+            "canonical_id": "201711-25989",
+            "vendor": "NVIDIA",
+            "platform": "DGX-Station",
+            "configuration": "DGX-Station",
+            "created_at": "2023-07-12T11:54:42.375981+01:00",
+            "completed": "2023-07-12T11:54:42.551482+01:00",
+            "name": "2307-14834",
+            "release": {
+                "codename": "jammy",
+                "release": "22.04 LTS",
+                "release_date": "2022-04-21",
+                "supported_until": "2032-04-22",
+                "i_version": 2204
+            },
+            "architecture": "amd64",
+            "kernel_version": "5.15.0-1028-nvidia",
+            "bios": {
+                "name": "American Megatrends Inc.: 0406 (UEFI)",
+                "vendor": "American Megatrends Inc.",
+                "version": "0406",
+                "firmware_type": "UEFI"
+            },
+            "firmware_revision": null
+        },
+        {
+            "canonical_id": "202203-30052",
+            "vendor": "Lenovo",
+            "platform": "ThinkStation P620 (Radeon Pro W6800)",
+            "configuration": "ThinkStation P620 (Radeon Pro W6800)",
+            "created_at": "2023-03-17T14:53:48.510747Z",
+            "completed": "2023-03-17T14:53:48.983246Z",
+            "name": "2303-14329",
+            "release": {
+                "codename": "focal",
+                "release": "20.04 LTS",
+                "release_date": "2020-04-23",
+                "supported_until": "2030-04-23",
+                "i_version": 2004
+            },
+            "architecture": "amd64",
+            "kernel_version": "5.15.0-48-generic",
+            "bios": {
+                "name": "LENOVO: S07KT41A (UEFI)",
+                "vendor": "LENOVO",
+                "version": "S07KT41A",
+                "firmware_type": "UEFI"
+            },
+            "firmware_revision": "1.19"
+        },
+        {
+            "canonical_id": "201711-25989",
+            "vendor": "NVIDIA",
+            "platform": "DGX-Station",
+            "configuration": "DGX-Station",
+            "created_at": "2020-10-30T22:18:59.216459Z",
+            "completed": "2020-10-30T22:18:59.330898Z",
+            "name": "2010-12190",
+            "release": {
+                "codename": "focal",
+                "release": "20.04 LTS",
+                "release_date": "2020-04-23",
+                "supported_until": "2030-04-23",
+                "i_version": 2004
+            },
+            "architecture": "amd64",
+            "kernel_version": "5.4.0-26-generic",
+            "bios": {
+                "name": "American Megatrends Inc.: 0406",
+                "vendor": "American Megatrends Inc.",
+                "version": "040",
+                "firmware_type": ""
+            },
+            "firmware_revision": null
+        },
+        {
+            "canonical_id": "201711-25989",
+            "vendor": "NVIDIA",
+            "platform": "DGX-Station",
+            "configuration": "DGX-Station",
+            "created_at": "2020-06-13T01:50:38.226696+01:00",
+            "completed": "2020-06-13T01:50:38.374817+01:00",
+            "name": "2006-11911",
+            "release": {
+                "codename": "bionic",
+                "release": "18.04 LTS",
+                "release_date": "2018-04-26",
+                "supported_until": "2028-04-25",
+                "i_version": 1804
+            },
+            "architecture": "amd64",
+            "kernel_version": "5.3.0-51-generic",
+            "bios": {
+                "name": "American Megatrends Inc.: 0406",
+                "vendor": "American Megatrends Inc.",
+                "version": "040",
+                "firmware_type": ""
+            },
+            "firmware_revision": null
+        }
+    ]
+}
