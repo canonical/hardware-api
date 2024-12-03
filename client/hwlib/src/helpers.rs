@@ -59,8 +59,8 @@ pub(crate) mod test_utils {
         let mut path = get_project_root().unwrap();
         let test_data_path = path.join("test_data");
         if !test_data_path.is_dir() {
-            // If test_data/ is not found, we're in the monorepo root
-            path.extend(["client", "hwlib"]);
+            // If test_data/ is not found, we're in the client root
+            path.extend(["hwlib"]);
         }
         path.extend(["test_data", file_name]);
         path
