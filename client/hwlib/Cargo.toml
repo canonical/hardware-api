@@ -14,11 +14,6 @@ homepage = "https://github.com/canonical/hardware-api/"
 repository = "https://github.com/canonical/hardware-api/"
 exclude = ["debian/*",]
 
-[package.metadata.vendor-filter]
-platforms = ["*-unknown-linux-gnu"]
-tier = "2"
-all-features = false
-
 [lib]
 name = "hwlib"
 crate-type = [ "cdylib", "rlib",]
