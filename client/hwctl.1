@@ -1,0 +1,28 @@
+.TH HWCTL 1 "03 Dec 2024" "Canonical Ltd."
+.SH NAME
+hwctl \- CLI tool to check hardware certification status
+.SH SYNOPSIS
+.B hwctl
+.SH DESCRIPTION
+.B hwctl
+is a command-line tool that checks the Ubuntu Hardware Certification
+status of your system. It verifies whether your exact machine model or
+a similar system has been certified and displays which Ubuntu releases
+the certification covers for it. Also, note that root privileges are
+typically required to run this command. For more information about the
+Ubuntu Hardware Certification Program, visit
+https://ubuntu.com/certified.
+.SH OPTIONS
+.B hwctl
+does not accept any command-line options.
+.SH ENVIRONMENT
+.TP
+.B HW_API_URL
+Specifies the hardware-api server URL that
+.B hwctl
+uses for certification queries. The default value is
+https://hw.ubuntu.com
+.SH BUGS
+https://github.com/canonical/hardware-api/issues/
+.SH COPYRIGHT
+Copyright (C) 2024 Canonical Ltd.
