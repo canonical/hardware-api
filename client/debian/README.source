@@ -10,6 +10,6 @@ opened in GitHub.
 
 ## Package source code
 
-The information regarding how to build the client source package is
-located in the [client
-README.md](https://github.com/canonical/hardware-api/tree/main/client).
+The information regarding how to build the client source package and
+refresh cargo dependencies is located in the [client
+README.md](../README.md).
