@@ -24,15 +24,33 @@ Architecture: amd64
 Multi-Arch: foreign
 Depends: libssl-dev, pkgconf, python3, ${misc:Depends}, ${shlibs:Depends}
 Provides: librust-hwlib-dev (= ${binary:Version})
-Description: Libary for checking hardware Ubuntu certification status - Rust source code
- This library is used for gathering hardware information from a device
- and sending it to the hardware-api to determine the testing status of
- the device model.
+Description: Library for querying Ubuntu hardware certification status - Rust source code
+ A Rust library that collects hardware information from the local
+ system and queries the Ubuntu Hardware Certification service to
+ determine if the device model has been certified.
+ .
+ The library identifies system components, creates a hardware profile, and
+ communicates with the certification database to check:
+  * If the exact or similar device model has been certified
+  * Which Ubuntu releases the device is certified for
+  * Current certification status
+ .
+ This package provides the development files needed to use hwlib in Rust
+ applications.
 
 Package: hwctl
 Architecture: amd64
 Multi-Arch: foreign
 Depends: ${misc:Depends}, ${shlibs:Depends}
-Description: CLI tool to check hardware certification status - Rust source code
- This tool uses `hwlib` to determine the hardware Ubuntu testing and
- certification status of the machine.
+Description: Command-line tool for checking Ubuntu hardware certification status - Rust source code
+ A command-line interface that checks whether your hardware has been certified
+ for use with Ubuntu. It uses the hwlib library to collect system information
+ and query Ubuntu's Hardware Certification database.
+ .
+ The tool provides an easy way to:
+  * Check if your exact device model or a similar one is Ubuntu certified
+  * See which Ubuntu releases your hardware is certified for
+  * Verify the certification status of your system
+ .
+ This tool is particularly useful for system administrators and users who
+ want to verify hardware compatibility with Ubuntu.
