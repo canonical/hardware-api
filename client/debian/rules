@@ -9,7 +9,7 @@ export CARGO_VENDOR_DIR = $(CURDIR)/rust-vendor/
 export CARGO_PROFILE_RELEASE_DEBUG=1
 
 CARGO_TARGET_DIR = $(CURDIR)/target
-PARALLEL := $(shell nproc)
+NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
 PKG_HWLIB = $(CURDIR)/debian/librust-hwlib-dev
 PKG_HWCTL = $(CURDIR)/debian/hwctl
 
@@ -33,9 +33,9 @@ override_dh_auto_install:
 	# workspace, we install both library and cli tool using the same logic
 	# that implemented in the dh-cargo install function. See
 	# https://salsa.debian.org/rust-team/dh-cargo/-/blob/5cc7f7b8/cargo.pm#L168-195
-
 	install -d $(HWLIB_CARGO_DIR)
 	cp -r hwlib/* $(HWLIB_CARGO_DIR)/
+	cp -r Cargo.lock $(HWLIB_CARGO_DIR)/
 	cp $(CURDIR)/debian/cargo-checksum.json $(HWLIB_CARGO_DIR)/.cargo-checksum.json
 
 	env RUST_BACKTRACE=1 \
@@ -44,14 +44,15 @@ override_dh_auto_install:
 		/usr/bin/cargo -Zavoid-dev-deps install \
 		--verbose \
 		--verbose \
-		-j$(PARALLEL) \
+		-j$(NUMJOBS) \
 		--target $(DEB_HOST_RUST_TYPE) \
 		--config 'profile.release.lto = "thin"' \
 		--no-track \
 		--path hwctl \
 		--root $(CURDIR)/debian/hwctl/usr
+	# Since we use vendored Rust code, it's required by ubuntu-mir to ship
+	# Cargo.lock file in the package at /usr/share/doc/<pkgname>/Cargo.lock
 	install -D -m 644 Cargo.lock $(PKG_HWCTL)/usr/share/doc/hwctl/Cargo.lock
-
 	/usr/share/cargo/bin/dh-cargo-built-using hwctl
 
 	# Delete generated via `cargo install` hidden files
