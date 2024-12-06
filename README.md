@@ -105,107 +105,17 @@ using SMBIOS data. If you're running it on a device that doesn't have
 SMBIOS data available, root privileges are not required.
 
 ```bash
+cd client/
 cargo build
 sudo ./target/debug/hwctl
 ```
 
-To send the request to a different server, run the tool the following
-way:
+To send the request to a different server, run the tool specifying
+`HW_API_URL` environment variable:
 
 ```bash
 cargo build
 sudo HW_API_URL=https://your.server.url ./target/debug/hwctl
-```
-
-This is the output should look a similar way:
-
-```
-Request:
-{
-  "architecture": "amd64",
-  "bios": {
-    "firmware_revision": "1.13",
-    "release_date": "2023-03-14",
-    "revision": "1.13.0",
-    "vendor": "Dell Inc.",
-    "version": "1.13.0"
-  },
-  "board": {
-    "manufacturer": "Dell Inc.",
-    "product_name": "0F0W8W",
-    "version": "A00"
-  },
-  "chassis": {
-    "chassis_type": "Notebook",
-    "manufacturer": "Dell Inc.",
-    "sku": "Notebook",
-    "version": ""
-  },
-  "model": "Inspiron 14 5420",
-  "os": {
-    "codename": "noble",
-    "distributor": "Ubuntu",
-    "kernel": {
-      "loaded_modules": [
-        "tls",
-        "nft_masq",
-        "truncated for this example",
-      ],
-      "name": "Linux",
-      "signature": null,
-      "version": "6.8.0-38-generic"
-    },
-    "version": "24.04"
-  },
-  "pci_peripherals": [],
-  "processor": {
-    "codename": "Unknown",
-    "frequency": 4400,
-    "manufacturer": "Intel(R) Corporation",
-    "version": "12th Gen Intel(R) Core(TM) i5-1235U"
-  },
-  "usb_peripherals": [],
-  "vendor": "Dell Inc."
-}
-
-Response:
-{
-  "architecture": "amd64",
-  "audio": null,
-  "available_releases": [
-    {
-      "codename": "focal",
-      "distributor": "Ubuntu",
-      "kernel": {
-        "loaded_modules": [],
-        "name": null,
-        "signature": null,
-        "version": "5.14.0-1010-oem"
-      },
-      "version": "20.04 LTS"
-    }
-  ],
-  "bios": {
-    "firmware_revision": "1.13",
-    "release_date": null,
-    "revision": null,
-    "vendor": "Dell",
-    "version": "1.13.0"
-  },
-  "board": {
-    "manufacturer": "Dell",
-    "product_name": "0F0W8W",
-    "version": "A00"
-  },
-  "chassis": null,
-  "gpu": null,
-  "network": null,
-  "pci_peripherals": [],
-  "status": "Related Certified System Exists",
-  "usb_peripherals": [],
-  "video": null,
-  "wireless": null
-}
 ```
 
 ## Building `hwctl` snap

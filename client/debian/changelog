@@ -1,3 +1,10 @@
+rust-hwlib (0.0.1~ppa3) oracular; urgency=medium
+
+  * Provide both hwlib library and hwctl CLI tool.
+  Add component tests for the hwlib code.
+
+ -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Mon, 02 Dec 2024 13:45:06 +0200
+
 rust-hwlib (0.0.1~ppa2) oracular; urgency=medium
 
   * Add the hwlib implementation for collecting hardware data.
