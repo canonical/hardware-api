@@ -17,8 +17,7 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::Result;
-use std::process::exit;
+use std::process;
 
 use hwlib::{
     models::request_validators::{CertificationStatusRequest, Paths},
@@ -26,23 +25,42 @@ use hwlib::{
 };
 
 #[tokio::main]
-async fn main() -> Result<()> {
-    let cert_status_request = CertificationStatusRequest::new(Paths::default())?;
-    println!(
-        "Request:\n{}",
-        serde_json::to_string_pretty(&cert_status_request)?
-    );
+async fn main() -> process::ExitCode {
+    let cert_status_request = match CertificationStatusRequest::new(Paths::default()) {
+        Ok(request_data) => request_data,
+        Err(e) => {
+            eprintln!("cannot collect system data: {e}");
+            eprintln!("ensure that hwctl is running as root and on an SMBIOS-compatible system.");
+            return process::ExitCode::FAILURE;
+        }
+    };
+    match serde_json::to_string_pretty(&cert_status_request) {
+        Ok(request_json) => {
+            println!("Request:\n{}", request_json);
+        }
+        Err(e) => {
+            eprintln!("Failed to serialize request to JSON: {e}");
+            return process::ExitCode::FAILURE;
+        }
+    }
+
     let url = std::env::var("HW_API_URL").unwrap_or_else(|_| String::from("https://hw.ubuntu.com"));
     let response = send_certification_status_request(url, &cert_status_request).await;
 
     match response {
-        Ok(response) => {
-            println!("\nResponse:\n{}", serde_json::to_string_pretty(&response)?);
-            exit(0);
-        }
+        Ok(response) => match serde_json::to_string_pretty(&response) {
+            Ok(response_json) => {
+                println!("\nResponse:\n{}", response_json);
+                process::ExitCode::SUCCESS
+            }
+            Err(e) => {
+                eprintln!("Failed to serialize response to JSON: {e}");
+                process::ExitCode::FAILURE
+            }
+        },
         Err(e) => {
-            eprintln!("{}", e);
-            exit(1);
+            eprintln!("cannot send certification status request: {e}");
+            process::ExitCode::FAILURE
         }
     }
 }

@@ -96,7 +96,7 @@ impl CertificationStatusRequest {
             proc_version_filepath,
             ..
         } = paths;
-        let data = load_smbios_data(&smbios_entry_filepath, &smbios_table_filepath).unwrap();
+        let data = load_smbios_data(&smbios_entry_filepath, &smbios_table_filepath)?;
         let bios_info_vec = data.collect::<SMBiosInformation>();
         let bios_info = bios_info_vec
             .first()

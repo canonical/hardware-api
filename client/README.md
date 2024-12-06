@@ -91,6 +91,7 @@ this also requires updating the `XS-Vendored-Sources-Rust` header in the
 expected section of this command's output:
 
 ```sh
+./debian/vendor-rust.sh
 export CARGO_VENDOR_DIR=$(pwd)/rust-vendor/
 /usr/share/cargo/bin/dh-cargo-vendored-sources
 ```
