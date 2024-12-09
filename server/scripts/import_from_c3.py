@@ -1,11 +1,9 @@
 #!/usr/bin/env python3
 # Copyright 2024 Canonical Ltd.
-# All rights reserved.
 #
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# it under the terms of the GNU General Public License version 3, as
+# published by the Free Software Foundation.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -32,7 +30,7 @@ logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 
-if __name__ == "__main__":
+def main():
     session = Session(bind=engine)
     c3_client = C3Client(db=session)
     logger.info("Importing data from C3")
@@ -44,3 +42,7 @@ if __name__ == "__main__":
             exc.response.status_code,
         )
         raise
+
+
+if __name__ == "__main__":
+    main()
