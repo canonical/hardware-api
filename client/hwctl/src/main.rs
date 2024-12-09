@@ -17,8 +17,8 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::Result;
-use std::process::exit;
+use anyhow::{Context, Result};
+use std::process;
 
 use hwlib::{
     models::request_validators::{CertificationStatusRequest, Paths},
@@ -26,23 +26,34 @@ use hwlib::{
 };
 
 #[tokio::main]
-async fn main() -> Result<()> {
-    let cert_status_request = CertificationStatusRequest::new(Paths::default())?;
-    println!(
-        "Request:\n{}",
-        serde_json::to_string_pretty(&cert_status_request)?
-    );
-    let url = std::env::var("HW_API_URL").unwrap_or_else(|_| String::from("https://hw.ubuntu.com"));
-    let response = send_certification_status_request(url, &cert_status_request).await;
-
-    match response {
-        Ok(response) => {
-            println!("\nResponse:\n{}", serde_json::to_string_pretty(&response)?);
-            exit(0);
-        }
+async fn main() -> process::ExitCode {
+    match run().await {
+        Ok(_) => process::ExitCode::SUCCESS,
         Err(e) => {
-            eprintln!("{}", e);
-            exit(1);
+            eprintln!("ERROR: {e:?}");
+            process::ExitCode::FAILURE
         }
     }
+}
+
+async fn run() -> Result<()> {
+    let cert_status_request = CertificationStatusRequest::new(Paths::default()).context(
+        "cannot collect system data. \
+         Ensure that hwctl is running as root and on an SMBIOS-compatible system.",
+    )?;
+
+    let request_json = serde_json::to_string_pretty(&cert_status_request)
+        .context("cannot serialize request to JSON")?;
+    println!("Request:\n{}", request_json);
+
+    let url = std::env::var("HW_API_URL").unwrap_or_else(|_| String::from("https://hw.ubuntu.com"));
+    let response = send_certification_status_request(url, &cert_status_request)
+        .await
+        .context("cannot send certification status request")?;
+
+    let response_json =
+        serde_json::to_string_pretty(&response).context("cannot serialize response to JSON")?;
+    println!("\nResponse:\n{}", response_json);
+
+    Ok(())
 }
