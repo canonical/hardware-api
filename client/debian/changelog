@@ -1,3 +1,16 @@
+rust-hwlib (0.0.1~22.04~ppa3) jammy; urgency=medium
+
+  * Backport 0.0.1~ppa3 to jammy
+
+ -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Mon, 09 Dec 2024 13:56:16 +0200
+
+rust-hwlib (0.0.1~ppa3) oracular; urgency=medium
+
+  * Provide both hwlib library and hwctl CLI tool.
+  Add component tests for the hwlib code.
+
+ -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Mon, 02 Dec 2024 13:45:06 +0200
+
 rust-hwlib (0.0.1~22.04~ppa2) jammy; urgency=medium
 
   * Backport 0.0.1~ppa2 to jammy

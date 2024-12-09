@@ -1,0 +1,51 @@
+{
+  "architecture": "amd64",
+  "bios": {
+    "firmware_revision": "1.7",
+    "release_date": "2024-06-12",
+    "revision": "1.7.0",
+    "vendor": "Dell Inc.",
+    "version": "1.7.0"
+  },
+  "board": {
+    "manufacturer": "Dell Inc.",
+    "product_name": "02395C",
+    "version": "X04"
+  },
+  "chassis": {
+    "chassis_type": "Notebook",
+    "manufacturer": "Dell Inc.",
+    "sku": "Notebook",
+    "version": ""
+  },
+  "model": "XPS 13 9340",
+  "os": {
+    "codename": "$CODENAME",
+    "distributor": "Ubuntu",
+    "kernel": {
+      "loaded_modules": $KERNEL_MODULES,
+      "name": "Linux",
+      "signature": null,
+      "version": "$KERNEL_VERSION"
+    },
+    "version": "$RELEASE"
+  },
+  "pci_peripherals": [],
+  "processor": {
+    "frequency": 4500,
+    "identifier": [
+      164,
+      6,
+      10,
+      0,
+      255,
+      251,
+      235,
+      191
+    ],
+    "manufacturer": "Intel(R) Corporation",
+    "version": "Intel(R) Core(TM) Ultra 7 155H"
+  },
+  "usb_peripherals": [],
+  "vendor": "Dell Inc."
+}

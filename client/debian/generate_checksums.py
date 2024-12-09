@@ -1,12 +1,9 @@
 #!/usr/bin/python3
 
 import os
+from pathlib import Path
 import hashlib
 import json
-
-
-# Directories to exclude from the root dir
-DIRS_TO_EXCLUDE = ["debian", "rust-vendor"]
 
 
 def calculate_sha256sum(file_path):
@@ -22,12 +19,6 @@ def generate_checksums(root_dir):
     """Generate a dictionary of file paths and their SHA-256 checksums."""
     checksums = {}
     for dirpath, dirnames, filenames in os.walk(root_dir):
-        # Only exclude debian/ and vendor/ directories in the root directory
-        if dirpath == root_dir:
-            for dir_to_exclude in DIRS_TO_EXCLUDE:
-                if dir_to_exclude in dirnames:
-                    dirnames.remove(dir_to_exclude)
-
         for filename in filenames:
             file_path = os.path.join(dirpath, filename)
             relative_path = os.path.relpath(file_path, root_dir)
@@ -36,12 +27,13 @@ def generate_checksums(root_dir):
 
 
 def main():
-    root_dir = "."
+    # The cargo-checksum.json is required only for the library
+    root_dir = "hwlib"
     checksums = generate_checksums(root_dir)
 
     cargo_checksum = {"files": checksums}
 
-    with open("debian/cargo-checksum.json", "w") as f:
+    with open(Path(Path(__file__).parent, "cargo-checksum.json"), "w") as f:
         json.dump(cargo_checksum, f, separators=(",", ":"))
 
     print("debian/cargo-checksum.json has been generated.")

@@ -22,7 +22,7 @@ jobs:
     runs-on: [self-hosted, linux, large, noble, x64]
     defaults:
       run:
-        working-directory: client/hwlib
+        working-directory: client
     steps:
     - name: Checkout the repository
       uses: actions/checkout@v4
@@ -54,7 +54,6 @@ jobs:
         profile: minimal
         toolchain: stable
         override: true
-    - run: cp ../../Cargo.lock ./
     - name: Vendor the dependencies
       run: |
         cargo install cargo-vendor-filterer
@@ -62,7 +61,6 @@ jobs:
     - name: Generate checksums
       run: ./debian/generate_checksums.py
     - run: dpkg-buildpackage -us -uc -S
-    - run: lintian --pedantic --verbose
     - name: Setup sbuild and build the package
       run: |
         set -xeu
@@ -91,3 +89,4 @@ jobs:
         fi
         echo "Running sbuild for $PACKAGE_DSC"
         sbuild $PACKAGE_DSC -d jammy -v
+    - run: lintian --pedantic --verbose

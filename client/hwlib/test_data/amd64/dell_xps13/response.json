@@ -1,0 +1,30 @@
+{
+  "status": "Certified",
+  "architecture": "amd64",
+  "bios": {
+    "vendor": "Dell",
+    "version": "1.7.0",
+    "revision": null,
+    "firmware_revision": "1.9",
+    "release_date": null
+  },
+  "board": {
+    "manufacturer": "Dell",
+    "product_name": "02395C",
+    "version": "X04"
+  },
+  "chassis": null,
+  "available_releases": [
+    {
+      "distributor": "Ubuntu",
+      "version": "24.04",
+      "codename": "noble",
+      "kernel": {
+        "name": null,
+        "version": "6.8.0-1009-oem",
+        "signature": null,
+        "loaded_modules": []
+      }
+    }
+  ]
+}

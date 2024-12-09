@@ -14,27 +14,26 @@ homepage = "https://github.com/canonical/hardware-api/"
 repository = "https://github.com/canonical/hardware-api/"
 exclude = ["debian/*",]
 
-[package.metadata.vendor-filter]
-platforms = ["*-unknown-linux-gnu"]
-tier = "2"
-all-features = false
-
 [lib]
 name = "hwlib"
 crate-type = [ "cdylib", "rlib",]
 
-[target.'cfg(all(target_os = "linux"))'.dependencies]
+[dependencies]
 serde_json = "~1.0.0"
 reqwest = { version = "0.12.0", features = ["json"] }
 serde = { version = "~1.0.0", features = ["derive"] }
 tokio = { version = "1.38.0", features = ["rt", "rt-multi-thread", "test-util"], default-features = false }
-pyo3 = { version = "0.22.0", features = ["extension-module"] }
+pyo3 = { version = "0.23.0", features = ["extension-module"] }
 smbios-lib = "0.9.0"
 regex = "1.10.0"
 time = { version = "~0.3.0", features = ["macros" ,"parsing", "formatting"]}
 anyhow = "~1.0.0"
 itertools = "0.13.0"
 lazy_static = "1.5.0"
+
+[dev-dependencies]
+simple_test_case = "1.2.0"
+pretty_assertions = "1.4.1"
 
 [package.metadata.deb]
 maintainer = "Canonical Hardware Certification <canonical-hw-cert@lists.launchpad.net>"

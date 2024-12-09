@@ -1,17 +1,15 @@
 /* Copyright 2024 Canonical Ltd.
- * All rights reserved.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License
+ * version 3, as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Written by:
@@ -38,7 +36,7 @@ pub struct CpuInfo {
 
 impl CpuInfo {
     /// Parse cpuinfo file the same way it's done in checkbox:
-    /// https://github.com/canonical/checkbox/blob/3789fdd/checkbox-support/checkbox_support/parsers/cpuinfo.py
+    /// <https://github.com/canonical/checkbox/blob/3789fdd/checkbox-support/checkbox_support/parsers/cpuinfo.py>
     pub fn from_file(cpuinfo_filepath: &Path) -> Result<CpuInfo> {
         let mut attributes: HashMap<&str, &str> = HashMap::new();
         let mut cores_count = 0;
@@ -115,7 +113,7 @@ pub struct CpuFrequency {
 
 impl CpuFrequency {
     /// Read max CPU frequency from file and parse it in MHz as it's done in checkbox.
-    /// https://github.com/canonical/checkbox/blob/3789fdd/providers/resource/bin/cpuinfo_resource.py#L56-L63
+    /// <https://github.com/canonical/checkbox/blob/3789fdd/providers/resource/bin/cpuinfo_resource.py#L56-L63>
     pub fn from_k_hz_file(max_cpu_frequency_filepath: &Path) -> Result<Self> {
         let raw_freq = read_to_string(max_cpu_frequency_filepath)?;
         let k_hz: u64 = raw_freq.trim().parse()?;
@@ -178,22 +176,18 @@ mod tests {
 
     #[test]
     fn test_parsing_cpuinfo() {
-        let cpuinfo = CpuInfo::from_file(&get_test_filepath("cpuinfo")).unwrap();
+        let cpuinfo = CpuInfo::from_file(&get_test_filepath("arm64/rpi4b8g/cpuinfo")).unwrap();
         assert_eq!(cpuinfo.platform, std::env::consts::ARCH);
-        assert_eq!(cpuinfo.cores_count, 2);
-        assert_eq!(cpuinfo.cpu_type, "GenuineIntel");
-        assert_eq!(cpuinfo.model, "Intel(R) Celeron(R) 6305E @ 1.80GHz");
-        assert_eq!(cpuinfo.model_number, "6");
-        assert_eq!(cpuinfo.model_version, "140");
-        assert_eq!(cpuinfo.model_revision, "1");
-        assert_eq!(cpuinfo.cache.unwrap(), 4096);
-        assert_eq!(cpuinfo.bogomips.unwrap(), 3610);
+        assert_eq!(cpuinfo.cores_count, 4);
+        assert_eq!(cpuinfo.cpu_type, std::env::consts::ARCH);
+        assert_eq!(cpuinfo.model, "Raspberry Pi 4 Model B Rev 1.4");
     }
 
     #[test]
     fn test_read_max_cpu_frequency() {
         let cpu_freq =
-            CpuFrequency::from_k_hz_file(&get_test_filepath("cpuinfo_max_freq")).unwrap();
-        assert_eq!(cpu_freq.m_hz, 1800);
+            CpuFrequency::from_k_hz_file(&get_test_filepath("arm64/rpi4b8g/cpuinfo_max_freq"))
+                .unwrap();
+        assert_eq!(cpu_freq.m_hz, 600);
     }
 }

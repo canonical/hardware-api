@@ -13,8 +13,7 @@ To build the package using the vendored dependencies and then run it
 in offline mode, execute the following commands:
 
 ```bash
-cd client/hwlib
-# By default, the vendored dependencies are stored under the ./vendor/ directory
+# By default, the vendored dependencies are stored under the ./rust-vendor/ directory
 ./debian/vendor-rust.sh
 ```
 
@@ -27,18 +26,17 @@ forget to specify the correct path:
 replace-with = "vendored-sources"
 
 [source.vendored-sources]
-directory = "/path/to/hardware-api/client/hwlib/vendor"
+directory = "/path/to/hardware-api/client/rust-vendor"
 ```
 
 Currently, there is no way to change these settings per project, so
 cargo will use these vendored dependencies for all your Rust
 projects. You can remove these lines after finishing the work on the
-`hwlib`.
+`hardware-api` client project.
 
 Now you can build the project in offline mode:
 
 ```bash
-cd client/
 cargo build --offline
 ```
 
@@ -75,7 +73,6 @@ $ sudo /path/to/venv/bin/python3  # or `python3`
 >>> hwlib.get_certification_status("https://hw.ubuntu.com")
 ```
 
-
 ## Run tests
 
 Since we're using python bindings, this library contains tests for
@@ -86,8 +83,23 @@ commands in the `hwlib/` directory:
 * For Python tests, you need to have `tox` on your system installed:
 `pip install tox`.  Then, you can run Python tests with tox `$ tox`
 
+## Refreshing cargo dependencies
 
-## Build deb package
+To update dependency versions, simply run `cargo update`. However,
+this also requires updating the `XS-Vendored-Sources-Rust` header in the
+`debian/control` file. You can get the new header value from the
+expected section of this command's output:
+
+```sh
+export CARGO_VENDOR_DIR=$(pwd)/rust-vendor/
+/usr/share/cargo/bin/dh-cargo-vendored-sources
+```
+
+If the command returns a non-zero exit code, you'll need to update the
+`XS-Vendored-Sources-Rust` header with the value shown in the output.
+
+
+## Build Debian package
 
 This section describes how to pack `hwlib` as a debian package. Before
 getting started, make sure that you have the following packages
@@ -102,35 +114,16 @@ sudo apt-get install -y debhelper dh-cargo devscripts
 First, generate update to the changelog file using the `dch` tool:
 
 ```bash
-cd client/hwlib
 export DEBEMAIL=your.email@canonical.com
-export DEBFULLNAME="Name Surname"
+export DEBFULLNAME="Your Full Name"
 dch -i  # increment release number
 dch -r  # create release
-```
-
-Then copy the Cargo.lock file from the project root to `client/hwlib`
-dir, because the MIR policy requires the lock file to be included to
-the archive
-
-```bash
-cp ../../Cargo.lock ./
 ```
 
 Then you need to vendor the Rust dependencies:
 
 ```bash
-# under client/hwlib/ dir
 ./debian/vendor-rust.sh
-```
-
-If the cargo dependencies got updated, you also need to update the
-`XS-Vendored-Sources-Rust` header. The value can be retrieved from the
-`expected` section of the output of this command:
-
-```sh
-export CARGO_VENDOR_DIR=$(pwd)/rust-vendor/
-/usr/share/cargo/bin/dh-cargo-vendored-sources
 ```
 
 `dh-cargo` requires the `debian/cargo-checksum.json` file to be
@@ -138,7 +131,6 @@ present in the archive. Until the package is not published to
 crates.io, we need to generate it ourselves:
 
 ```bash
-# under client/hwlib/ dir
 ./debian/generate_checksums.py
 ```
 
@@ -154,7 +146,7 @@ the `debian/` dir.
 ### Testing the package build
 
 You can test your package and build it with the
-[sbuild](https://wiki.debian.org/sbuild) tool.  In this example, we do
+[sbuild](https://wiki.debian.org/sbuild) tool. In this example, we do
 it for oracular distro, but you can replace it with the desired one:
 
 ```bash
@@ -193,7 +185,6 @@ Not you can build the binary itself:
 sbuild /path/to/.dsc -d oracular
 ```
 
-
 ### Running autopkgtests locally in lxd
 
 To run autopkgtests, first set up the environment. It can be set up by
@@ -203,8 +194,7 @@ running the following command (the distro can be different):
 autopkgtest-build-lxd ubuntu-daily:noble/amd64
 ```
 
-Then, go to the `client/hwlib` directory and run the autopkgtests in
-`lxd`:
+Then run the autopkgtests in `lxd`:
 
 ```sh
 autopkgtest . -- lxd autopkgtest/ubuntu/noble/amd64
