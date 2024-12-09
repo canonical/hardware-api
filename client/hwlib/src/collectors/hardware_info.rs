@@ -31,14 +31,8 @@ use crate::{
     models::devices::{Bios, Board, Chassis, Processor},
 };
 
-pub(crate) fn load_smbios_data(entry_filepath: &Path, table_filepath: &Path) -> Option<SMBiosData> {
-    match table_load_from_device(entry_filepath, table_filepath) {
-        Ok(data) => Some(data),
-        Err(e) => {
-            eprintln!("failed to load SMBIOS data: {}.", e);
-            None
-        }
-    }
+pub(crate) fn load_smbios_data(entry_filepath: &Path, table_filepath: &Path) -> Result<SMBiosData> {
+    table_load_from_device(entry_filepath, table_filepath)
 }
 
 impl TryFrom<&SMBiosInformation<'_>> for Bios {
@@ -225,7 +219,7 @@ mod tests {
             &get_test_filepath("amd64/dgx_station/smbios_entry_point"),
             &get_test_filepath("amd64/dgx_station/DMI"),
         );
-        assert!(result.is_some());
+        assert!(result.is_ok());
     }
 
     #[test]
