@@ -1,0 +1,187 @@
+{
+    "count": 10,
+    "next": null,
+    "previous": null,
+    "results": [
+        {
+            "machine_canonical_id": "202405-34051",
+            "certificate_name": "2409-16099",
+            "device": {
+                "name": "02395C",
+                "subproduct_name": null,
+                "vendor": "Dell",
+                "device_type": null,
+                "bus": "dmi",
+                "identifier": "dmi:02395C",
+                "subsystem": null,
+                "version": "X04",
+                "category": "BOARD",
+                "codename": ""
+            },
+            "driver_name": "unknown",
+            "cpu_codename": ""
+        },
+        {
+            "machine_canonical_id": "202203-30052",
+            "certificate_name": "2303-14329",
+            "device": {
+                "name": "1046",
+                "subproduct_name": null,
+                "vendor": "Lenovo",
+                "device_type": null,
+                "bus": "dmi",
+                "identifier": "dmi:1046",
+                "subsystem": null,
+                "version": "Not Defined",
+                "category": "BOARD",
+                "codename": ""
+            },
+            "driver_name": "unknown",
+            "cpu_codename": ""
+        },
+        {
+            "machine_canonical_id": "202203-30052",
+            "certificate_name": "2303-14329",
+            "device": {
+                "name": "AMD Ryzen Threadripper PRO 3945WX 12-Cores",
+                "subproduct_name": null,
+                "vendor": "Advanced Micro Devices, Inc.",
+                "device_type": null,
+                "bus": "dmi",
+                "identifier": "dmi:AMDRyzenThreadripperPRO3945WX12-Cores",
+                "subsystem": null,
+                "version": null,
+                "category": "PROCESSOR",
+                "codename": ""
+            },
+            "driver_name": "unknown",
+            "cpu_codename": "AMD ROME"
+        },
+        {
+            "machine_canonical_id": "202405-34051",
+            "certificate_name": "2409-16099",
+            "device": {
+                "name": "Intel(R) Core(TM) Ultra 7 155H",
+                "subproduct_name": null,
+                "vendor": "Intel Corp.",
+                "device_type": null,
+                "bus": "dmi",
+                "identifier": "dmi:Intel(R)Core(TM)Ultra7155H",
+                "subsystem": null,
+                "version": null,
+                "category": "PROCESSOR",
+                "codename": ""
+            },
+            "driver_name": "unknown",
+            "cpu_codename": "Meteor Lake"
+        },
+        {
+            "machine_canonical_id": "201711-25989",
+            "certificate_name": "2006-11911",
+            "device": {
+                "name": "Intel(R) Xeon(R) CPU E5-2698 v4 @ 2.20GHz",
+                "subproduct_name": null,
+                "vendor": "Intel Corp.",
+                "device_type": null,
+                "bus": "dmi",
+                "identifier": "dmi:Intel(R)Xeon(R)CPUE5-2698v4@2.20GHz",
+                "subsystem": null,
+                "version": null,
+                "category": "PROCESSOR",
+                "codename": ""
+            },
+            "driver_name": "unknown",
+            "cpu_codename": "Broadwell"
+        },
+        {
+            "machine_canonical_id": "201711-25989",
+            "certificate_name": "2010-12190",
+            "device": {
+                "name": "Intel(R) Xeon(R) CPU E5-2698 v4 @ 2.20GHz",
+                "subproduct_name": null,
+                "vendor": "Intel Corp.",
+                "device_type": null,
+                "bus": "dmi",
+                "identifier": "dmi:Intel(R)Xeon(R)CPUE5-2698v4@2.20GHz",
+                "subsystem": null,
+                "version": null,
+                "category": "PROCESSOR",
+                "codename": ""
+            },
+            "driver_name": "unknown",
+            "cpu_codename": "Broadwell"
+        },
+        {
+            "machine_canonical_id": "201711-25989",
+            "certificate_name": "2307-14834",
+            "device": {
+                "name": "Intel(R) Xeon(R) CPU E5-2698 v4 @ 2.20GHz",
+                "subproduct_name": null,
+                "vendor": "Intel Corp.",
+                "device_type": null,
+                "bus": "dmi",
+                "identifier": "dmi:Intel(R)Xeon(R)CPUE5-2698v4@2.20GHz",
+                "subsystem": null,
+                "version": null,
+                "category": "PROCESSOR",
+                "codename": ""
+            },
+            "driver_name": "unknown",
+            "cpu_codename": "Broadwell"
+        },
+        {
+            "machine_canonical_id": "201711-25989",
+            "certificate_name": "2307-14834",
+            "device": {
+                "name": "X99-E-10G WS",
+                "subproduct_name": null,
+                "vendor": "empty",
+                "device_type": null,
+                "bus": "dmi",
+                "identifier": "dmi:X99-E-10GWS",
+                "subsystem": null,
+                "version": "Rev 1.xx",
+                "category": "BOARD",
+                "codename": ""
+            },
+            "driver_name": "unknown",
+            "cpu_codename": ""
+        },
+        {
+            "machine_canonical_id": "201711-25989",
+            "certificate_name": "2010-12190",
+            "device": {
+                "name": "X99-E-10G WS",
+                "subproduct_name": null,
+                "vendor": "empty",
+                "device_type": null,
+                "bus": "dmi",
+                "identifier": "dmi:X99-E-10GWS",
+                "subsystem": null,
+                "version": "Rev 1.xx",
+                "category": "BOARD",
+                "codename": ""
+            },
+            "driver_name": "unknown",
+            "cpu_codename": ""
+        },
+        {
+            "machine_canonical_id": "201711-25989",
+            "certificate_name": "2006-11911",
+            "device": {
+                "name": "X99-E-10G WS",
+                "subproduct_name": null,
+                "vendor": "empty",
+                "device_type": null,
+                "bus": "dmi",
+                "identifier": "dmi:X99-E-10GWS",
+                "subsystem": null,
+                "version": "Rev 1.xx",
+                "category": "BOARD",
+                "codename": ""
+            },
+            "driver_name": "unknown",
+            "cpu_codename": ""
+        }
+    ]
+}

@@ -1,17 +1,15 @@
 /* Copyright 2024 Canonical Ltd.
- * All rights reserved.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License
+ * version 3, as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Written by:
@@ -20,17 +18,12 @@
 
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
-use smbioslib::{
-    self, SMBiosBaseboardInformation, SMBiosInformation, SMBiosProcessorInformation,
-    SMBiosSystemChassisInformation, SMBiosSystemInformation,
-};
 use std::path::PathBuf;
 
 use crate::{
     collectors::{
-        cpuinfo::CpuInfo,
         hardware_info::{load_smbios_data, SystemInfo},
-        os_info::get_architecture,
+        os_info::{get_architecture, CommandRunner, SystemCommandRunner},
     },
     constants,
     models::{
@@ -38,6 +31,15 @@ use crate::{
         software::OS,
     },
 };
+
+#[cfg(target_arch = "x86_64")]
+use smbioslib::{
+    SMBiosBaseboardInformation, SMBiosInformation, SMBiosProcessorInformation,
+    SMBiosSystemChassisInformation, SMBiosSystemInformation,
+};
+
+#[cfg(not(target_arch = "x86_64"))]
+use crate::collectors::cpuinfo::CpuInfo;
 
 #[derive(Debug, Clone)]
 pub struct Paths {
@@ -78,24 +80,23 @@ pub struct CertificationStatusRequest {
 
 impl CertificationStatusRequest {
     pub fn new(paths: Paths) -> Result<Self> {
+        Self::new_with_runner(paths, &SystemCommandRunner)
+    }
+
+    pub(crate) fn new_with_runner(paths: Paths, runner: &impl CommandRunner) -> Result<Self> {
+        Self::from(paths, runner)
+    }
+
+    #[cfg(target_arch = "x86_64")]
+    fn from(paths: Paths, runner: &impl CommandRunner) -> Result<Self> {
         let Paths {
             smbios_entry_filepath,
             smbios_table_filepath,
-            ..
-        } = &paths;
-        if let Some(smbios_data) = load_smbios_data(smbios_entry_filepath, smbios_table_filepath) {
-            Self::from_smbios_data(&smbios_data, paths)
-        } else {
-            Self::from_defaults(paths)
-        }
-    }
-
-    fn from_smbios_data(data: &smbioslib::SMBiosData, paths: Paths) -> Result<Self> {
-        let Paths {
             max_cpu_frequency_filepath,
             proc_version_filepath,
             ..
         } = paths;
+        let data = load_smbios_data(&smbios_entry_filepath, &smbios_table_filepath).unwrap();
         let bios_info_vec = data.collect::<SMBiosInformation>();
         let bios_info = bios_info_vec
             .first()
@@ -116,12 +117,12 @@ impl CertificationStatusRequest {
         let system_data = system_data_vec.first().unwrap();
         let system_info = SystemInfo::try_from_smbios(system_data)?;
         Ok(Self {
-            architecture: get_architecture()?,
+            architecture: get_architecture(runner)?,
             bios: Some(Bios::try_from(bios_info)?),
             board: Board::try_from(board_info)?,
             chassis: Some(Chassis::try_from(chassis_info)?),
             model: system_info.product_name,
-            os: OS::try_from(proc_version_filepath.as_path())?,
+            os: OS::try_new(proc_version_filepath.as_path(), runner)?,
             pci_peripherals: Vec::new(),
             processor: Processor::try_from((processor_info, max_cpu_frequency_filepath.as_path()))?,
             usb_peripherals: Vec::new(),
@@ -129,7 +130,8 @@ impl CertificationStatusRequest {
         })
     }
 
-    fn from_defaults(paths: Paths) -> Result<Self> {
+    #[cfg(not(target_arch = "x86_64"))]
+    fn from(paths: Paths, runner: &impl CommandRunner) -> Result<Self> {
         let Paths {
             cpuinfo_filepath,
             max_cpu_frequency_filepath,
@@ -138,12 +140,12 @@ impl CertificationStatusRequest {
             ..
         } = paths;
         let cpu_info = CpuInfo::from_file(&cpuinfo_filepath.clone())?;
-        let architecture = get_architecture()?;
+        let architecture = get_architecture(runner)?;
         let bios = None;
         let board = Board::try_from(device_tree_dirpath.as_path())?;
         let chassis = None;
         let model = cpu_info.model;
-        let os = OS::try_from(proc_version_filepath.as_path())?;
+        let os = OS::try_new(proc_version_filepath.as_path(), runner)?;
         let pci_peripherals = Vec::new();
         let processor = Processor::try_from((
             cpuinfo_filepath.as_path(),
@@ -163,5 +165,112 @@ impl CertificationStatusRequest {
             usb_peripherals,
             vendor,
         })
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        helpers::test_utils::{apply_vars, get_test_filepath, MockCommandRunner},
+        models::request_validators::{CertificationStatusRequest, Paths},
+    };
+    use serde_json::Value;
+    use simple_test_case::test_case;
+    use std::{fs::read_to_string, path::PathBuf};
+
+    /// Test how certification request is prepared for the data collected
+    /// from SMBios
+    #[test_case(
+        "amd64/dgx_station",
+        "jammy",
+        "22.04",
+        "5.4.0-192-generic",
+        &["nvme", "intel_lpss_pci", "intel_ish_ipc", "idma64"];
+        "jammy_dgx_station"
+    )]
+    #[test_case(
+        "amd64/dell_xps13",
+        "noble",
+        "24.04",
+        "6.8.0-1013-oem",
+        &["zfs", "spl", "nvme_tcp"];
+        "noble_dell_xps13"
+    )]
+    #[test_case(
+        "amd64/thinkstation_p620",
+        "focal",
+        "20.04",
+        "5.15.0-125-generic",
+        &["xt_tcpudp", "nft_chain_nat"];
+        "focal_thinkstation"
+    )]
+    #[test]
+    fn test_smbios_certification_request(
+        dir_path: &str,
+        codename: &str,
+        release: &str,
+        kernel_version: &str,
+        kernel_modules: &[&str],
+    ) {
+        let paths = Paths {
+            smbios_entry_filepath: get_test_filepath(
+                format!("{dir_path}/smbios_entry_point").as_str(),
+            ),
+            smbios_table_filepath: get_test_filepath(format!("{dir_path}/DMI").as_str()),
+            max_cpu_frequency_filepath: get_test_filepath(
+                format!("{dir_path}/cpuinfo_max_freq").as_str(),
+            ),
+            proc_version_filepath: get_test_filepath(format!("{dir_path}/version").as_str()),
+            cpuinfo_filepath: PathBuf::from("./none"),
+            device_tree_dirpath: PathBuf::from("./none"),
+        };
+
+        let codename_str = format!("Codename: {codename}\n");
+        let release_str = format!("No LSB modules are available.\nRelease: {release}\n");
+        let lsmod_output: String = std::iter::once("Module Size Used by\n".to_owned())
+            .chain(
+                kernel_modules
+                    .iter()
+                    .map(|module| format!("{module} 456092 0\n")),
+            )
+            .collect::<String>();
+
+        let mock_calls = vec![
+            (("dpkg", vec!["--print-architecture"]), Ok("amd64")),
+            (("lsb_release", vec!["-c"]), Ok(codename_str.as_str())),
+            (("lsb_release", vec!["-i"]), Ok("Distributor ID: Ubuntu\n")),
+            (("lsb_release", vec!["-r"]), Ok(release_str.as_str())),
+            (("lsmod", vec![]), Ok(lsmod_output.as_str())),
+        ];
+        let mock_runner = MockCommandRunner::new(mock_calls);
+
+        let quoted_kernel_modules: Vec<_> = kernel_modules
+            .iter()
+            .map(|module| format!("\"{module}\""))
+            .collect();
+        let kernel_modules_str = format!("[{}]", quoted_kernel_modules.join(", "));
+
+        let content = read_to_string(get_test_filepath(
+            format!("{dir_path}/request.json").as_str(),
+        ))
+        .unwrap();
+        let expected_result = apply_vars(
+            content,
+            &[
+                ("CODENAME", codename),
+                ("KERNEL_VERSION", kernel_version),
+                ("KERNEL_MODULES", kernel_modules_str.as_str()),
+                ("RELEASE", release),
+            ],
+        );
+
+        let cert_status_request_json = serde_json::to_value(
+            CertificationStatusRequest::new_with_runner(paths, &mock_runner).unwrap(),
+        )
+        .unwrap();
+        let expected_json: Value =
+            serde_json::from_str(expected_result.as_str()).expect("JSON was not well formatted");
+
+        assert_eq!(cert_status_request_json, expected_json);
     }
 }

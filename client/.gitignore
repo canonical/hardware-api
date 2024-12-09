@@ -1,8 +1,3 @@
-*.tar.*
-*.dsc
-*.build
-*.log
-debhelper-build-stamp
 target
 hwlib/debian/hwlib/
 cargo_home
@@ -15,16 +10,3 @@ __pycache__/
 # See https://doc.rust-lang.org/book/ch14-03-cargo-workspaces.html for more
 hwlib/Cargo.lock
 hwctl/Cargo.lock
-
-# debian/ source files to ignore
-.debhelper/
-*/debian/files
-*/debian/hwlib.substvars
-*/debian/hwlib
-*/debian/cargo_registry
-*.deb
-*.ddeb
-*.buildinfo
-*.changes
-*.ppa.upload
-hwlib/*.whl

@@ -1,0 +1,50 @@
+.Dd December 5, 2024
+.Dt HWCTL 1
+.Os Ubuntu
+.Sh NAME
+.Nm hwctl
+.Nd CLI tool to check hardware certification status
+.Sh SYNOPSIS
+.Nm
+.Sh DESCRIPTION
+The
+.Nm
+utility checks the
+.Em Ubuntu Hardware Certification
+status of your system.
+.Pp
+.Nm
+verifies whether your exact machine model
+or a similar system has been certified and displays which Ubuntu
+releases the certification covers for it.
+For more information about the
+.Em Ubuntu Hardware Certification Program ,
+visit
+.Lk https://ubuntu.com/certified "the certification website" .
+.Pp
+Note that root privileges are typically required to run this command.
+.Sh OPTIONS
+The
+.Nm
+utility does not accept any command-line options.
+.Sh ENVIRONMENT
+.Bl -tag -width "HW_API_URL" -compact
+.It Ev HW_API_URL
+Specifies the hardware-api server URL that
+.Nm
+uses for certification queries. The default value is
+.Lk https://hw.ubuntu.com .
+.El
+.Sh SEE ALSO
+.Xr dmidecode 8 ,
+.Xr lshw 1
+.Sh AUTHORS
+Written by
+.An Nadzeya Hutsko Aq Mt nadzeya.hutsko@canonical.com .
+.Sh BUGS
+Only amd64 architecture is currently supported.
+.Pp
+For information about open bugs, visit
+.Lk https://github.com/canonical/hardware-api/issues/ .
+.Sh COPYRIGHT
+Copyright \(co 2024 Canonical Ltd.
