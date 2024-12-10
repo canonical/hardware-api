@@ -1,3 +1,10 @@
+rust-hwlib (0.9.0~ppa1) oracular; urgency=medium
+
+  * Release 0.9.0 version of the client.
+  * Fix error-handling in hwctl.
+
+ -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Tue, 10 Dec 2024 16:40:46 +0200
+
 rust-hwlib (0.0.1~ppa3) oracular; urgency=medium
 
   * Provide both hwlib library and hwctl CLI tool.
