@@ -31,16 +31,6 @@ use crate::{
     models::devices::{Bios, Board, Chassis, Processor},
 };
 
-pub(crate) fn load_smbios_data(entry_filepath: &Path, table_filepath: &Path) -> Option<SMBiosData> {
-    match table_load_from_device(entry_filepath, table_filepath) {
-        Ok(data) => Some(data),
-        Err(e) => {
-            eprintln!("failed to load SMBIOS data: {}.", e);
-            None
-        }
-    }
-}
-
 impl TryFrom<&SMBiosInformation<'_>> for Bios {
     type Error = anyhow::Error;
 
@@ -220,17 +210,17 @@ mod tests {
     use crate::helpers::test_utils::get_test_filepath;
 
     #[test]
-    fn test_load_smbios_data() {
-        let result = load_smbios_data(
+    fn test_table_load_from_device() {
+        let result = table_load_from_device(
             &get_test_filepath("amd64/dgx_station/smbios_entry_point"),
             &get_test_filepath("amd64/dgx_station/DMI"),
         );
-        assert!(result.is_some());
+        assert!(result.is_ok());
     }
 
     #[test]
     fn test_bios_from_smbios() {
-        let smbios_data = load_smbios_data(
+        let smbios_data = table_load_from_device(
             &get_test_filepath("amd64/dgx_station/smbios_entry_point"),
             &get_test_filepath("amd64/dgx_station/DMI"),
         )
@@ -250,7 +240,7 @@ mod tests {
 
     #[test]
     fn test_processor_from_smbios() {
-        let smbios_data = load_smbios_data(
+        let smbios_data = table_load_from_device(
             &get_test_filepath("amd64/dgx_station/smbios_entry_point"),
             &get_test_filepath("amd64/dgx_station/DMI"),
         )
@@ -276,7 +266,7 @@ mod tests {
 
     #[test]
     fn test_collect_chassis_info() {
-        let smbios_data = load_smbios_data(
+        let smbios_data = table_load_from_device(
             &get_test_filepath("amd64/dgx_station/smbios_entry_point"),
             &get_test_filepath("amd64/dgx_station/DMI"),
         )
@@ -292,7 +282,7 @@ mod tests {
 
     #[test]
     fn test_collect_motherboard_info() {
-        let smbios_data = load_smbios_data(
+        let smbios_data = table_load_from_device(
             &get_test_filepath("amd64/dgx_station/smbios_entry_point"),
             &get_test_filepath("amd64/dgx_station/DMI"),
         )
@@ -316,7 +306,7 @@ mod tests {
 
     #[test]
     fn test_get_system_info() {
-        let smbios_data = load_smbios_data(
+        let smbios_data = table_load_from_device(
             &get_test_filepath("amd64/dgx_station/smbios_entry_point"),
             &get_test_filepath("amd64/dgx_station/DMI"),
         )
