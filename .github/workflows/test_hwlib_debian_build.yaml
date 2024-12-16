@@ -18,11 +18,57 @@ concurrency:
 
 
 jobs:
+  validate-version:
+    runs-on: [self-hosted, linux, large, noble, x64]
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+      - name: Get version from git tag
+        id: get-version
+        run: |
+          VERSION=$(git describe --tags --match 'v*.*.*' --dirty)
+          if [[ $VERSION == *-dirty ]]; then
+            echo "Version includes -dirty. Ensure working tree is clean before building."
+            exit 1
+          fi
+          # Extract base version (strip 'v', commit count, and hash)
+          BASE_VERSION=$(echo "$VERSION" | sed -E 's/^v([0-9]+\.[0-9]+\.[0-9]+)(-.*)?$/\1/')
+          echo "version=$BASE_VERSION" >> $GITHUB_OUTPUT
+          echo "Git tag base version: $BASE_VERSION"
+      - name: Check hwlib and hwctl Cargo versions
+        run: |
+          echo "Using Git tag version: ${{ steps.get-version.outputs.version }}"
+          for manifest in hwlib/Cargo.toml hwctl/Cargo.toml; do
+            CARGO_VERSION=$(cargo metadata --manifest-path "$manifest" --no-deps --format-version 1 | jq -r '.packages[0].version')
+            if [[ $CARGO_VERSION != ${{ steps.get-version.outputs.version }} ]]; then
+              echo "Version mismatch in $manifest: $CARGO_VERSION (expected ${{ steps.get-version.outputs.version }})"
+              exit 1
+            fi
+          done
+      - name: Check Debian changelog version
+        run: |
+          echo "Using Git tag version: ${{ steps.get-version.outputs.version }}"
+          DEBIAN_VERSION=$(dpkg-parsechangelog --show-field Version | cut -d'~' -f1)
+          if [[ $DEBIAN_VERSION != ${{ steps.get-version.outputs.version }} ]]; then
+            echo "Debian changelog version mismatch: $DEBIAN_VERSION (expected ${{ steps.get-version.outputs.version }})"
+            exit 1
+          fi
+
   build:
     runs-on: [self-hosted, linux, large, noble, x64]
     defaults:
       run:
         working-directory: client
+    needs: [validate-version]
     steps:
     - name: Checkout the repository
       uses: actions/checkout@v4

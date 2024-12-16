@@ -110,9 +110,12 @@ installed on your system:
 sudo apt-get install -y debhelper dh-cargo devscripts
 ```
 
-### Building the rust lib
+### Creating a new version
 
-First, generate update to the changelog file using the `dch` tool:
+To create a new version of the client package, follow these steps:
+
+1. Update the Changelog
+Generate update to the changelog file using the `dch` tool:
 
 ```bash
 export DEBEMAIL=your.email@canonical.com
@@ -121,7 +124,46 @@ dch -i  # increment release number
 dch -r  # create release
 ```
 
-Then you need to vendor the Rust dependencies:
+2. Versioning Scheme
+
+We follow the `MAJOR.MINOR.PATCH` semantic versioning convention for
+this package:
+
+* `MAJOR`: Incremented for incompatible API changes or significant functionality updates.
+* `MINOR`: Incremented for backward-compatible feature additions.
+* `PATCH`: Incremented for backward-compatible bug fixes.
+
+
+For pre-releases targeted at a PPA, append the `~ppaN` suffix to the
+version, where `N` represents the build number (e.g., `1.2.3~ppa1`). Once
+the package is approved for publication to the main repository, remove
+the `~ppaN` suffix to finalize the version.
+
+3. Create a Matching Git Tag
+
+Ensure the version is correctly tagged in Git. The tag should follow
+the format `vMAJOR.MINOR.PATCH` and must be annotated to the same
+commit as the changelog entry:
+
+```
+git tag -a v1.2.3 <commit_hash>
+git push origin v1.2.3
+```
+
+4. Update Cargo Versions
+
+If the new version includes changes to the MAJOR, MINOR, or PATCH
+version numbers, update the version fields in the following files:
+
+* `hwlib/Cargo.toml`
+* `hwctl/Cargo.toml`
+
+Make sure to commit these changes along with the updated changelog.
+
+### Building the client package
+
+After generating a new version, you need to vendor the Rust
+dependencies:
 
 ```bash
 ./debian/vendor-rust.sh
