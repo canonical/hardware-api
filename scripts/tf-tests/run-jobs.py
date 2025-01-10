@@ -77,7 +77,7 @@ def submit_job(temp_job_file: Path, canonical_id: str) -> Optional[str]:
     """Submits the job and returns the job UUID."""
     try:
         result = subprocess.run(
-            ["testflinger", "submit", str(temp_job_file)],
+            ["testflinger", "submit", "--attachments-relative-to", ".", str(temp_job_file)],
             capture_output=True,
             text=True,
             check=True,
