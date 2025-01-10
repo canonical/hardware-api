@@ -137,8 +137,6 @@ components:
         status:
           const: Certified Image Exists
           default: Certified Image Exists
-          enum:
-          - Certified Image Exists
           title: Status
           type: string
       required:
@@ -171,8 +169,6 @@ components:
         status:
           const: Certified
           default: Certified
-          enum:
-          - Certified
           title: Status
           type: string
       required:
@@ -303,8 +299,6 @@ components:
         status:
           const: Not Seen
           default: Not Seen
-          enum:
-          - Not Seen
           title: Status
           type: string
       title: NotCertifiedResponse
@@ -425,8 +419,6 @@ components:
         status:
           const: Related Certified System Exists
           default: Related Certified System Exists
-          enum:
-          - Related Certified System Exists
           title: Status
           type: string
         usb_peripherals:

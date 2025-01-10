@@ -1,17 +1,15 @@
 /* Copyright 2024 Canonical Ltd.
- * All rights reserved.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License
+ * version 3, as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Written by:
@@ -24,7 +22,7 @@ use std::path::PathBuf;
 
 use crate::{
     collectors::{
-        hardware_info::{load_smbios_data, SystemInfo},
+        hardware_info::{table_load_from_device, SystemInfo},
         os_info::{get_architecture, CommandRunner, SystemCommandRunner},
     },
     constants,
@@ -98,7 +96,7 @@ impl CertificationStatusRequest {
             proc_version_filepath,
             ..
         } = paths;
-        let data = load_smbios_data(&smbios_entry_filepath, &smbios_table_filepath).unwrap();
+        let data = table_load_from_device(&smbios_entry_filepath, &smbios_table_filepath)?;
         let bios_info_vec = data.collect::<SMBiosInformation>();
         let bios_info = bios_info_vec
             .first()
@@ -253,7 +251,7 @@ mod tests {
         let kernel_modules_str = format!("[{}]", quoted_kernel_modules.join(", "));
 
         let content = read_to_string(get_test_filepath(
-            format!("{dir_path}/expected.json").as_str(),
+            format!("{dir_path}/request.json").as_str(),
         ))
         .unwrap();
         let expected_result = apply_vars(

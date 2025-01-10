@@ -1,0 +1,12 @@
+[workspace]
+members = [
+    "hwctl",
+    "hwlib"
+]
+resolver = "2"
+exclude = ["rust-vendor",]
+
+[workspace.metadata.vendor-filter]
+platforms = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"]
+tier = "2"
+all-features = false

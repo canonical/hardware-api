@@ -1,17 +1,15 @@
 /* Copyright 2024 Canonical Ltd.
- * All rights reserved.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU Lesser General Public License
+ * version 3, as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
+ * GNU Lesser General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License
+ * You should have received a copy of the GNU Lesser General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  * Written by:
@@ -61,8 +59,8 @@ pub(crate) mod test_utils {
         let mut path = get_project_root().unwrap();
         let test_data_path = path.join("test_data");
         if !test_data_path.is_dir() {
-            // If test_data/ is not found, we're in the monorepo root
-            path.extend(["client", "hwlib"]);
+            // If test_data/ is not found, we're in the client root
+            path.extend(["hwlib"]);
         }
         path.extend(["test_data", file_name]);
         path

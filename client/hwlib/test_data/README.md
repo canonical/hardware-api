@@ -30,7 +30,7 @@ The `test_data` directory has the following structure:
 ├── <arch>
 │   ├── <device_model>
 │   │   ├── <hardware_related_data>
-│   │   └── expected.json
+│   │   └── request.json
 ```
 
 Key Files:
@@ -42,7 +42,7 @@ Key Files:
 - `smbios_entry_point` — SMBIOS entry point details. Is located in the
   `/sys/firmware/dmi/tables/` directory.
 - `version` — Kernel version file (`/proc/version`).
-- `expected.json` — Expected request body that should be constructed.
+- `request.json` — Expected request body that should be constructed.
 - `cpuinfo` — CPU information, see `/proc/cpuinfo`. If used only for
   non-amd64 machine.
 - `device-tree/` (dir) — arm64 specific directory with system
@@ -57,7 +57,7 @@ Key Files:
    numbers with zeroes.** You can use the
    [`sed`](https://man7.org/linux/man-pages/man1/sed.1.html) tool for
    it.
-3. Add `expected.json` with anticipated values to validate against.
+3. Add `request.json` with anticipated values to validate against.
    Replace the values that you want to use variable with placeholders, for example:
    ```
    "os": {

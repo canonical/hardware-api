@@ -1,23 +1,20 @@
 # Copyright 2024 Canonical Ltd.
-# All rights reserved.
 #
 # This program is free software: you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by
-# the Free Software Foundation, either version 3 of the License, or
-# (at your option) any later version.
+# it under the terms of the GNU Affero General Public License version
+# 3, as published by the Free Software Foundation.
 #
 # This program is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-# GNU General Public License for more details.
+# GNU Affero General Public License for more details.
 #
-# You should have received a copy of the GNU General Public License
+# You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 """The algorithms for determining certification status"""
-
 
 from sqlalchemy.orm import Session
 
@@ -29,32 +26,35 @@ from hwapi.data_models.data_validators import (
 )
 
 
-def find_main_hardware_components(
-    db: Session, board_data: BoardValidator, bios_data: BiosValidator | None
-) -> tuple[models.Device, models.Bios | None]:
+def find_board(db: Session, board_data: BoardValidator) -> models.Device:
     """
-    A function to get "main hardware components" like board and bios. Can be extended
-    in future
+    Find the board device based on the given board data.
+    Raises ValueError if the board is not found.
     """
-    board = repository.get_board(
-        db, board_data.manufacturer, board_data.product_name, board_data.version
-    )
+    board = repository.get_board(db, board_data.manufacturer, board_data.product_name)
     if not board:
-        raise ValueError("Hardware not certified")
-    if bios_data:
-        bios = repository.get_bios(
-            db, bios_data.vendor, bios_data.version, bios_data.firmware_revision
-        )
-        if not bios:
-            raise ValueError("Hardware not certified")
-        return board, bios
-    return board, None
+        raise ValueError("Hardware not certified: Board not found")
+    return board
+
+
+def find_bioses(db: Session, bios_data: BiosValidator) -> list[models.Bios]:
+    """
+    Find the BIOS list based on the given BIOS data.
+    Raises ValueError if no matching BIOS is found.
+    """
+    bios_list = repository.get_bios_list(db, bios_data.vendor, bios_data.version)
+    if not bios_list:
+        raise ValueError("Hardware not certified: BIOS not found")
+    return list(bios_list)
 
 
 def find_certified_machine(
-    db: Session, arch: str, board: models.Device, bios: models.Bios | None
+    db: Session, arch: str, board: models.Device, bios_list: list[models.Bios]
 ) -> models.Machine:
-    machine = repository.get_machine_with_same_hardware_params(db, arch, board, bios)
+    bios_ids = [bios.id for bios in bios_list] if bios_list else []
+    machine = repository.get_machine_with_same_hardware_params(
+        db, arch, board, bios_ids
+    )
     if not machine:
         raise ValueError("No certified machine matches the hardware specifications")
     return machine

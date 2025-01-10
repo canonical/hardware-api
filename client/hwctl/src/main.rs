@@ -1,10 +1,8 @@
 /* Copyright 2024 Canonical Ltd.
- * All rights reserved.
  *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
+ * This program is free software: you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License version
+ * 3, as published by the Free Software Foundation.
  *
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -19,8 +17,8 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::Result;
-use std::process::exit;
+use anyhow::{Context, Result};
+use std::{env, process::ExitCode};
 
 use hwlib::{
     models::request_validators::{CertificationStatusRequest, Paths},
@@ -28,23 +26,32 @@ use hwlib::{
 };
 
 #[tokio::main]
-async fn main() -> Result<()> {
-    let cert_status_request = CertificationStatusRequest::new(Paths::default())?;
-    println!(
-        "Request:\n{}",
-        serde_json::to_string_pretty(&cert_status_request)?
-    );
-    let url = std::env::var("HW_API_URL").unwrap_or_else(|_| String::from("https://hw.ubuntu.com"));
-    let response = send_certification_status_request(url, &cert_status_request).await;
-
-    match response {
-        Ok(response) => {
-            println!("\nResponse:\n{}", serde_json::to_string_pretty(&response)?);
-            exit(0);
-        }
+async fn main() -> ExitCode {
+    match run().await {
+        Ok(_) => ExitCode::SUCCESS,
         Err(e) => {
-            eprintln!("{}", e);
-            exit(1);
+            eprintln!("ERROR: {e:?}");
+            ExitCode::FAILURE
         }
     }
+}
+
+async fn run() -> Result<()> {
+    let cert_status_request =
+        CertificationStatusRequest::new(Paths::default()).context("cannot collect system data")?;
+
+    let request_json = serde_json::to_string_pretty(&cert_status_request)
+        .context("cannot serialize request as JSON")?;
+    println!("Request:\n{}", request_json);
+
+    let url = env::var("HW_API_URL").unwrap_or_else(|_| String::from("https://hw.ubuntu.com"));
+    let response = send_certification_status_request(url, &cert_status_request)
+        .await
+        .context("cannot send certification status request")?;
+
+    let response_json =
+        serde_json::to_string_pretty(&response).context("cannot serialize response as JSON")?;
+    println!("\nResponse:\n{}", response_json);
+
+    Ok(())
 }
