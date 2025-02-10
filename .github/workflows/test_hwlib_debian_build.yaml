@@ -118,4 +118,12 @@ jobs:
         fi
         echo "Running sbuild for $PACKAGE_DSC"
         sg sbuild -c "sbuild $PACKAGE_DSC -d oracular -v --resolve-alternatives --no-clean-source --no-run-lintian"
+
+        mv *.deb '${{ runner.temp }}'
     - run: lintian --pedantic --verbose
+    - name: Archive artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ci-debs-oracular
+        path: '${{ runner.temp }}/*.deb'
+        retention-days: 3
