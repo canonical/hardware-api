@@ -81,17 +81,12 @@ jobs:
     - name: Download dependencies
       run: |
         set -xeu
-        sudo apt update
+        sudo DEBIAN_FRONTEND=noninteractive apt -y update
         sudo DEBIAN_FRONTEND=noninteractive apt install -y \
-          debhelper \
-          devscripts \
           sbuild \
           schroot \
           debootstrap \
-          jq \
-          mmdebstrap \
-          uidmap \
-          sbuild-debian-developer-setup \
+          ubuntu-dev-tools \
           dh-cargo \
           pkg-config \
           libssl-dev
@@ -110,23 +105,11 @@ jobs:
     - name: Setup sbuild and build the package
       run: |
         set -xeu
-        mkdir -p ~/.cache/sbuild
-        echo
-        mmdebstrap --variant=buildd --components=main,restricted,universe oracular ~/.cache/sbuild/oracular-amd64.tar.zst
 
-        echo "Running sbuild-debian-developer-setup"
-        sudo sbuild-debian-developer-setup
         sudo sbuild-adduser $USER
-        newgrp sbuild
-        echo "Creating ~/.sbuildrc"
-        cat <<'EOF' >> ~/.sbuildrc
-        $chroot_mode = 'unshare';
-        $run_autopkgtest = 0;
-        $autopkgtest_root_args = '';
-        $autopkgtest_opts = [ '--apt-upgrade', '--', 'unshare', '--release', '%r', '--arch', '%a' ];
-        EOF
-        sudo sbuild-update -udcar u
-        schroot -l | grep sbuild
+        cp /usr/share/doc/sbuild/examples/example.sbuildrc /home/$USER/.sbuildrc
+
+        sg sbuild -c "mk-sbuild oracular"
 
         PACKAGE_DSC=$(find ../ -name "*.dsc" | head -n 1)
         if [ -z "$PACKAGE_DSC" ]; then
@@ -134,5 +117,13 @@ jobs:
           exit 1
         fi
         echo "Running sbuild for $PACKAGE_DSC"
-        sbuild $PACKAGE_DSC -d oracular -v
+        sg sbuild -c "sbuild $PACKAGE_DSC -d oracular -v --resolve-alternatives --no-clean-source --no-run-lintian"
+
+        mv *.deb '${{ runner.temp }}'
     - run: lintian --pedantic --verbose
+    - name: Archive artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: ci-debs-oracular
+        path: '${{ runner.temp }}/*.deb'
+        retention-days: 3
