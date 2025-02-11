@@ -87,6 +87,7 @@ jobs:
           schroot \
           debootstrap \
           ubuntu-dev-tools \
+          distro-info-data \
           dh-cargo \
           pkg-config \
           libssl-dev
