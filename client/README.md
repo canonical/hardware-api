@@ -190,12 +190,12 @@ the `debian/` dir.
 
 You can test your package and build it with the
 [sbuild](https://wiki.debian.org/sbuild) tool. In this example, we do
-it for oracular distro, but you can replace it with the desired one:
+it for plucky distro, but you can replace it with the desired one:
 
 ```bash
 sudo apt install sbuild mmdebstrap uidmap
 mkdir -p ~/.cache/sbuild
-mmdebstrap --variant=buildd --components=main,restricted,universe oracular ~/.cache/sbuild/oracular-amd64.tar.zst
+mmdebstrap --variant=buildd --components=main,restricted,universe plucky ~/.cache/sbuild/plucky-amd64.tar.zst
 ```
 
 For configuring `sbuild` , install `sbuild-debian-developer-setup`:
@@ -225,7 +225,7 @@ $autopkgtest_opts = [ '--apt-upgrade', '--', 'unshare', '--release', '%r', '--ar
 Not you can build the binary itself:
 
 ```bash
-sbuild /path/to/.dsc -d oracular
+sbuild /path/to/.dsc -d plucky
 ```
 
 ### Running autopkgtests locally in lxd
@@ -234,13 +234,13 @@ To run autopkgtests, first set up the environment. It can be set up by
 running the following command (the distro can be different):
 
 ```sh
-autopkgtest-build-lxd ubuntu-daily:noble/amd64
+autopkgtest-build-lxd ubuntu-daily:plucky/amd64
 ```
 
 Then run the autopkgtests in `lxd`:
 
 ```sh
-autopkgtest . -- lxd autopkgtest/ubuntu/noble/amd64
+autopkgtest . -- lxd autopkgtest/ubuntu/plucky/amd64
 ```
 
 ### Publishing the package
