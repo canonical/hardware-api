@@ -87,6 +87,7 @@ jobs:
           schroot \
           debootstrap \
           ubuntu-dev-tools \
+          distro-info-data \
           dh-cargo \
           pkg-config \
           libssl-dev
@@ -109,7 +110,7 @@ jobs:
         sudo sbuild-adduser $USER
         cp /usr/share/doc/sbuild/examples/example.sbuildrc /home/$USER/.sbuildrc
 
-        sg sbuild -c "mk-sbuild oracular"
+        sg sbuild -c "mk-sbuild plucky"
 
         PACKAGE_DSC=$(find ../ -name "*.dsc" | head -n 1)
         if [ -z "$PACKAGE_DSC" ]; then
@@ -117,13 +118,13 @@ jobs:
           exit 1
         fi
         echo "Running sbuild for $PACKAGE_DSC"
-        sg sbuild -c "sbuild $PACKAGE_DSC -d oracular -v --resolve-alternatives --no-clean-source --no-run-lintian"
+        sg sbuild -c "sbuild $PACKAGE_DSC -d plucky -v --resolve-alternatives --no-clean-source --no-run-lintian"
 
         mv *.deb '${{ runner.temp }}'
     - run: lintian --pedantic --verbose
     - name: Archive artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ci-debs-oracular
+        name: ci-debs-plucky
         path: '${{ runner.temp }}/*.deb'
         retention-days: 3

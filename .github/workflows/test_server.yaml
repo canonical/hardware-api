@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   test:
-    runs-on: [self-hosted, linux, large, jammy, x64]
+    runs-on: [self-hosted, linux, large, noble, x64]
     defaults:
       run:
         working-directory: server
@@ -57,7 +57,7 @@ jobs:
           retention-days: 2
 
   report-coverage:
-    runs-on: [self-hosted, linux, large, jammy, x64]
+    runs-on: [self-hosted, linux, large, noble, x64]
     if: github.event_name == 'pull_request'
     needs: [test]
     steps:
@@ -75,7 +75,7 @@ jobs:
             thresholdModified: 0.0
 
   compare-openapi:
-    runs-on: [self-hosted, linux, large, jammy, x64]
+    runs-on: [self-hosted, linux, large, noble, x64]
     defaults:
       run:
         working-directory: server

@@ -20,7 +20,7 @@ concurrency:
 
 jobs:
   test:
-    runs-on: [self-hosted, linux, large, jammy, x64]
+    runs-on: [self-hosted, linux, large, noble, x64]
     defaults:
       run:
         working-directory: integration-tests

@@ -19,7 +19,7 @@ concurrency:
 
 jobs:
   lint-and-test:
-    runs-on: [self-hosted, linux, large, jammy, x64]
+    runs-on: [self-hosted, linux, large, noble, x64]
     defaults:
       run:
         working-directory: client
@@ -58,7 +58,7 @@ jobs:
         run: cargo test
 
   py-bindings-test:
-    runs-on: [self-hosted, linux, large, jammy, x64]
+    runs-on: [self-hosted, linux, large, noble, x64]
     defaults:
       run:
         working-directory: client/hwlib
