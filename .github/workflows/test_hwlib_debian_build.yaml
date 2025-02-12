@@ -1,13 +1,13 @@
 name: Test build hwlib Rust package with sbuild
 on:
   push:
-    branches: [ main ]
+    branches: [ 24.04 ]
     paths:
       - client/**
       - Cargo.*
       - ".github/workflows/test_hwlib_debian_build.yaml"
   pull_request:
-    branches: [ main ]
+    branches: [ 24.04 ]
     paths:
       - client/**
       - Cargo.*
@@ -110,7 +110,7 @@ jobs:
         sudo sbuild-adduser $USER
         cp /usr/share/doc/sbuild/examples/example.sbuildrc /home/$USER/.sbuildrc
 
-        sg sbuild -c "mk-sbuild plucky"
+        sg sbuild -c "mk-sbuild noble"
 
         PACKAGE_DSC=$(find ../ -name "*.dsc" | head -n 1)
         if [ -z "$PACKAGE_DSC" ]; then
@@ -118,13 +118,13 @@ jobs:
           exit 1
         fi
         echo "Running sbuild for $PACKAGE_DSC"
-        sg sbuild -c "sbuild $PACKAGE_DSC -d plucky -v --resolve-alternatives --no-clean-source --no-run-lintian"
+        sg sbuild -c "sbuild $PACKAGE_DSC -d noble -v --resolve-alternatives --no-clean-source --no-run-lintian"
 
         mv *.deb '${{ runner.temp }}'
     - run: lintian --pedantic --verbose
     - name: Archive artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: ci-debs-plucky
+        name: ci-debs-noble
         path: '${{ runner.temp }}/*.deb'
         retention-days: 3
