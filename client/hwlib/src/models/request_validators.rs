@@ -22,7 +22,7 @@ use std::path::PathBuf;
 
 use crate::{
     collectors::{
-        hardware_info::{load_smbios_data, SystemInfo},
+        hardware_info::{table_load_from_device, SystemInfo},
         os_info::{get_architecture, CommandRunner, SystemCommandRunner},
     },
     constants,
@@ -96,7 +96,7 @@ impl CertificationStatusRequest {
             proc_version_filepath,
             ..
         } = paths;
-        let data = load_smbios_data(&smbios_entry_filepath, &smbios_table_filepath).unwrap();
+        let data = table_load_from_device(&smbios_entry_filepath, &smbios_table_filepath)?;
         let bios_info_vec = data.collect::<SMBiosInformation>();
         let bios_info = bios_info_vec
             .first()

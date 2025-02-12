@@ -16,7 +16,7 @@ concurrency:
 
 jobs:
   test:
-    runs-on: [self-hosted, linux, large, jammy, x64]
+    runs-on: [self-hosted, linux, large, noble, x64]
     defaults:
       run:
         working-directory: server
@@ -57,7 +57,7 @@ jobs:
           retention-days: 2
 
   report-coverage:
-    runs-on: [self-hosted, linux, large, jammy, x64]
+    runs-on: [self-hosted, linux, large, noble, x64]
     if: github.event_name == 'pull_request'
     needs: [test]
     steps:
@@ -75,7 +75,7 @@ jobs:
             thresholdModified: 0.0
 
   compare-openapi:
-    runs-on: [self-hosted, linux, large, jammy, x64]
+    runs-on: [self-hosted, linux, large, noble, x64]
     defaults:
       run:
         working-directory: server
@@ -86,7 +86,7 @@ jobs:
           python-version: "3.10"
       - uses: Gr1N/setup-poetry@12c727a3dcf8c1a548d8d041c9d5ef5cebb3ba2e
         with:
-          poetry-version: "1.6.1"
+          poetry-version: "2.0.0"
       - run: poetry install
       - name: Start FastAPI application
         run: poetry run uvicorn hwapi.main:app --port 8001 &
