@@ -2,8 +2,8 @@
 
 ## Development code
 
-The development branches of ubuntu-advantage-tools are hosted in
-GitHub, at: https://github.com/canonical/hardware-api
+The development branches of hardware-api client are hosted in GitHub,
+at: https://github.com/canonical/hardware-api
 
 New pull requests with contributions to the codebase should always be
 opened in GitHub.
