@@ -1,3 +1,17 @@
+rust-hwlib (0.9.0~ppa2) plucky; urgency=medium
+
+  * Update cargo dependencies.
+  * Pack the package for plucky release.
+
+ -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Thu, 06 Feb 2025 11:40:16 +0100
+
+rust-hwlib (0.9.0~ppa1) oracular; urgency=medium
+
+  * Release 0.9.0 version of the client.
+  * Fix error-handling in hwctl.
+
+ -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Tue, 10 Dec 2024 16:40:46 +0200
+
 rust-hwlib (0.0.1~20.04~ppa3) focal; urgency=medium
 
   * Backport 0.0.1~ppa3 to focal 
