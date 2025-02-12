@@ -33,7 +33,9 @@ jobs:
         with:
           node-version: '20.x'
       - run: mkdir -p dist
-      - run: npx @redocly/cli build-docs ./schemas/openapi.yaml -o ./dist/index.html
+      - run: |
+          sudo chown -R 1000:1000 ~/.npm
+          npx @redocly/cli build-docs ./schemas/openapi.yaml -o ./dist/index.html
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
         with:
