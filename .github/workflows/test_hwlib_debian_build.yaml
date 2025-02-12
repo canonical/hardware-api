@@ -1,13 +1,13 @@
 name: Test build hwlib Rust package with sbuild
 on:
   push:
-    branches: [ main ]
+    branches: [ 24.10 ]
     paths:
       - client/**
       - Cargo.*
       - ".github/workflows/test_hwlib_debian_build.yaml"
   pull_request:
-    branches: [ main ]
+    branches: [ 24.10 ]
     paths:
       - client/**
       - Cargo.*
