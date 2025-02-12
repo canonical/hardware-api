@@ -1,3 +1,9 @@
+rust-hwlib (0.9.0~22.04~ppa2) jammy; urgency=medium
+
+  * Backport 0.9.0~ppa2 to jammy. 
+
+ -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Wed, 12 Feb 2025 13:52:10 +0200
+
 rust-hwlib (0.9.0~ppa2) plucky; urgency=medium
 
   * Update cargo dependencies.
