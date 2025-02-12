@@ -1,7 +1,7 @@
 Source: rust-hwlib
 Section: rust
 Priority: optional
-Build-Depends: cargo:native,
+Build-Depends: cargo:native (>= 1.75),
                debhelper (>= 12),
                dh-cargo (>= 23),
                jq,
