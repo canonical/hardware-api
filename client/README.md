@@ -240,7 +240,7 @@ autopkgtest-build-lxd ubuntu-daily:plucky/amd64
 Then run the autopkgtests in `lxd`:
 
 ```sh
-autopkgtest . -- lxd autopkgtest/ubuntu/plucky/amd64
+autopkgtest /path/to/<package>_<version>_source.changes -- lxd autopkgtest/ubuntu/plucky/amd64
 ```
 
 ### Publishing the package
