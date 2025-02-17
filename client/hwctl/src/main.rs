@@ -40,10 +40,6 @@ async fn run() -> Result<()> {
     let cert_status_request =
         CertificationStatusRequest::new(Paths::default()).context("cannot collect system data")?;
 
-    let request_json = serde_json::to_string_pretty(&cert_status_request)
-        .context("cannot serialize request as JSON")?;
-    println!("Request:\n{}", request_json);
-
     let url = env::var("HW_API_URL").unwrap_or_else(|_| String::from("https://hw.ubuntu.com"));
     let response = send_certification_status_request(url, &cert_status_request)
         .await
@@ -51,7 +47,7 @@ async fn run() -> Result<()> {
 
     let response_json =
         serde_json::to_string_pretty(&response).context("cannot serialize response as JSON")?;
-    println!("\nResponse:\n{}", response_json);
+    println!("{}", response_json);
 
     Ok(())
 }
