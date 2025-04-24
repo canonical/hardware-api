@@ -22,3 +22,7 @@ pub const CPU_MAX_FREQ_FILE_PATH: &str = "/sys/devices/system/cpu/cpu0/cpufreq/c
 pub const PROC_CPUINFO_FILE_PATH: &str = "/proc/cpuinfo";
 pub const PROC_DEVICE_TREE_DIR_PATH: &str = "/proc/device-tree/";
 pub const PROC_VERSION_FILE_PATH: &str = "/proc/version";
+
+pub const DPKG: &str = "/usr/bin/dpkg";
+pub const LSB_RELEASE: &str = "/usr/bin/lsb_release";
+pub const LSMOD: &str = "/usr/bin/lsmod";

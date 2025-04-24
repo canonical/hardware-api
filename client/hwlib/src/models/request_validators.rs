@@ -171,6 +171,7 @@ impl CertificationStatusRequest {
 #[cfg(test)]
 mod tests {
     use crate::{
+        constants,
         helpers::test_utils::{apply_vars, get_test_filepath, MockCommandRunner},
         models::request_validators::{CertificationStatusRequest, Paths},
     };
@@ -236,11 +237,20 @@ mod tests {
             .collect::<String>();
 
         let mock_calls = vec![
-            (("dpkg", vec!["--print-architecture"]), Ok("amd64")),
-            (("lsb_release", vec!["-c"]), Ok(codename_str.as_str())),
-            (("lsb_release", vec!["-i"]), Ok("Distributor ID: Ubuntu\n")),
-            (("lsb_release", vec!["-r"]), Ok(release_str.as_str())),
-            (("lsmod", vec![]), Ok(lsmod_output.as_str())),
+            ((constants::DPKG, vec!["--print-architecture"]), Ok("amd64")),
+            (
+                (constants::LSB_RELEASE, vec!["-c"]),
+                Ok(codename_str.as_str()),
+            ),
+            (
+                (constants::LSB_RELEASE, vec!["-i"]),
+                Ok("Distributor ID: Ubuntu\n"),
+            ),
+            (
+                (constants::LSB_RELEASE, vec!["-r"]),
+                Ok(release_str.as_str()),
+            ),
+            ((constants::LSMOD, vec![]), Ok(lsmod_output.as_str())),
         ];
         let mock_runner = MockCommandRunner::new(mock_calls);
 
