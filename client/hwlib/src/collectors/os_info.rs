@@ -21,7 +21,10 @@ use lazy_static::lazy_static;
 use regex::Regex;
 use std::{fs::read_to_string, path::Path, process::Command};
 
-use crate::models::software::{KernelPackage, OS};
+use crate::{
+    constants::{DPKG, LSB_RELEASE, LSMOD},
+    models::software::{KernelPackage, OS},
+};
 
 pub(crate) trait CommandRunner {
     fn run_command(&self, cmd: &str, args: &[&str]) -> Result<String>;
@@ -66,7 +69,7 @@ impl KernelPackage {
             .nth(2)
             .unwrap_or_default()
             .to_string();
-        let loaded_modules_str = runner.run_command("lsmod", &[])?;
+        let loaded_modules_str = runner.run_command(LSMOD, &[])?;
         let loaded_modules: Vec<String> = loaded_modules_str
             .lines()
             .skip(1) // skip the header
@@ -82,7 +85,7 @@ impl KernelPackage {
 }
 
 pub(crate) fn get_architecture(runner: &impl CommandRunner) -> Result<String> {
-    let arch = runner.run_command("dpkg", &["--print-architecture"])?;
+    let arch = runner.run_command(DPKG, &["--print-architecture"])?;
     Ok(arch.trim().to_owned())
 }
 
@@ -108,7 +111,7 @@ pub(super) fn get_version(runner: &impl CommandRunner) -> Result<String> {
 }
 
 fn get_lsb_release_info(flag: &str, re: &Regex, runner: &impl CommandRunner) -> Result<String> {
-    let lsb_release_output = runner.run_command("lsb_release", &[flag])?;
+    let lsb_release_output = runner.run_command(LSB_RELEASE, &[flag])?;
     re.captures(&lsb_release_output)
         .and_then(|caps| caps.get(1))
         .map(|m| m.as_str().to_string())
@@ -122,7 +125,7 @@ mod tests {
 
     #[test]
     fn test_get_architecture() {
-        let mock_calls = vec![(("dpkg", vec!["--print-architecture"]), Ok("amd64\n"))];
+        let mock_calls = vec![((DPKG, vec!["--print-architecture"]), Ok("amd64\n"))];
         let mock_runner = MockCommandRunner::new(mock_calls);
         let result = get_architecture(&mock_runner);
         assert!(result.is_ok());
@@ -132,13 +135,13 @@ mod tests {
     #[test]
     fn test_os_try_new() {
         let mock_calls = vec![
-            (("lsb_release", vec!["-c"]), Ok("Codename: focal\n")),
-            (("lsb_release", vec!["-i"]), Ok("Distributor ID: Ubuntu\n")),
+            ((LSB_RELEASE, vec!["-c"]), Ok("Codename: focal\n")),
+            ((LSB_RELEASE, vec!["-i"]), Ok("Distributor ID: Ubuntu\n")),
             (
-                ("lsb_release", vec!["-r"]),
+                (LSB_RELEASE, vec!["-r"]),
                 Ok("No LSB modules are available.\nRelease: 20.04\n"),
             ),
-            (("lsmod", vec![]), Ok("Module Size Used\nsnd 61440 1\n")),
+            ((LSMOD, vec![]), Ok("Module Size Used\nsnd 61440 1\n")),
         ];
         let mock_runner = MockCommandRunner::new(mock_calls);
         let result = OS::try_new(
