@@ -10,6 +10,333 @@ Files: hwlib/*
 Copyright: Copyright 2024 Canonical Ltd.
 License: LGPL-3
 
+Files: rust-vendor/aho-corasick/*
+Copyright: 2015 Andrew Gallant
+License: MIT
+
+Files:
+  rust-vendor/anyhow/*
+  rust-vendor/indoc/*
+  rust-vendor/proc-macro2/*
+  rust-vendor/quote/*
+  rust-vendor/serde/*
+  rust-vendor/serde_derive/*
+  rust-vendor/serde_json/*
+  rust-vendor/syn/*
+  rust-vendor/unindent/*
+Copyright: 2024 David Tolnay
+License: MIT or Apache-2.0
+
+Files: rust-vendor/atomic-waker/*
+Copyright:
+  2016 Alex Crichton,
+  2017 The Tokio Authors
+License: MIT or Apache-2.0
+
+Files: rust-vendor/autocfg/*
+Copyright: 2018 Josh Stone
+License: MIT or Apache-2.0
+
+Files: rust-vendor/base64/*
+Copyright: 2015 Alice Maz
+License: MIT or Apache-2.0
+
+Files:
+  rust-vendor/bitflags/*
+  rust-vendor/getopts/*
+  rust-vendor/heck/*
+  rust-vendor/lazy_static/*
+  rust-vendor/libc/*
+  rust-vendor/log/*
+  rust-vendor/regex*/*
+  rust-vendor/unicode-width/*
+Copyright: 2010, 2014-2020 The Rust Project Developers
+License: MIT or Apache-2.0
+
+Files: rust-vendor/bytes/*
+Copyright: 2018 Carl Lerche
+License: MIT
+
+Files:
+  rust-vendor/cc/*
+  rust-vendor/cfg-if/*
+  rust-vendor/futures-*/*
+  rust-vendor/openssl-probe/*
+  rust-vendor/openssl-sys/*
+  rust-vendor/pkg-config/*
+  rust-vendor/socket2/*
+Copyright: 2014, 2016 Alex Crichton
+License: MIT or Apache-2.0
+
+Files: rust-vendor/deranged/*
+Copyright: 2024 Jacob Pratt et al
+License: MIT or Apache-2.0
+
+Files: rust-vendor/diff/*
+Copyright: 2015 Utkarsh Kukreti
+License: MIT or Apache-2.0
+
+Files: rust-vendor/displaydoc/*
+Copyright: 2024 Manish Goregaokar, Jane Losare-Lusby
+License: MIT or Apache-2.0
+
+Files: rust-vendor/either/*
+Copyright: 2015 Josh Stone, Jack Wrenn
+License: MIT or Apache-2.0
+
+Files: rust-vendor/encoding_rs/*
+Copyright:
+  Mozilla Foundation
+  WHATWG (Apple, Google, Mozilla, Microsoft)
+License: MIT or Apache-2.0 or WHATWG
+
+Files: rust-vendor/equivalent/*
+Copyright: 2016-2023 Josh Stone
+License: MIT or Apache-2.0
+
+Files: rust-vendor/fnv/*
+Copyright: 2017 Simon Sapin
+License: MIT or Apache-2.0
+
+Files: rust-vendor/foreign-*/*
+Copyright: 2017 The foreign-types Developers
+License: MIT or Apache-2.0
+
+Files: rust-vendor/form_urlencoded/*
+Copyright: 2013-2016 The rust-url developers
+License: MIT or Apache-2.0
+
+Files: rust-vendor/getrandom-*/*
+Copyright: 2018-2024 The rust-random Project Developers
+License: MIT or Apache-2.0
+
+Files: rust-vendor/hashbrown/*
+Copyright: 2016 Amanieu d'Antras
+License: MIT or Apache-2.0
+
+Files: rust-vendor/http/*
+Copyright: 2017 http-rs authors
+License: MIT or Apache-2.0
+
+Files: rust-vendor/httparse/*
+Copyright: 2015-2025 Sean McArthur
+License: MIT or Apache-2.0
+
+Files: rust-vendor/http-body*/*
+Copyright: 2019-2024 Sean McArthur & Hyper Contributors
+License: MIT
+
+Files:
+  rust-vendor/hyper/*
+  rust-vendor/hyper-tls/*
+  rust-vendor/hyper-util/*
+Copyright: 2017, 2013-2025 Sean McArthur
+License: MIT
+
+Files: rust-vendor/hyper-rustls/*
+Copyright: 2016 Joseph Birr-Pixton <jpixton@gmail.com>
+License: MIT or Apache-2.0
+
+Files:
+  rust-vendor/icu_*/*
+  rust-vendor/litemap/*
+  rust-vendor/tinystr/*
+  rust-vendor/writeable/*
+  rust-vendor/yoke*/*
+  rust-vendor/zerofrom*/*
+  rust-vendor/zerovec*/*
+Copyright: 2020-2024 Unicode
+License: Unicode
+
+Files: rust-vendor/idna*/*
+Copyright: 2013-2022 The rust-url developers
+License: MIT or Apache-2.0
+
+Files: rust-vendor/indexmap/*
+Copyright: 2016-2017 Josh Stone
+License: MIT or Apache-2.0
+
+Files: rust-vendor/ipnet/*
+Copyright: 2017 Juniper Networks, Inc.
+License: MIT or Apache-2.0
+
+Files: rust-vendor/itertools/*
+Copyright: 2015 Jack Wrenn
+License: MIT or Apache-2.0
+
+Files: rust-vendor/itoa/*
+Copyright: 2024 Jack Wrenn
+License: MIT or Apache-2.0
+
+Files: rust-vendor/memchr/*
+Copyright: 2015 Andrew Gallant
+License: MIT
+
+Files: rust-vendor/memoffset/*
+Copyright: 2017 Gilad Naaman
+License: MIT
+
+Files: rust-vendor/mime/*
+Copyright: 2014 Sean McArthur
+License: MIT or Apache-2.0
+
+Files: rust-vendor/mio/*
+Copyright: 2014 Carl Lerche and other MIO contributors
+License: MIT
+
+Files: rust-vendor/native-tls/*
+Copyright: 2016 The rust-native-tls Developers
+License: MIT or Apache-2.0
+
+Files: rust-vendor/num-conv/*
+Copyright: 2023 Jacob Pratt
+License: MIT or Apache-2.0
+
+Files: rust-vendor/openssl-macros/*
+Copyright: 2022 Steven Fackler
+License: MIT or Apache-2.0
+
+Files: rust-vendor/percent-encoding/*
+Copyright: 2013-2022 The rust-url developers
+License: MIT or Apache-2.0
+
+Files: rust-vendor/pin-project-lite/*
+Copyright: 2024 Taiki Endo
+License: MIT or Apache-2.0
+
+Files: rust-vendor/pin-utils/*
+Copyright: 2018 The pin-utils authors
+License: MIT or Apache-2.0
+
+Files: rust-vendor/powerfmt/*
+Copyright: 2023 Jacob Pratt et al
+License: MIT or Apache-2.0
+
+Files: rust-vendor/pretty_assertions/*
+Copyright: 2016 rust-derive-builder contributors
+License: MIT or Apache-2.0
+
+Files: rust-vendor/pyo3*/*
+Copyright: 2023-present PyO3 Project and Contributors.  https://github.com/PyO3
+License: MIT or Apache-2.0
+
+Files: rust-vendor/reqwest/*
+Copyright: 2016-2025 Sean McArthur
+License: MIT or Apache-2.0
+
+Files: rust-vendor/ring/*
+Copyright: 2024 Brian Smith
+License: MIT or Apache-2.0
+
+Files:
+  rust-vendor/rustls/*
+  rust-vendor/rustls-pemfile/*
+Copyright: 2016 Joseph Birr-Pixton <jpixton@gmail.com>
+License: MIT or Apache-2.0
+
+Files: rust-vendor/rustls-pki-types/*
+Copyright: 2023 Dirkjan Ochtman <dirkjan@ochtman.nl>
+License: MIT or Apache-2.0
+
+Files: rust-vendor/serde_urlencoded/*
+Copyright: 2016 Anthony Ramine
+License: MIT or Apache-2.0
+
+Files: rust-vendor/shlex/*
+Copyright: 2015 Nicholas Allegra (comex)
+License: MIT or Apache-2.0
+
+Files: rust-vendor/simple_test_case/*
+Copyright: 2020 Innes Anderson-Morrison
+License: MIT
+
+Files: rust-vendor/slab/*
+Copyright: 2019 Carl Lerche
+License: MIT
+
+Files: rust-vendor/smallvec/*
+Copyright: 2018 The Servo Project Developers
+License: MIT or Apache-2.0
+
+Files: rust-vendor/smbios-lib/*
+Copyright: 2021 jrgerber
+License: MIT
+
+Files: rust-vendor/stable_deref_trait/*
+Copyright: 2017 Robert Grosse
+License: MIT or Apache-2.0
+
+Files: rust-vendor/subtle/*
+Copyright: 2016-2017 Isis Agora Lovecruft, Henry de Valence
+License: MIT
+
+Files: rust-vendor/sync_wrapper/*
+Copyright: 2024 Ronald Kuhn
+License: Apache-2.0
+
+Files: rust-vendor/synstructure/*
+Copyright: 2016 Nika Layzell
+License: MIT
+
+Files: rust-vendor/time*/*
+Copyright: Jacob Pratt et al
+License: MIT or Apache-2.0
+
+Files:
+  rust-vendor/tokio/*
+  rust-vendor/tokio-native-tls/*
+  rust-vendor/tokio-util/*
+  rust-vendor/tower*/*
+  rust-vendor/tracing*/*
+Copyright: 2019 Tokio Contributors
+License: MIT
+
+Files: rust-vendor/tokio-macros/*
+Copyright: 2019 Yoshua Wuyts
+License: MIT
+
+Files: rust-vendor/tokio-rustls/*
+Copyright: 2017 quininer kel
+License: MIT or Apache-2.0
+
+Files: rust-vendor/try-lock/*
+Copyright: 2018-2023 Sean McArthur
+License: MIT
+
+Files: rust-vendor/unicode-ident/*
+Copyright: 1991-2023 Unicode, Inc.
+License: MIT or Apache-2.0 or Unicode
+
+Files: rust-vendor/url/*
+Copyright: 2013-2022 The rust-url developers
+License: MIT or Apache-2.0
+
+Files:
+  rust-vendor/utf8_iter/*
+  rust-vendor/utf16_iter/*
+Copyright: Mozilla Foundation
+License: MIT or Apache-2.0
+
+Files: rust-vendor/vcpkg/*
+Copyright: 2017 Jim McGrath
+License: MIT or Apache-2.0
+
+Files: rust-vendor/want/*
+Copyright: 2018-2019 Sean McArthur
+License: MIT
+
+Files: rust-vendor/write16/*
+Copyright: Mozilla Foundation
+License: MIT or Apache-2.0
+
+Files: rust-vendor/yansi/*
+Copyright: 2017 Sergio Benitez
+License: MIT or Apache-2.0
+
+Files: rust-vendor/zeroize/*
+Copyright: 2018-2021 The RustCrypto Project Developers
+License: MIT or Apache-2.0
+
 License: GPL-3
  This program is free software: you can redistribute it and/or modify
  it under the terms of the GNU General Public License version 3, as
@@ -42,3 +369,104 @@ License: LGPL-3
  .
  On Debian-based systems the full text of the LGPL, version 3, can be
  found at /usr/share/common-licenses/LGPL-3.
+
+License: MIT
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included in
+ all copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ THE SOFTWARE.
+
+License: Apache-2.0
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ .
+ .    http://www.apache.org/licenses/LICENSE-2.0
+ .
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+ .
+ On Debian/Ubuntu systems, the complete text of the
+ Apache License, Version 2.0
+ can be found in "/usr/share/common-licenses/Apache-2.0".
+
+License: WHATWG
+ Redistribution and use in source and binary forms, with or without
+ modification, are permitted provided that the following conditions are met:
+ .
+ 1. Redistributions of source code must retain the above copyright notice, this
+    list of conditions and the following disclaimer.
+ .
+ 2. Redistributions in binary form must reproduce the above copyright notice,
+    this list of conditions and the following disclaimer in the documentation
+    and/or other materials provided with the distribution.
+ .
+ 3. Neither the name of the copyright holder nor the names of its
+    contributors may be used to endorse or promote products derived from
+    this software without specific prior written permission.
+ .
+ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+ DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
+ CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
+ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
+ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+
+License: Unicode
+ UNICODE LICENSE V3
+ .
+ NOTICE TO USER: Carefully read the following legal agreement. BY
+ DOWNLOADING, INSTALLING, COPYING OR OTHERWISE USING DATA FILES, AND/OR
+ SOFTWARE, YOU UNEQUIVOCALLY ACCEPT, AND AGREE TO BE BOUND BY, ALL OF THE
+ TERMS AND CONDITIONS OF THIS AGREEMENT. IF YOU DO NOT AGREE, DO NOT
+ DOWNLOAD, INSTALL, COPY, DISTRIBUTE OR USE THE DATA FILES OR SOFTWARE.
+ .
+ Permission is hereby granted, free of charge, to any person obtaining a
+ copy of data files and any associated documentation (the "Data Files") or
+ software and any associated documentation (the "Software") to deal in the
+ Data Files or Software without restriction, including without limitation
+ the rights to use, copy, modify, merge, publish, distribute, and/or sell
+ copies of the Data Files or Software, and to permit persons to whom the
+ Data Files or Software are furnished to do so, provided that either (a)
+ this copyright and permission notice appear with all copies of the Data
+ Files or Software, or (b) this copyright and permission notice appear in
+ associated Documentation.
+ .
+ THE DATA FILES AND SOFTWARE ARE PROVIDED "AS IS", WITHOUT WARRANTY OF ANY
+ KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+ MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT OF
+ THIRD PARTY RIGHTS.
+ .
+ IN NO EVENT SHALL THE COPYRIGHT HOLDER OR HOLDERS INCLUDED IN THIS NOTICE
+ BE LIABLE FOR ANY CLAIM, OR ANY SPECIAL INDIRECT OR CONSEQUENTIAL DAMAGES,
+ OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS,
+ WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION,
+ ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THE DATA
+ FILES OR SOFTWARE.
+ .
+ Except as contained in this notice, the name of a copyright holder shall
+ not be used in advertising or otherwise to promote the sale, use or other
+ dealings in these Data Files or Software without prior written
+ authorization of the copyright holder.
+ The Unicode License V3
+ can also be found at "https://www.unicode.org/license.txt".
