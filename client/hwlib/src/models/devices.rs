@@ -41,6 +41,16 @@ pub struct Board {
     pub version: String,
 }
 
+impl Default for Board {
+    fn default() -> Self {
+        Self {
+            manufacturer: String::new(),
+            product_name: String::new(),
+            version: String::new(),
+        }
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
 pub struct Chassis {
     pub chassis_type: String,
