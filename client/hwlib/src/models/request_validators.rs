@@ -97,6 +97,7 @@ impl CertificationStatusRequest {
             ..
         } = paths;
         let data = table_load_from_device(&smbios_entry_filepath, &smbios_table_filepath)?;
+
         let bios_info_vec = data.collect::<SMBiosInformation>();
         let bios_info = bios_info_vec
             .first()
@@ -113,15 +114,14 @@ impl CertificationStatusRequest {
         let chassis_info_vec = data.collect::<SMBiosSystemChassisInformation>();
         let chassis = chassis_info_vec
             .first()
-            .map(|info| Chassis::try_from(info).ok())
-            .flatten();
+            .and_then(|info| Chassis::try_from(info).ok());
 
         let board_info_vec = data.collect::<SMBiosBaseboardInformation>();
         let board = board_info_vec
             .first()
-            .map(|info| Board::try_from(info))
+            .map(Board::try_from)
             .transpose()?
-            .unwrap_or_else(|| Board::default());
+            .unwrap_or_else(Board::default);
 
         let system_data_vec = data.collect::<SMBiosSystemInformation>();
         let system_data = system_data_vec.first().unwrap();

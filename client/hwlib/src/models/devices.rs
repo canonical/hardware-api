@@ -34,21 +34,11 @@ pub struct Bios {
     pub version: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Default)]
 pub struct Board {
     pub manufacturer: String,
     pub product_name: String,
     pub version: String,
-}
-
-impl Default for Board {
-    fn default() -> Self {
-        Self {
-            manufacturer: String::new(),
-            product_name: String::new(),
-            version: String::new(),
-        }
-    }
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
