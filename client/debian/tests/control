@@ -5,5 +5,5 @@ Restrictions: allow-stderr
 
 Test-Command: debian/tests/run-hwctl-tests.sh
 Features: test-name=rust-hwlib:hwctl
-Depends: @
+Depends: jq, python3, @
 Restrictions: allow-stderr, needs-root

@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 
-import http.server
 import socketserver
+from http.server import BaseHTTPRequestHandler
+from json import dumps
 
-RESPONSE = b'{ "status": "Not Seen" }'
+RESPONSE = dumps({"status": "Not Seen"}).encode()
 
 
-class CustomHandler(http.server.BaseHTTPRequestHandler):
+class CustomHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         if self.path == "/v1/certification/status":
             self.send_response(200)
