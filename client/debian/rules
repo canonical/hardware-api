@@ -30,8 +30,8 @@ override_dh_auto_test:
 
 override_dh_auto_install:
 	# Since dh-cargo doesn't support installing multiple packages in a
-	# workspace, we install both library and cli tool using the same logic
-	# that implemented in the dh-cargo install function. See
+	# workspace, we install both library and CLI tool using the same logic
+	# that is implemented in the dh-cargo install function. See
 	# https://salsa.debian.org/rust-team/dh-cargo/-/blob/5cc7f7b8/cargo.pm#L168-195
 	install -d $(HWLIB_CARGO_DIR)
 	cp -r hwlib/* $(HWLIB_CARGO_DIR)/
