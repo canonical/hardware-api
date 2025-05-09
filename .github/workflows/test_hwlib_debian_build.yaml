@@ -121,7 +121,8 @@ jobs:
         sg sbuild -c "sbuild $PACKAGE_DSC -d questing -v --resolve-alternatives --no-clean-source --no-run-lintian"
 
         mv *.deb '${{ runner.temp }}'
-    - run: lintian --pedantic --verbose
+    # TODO: Uncomment this step one lintian gets updated
+    # - run: lintian --pedantic --verbose
     - name: Archive artifacts
       uses: actions/upload-artifact@v4
       with:
