@@ -140,10 +140,12 @@ License: MIT or Apache-2.0
 Files:
   rust-vendor/icu_*/*
   rust-vendor/litemap/*
+  rust-vendor/potential_utf/*
   rust-vendor/tinystr/*
   rust-vendor/writeable/*
   rust-vendor/yoke*/*
   rust-vendor/zerofrom*/*
+  rust-vendor/zerotrie*/*
   rust-vendor/zerovec*/*
 Copyright: 2020-2024 Unicode
 License: Unicode
@@ -313,7 +315,6 @@ License: MIT or Apache-2.0
 
 Files:
   rust-vendor/utf8_iter/*
-  rust-vendor/utf16_iter/*
 Copyright: Mozilla Foundation
 License: MIT or Apache-2.0
 
@@ -324,10 +325,6 @@ License: MIT or Apache-2.0
 Files: rust-vendor/want/*
 Copyright: 2018-2019 Sean McArthur
 License: MIT
-
-Files: rust-vendor/write16/*
-Copyright: Mozilla Foundation
-License: MIT or Apache-2.0
 
 Files: rust-vendor/yansi/*
 Copyright: 2017 Sergio Benitez
