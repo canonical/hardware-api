@@ -249,8 +249,8 @@ qemu-img resize autopkgtest-plucky-amd64.img +15G
 ```
 
 Then run the autopkgtests. The setup command adds more space to the
-`tmpfs` partition because autopkgtest for cargo use `/tmp` directory
-for building the package.
+`tmpfs` partition because autopkgtest for cargo uses the `/tmp`
+directory for building the package.
 
 ```sh
 autopkgtest \

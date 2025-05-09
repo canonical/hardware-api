@@ -22,13 +22,7 @@ Rules-Requires-Root: no
 Package: librust-hwlib-dev
 Architecture: amd64
 Multi-Arch: foreign
-Depends: kmod,
-         libssl-dev,
-         lsb-release,
-         pkgconf,
-         python3,
-         ${misc:Depends},
-         ${shlibs:Depends}
+Depends: libssl-dev, pkgconf, python3, ${misc:Depends}, ${shlibs:Depends}
 Provides: librust-hwlib-dev (= ${binary:Version})
 Description: Library for querying Ubuntu hardware certification status - Rust source code
  A Rust library that collects hardware information from the local
@@ -48,7 +42,7 @@ Package: hwctl
 Architecture: amd64
 Multi-Arch: foreign
 Depends: kmod, lsb-release, ${misc:Depends}, ${shlibs:Depends}
-Description: CLI tool for checking Ubuntu hardware certification status - Rust source code
+Description: A tool for checking Ubuntu hardware certification status - Rust source code
  A command-line interface that checks whether your hardware has been certified
  for use with Ubuntu. It uses the hwlib library to collect system information
  and query Ubuntu's Hardware Certification database.
