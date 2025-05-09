@@ -228,19 +228,38 @@ Not you can build the binary itself:
 sbuild /path/to/.dsc -d plucky
 ```
 
-### Running autopkgtests locally in lxd
+### Running autopkgtests locally in VM
 
-To run autopkgtests, first set up the environment. It can be set up by
-running the following command (the distro can be different):
+Before proceeding please make sure you have QEMU installed on your
+system.
+
+To run autopkgtests, first we need to download the image (replace
+`plucky` with a corresponding release):
 
 ```sh
-autopkgtest-build-lxd ubuntu-daily:plucky/amd64
+autopkgtest-buildvm-ubuntu-cloud -r plucky -v \
+ --cloud-image-url http://cloud-images.ubuntu.com/daily/server
 ```
 
-Then run the autopkgtests in `lxd`:
+The image size may be too small, so you probably need to resize the
+disk and give it more storage:
+
+```
+qemu-img resize autopkgtest-plucky-amd64.img +15G
+```
+
+Then run the autopkgtests. The setup command adds more space to the
+`tmpfs` partition because autopkgtest for cargo uses the `/tmp`
+directory for building the package.
 
 ```sh
-autopkgtest /path/to/<package>_<version>_source.changes -- lxd autopkgtest/ubuntu/plucky/amd64
+autopkgtest \
+  --apt-upgrade \
+  --shell-fail \
+  --output-dir dep8-rust-hwlib \
+  --setup-commands="mount -o remount,size=10G /tmp" \
+    /path/to/<package>_<version>_source.changes \
+  -- qemu --ram-size 4096 /var/lib/adt-images/autopkgtest-plucky-amd64.img
 ```
 
 ### Publishing the package
@@ -249,5 +268,5 @@ After the archive is created and you've tested the build locally, you
 can publish the package by running:
 
 ```sh
-dput ppa:<ppa_name> ../<package>_<version>_source.changes
+dput ppa:<ppa_name> /path/to/<package>_<version>_source.changes
  ```

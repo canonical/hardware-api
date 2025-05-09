@@ -1,3 +1,10 @@
+rust-hwlib (0.9.0~ppa8) plucky; urgency=medium
+
+  * Add integration tests to autopkgtests
+  * Update debian/copyright to include vendored dependencies licenses
+
+ -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Thu, 01 May 2025 12:34:53 +0200
+
 rust-hwlib (0.9.0~ppa3) plucky; urgency=medium
 
   * Don't output the request information in hwctl.

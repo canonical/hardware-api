@@ -18,7 +18,7 @@
 
 use anyhow::Result;
 use itertools::Itertools;
-use std::{collections::HashMap, fs::read_to_string, path::Path};
+use std::{collections::HashMap, fs::read_to_string, io::ErrorKind::NotFound, path::Path};
 
 #[derive(Debug)]
 pub struct CpuInfo {
@@ -115,9 +115,14 @@ impl CpuFrequency {
     /// Read max CPU frequency from file and parse it in MHz as it's done in checkbox.
     /// <https://github.com/canonical/checkbox/blob/3789fdd/providers/resource/bin/cpuinfo_resource.py#L56-L63>
     pub fn from_k_hz_file(max_cpu_frequency_filepath: &Path) -> Result<Self> {
-        let raw_freq = read_to_string(max_cpu_frequency_filepath)?;
-        let k_hz: u64 = raw_freq.trim().parse()?;
-        Ok(Self::from_k_hz(k_hz))
+        match read_to_string(max_cpu_frequency_filepath) {
+            Ok(raw_freq) => {
+                let k_hz: u64 = raw_freq.trim().parse()?;
+                Ok(Self::from_k_hz(k_hz))
+            }
+            Err(e) if e.kind() == NotFound => Ok(Self::from_m_hz(0)),
+            Err(e) => Err(e.into()),
+        }
     }
 
     /// Create a CpuFrequency from a frequency in kHz
