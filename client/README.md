@@ -190,12 +190,12 @@ the `debian/` dir.
 
 You can test your package and build it with the
 [sbuild](https://wiki.debian.org/sbuild) tool. In this example, we do
-it for plucky distro, but you can replace it with the desired one:
+it for questing distro, but you can replace it with the desired one:
 
 ```bash
 sudo apt install sbuild mmdebstrap uidmap
 mkdir -p ~/.cache/sbuild
-mmdebstrap --variant=buildd --components=main,restricted,universe plucky ~/.cache/sbuild/plucky-amd64.tar.zst
+mmdebstrap --variant=buildd --components=main,restricted,universe questing ~/.cache/sbuild/questing-amd64.tar.zst
 ```
 
 For configuring `sbuild` , install `sbuild-debian-developer-setup`:
@@ -225,7 +225,7 @@ $autopkgtest_opts = [ '--apt-upgrade', '--', 'unshare', '--release', '%r', '--ar
 Not you can build the binary itself:
 
 ```bash
-sbuild /path/to/.dsc -d plucky
+sbuild /path/to/.dsc -d questing
 ```
 
 ### Running autopkgtests locally in VM
@@ -234,10 +234,10 @@ Before proceeding please make sure you have QEMU installed on your
 system.
 
 To run autopkgtests, first we need to download the image (replace
-`plucky` with a corresponding release):
+`questing` with a corresponding release):
 
 ```sh
-autopkgtest-buildvm-ubuntu-cloud -r plucky -v \
+autopkgtest-buildvm-ubuntu-cloud -r questing -v \
  --cloud-image-url http://cloud-images.ubuntu.com/daily/server
 ```
 
@@ -245,7 +245,7 @@ The image size may be too small, so you probably need to resize the
 disk and give it more storage:
 
 ```
-qemu-img resize autopkgtest-plucky-amd64.img +15G
+qemu-img resize autopkgtest-questing-amd64.img +15G
 ```
 
 Then run the autopkgtests. The setup command adds more space to the
@@ -259,7 +259,7 @@ autopkgtest \
   --output-dir dep8-rust-hwlib \
   --setup-commands="mount -o remount,size=10G /tmp" \
     /path/to/<package>_<version>_source.changes \
-  -- qemu --ram-size 4096 /var/lib/adt-images/autopkgtest-plucky-amd64.img
+  -- qemu --ram-size 4096 /var/lib/adt-images/autopkgtest-questing-amd64.img
 ```
 
 ### Publishing the package

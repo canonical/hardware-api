@@ -42,7 +42,7 @@ Package: hwctl
 Architecture: amd64
 Multi-Arch: foreign
 Depends: kmod, lsb-release, ${misc:Depends}, ${shlibs:Depends}
-Description: A tool for checking Ubuntu hardware certification status - Rust source code
+Description: Tool for checking Ubuntu hardware certification status - Rust source code
  A command-line interface that checks whether your hardware has been certified
  for use with Ubuntu. It uses the hwlib library to collect system information
  and query Ubuntu's Hardware Certification database.
