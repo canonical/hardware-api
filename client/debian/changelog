@@ -1,3 +1,9 @@
+rust-hwlib (0.9.0~22.04~ppa8) jammy; urgency=medium
+
+  * Backport 0.9.0~ppa8 to jammy.
+
+ -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Fri, 09 May 2025 23:14:41 +0200
+
 rust-hwlib (0.9.0~ppa8) questing; urgency=medium
 
   * Add integration tests to autopkgtests

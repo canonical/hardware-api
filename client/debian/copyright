@@ -76,10 +76,6 @@ Files: rust-vendor/diff/*
 Copyright: 2015 Utkarsh Kukreti
 License: MIT or Apache-2.0
 
-Files: rust-vendor/displaydoc/*
-Copyright: 2024 Manish Goregaokar, Jane Losare-Lusby
-License: MIT or Apache-2.0
-
 Files: rust-vendor/either/*
 Copyright: 2015 Josh Stone, Jack Wrenn
 License: MIT or Apache-2.0
@@ -136,19 +132,6 @@ License: MIT
 Files: rust-vendor/hyper-rustls/*
 Copyright: 2016 Joseph Birr-Pixton <jpixton@gmail.com>
 License: MIT or Apache-2.0
-
-Files:
-  rust-vendor/icu_*/*
-  rust-vendor/litemap/*
-  rust-vendor/potential_utf/*
-  rust-vendor/tinystr/*
-  rust-vendor/writeable/*
-  rust-vendor/yoke*/*
-  rust-vendor/zerofrom*/*
-  rust-vendor/zerotrie*/*
-  rust-vendor/zerovec*/*
-Copyright: 2020-2024 Unicode
-License: Unicode
 
 Files: rust-vendor/idna*/*
 Copyright: 2013-2022 The rust-url developers
@@ -264,10 +247,6 @@ Files: rust-vendor/smbios-lib/*
 Copyright: 2021 jrgerber
 License: MIT
 
-Files: rust-vendor/stable_deref_trait/*
-Copyright: 2017 Robert Grosse
-License: MIT or Apache-2.0
-
 Files: rust-vendor/subtle/*
 Copyright: 2016-2017 Isis Agora Lovecruft, Henry de Valence
 License: MIT
@@ -275,10 +254,6 @@ License: MIT
 Files: rust-vendor/sync_wrapper/*
 Copyright: 2024 Ronald Kuhn
 License: Apache-2.0
-
-Files: rust-vendor/synstructure/*
-Copyright: 2016 Nika Layzell
-License: MIT
 
 Files: rust-vendor/time*/*
 Copyright: Jacob Pratt et al
