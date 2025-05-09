@@ -1,8 +1,10 @@
-rust-hwlib (0.9.0~24.04~ppa3) noble; urgency=medium
+rust-hwlib (0.9.0~ppa8) questing; urgency=medium
 
-  * Backport 0.9.0~ppa3 to noble.
+  * Add integration tests to autopkgtests
+  * Update debian/copyright to include vendored dependencies licenses
+  * Package the project for Questing 
 
- -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Mon, 17 Feb 2025 15:48:36 +0200
+ -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Thu, 01 May 2025 12:34:53 +0200
 
 rust-hwlib (0.9.0~ppa3) plucky; urgency=medium
 

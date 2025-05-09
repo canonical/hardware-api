@@ -97,36 +97,54 @@ impl CertificationStatusRequest {
             ..
         } = paths;
         let data = table_load_from_device(&smbios_entry_filepath, &smbios_table_filepath)?;
+
         let bios_info_vec = data.collect::<SMBiosInformation>();
         let bios_info = bios_info_vec
             .first()
             .ok_or_else(|| anyhow!("failed to load BIOS data"))?;
+        let bios = Some(Bios::try_from(bios_info)?);
+
         let processor_info_vec = data.collect::<SMBiosProcessorInformation>();
         let processor_info = processor_info_vec
             .first()
             .ok_or_else(|| anyhow!("failed to load processor data"))?;
+        let processor =
+            Processor::try_from((processor_info, max_cpu_frequency_filepath.as_path()))?;
+
         let chassis_info_vec = data.collect::<SMBiosSystemChassisInformation>();
-        let chassis_info = chassis_info_vec
+        let chassis = chassis_info_vec
             .first()
-            .ok_or_else(|| anyhow!("failed to load chassis data"))?;
+            .and_then(|info| Chassis::try_from(info).ok());
+
         let board_info_vec = data.collect::<SMBiosBaseboardInformation>();
-        let board_info = board_info_vec
+        let board = board_info_vec
             .first()
-            .ok_or_else(|| anyhow!("failed to load board data"))?;
+            .map(Board::try_from)
+            .transpose()?
+            .unwrap_or_else(Board::default);
+
         let system_data_vec = data.collect::<SMBiosSystemInformation>();
         let system_data = system_data_vec.first().unwrap();
         let system_info = SystemInfo::try_from_smbios(system_data)?;
+        let model = system_info.product_name;
+        let vendor = system_info.manufacturer;
+
+        let architecture = get_architecture(runner)?;
+        let os = OS::try_new(proc_version_filepath.as_path(), runner)?;
+        let pci_peripherals = Vec::new();
+        let usb_peripherals = Vec::new();
+
         Ok(Self {
-            architecture: get_architecture(runner)?,
-            bios: Some(Bios::try_from(bios_info)?),
-            board: Board::try_from(board_info)?,
-            chassis: Some(Chassis::try_from(chassis_info)?),
-            model: system_info.product_name,
-            os: OS::try_new(proc_version_filepath.as_path(), runner)?,
-            pci_peripherals: Vec::new(),
-            processor: Processor::try_from((processor_info, max_cpu_frequency_filepath.as_path()))?,
-            usb_peripherals: Vec::new(),
-            vendor: system_info.manufacturer,
+            architecture,
+            bios,
+            board,
+            chassis,
+            model,
+            os,
+            pci_peripherals,
+            processor,
+            usb_peripherals,
+            vendor,
         })
     }
 
@@ -171,6 +189,7 @@ impl CertificationStatusRequest {
 #[cfg(test)]
 mod tests {
     use crate::{
+        constants,
         helpers::test_utils::{apply_vars, get_test_filepath, MockCommandRunner},
         models::request_validators::{CertificationStatusRequest, Paths},
     };
@@ -236,11 +255,20 @@ mod tests {
             .collect::<String>();
 
         let mock_calls = vec![
-            (("dpkg", vec!["--print-architecture"]), Ok("amd64")),
-            (("lsb_release", vec!["-c"]), Ok(codename_str.as_str())),
-            (("lsb_release", vec!["-i"]), Ok("Distributor ID: Ubuntu\n")),
-            (("lsb_release", vec!["-r"]), Ok(release_str.as_str())),
-            (("lsmod", vec![]), Ok(lsmod_output.as_str())),
+            ((constants::DPKG, vec!["--print-architecture"]), Ok("amd64")),
+            (
+                (constants::LSB_RELEASE, vec!["-c"]),
+                Ok(codename_str.as_str()),
+            ),
+            (
+                (constants::LSB_RELEASE, vec!["-i"]),
+                Ok("Distributor ID: Ubuntu\n"),
+            ),
+            (
+                (constants::LSB_RELEASE, vec!["-r"]),
+                Ok(release_str.as_str()),
+            ),
+            ((constants::LSMOD, vec![]), Ok(lsmod_output.as_str())),
         ];
         let mock_runner = MockCommandRunner::new(mock_calls);
 

@@ -5,6 +5,7 @@ cargo-checksum.json
 
 # debian/ source files to ignore
 .debhelper/
+dep8-rust-hwlib/
 */debian/files
 */debian/cargo_registry
 *.deb
