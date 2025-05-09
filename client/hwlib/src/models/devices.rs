@@ -34,7 +34,7 @@ pub struct Bios {
     pub version: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Default)]
 pub struct Board {
     pub manufacturer: String,
     pub product_name: String,

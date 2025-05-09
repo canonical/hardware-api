@@ -43,7 +43,7 @@ pub(crate) mod test_utils {
         }
     }
 
-    impl<'args> CommandRunner for MockCommandRunner<'args> {
+    impl CommandRunner for MockCommandRunner<'_> {
         fn run_command(&self, cmd: &str, args: &[&str]) -> Result<String> {
             match self.calls.get(&(cmd, args.to_vec())) {
                 Some(res) => match res {

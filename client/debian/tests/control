@@ -1,4 +1,9 @@
-Test-Command: debian/tests/run-tests.sh
+Test-Command: debian/tests/run-cargo-tests.sh
 Features: test-name=rust-hwlib:@
 Depends: @builddeps@
 Restrictions: allow-stderr
+
+Test-Command: debian/tests/run-hwctl-tests.sh
+Features: test-name=rust-hwlib:hwctl
+Depends: jq, python3, @
+Restrictions: allow-stderr, needs-root
