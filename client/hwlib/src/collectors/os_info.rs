@@ -22,7 +22,7 @@ use regex::Regex;
 use std::{fs::read_to_string, path::Path, process::Command};
 
 use crate::{
-    constants::{DPKG, LSB_RELEASE, LSMOD},
+    constants::{LSB_RELEASE, LSMOD},
     models::software::{KernelPackage, OS},
 };
 
@@ -84,9 +84,20 @@ impl KernelPackage {
     }
 }
 
-pub(crate) fn get_architecture(runner: &impl CommandRunner) -> Result<String> {
-    let arch = runner.run_command(DPKG, &["--print-architecture"])?;
-    Ok(arch.trim().to_owned())
+pub(crate) fn get_deb_arch(arch: &str) -> Result<String> {
+    let deb_arch = match arch {
+        "aarch64" => "arm64",
+        "arm" => "armel",
+        "loongarch64" => "loong64",
+        "mips" => "mips",
+        "powerpc" => "powerpc",
+        "powerpc64" => "ppc64",
+        "riscv64" => "riscv64",
+        "x86" => "i386",
+        "x86_64" => "amd64",
+        _ => arch,
+    };
+    Ok(deb_arch.trim().to_owned())
 }
 
 pub(super) fn get_codename(runner: &impl CommandRunner) -> Result<String> {
@@ -124,10 +135,9 @@ mod tests {
     use crate::helpers::test_utils::{get_test_filepath, MockCommandRunner};
 
     #[test]
-    fn test_get_architecture() {
-        let mock_calls = vec![((DPKG, vec!["--print-architecture"]), Ok("amd64\n"))];
-        let mock_runner = MockCommandRunner::new(mock_calls);
-        let result = get_architecture(&mock_runner);
+    fn test_get_deb_arch() {
+        let arch = "x86_64";
+        let result = get_deb_arch(arch);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), "amd64");
     }

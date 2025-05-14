@@ -23,7 +23,7 @@ use std::path::PathBuf;
 use crate::{
     collectors::{
         hardware_info::{table_load_from_device, SystemInfo},
-        os_info::{get_architecture, CommandRunner, SystemCommandRunner},
+        os_info::{get_deb_arch, CommandRunner, SystemCommandRunner},
     },
     constants,
     models::{
@@ -129,7 +129,7 @@ impl CertificationStatusRequest {
         let model = system_info.product_name;
         let vendor = system_info.manufacturer;
 
-        let architecture = get_architecture(runner)?;
+        let architecture = get_deb_arch(std::env::consts::ARCH)?;
         let os = OS::try_new(proc_version_filepath.as_path(), runner)?;
         let pci_peripherals = Vec::new();
         let usb_peripherals = Vec::new();
@@ -158,7 +158,7 @@ impl CertificationStatusRequest {
             ..
         } = paths;
         let cpu_info = CpuInfo::from_file(&cpuinfo_filepath.clone())?;
-        let architecture = get_architecture(runner)?;
+        let architecture = get_deb_arch(std::env::consts::ARCH)?;
         let bios = None;
         let board = Board::try_from(device_tree_dirpath.as_path())?;
         let chassis = None;
@@ -255,7 +255,6 @@ mod tests {
             .collect::<String>();
 
         let mock_calls = vec![
-            ((constants::DPKG, vec!["--print-architecture"]), Ok("amd64")),
             (
                 (constants::LSB_RELEASE, vec!["-c"]),
                 Ok(codename_str.as_str()),
