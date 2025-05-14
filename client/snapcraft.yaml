@@ -20,21 +20,20 @@ apps:
   hwctl:
     command: hwctl
     plugs:
-      - network
       - hardware-observe
-      - system-observe
-      - network-setup-observe
       - kernel-module-observe
-      - hardware-control
+      - network
+      - network-setup-observe
+      - system-observe
 
 parts:
   hwctl:
     plugin: rust
     source: .
     build-packages:
-      - pkg-config
-      - libssl-dev
       - jq
+      - libssl-dev
+      - pkg-config
     override-pull: |
       craftctl default
       metadata="$(cargo metadata --no-deps --format-version 1)"
