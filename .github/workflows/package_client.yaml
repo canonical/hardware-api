@@ -1,4 +1,4 @@
-name: Publish Client
+name: Package Client
 
 permissions:
   contents: read
@@ -9,12 +9,12 @@ on:
   push:
     branches: ["main"]
     paths:
-      - .github/workflows/publish_client.yaml
+      - .github/workflows/package_client.yaml
       - client/**
   pull_request:
     branches: ["main"]
     paths:
-      - .github/workflows/publish_client.yaml
+      - .github/workflows/package_client.yaml
       - client/**
   schedule:
     - cron: "0 0 * * 0"
@@ -40,7 +40,7 @@ jobs:
         with:
           name: snap
           path: ${{ steps.snapcraft.outputs.snap }}
-      - name: Publish
+      - name: Package
         if: github.ref == 'refs/heads/main'
         uses: snapcore/action-publish@v1
         env:
