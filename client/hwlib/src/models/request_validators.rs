@@ -244,8 +244,6 @@ mod tests {
             device_tree_dirpath: PathBuf::from("./none"),
         };
 
-        let codename_str = format!("Codename: {codename}\n");
-        let release_str = format!("No LSB modules are available.\nRelease: {release}\n");
         let lsmod_output: String = std::iter::once("Module Size Used by\n".to_owned())
             .chain(
                 kernel_modules
@@ -256,18 +254,6 @@ mod tests {
 
         let mock_calls = vec![
             ((constants::DPKG, vec!["--print-architecture"]), Ok("amd64")),
-            (
-                (constants::LSB_RELEASE, vec!["-c"]),
-                Ok(codename_str.as_str()),
-            ),
-            (
-                (constants::LSB_RELEASE, vec!["-i"]),
-                Ok("Distributor ID: Ubuntu\n"),
-            ),
-            (
-                (constants::LSB_RELEASE, vec!["-r"]),
-                Ok(release_str.as_str()),
-            ),
             ((constants::LSMOD, vec![]), Ok(lsmod_output.as_str())),
         ];
         let mock_runner = MockCommandRunner::new(mock_calls);
