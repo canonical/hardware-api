@@ -1,0 +1,50 @@
+name: Package Client
+
+permissions:
+  contents: read
+
+on:
+  workflow_call:
+  workflow_dispatch:
+  push:
+    branches: ["main"]
+    paths:
+      - .github/workflows/package_client.yaml
+      - client/**
+  pull_request:
+    branches: ["main"]
+    paths:
+      - .github/workflows/package_client.yaml
+      - client/**
+  schedule:
+    - cron: "0 0 * * 0"
+
+jobs:
+  snap:
+    name: Snap
+    runs-on: [self-hosted, linux, jammy, x64]
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Build
+        id: snapcraft
+        uses: snapcore/action-build@v1
+        with:
+          path: client
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: snap
+          path: ${{ steps.snapcraft.outputs.snap }}
+      - name: Package
+        if: github.ref == 'refs/heads/main'
+        uses: snapcore/action-publish@v1
+        env:
+          SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAP_STORE_LOGIN }}
+        with:
+          snap: ${{ steps.snapcraft.outputs.snap }}
+          release: beta

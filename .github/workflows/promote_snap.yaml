@@ -1,0 +1,61 @@
+name: Promote Snap
+
+permissions:
+  contents: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      snap:
+        description: Snap name
+        required: true
+        default: hwctl
+        type: choice
+        options:
+          - hwctl
+      to-channel:
+        description: Channel to promote to
+        required: true
+        default: latest/stable
+        type: choice
+        options:
+          - latest/stable
+          - latest/candidate
+          - latest/beta
+      from-channel:
+        description: Channel to promote from
+        default: latest/beta
+        type: choice
+        options:
+          - latest/candidate
+          - latest/beta
+          - latest/edge
+
+jobs:
+  promote:
+    name: Promote Snap
+    runs-on: [self-hosted, linux, jammy, x64]
+    permissions:
+      contents: read
+    env:
+      SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAP_STORE_LOGIN }}
+      SNAP_NAME: ${{ inputs.snap }}
+      SNAPCRAFT_TO_CHANNEL: ${{ inputs.to-channel }}
+      SNAPCRAFT_FROM_CHANNEL: ${{ inputs.from-channel }}
+    steps:
+      - name: Validate inputs
+        run: |
+          echo "Snap: $SNAP_NAME"
+          echo "To Channel: $SNAPCRAFT_TO_CHANNEL"
+          echo "From Channel: $SNAPCRAFT_FROM_CHANNEL"
+          if [ "$SNAPCRAFT_TO_CHANNEl" = "$SNAPCRAFT_FROM_CHANNEL" ]; then
+            echo "Error: To channel and from channel cannot be the same."
+            exit 1
+          fi
+      - name: Install Snapcraft
+        run: sudo snap install snapcraft --classic
+      - name: Promote Snap
+        run: |
+          snapcraft promote --yes "$SNAP_NAME" \
+            --to-channel "$SNAPCRAFT_TO_CHANNEL" \
+            --from-channel "$SNAPCRAFT_FROM_CHANNEL"
