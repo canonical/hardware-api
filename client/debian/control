@@ -4,6 +4,7 @@ Priority: optional
 Build-Depends: cargo:native (>= 1.75),
                debhelper (>= 12),
                dh-cargo (>= 23),
+               dh-apparmor,
                jq,
                libssl-dev,
                pkgconf,

@@ -1,0 +1,54 @@
+# ------------------------------------------------------------------
+#
+#    Copyright (C) 2025 Canonical Ltd.
+#
+#    This program is free software; you can redistribute it and/or
+#    modify it under the terms of version 3 of the GNU General Public
+#    License published by the Free Software Foundation.
+#
+# ------------------------------------------------------------------
+
+abi <abi/4.0>,
+
+include <tunables/global>
+
+profile hwctl /usr/bin/hwctl {
+  include <abstractions/base>
+  include <abstractions/nameservice-strict>
+  include <abstractions/openssl>
+  include <abstractions/ssl_certs>
+
+  network inet dgram,
+  network inet6 dgram,
+  network inet stream,
+  network inet6 stream,
+  network netlink raw,
+
+  /sys/firmware/dmi/tables/* r,  # for collecting SMBIOS info
+  /sys/devices/system/cpu/cpufreq/policy*/cpuinfo_max_freq r,
+  /sys/fs/cgroup/**/cpu.max r,
+
+  @{PROC}/version       r,
+  @{PROC}/@{pid}/cgroup r,
+
+  # for collecting OS information
+  /usr/bin/{dpkg,kmod} cx,
+  /usr/bin/lsb_release Px -> lsb_release,
+
+  profile dpkg /usr/bin/dpkg {
+    include <abstractions/base>
+
+    /usr/bin/dpkg r,
+    /etc/dpkg/**  r,
+  }
+
+  profile kmod /usr/bin/kmod {
+    include <abstractions/base>
+
+    /usr/bin/kmod             r,
+    @{PROC}/{cmdline,modules} r,
+    @{sys}/module/**          r,  # for fetching kernel modules
+  }
+
+  include if exists <local/usr.bin.hwctl>
+}
