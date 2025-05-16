@@ -23,5 +23,6 @@ pub const PROC_CPUINFO_FILE_PATH: &str = "/proc/cpuinfo";
 pub const PROC_DEVICE_TREE_DIR_PATH: &str = "/proc/device-tree/";
 pub const PROC_VERSION_FILE_PATH: &str = "/proc/version";
 
+pub const OS_RELEASE_SNAP: &str = "/var/lib/snapd/hostfs/etc/os-release";
 pub const DPKG: &str = "/usr/bin/dpkg";
 pub const LSMOD: &str = "/usr/bin/lsmod";
