@@ -16,7 +16,7 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -48,17 +48,27 @@ pub struct Paths {
     pub cpuinfo_filepath: PathBuf,
     pub max_cpu_frequency_filepath: PathBuf,
     pub device_tree_dirpath: PathBuf,
+    pub os_release_filepath: PathBuf,
     pub proc_version_filepath: PathBuf,
 }
 
 impl Default for Paths {
     fn default() -> Self {
+        // Snap confinement exposes /etc/os-release in a different location
+        let snap_os_release_filepath = PathBuf::from(constants::SNAP_OS_RELEASE_FILE_PATH);
+        let os_release_filepath = if snap_os_release_filepath.exists() {
+            snap_os_release_filepath
+        } else {
+            PathBuf::from(constants::OS_RELEASE_FILE_PATH)
+        };
+
         Self {
             smbios_entry_filepath: PathBuf::from(smbioslib::SYS_ENTRY_FILE),
             smbios_table_filepath: PathBuf::from(smbioslib::SYS_TABLE_FILE),
             cpuinfo_filepath: PathBuf::from(constants::PROC_CPUINFO_FILE_PATH),
             max_cpu_frequency_filepath: PathBuf::from(constants::CPU_MAX_FREQ_FILE_PATH),
             device_tree_dirpath: PathBuf::from(constants::PROC_DEVICE_TREE_DIR_PATH),
+            os_release_filepath: os_release_filepath,
             proc_version_filepath: PathBuf::from(constants::PROC_VERSION_FILE_PATH),
         }
     }
@@ -130,7 +140,16 @@ impl CertificationStatusRequest {
         let vendor = system_info.manufacturer;
 
         let architecture = get_architecture(runner)?;
-        let os = OS::try_new(proc_version_filepath.as_path(), runner)?;
+
+        let snap_os_release_filepath = PathBuf::from(constants::SNAP_OS_RELEASE_FILE_PATH);
+        let os_release_path = if snap_os_release_filepath.exists() {
+            snap_os_release_filepath
+        } else {
+            PathBuf::from(constants::OS_RELEASE_FILE_PATH)
+        };
+        let os = OS::try_new(os_release_path.as_path(), &proc_version_filepath, runner)
+            .context("Failed to read OS release information")?;
+
         let pci_peripherals = Vec::new();
         let usb_peripherals = Vec::new();
 
@@ -239,6 +258,7 @@ mod tests {
             max_cpu_frequency_filepath: get_test_filepath(
                 format!("{dir_path}/cpuinfo_max_freq").as_str(),
             ),
+            os_release_filepath: get_test_filepath(format!("{dir_path}/os-release").as_str()),
             proc_version_filepath: get_test_filepath(format!("{dir_path}/version").as_str()),
             cpuinfo_filepath: PathBuf::from("./none"),
             device_tree_dirpath: PathBuf::from("./none"),
