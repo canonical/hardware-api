@@ -1,6 +1,6 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: librust-hwlib-dev
-Source: https://github.com/canonical/hardware-api/tree/main/client/hwlib
+Upstream-Name: hardware-api client
+Source: https://github.com/canonical/hardware-api/tree/main/client/
 
 Files: *
 Copyright: Copyright 2024 Canonical Ltd.
