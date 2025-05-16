@@ -22,7 +22,7 @@ use regex::Regex;
 use std::{fs::read_to_string, path::Path, process::Command};
 
 use crate::{
-    constants::{DPKG, LSMOD},
+    constants::{DPKG, LSMOD, OS_RELEASE_SNAP},
     models::software::{KernelPackage, OS},
 };
 
@@ -45,10 +45,11 @@ impl OS {
         proc_version_filepath: &Path,
         runner: &impl CommandRunner,
     ) -> Result<Self> {
-        let release =
-            os_release::OsRelease::new().context("Failed to read OS release information")?;
+        let release = os_release::OsRelease::new_from(Path::new(OS_RELEASE_SNAP))
+            .or_else(|_| os_release::OsRelease::new())
+            .context("Failed to read OS release information")?;
         let codename = release.version_codename;
-        let distributor = release.id;
+        let distributor = release.name;
         let version = release.version_id;
         let kernel = KernelPackage::try_new(proc_version_filepath, runner)?;
         Ok(OS {
