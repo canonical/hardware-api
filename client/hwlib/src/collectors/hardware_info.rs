@@ -16,13 +16,17 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use smbioslib::{
     SMBiosBaseboardInformation, SMBiosData, SMBiosEntryPoint32, SMBiosEntryPoint64,
     SMBiosInformation, SMBiosProcessorInformation, SMBiosSystemChassisInformation,
     SMBiosSystemInformation, SMBiosVersion,
 };
-use std::{fs::read_to_string, io::ErrorKind, path::Path};
+use std::{
+    fs::read_to_string,
+    io::{Error as IoError, ErrorKind},
+    path::Path,
+};
 use time::{macros::format_description, Date};
 
 use crate::{
@@ -182,26 +186,42 @@ pub(crate) fn table_load_from_device(
     table_file: &Path,
 ) -> Result<SMBiosData, anyhow::Error> {
     let version = SMBiosEntryPoint64::try_load_from_file(entry_file)
+        .with_context(|| {
+            format!(
+                "Failed to load SMBIOS entry point 64 from: {}",
+                entry_file.display()
+            )
+        })
         .map(|entry_point| SMBiosVersion {
             major: entry_point.major_version(),
             minor: entry_point.minor_version(),
             revision: 0,
         })
         .or_else(|err| {
-            if err.kind() != ErrorKind::InvalidData {
-                return Err(err);
+            // Downcast to std::io::Error to check the kind
+            if let Some(io_err) = err.downcast_ref::<IoError>() {
+                if io_err.kind() != ErrorKind::InvalidData {
+                    return Err(err);
+                }
+                SMBiosEntryPoint32::try_load_from_file(entry_file)
+                    .with_context(|| {
+                        format!(
+                            "Failed to load SMBIOS entry point 32 from: {}",
+                            entry_file.display()
+                        )
+                    })
+                    .map(|entry_point| SMBiosVersion {
+                        major: entry_point.major_version(),
+                        minor: entry_point.minor_version(),
+                        revision: 0,
+                    })
+            } else {
+                Err(err)
             }
-            SMBiosEntryPoint32::try_load_from_file(entry_file).map(|entry_point| SMBiosVersion {
-                major: entry_point.major_version(),
-                minor: entry_point.minor_version(),
-                revision: 0,
-            })
         })?;
 
-    Ok(SMBiosData::try_load_from_file(
-        table_file.to_str().unwrap(),
-        Some(version),
-    )?)
+    SMBiosData::try_load_from_file(table_file.to_str().unwrap(), Some(version))
+        .with_context(|| format!("Failed to load SMBIOS table from: {}", table_file.display()))
 }
 
 #[cfg(test)]
