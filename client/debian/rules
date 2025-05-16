@@ -10,17 +10,7 @@ export CARGO_PROFILE_RELEASE_DEBUG=1
 
 CARGO_TARGET_DIR = $(CURDIR)/target
 NUMJOBS = $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
-PKG_HWLIB = $(CURDIR)/debian/librust-hwlib-dev
 PKG_HWCTL = $(CURDIR)/debian/hwctl
-
-# The original code gets package version using the same `cargo manifest`
-# command and extracts it from the JSON output. See
-# https://salsa.debian.org/rust-team/dh-cargo/-/blob/5cc7f7b8/cargo.pm#L37-44
-HWLIB_CARGO_DIR = $(PKG_HWLIB)/usr/share/cargo/registry/hwlib-$(shell \
-	cargo metadata \
-	--manifest-path hwlib/Cargo.toml \
-	--no-deps \
-	--format-version 1 | jq -r '.packages[0].version')
 
 %:
 	dh $@ --buildsystem cargo
@@ -30,14 +20,9 @@ override_dh_auto_test:
 
 override_dh_auto_install:
 	# Since dh-cargo doesn't support installing multiple packages in a
-	# workspace, we install both library and CLI tool using the same logic
-	# that is implemented in the dh-cargo install function. See
+	# workspace, we install the CLI tool using the same logic that is
+	# implemented in the dh-cargo install function. See
 	# https://salsa.debian.org/rust-team/dh-cargo/-/blob/5cc7f7b8/cargo.pm#L168-195
-	install -d $(HWLIB_CARGO_DIR)
-	cp -r hwlib/* $(HWLIB_CARGO_DIR)/
-	cp -r Cargo.lock $(HWLIB_CARGO_DIR)/
-	cp $(CURDIR)/debian/cargo-checksum.json $(HWLIB_CARGO_DIR)/.cargo-checksum.json
-
 	env RUST_BACKTRACE=1 \
 		CARGO_TARGET_DIR=$(CARGO_TARGET_DIR) \
 		DESTDIR=$(CURDIR)/debian/hwctl \

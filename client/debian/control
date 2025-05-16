@@ -20,25 +20,6 @@ Homepage: https://github.com/canonical/hardware-api
 X-Cargo-Crate: hwlib
 Rules-Requires-Root: no
 
-Package: librust-hwlib-dev
-Architecture: amd64
-Multi-Arch: foreign
-Depends: libssl-dev, pkgconf, python3, ${misc:Depends}, ${shlibs:Depends}
-Provides: librust-hwlib-dev (= ${binary:Version})
-Description: Library for querying Ubuntu hardware certification status - Rust source code
- A Rust library that collects hardware information from the local
- system and queries the Ubuntu Hardware Certification service to
- determine if the device model has been certified.
- .
- The library identifies system components, creates a hardware profile, and
- communicates with the certification database to check:
-  * If the exact or similar device model has been certified
-  * Which Ubuntu releases the device is certified for
-  * Current certification status
- .
- This package provides the development files needed to use hwlib in Rust
- applications.
-
 Package: hwctl
 Architecture: amd64
 Multi-Arch: foreign
