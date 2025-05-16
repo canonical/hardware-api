@@ -16,7 +16,7 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::{fs::read_to_string, path::Path, process::Command};
@@ -63,18 +63,29 @@ impl KernelPackage {
         proc_version_filepath: &Path,
         runner: &impl CommandRunner,
     ) -> Result<Self> {
-        let kernel_version = read_to_string(proc_version_filepath)?;
+        let kernel_version = read_to_string(proc_version_filepath).with_context(|| {
+            format!(
+                "Failed to read kernel version from: {}",
+                proc_version_filepath.display()
+            )
+        })?;
+
         let kernel_version = kernel_version
             .split_whitespace()
             .nth(2)
             .unwrap_or_default()
             .to_string();
-        let loaded_modules_str = runner.run_command(LSMOD, &[])?;
+
+        let loaded_modules_str = runner
+            .run_command(LSMOD, &[])
+            .with_context(|| "Failed to get loaded kernel modules using lsmod")?;
+
         let loaded_modules: Vec<String> = loaded_modules_str
             .lines()
             .skip(1) // skip the header
             .map(|line| line.split_whitespace().next().unwrap_or("").to_string())
             .collect();
+
         Ok(KernelPackage {
             name: Some("Linux".to_string()),
             version: kernel_version,
@@ -85,7 +96,9 @@ impl KernelPackage {
 }
 
 pub(crate) fn get_architecture(runner: &impl CommandRunner) -> Result<String> {
-    let arch = runner.run_command(DPKG, &["--print-architecture"])?;
+    let arch = runner
+        .run_command(DPKG, &["--print-architecture"])
+        .with_context(|| "Failed to determine system architecture")?;
     Ok(arch.trim().to_owned())
 }
 
@@ -111,11 +124,19 @@ pub(super) fn get_version(runner: &impl CommandRunner) -> Result<String> {
 }
 
 fn get_lsb_release_info(flag: &str, re: &Regex, runner: &impl CommandRunner) -> Result<String> {
-    let lsb_release_output = runner.run_command(LSB_RELEASE, &[flag])?;
+    let lsb_release_output = runner
+        .run_command(LSB_RELEASE, &[flag])
+        .with_context(|| format!("Failed to get release info using lsb_release {}", flag))?;
     re.captures(&lsb_release_output)
         .and_then(|caps| caps.get(1))
         .map(|m| m.as_str().to_string())
-        .ok_or_else(|| anyhow!("failed to capture information using regex"))
+        .ok_or_else(|| {
+            anyhow!(
+                "Failed to parse output from lsb_release {}: {}",
+                flag,
+                lsb_release_output
+            )
+        })
 }
 
 #[cfg(test)]
