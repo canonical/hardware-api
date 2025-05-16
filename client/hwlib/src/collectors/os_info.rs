@@ -17,10 +17,11 @@
  */
 
 use anyhow::{Context, Result};
+use os_release::OsRelease;
 use std::{fs::read_to_string, path::Path, process::Command};
 
 use crate::{
-    constants::{DPKG, LSMOD, OS_RELEASE_SNAP},
+    constants::{DPKG, LSMOD},
     models::software::{KernelPackage, OS},
 };
 
@@ -40,11 +41,11 @@ impl CommandRunner for SystemCommandRunner {
 
 impl OS {
     pub(crate) fn try_new(
+        os_release_filepath: &Path,
         proc_version_filepath: &Path,
         runner: &impl CommandRunner,
     ) -> Result<Self> {
-        let release = os_release::OsRelease::new_from(Path::new(OS_RELEASE_SNAP))
-            .or_else(|_| os_release::OsRelease::new())
+        let release = OsRelease::new_from(os_release_filepath)
             .context("Failed to read OS release information")?;
         let codename = release.version_codename;
         let distributor = release.name;
@@ -109,6 +110,7 @@ mod tests {
         let mock_calls = vec![((LSMOD, vec![]), Ok("Module Size Used\nsnd 61440 1\n"))];
         let mock_runner = MockCommandRunner::new(mock_calls);
         let result = OS::try_new(
+            get_test_filepath("arm64/rpi4b8g/os-release").as_path(),
             get_test_filepath("arm64/rpi4b8g/version").as_path(),
             &mock_runner,
         );
