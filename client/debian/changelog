@@ -1,46 +1,13 @@
-rust-hwlib (0.9.0~ppa8) questing; urgency=medium
+rust-hwlib (0.9.1) questing; urgency=medium
 
+  * Add AppArmor profile
+
+ -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Thu, 15 May 2025 16:44:17 +0200
+
+rust-hwlib (0.9.0) questing; urgency=medium
+
+  * Package the project for Questing (LP: #2072561)
   * Add integration tests to autopkgtests
   * Update debian/copyright to include vendored dependencies licenses
-  * Package the project for Questing 
 
  -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Thu, 01 May 2025 12:34:53 +0200
-
-rust-hwlib (0.9.0~ppa3) plucky; urgency=medium
-
-  * Don't output the request information in hwctl.
-
- -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Mon, 17 Feb 2025 12:50:15 +0100
-
-rust-hwlib (0.9.0~ppa2) plucky; urgency=medium
-
-  * Update cargo dependencies.
-  * Pack the package for plucky release.
-
- -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Thu, 06 Feb 2025 11:40:16 +0100
-
-rust-hwlib (0.9.0~ppa1) oracular; urgency=medium
-
-  * Release 0.9.0 version of the client.
-  * Fix error-handling in hwctl.
-
- -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Tue, 10 Dec 2024 16:40:46 +0200
-
-rust-hwlib (0.0.1~ppa3) oracular; urgency=medium
-
-  * Provide both hwlib library and hwctl CLI tool.
-  Add component tests for the hwlib code.
-
- -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Mon, 02 Dec 2024 13:45:06 +0200
-
-rust-hwlib (0.0.1~ppa2) oracular; urgency=medium
-
-  * Add the hwlib implementation for collecting hardware data.
-
- -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Thu, 09 Oct 2024 15:45:08 +0300
-
-rust-hwlib (0.0.1~ppa1) oracular; urgency=medium
-
-  * Publish the initial version of the hwlib for oracular
-
- -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Tue, 09 Jul 2024 15:10:14 +0300
