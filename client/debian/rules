@@ -58,3 +58,8 @@ override_dh_auto_install:
 	# Delete generated via `cargo install` hidden files
 	rm -f $(PKG_HWCTL)/.crates.toml
 	rm -f $(PKG_HWCTL)/.crates2.json
+
+	# Install the AppArmor profile
+	mkdir -p $(PKG_HWCTL)/etc/apparmor.d/
+	cp debian/usr.bin.hwctl $(PKG_HWCTL)/etc/apparmor.d/usr.bin.hwctl
+	dh_apparmor -phwctl --profile-name=usr.bin.hwctl

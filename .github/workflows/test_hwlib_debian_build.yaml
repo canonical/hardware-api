@@ -89,6 +89,7 @@ jobs:
           ubuntu-dev-tools \
           distro-info-data \
           dh-cargo \
+          dh-apparmor \
           pkg-config \
           libssl-dev
     - uses: actions-rs/toolchain@v1
