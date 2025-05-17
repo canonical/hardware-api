@@ -168,6 +168,7 @@ impl CertificationStatusRequest {
             cpuinfo_filepath,
             max_cpu_frequency_filepath,
             device_tree_dirpath,
+            os_release_filepath,
             proc_version_filepath,
             ..
         } = paths;
@@ -177,7 +178,11 @@ impl CertificationStatusRequest {
         let board = Board::try_from(device_tree_dirpath.as_path())?;
         let chassis = None;
         let model = cpu_info.model;
-        let os = OS::try_new(proc_version_filepath.as_path(), runner)?;
+        let os = OS::try_new(
+            os_release_filepath.as_path(),
+            proc_version_filepath.as_path(),
+            runner,
+        )?;
         let pci_peripherals = Vec::new();
         let processor = Processor::try_from((
             cpuinfo_filepath.as_path(),
