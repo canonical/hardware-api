@@ -103,6 +103,7 @@ impl CertificationStatusRequest {
             smbios_entry_filepath,
             smbios_table_filepath,
             max_cpu_frequency_filepath,
+            os_release_filepath,
             proc_version_filepath,
             ..
         } = paths;
@@ -141,13 +142,7 @@ impl CertificationStatusRequest {
 
         let architecture = get_architecture(runner)?;
 
-        let snap_os_release_filepath = PathBuf::from(constants::SNAP_OS_RELEASE_FILE_PATH);
-        let os_release_path = if snap_os_release_filepath.exists() {
-            snap_os_release_filepath
-        } else {
-            PathBuf::from(constants::OS_RELEASE_FILE_PATH)
-        };
-        let os = OS::try_new(os_release_path.as_path(), &proc_version_filepath, runner)
+        let os = OS::try_new(&os_release_filepath, &proc_version_filepath, runner)
             .context("Failed to read OS release information")?;
 
         let pci_peripherals = Vec::new();
