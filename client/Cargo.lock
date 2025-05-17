@@ -367,7 +367,7 @@ checksum = "6dbf3de79e51f3d586ab4cb9d5c3e2c14aa28ed23d180cf89b4df0454a69cc87"
 
 [[package]]
 name = "hwctl"
-version = "0.9.1"
+version = "0.9.2"
 dependencies = [
  "anyhow",
  "hwlib",
@@ -377,11 +377,12 @@ dependencies = [
 
 [[package]]
 name = "hwlib"
-version = "0.9.1"
+version = "0.9.2"
 dependencies = [
  "anyhow",
  "itertools",
  "lazy_static",
+ "os-release",
  "pretty_assertions",
  "pyo3",
  "regex",
@@ -791,6 +792,15 @@ dependencies = [
  "libc",
  "pkg-config",
  "vcpkg",
+]
+
+[[package]]
+name = "os-release"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "82f29ae2f71b53ec19cc23385f8e4f3d90975195aa3d09171ba3bef7159bec27"
+dependencies = [
+ "lazy_static",
 ]
 
 [[package]]
