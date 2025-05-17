@@ -36,6 +36,7 @@ fn get_test_device_paths(device_type: &str) -> Paths {
         cpuinfo_filepath: PathBuf::from("./none"),
         max_cpu_frequency_filepath: base_path.join("cpuinfo_max_freq"),
         device_tree_dirpath: PathBuf::from("./none"),
+        os_release_filepath: base_path.join("os-release"),
         proc_version_filepath: base_path.join("version"),
     }
 }
