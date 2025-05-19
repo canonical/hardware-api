@@ -16,13 +16,13 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::{anyhow, Context, Result};
+use anyhow::{anyhow, Context, Context, Result};
 use lazy_static::lazy_static;
 use regex::Regex;
 use std::{fs::read_to_string, path::Path, process::Command};
 
 use crate::{
-    constants::{DPKG, LSB_RELEASE, LSMOD},
+    constants::{ARCH, LSB_RELEASE, LSMOD},
     models::software::{KernelPackage, OS},
 };
 
@@ -93,9 +93,20 @@ impl KernelPackage {
 
 pub(crate) fn get_architecture(runner: &impl CommandRunner) -> Result<String> {
     let arch = runner
-        .run_command(DPKG, &["--print-architecture"])
+        .run_command(ARCH, &[])
+        .context("Failed to determine system architecture")
         .with_context(|| "cannot determine system architecture")?;
-    Ok(arch.trim().to_owned())
+    let deb_arch = match arch.trim() {
+        "armv7l" => "armhf",
+        "armv8l" | "aarch64" => "arm64",
+        "ppc64le" => "ppc64el",
+        "riscv64" => "riscv64",
+        "s390x" => "s390x",
+        "x86" => "i386",
+        "x86_64" => "amd64",
+        _ => arch.trim(),
+    };
+    Ok(deb_arch.to_owned())
 }
 
 pub(super) fn get_codename(runner: &impl CommandRunner) -> Result<String> {
@@ -138,7 +149,7 @@ mod tests {
 
     #[test]
     fn test_get_architecture() {
-        let mock_calls = vec![((DPKG, vec!["--print-architecture"]), Ok("amd64\n"))];
+        let mock_calls = vec![((ARCH, vec![]), Ok("x86_64\n"))];
         let mock_runner = MockCommandRunner::new(mock_calls);
         let result = get_architecture(&mock_runner);
         assert!(result.is_ok());

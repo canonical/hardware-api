@@ -255,7 +255,7 @@ mod tests {
             .collect::<String>();
 
         let mock_calls = vec![
-            ((constants::DPKG, vec!["--print-architecture"]), Ok("amd64")),
+            ((constants::ARCH, vec![]), Ok("x86_64")),
             (
                 (constants::LSB_RELEASE, vec!["-c"]),
                 Ok(codename_str.as_str()),
