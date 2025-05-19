@@ -35,6 +35,12 @@ profile hwctl /usr/bin/hwctl {
   /usr/bin/{arch,kmod} cx,
   /usr/bin/lsb_release Px -> lsb_release,
 
+  profile arch /usr/bin/arch {
+    include <abstractions/base>
+
+    /usr/bin/arch r,
+  }
+
   profile kmod /usr/bin/kmod {
     include <abstractions/base>
 
