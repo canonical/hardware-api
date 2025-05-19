@@ -1,10 +1,12 @@
 name: hwctl
 adopt-info: hwctl
+license: GPL-3.0-only
 summary: Canonical Certified Hardware API Client
 description: |
   hwctl is a hwlib backed CLI tool for collecting and sending hardware
   information to hwapi to find testing status of device models
 
+website: https://github.com/canonical/hardware-api
 source-code: https://github.com/canonical/hardware-api
 issues: https://github.com/canonical/hardware-api/issues
 contact: https://github.com/canonical/hardware-api/issues
@@ -34,6 +36,8 @@ parts:
       - jq
       - libssl-dev
       - pkg-config
+    stage-packages:
+      - kmod
     override-pull: |
       craftctl default
       metadata="$(cargo metadata --no-deps --format-version 1)"
