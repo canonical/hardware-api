@@ -42,10 +42,7 @@ impl CpuInfo {
         let mut cores_count = 0;
 
         let raw_cpuinfo = read_to_string(cpuinfo_filepath).with_context(|| {
-            format!(
-                "Failed to read CPU info file: {}",
-                cpuinfo_filepath.display()
-            )
+            format!("cannot read CPU info file {:?}", cpuinfo_filepath.display())
         })?;
 
         for line in raw_cpuinfo.lines() {
@@ -129,7 +126,7 @@ impl CpuFrequency {
             Err(e) if e.kind() == NotFound => Ok(Self::from_m_hz(0)),
             Err(e) => Err(e).with_context(|| {
                 format!(
-                    "Failed to read CPU frequency file: {}",
+                    "cannot read CPU frequency file: {:?}",
                     max_cpu_frequency_filepath.display()
                 )
             }),
