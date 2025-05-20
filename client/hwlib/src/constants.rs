@@ -23,6 +23,5 @@ pub const PROC_CPUINFO_FILE_PATH: &str = "/proc/cpuinfo";
 pub const PROC_DEVICE_TREE_DIR_PATH: &str = "/proc/device-tree/";
 pub const PROC_VERSION_FILE_PATH: &str = "/proc/version";
 
-pub const ARCH: &str = "/usr/bin/arch";
 pub const LSB_RELEASE: &str = "/usr/bin/lsb_release";
 pub const LSMOD: &str = "/usr/bin/lsmod";

@@ -18,6 +18,7 @@
 
 use anyhow::{anyhow, Result};
 use serde::{Deserialize, Serialize};
+use std::env::consts::ARCH;
 use std::path::PathBuf;
 
 use crate::{
@@ -129,7 +130,7 @@ impl CertificationStatusRequest {
         let model = system_info.product_name;
         let vendor = system_info.manufacturer;
 
-        let architecture = get_architecture(runner)?;
+        let architecture = get_architecture(ARCH)?;
         let os = OS::try_new(proc_version_filepath.as_path(), runner)?;
         let pci_peripherals = Vec::new();
         let usb_peripherals = Vec::new();
@@ -158,7 +159,7 @@ impl CertificationStatusRequest {
             ..
         } = paths;
         let cpu_info = CpuInfo::from_file(&cpuinfo_filepath.clone())?;
-        let architecture = get_architecture(runner)?;
+        let architecture = get_architecture(ARCH)?;
         let bios = None;
         let board = Board::try_from(device_tree_dirpath.as_path())?;
         let chassis = None;
@@ -255,7 +256,6 @@ mod tests {
             .collect::<String>();
 
         let mock_calls = vec![
-            ((constants::ARCH, vec![]), Ok("x86_64")),
             (
                 (constants::LSB_RELEASE, vec!["-c"]),
                 Ok(codename_str.as_str()),
