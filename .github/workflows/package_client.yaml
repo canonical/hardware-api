@@ -53,7 +53,7 @@ jobs:
         with:
           name: hwctl_${{ matrix.arch }}.snap
           path: ${{ steps.snapcraft.outputs.snap }}
-      - name: Package
+      - name: Publish
         if: github.ref == 'refs/heads/main'
         uses: snapcore/action-publish@v1
         env:
