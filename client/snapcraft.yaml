@@ -39,3 +39,5 @@ parts:
       metadata="$(cargo metadata --no-deps --format-version 1)"
       version="$(echo "$metadata" | jq -r .packages[0].version)"
       craftctl set version="$version"
+    build-environment:
+      - OS_RELEASE_FILE_PATH: /var/lib/snapd/hostfs/etc/os-release

@@ -54,21 +54,13 @@ pub struct Paths {
 
 impl Default for Paths {
     fn default() -> Self {
-        // Snap confinement exposes /etc/os-release in a different location
-        let snap_os_release_filepath = PathBuf::from(constants::SNAP_OS_RELEASE_FILE_PATH);
-        let os_release_filepath = if snap_os_release_filepath.exists() {
-            snap_os_release_filepath
-        } else {
-            PathBuf::from(constants::OS_RELEASE_FILE_PATH)
-        };
-
         Self {
             smbios_entry_filepath: PathBuf::from(smbioslib::SYS_ENTRY_FILE),
             smbios_table_filepath: PathBuf::from(smbioslib::SYS_TABLE_FILE),
             cpuinfo_filepath: PathBuf::from(constants::PROC_CPUINFO_FILE_PATH),
             max_cpu_frequency_filepath: PathBuf::from(constants::CPU_MAX_FREQ_FILE_PATH),
             device_tree_dirpath: PathBuf::from(constants::PROC_DEVICE_TREE_DIR_PATH),
-            os_release_filepath: os_release_filepath,
+            os_release_filepath: PathBuf::from(constants::OS_RELEASE_FILE_PATH),
             proc_version_filepath: PathBuf::from(constants::PROC_VERSION_FILE_PATH),
         }
     }
