@@ -54,14 +54,21 @@ pub struct Paths {
 
 impl Default for Paths {
     fn default() -> Self {
+        let smbios_entry_filepath = PathBuf::from(smbioslib::SYS_ENTRY_FILE);
+        let smbios_table_filepath = PathBuf::from(smbioslib::SYS_TABLE_FILE);
+        let cpuinfo_filepath = PathBuf::from(constants::PROC_CPUINFO_FILE_PATH);
+        let max_cpu_frequency_filepath = PathBuf::from(constants::CPU_MAX_FREQ_FILE_PATH);
+        let device_tree_dirpath = PathBuf::from(constants::PROC_DEVICE_TREE_DIR_PATH);
+        let os_release_filepath = PathBuf::from(constants::OS_RELEASE_FILE_PATH);
+        let proc_version_filepath = PathBuf::from(constants::PROC_VERSION_FILE_PATH);
         Self {
-            smbios_entry_filepath: PathBuf::from(smbioslib::SYS_ENTRY_FILE),
-            smbios_table_filepath: PathBuf::from(smbioslib::SYS_TABLE_FILE),
-            cpuinfo_filepath: PathBuf::from(constants::PROC_CPUINFO_FILE_PATH),
-            max_cpu_frequency_filepath: PathBuf::from(constants::CPU_MAX_FREQ_FILE_PATH),
-            device_tree_dirpath: PathBuf::from(constants::PROC_DEVICE_TREE_DIR_PATH),
-            os_release_filepath: PathBuf::from(constants::OS_RELEASE_FILE_PATH),
-            proc_version_filepath: PathBuf::from(constants::PROC_VERSION_FILE_PATH),
+            smbios_entry_filepath,
+            smbios_table_filepath,
+            cpuinfo_filepath,
+            max_cpu_frequency_filepath,
+            device_tree_dirpath,
+            os_release_filepath,
+            proc_version_filepath,
         }
     }
 }
