@@ -119,7 +119,7 @@ mod tests {
 
     #[test]
     fn test_os_try_new() {
-        let mock_calls = vec![((LSMOD, vec![]), Ok("Module Size Used\nsnd 61440 1\n"))];
+        let mock_calls = vec![((LSMOD, Vec::new()), Ok("Module Size Used\nsnd 61440 1\n"))];
         let mock_runner = MockCommandRunner::new(mock_calls);
         let result = OS::try_new(
             get_test_filepath("arm64/rpi4b8g/os-release").as_path(),

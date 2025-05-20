@@ -264,7 +264,7 @@ mod tests {
 
         let mock_calls = vec![
             ((constants::DPKG, vec!["--print-architecture"]), Ok("amd64")),
-            ((constants::LSMOD, vec![]), Ok(lsmod_output.as_str())),
+            ((constants::LSMOD, Vec::new()), Ok(lsmod_output.as_str())),
         ];
         let mock_runner = MockCommandRunner::new(mock_calls);
 
