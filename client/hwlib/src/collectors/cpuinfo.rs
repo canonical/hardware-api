@@ -16,7 +16,7 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::Result;
+use anyhow::{Context, Result};
 use itertools::Itertools;
 use std::{collections::HashMap, fs::read_to_string, io::ErrorKind::NotFound, path::Path};
 
@@ -41,7 +41,10 @@ impl CpuInfo {
         let mut attributes: HashMap<&str, &str> = HashMap::new();
         let mut cores_count = 0;
 
-        let raw_cpuinfo = read_to_string(cpuinfo_filepath)?;
+        let raw_cpuinfo = read_to_string(cpuinfo_filepath).with_context(|| {
+            format!("cannot read CPU info file {:?}", cpuinfo_filepath.display())
+        })?;
+
         for line in raw_cpuinfo.lines() {
             let trimmed_line = line.trim();
             if trimmed_line.is_empty() {
@@ -121,7 +124,12 @@ impl CpuFrequency {
                 Ok(Self::from_k_hz(k_hz))
             }
             Err(e) if e.kind() == NotFound => Ok(Self::from_m_hz(0)),
-            Err(e) => Err(e.into()),
+            Err(e) => Err(e).with_context(|| {
+                format!(
+                    "cannot read CPU frequency file: {:?}",
+                    max_cpu_frequency_filepath.display()
+                )
+            }),
         }
     }
 
