@@ -46,10 +46,13 @@ impl OS {
         runner: &impl CommandRunner,
     ) -> Result<Self> {
         let release = OsRelease::new_from(os_release_filepath)
-            .context("Failed to read OS release information")?;
-        let codename = release.version_codename;
-        let distributor = release.name;
-        let version = release.version_id;
+            .context("cannot read OS release information")?;
+        let OsRelease {
+            version_codename: codename,
+            name: distributor,
+            version_id: version,
+            ..
+        } = release;
         let kernel = KernelPackage::try_new(proc_version_filepath, runner)?;
         Ok(OS {
             codename,
