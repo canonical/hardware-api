@@ -45,8 +45,9 @@ impl OS {
         proc_version_filepath: &Path,
         runner: &impl CommandRunner,
     ) -> Result<Self> {
-        let release = OsRelease::new_from(os_release_filepath)
-            .context("cannot read OS release information")?;
+        let release = OsRelease::new_from(os_release_filepath).with_context(|| {
+            format!("cannot read OS release information from: {os_release_filepath:?}",)
+        })?;
         let OsRelease {
             version_codename: codename,
             name: distributor,
