@@ -91,7 +91,7 @@ impl KernelPackage {
     }
 }
 
-pub(crate) fn get_architecture(arch: &str) -> Result<String> {
+pub(crate) fn parse_debian_architecture(arch: &str) -> Result<String> {
     let deb_arch = match arch.trim() {
         "aarch64" => "arm64",
         "arm" => "armhf",
@@ -143,9 +143,9 @@ mod tests {
     use crate::helpers::test_utils::{get_test_filepath, MockCommandRunner};
 
     #[test]
-    fn test_get_architecture() {
+    fn test_parse_debian_architecture() {
         let arch = "x86_64";
-        let result = get_architecture(&arch);
+        let result = parse_debian_architecture(&arch);
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), "amd64");
     }
