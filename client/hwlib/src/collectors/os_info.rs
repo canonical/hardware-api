@@ -16,10 +16,8 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::{anyhow, Context, Result};
-use lazy_static::lazy_static;
+use anyhow::{Context, Result};
 use os_release::OsRelease;
-use regex::Regex;
 use std::{fs::read_to_string, path::Path, process::Command};
 
 use crate::{
