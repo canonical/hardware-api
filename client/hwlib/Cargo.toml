@@ -2,7 +2,7 @@
 name = "hwlib"
 description = "Collects and sends hardware information to hwapi to find testing status of the device model"
 license = "GPL-3.0-only"
-version = "0.9.2"
+version = "0.9.1"
 edition = "2021"
 authors = [
   "Canonical Hardware Certification <canonical-hw-cert@lists.launchpad.net>",
@@ -27,7 +27,7 @@ tokio = { version = "1.43.1", features = ["rt", "rt-multi-thread", "test-util"],
 pyo3 = { version = "0.24.0", features = ["extension-module"] }
 smbios-lib = "0.9.0"
 regex = "1.10.0"
-time = { version = "~0.3.0", features = ["macros" ,"parsing", "formatting"]}
+time = { version = "~0.3.0", features = ["macros", "parsing", "formatting"] }
 anyhow = "~1.0.0"
 itertools = "0.14.0"
 lazy_static = "1.5.0"

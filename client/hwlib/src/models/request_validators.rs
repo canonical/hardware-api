@@ -143,7 +143,7 @@ impl CertificationStatusRequest {
         let architecture = get_architecture(runner)?;
 
         let os = OS::try_new(&os_release_filepath, &proc_version_filepath, runner)
-            .context("Failed to read OS release information")?;
+            .context("cannot read OS release information")?;
 
         let pci_peripherals = Vec::new();
         let usb_peripherals = Vec::new();
