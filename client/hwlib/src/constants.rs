@@ -23,9 +23,8 @@ pub const PROC_CPUINFO_FILE_PATH: &str = "/proc/cpuinfo";
 pub const PROC_DEVICE_TREE_DIR_PATH: &str = "/proc/device-tree/";
 pub const PROC_VERSION_FILE_PATH: &str = "/proc/version";
 
-// The os-release file path is set during the build time
-// to allow for snap packaging, which exposes the file in a different location.
-pub const OS_RELEASE_FILE_PATH: &str = env!("OS_RELEASE_FILE_PATH", "/etc/os-release");
+// The os-release file path is defined in build.rs at build time
+pub const OS_RELEASE_FILE_PATH: &str = env!("OS_RELEASE_FILE_PATH");
 
 pub const DPKG: &str = "/usr/bin/dpkg";
 pub const LSMOD: &str = "/usr/bin/lsmod";
