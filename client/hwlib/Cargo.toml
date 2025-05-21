@@ -1,7 +1,7 @@
 [package]
 name = "hwlib"
 description = "Collects and sends hardware information to hwapi to find testing status of the device model"
-license.workspace = true
+license = "LGPL-3.0-only"
 version.workspace = true
 edition.workspace = true
 authors.workspace = true
