@@ -92,25 +92,26 @@ impl KernelPackage {
 }
 
 pub(crate) fn to_debian_architecture(arch: &str) -> Result<&str> {
-    match arch.trim() {
-        "aarch64" => Ok("arm64"),
-        "arm" => Ok("armhf"),
-        "loongarch64" => Ok("loong64"),
-        "m68k" => Ok("m68k"),
-        "mips" => Ok("mips"),
-        "mips32r6" => Ok("mipsr6"),
-        "mips64" => Ok("mips64"),
-        "mips64r6" => Ok("mips64r6"),
-        "powerpc" => Ok("powerpc"),
-        "powerpc64" => Ok("ppc64el"),
-        "riscv64" => Ok("riscv64"),
-        "s390x" => Ok("s390x"),
-        "sparc" => Ok("sparc"),
-        "sparc64" => Ok("sparc64"),
-        "x86" => Ok("i386"),
-        "x86_64" => Ok("amd64"),
-        _ => Err(anyhow!("cannot convert to debian architecture: {arch:?}")),
-    }
+    let deb_arch = match arch.trim() {
+        "aarch64" => "arm64",
+        "arm" => "armhf",
+        "loongarch64" => "loong64",
+        "m68k" => "m68k",
+        "mips" => "mips",
+        "mips32r6" => "mipsr6",
+        "mips64" => "mips64",
+        "mips64r6" => "mips64r6",
+        "powerpc" => "powerpc",
+        "powerpc64" => "ppc64el",
+        "riscv64" => "riscv64",
+        "s390x" => "s390x",
+        "sparc" => "sparc",
+        "sparc64" => "sparc64",
+        "x86" => "i386",
+        "x86_64" => "amd64",
+        _ => return Err(anyhow!("cannot convert {arch:?} to debian architecture")),
+    };
+    Ok(deb_arch)
 }
 
 pub(super) fn get_codename(runner: &impl CommandRunner) -> Result<String> {

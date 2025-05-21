@@ -131,7 +131,7 @@ impl CertificationStatusRequest {
         let vendor = system_info.manufacturer;
 
         let architecture = to_debian_architecture(ARCH)
-            .with_context(|| format!("cannot parse architecture: {ARCH:?}"))?
+            .with_context(|| format!("cannot parse architecture {ARCH:?}"))?
             .to_owned();
         let os = OS::try_new(proc_version_filepath.as_path(), runner)?;
         let pci_peripherals = Vec::new();
@@ -162,7 +162,7 @@ impl CertificationStatusRequest {
         } = paths;
         let cpu_info = CpuInfo::from_file(&cpuinfo_filepath.clone())?;
         let architecture = to_debian_architecture(ARCH)
-            .with_context(|| format!("cannot parse architecture: {ARCH:?}"))?
+            .with_context(|| format!("cannot parse architecture {ARCH:?}"))?
             .to_owned();
         let bios = None;
         let board = Board::try_from(device_tree_dirpath.as_path())?;
