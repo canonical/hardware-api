@@ -109,7 +109,7 @@ pub(crate) fn to_debian_architecture(arch: &str) -> Result<&str> {
         "sparc64" => Ok("sparc64"),
         "x86" => Ok("i386"),
         "x86_64" => Ok("amd64"),
-        _ => Err(anyhow!("Unsupported architecture: {arch:?}")),
+        _ => Err(anyhow!("cannot convert to debian architecture: {arch:?}")),
     }
 }
 
