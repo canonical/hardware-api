@@ -25,6 +25,10 @@ jobs:
     runs-on: [self-hosted, linux, jammy, x64]
     permissions:
       contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64]
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -32,15 +36,24 @@ jobs:
           persist-credentials: false
       - name: Build
         id: snapcraft
-        uses: snapcore/action-build@v1
+        uses: canonical/snapcraft-multiarch-action@v1
         with:
           path: client
+          architecture: ${{ matrix.arch }}
+      - name: Upload snapcraft logs
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: runtime-build-log-${{ matrix.arch }}
+          path: |
+            /home/runner/.cache/snapcraft/log/
+            /home/runner/.local/state/snapcraft/log/
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: snap
+          name: hwctl_${{ matrix.arch }}.snap
           path: ${{ steps.snapcraft.outputs.snap }}
-      - name: Package
+      - name: Publish
         if: github.ref == 'refs/heads/main'
         uses: snapcore/action-publish@v1
         env:
