@@ -144,7 +144,7 @@ impl CertificationStatusRequest {
             .with_context(|| format!("cannot parse architecture {ARCH:?}"))?
             .to_owned();
         let os = OS::try_new(
-            &os_release_filepath,
+            os_release_filepath.as_path(),
             proc_version_filepath.as_path(),
             runner,
         )
