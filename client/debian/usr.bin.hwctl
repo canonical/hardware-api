@@ -32,15 +32,8 @@ profile hwctl /usr/bin/hwctl {
   @{PROC}/@{pid}/cgroup r,
 
   # for collecting OS information
-  /usr/bin/{dpkg,kmod} cx,
+  /usr/bin/kmod cx,
   /etc/os-release      r,
-
-  profile dpkg /usr/bin/dpkg {
-    include <abstractions/base>
-
-    /usr/bin/dpkg r,
-    /etc/dpkg/**  r,
-  }
 
   profile kmod /usr/bin/kmod {
     include <abstractions/base>

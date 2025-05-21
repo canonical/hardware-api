@@ -18,12 +18,13 @@
 
 use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
+use std::env::consts::ARCH;
 use std::path::PathBuf;
 
 use crate::{
     collectors::{
         hardware_info::{table_load_from_device, SystemInfo},
-        os_info::{get_architecture, CommandRunner, SystemCommandRunner},
+        os_info::{to_debian_architecture, CommandRunner, SystemCommandRunner},
     },
     constants,
     models::{
@@ -139,9 +140,15 @@ impl CertificationStatusRequest {
         let model = system_info.product_name;
         let vendor = system_info.manufacturer;
 
-        let architecture = get_architecture(runner)?;
-        let os = OS::try_new(&os_release_filepath, &proc_version_filepath, runner)
-            .context("cannot read OS release information")?;
+        let architecture = to_debian_architecture(ARCH)
+            .with_context(|| format!("cannot parse architecture {ARCH:?}"))?
+            .to_owned();
+        let os = OS::try_new(
+            os_release_filepath.as_path(),
+            proc_version_filepath.as_path(),
+            runner,
+        )
+        .context("cannot read OS release information")?;
         let pci_peripherals = Vec::new();
         let usb_peripherals = Vec::new();
 
@@ -170,7 +177,9 @@ impl CertificationStatusRequest {
             ..
         } = paths;
         let cpu_info = CpuInfo::from_file(&cpuinfo_filepath.clone())?;
-        let architecture = get_architecture(runner)?;
+        let architecture = to_debian_architecture(ARCH)
+            .with_context(|| format!("cannot parse architecture {ARCH:?}"))?
+            .to_owned();
         let bios = None;
         let board = Board::try_from(device_tree_dirpath.as_path())?;
         let chassis = None;
@@ -269,10 +278,7 @@ mod tests {
             )
             .collect::<String>();
 
-        let mock_calls = vec![
-            ((constants::DPKG, vec!["--print-architecture"]), Ok("amd64")),
-            ((constants::LSMOD, Vec::new()), Ok(lsmod_output.as_str())),
-        ];
+        let mock_calls = vec![((constants::LSMOD, Vec::new()), Ok(lsmod_output.as_str()))];
         let mock_runner = MockCommandRunner::new(mock_calls);
 
         let quoted_kernel_modules: Vec<_> = kernel_modules

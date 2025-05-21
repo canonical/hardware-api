@@ -16,12 +16,12 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::{Context, Result};
+use anyhow::{anyhow, Context, Result};
 use os_release::OsRelease;
 use std::{fs::read_to_string, path::Path, process::Command};
 
 use crate::{
-    constants::{DPKG, LSMOD},
+    constants::LSMOD,
     models::software::{KernelPackage, OS},
 };
 
@@ -98,11 +98,27 @@ impl KernelPackage {
     }
 }
 
-pub(crate) fn get_architecture(runner: &impl CommandRunner) -> Result<String> {
-    let arch = runner
-        .run_command(DPKG, &["--print-architecture"])
-        .with_context(|| "cannot determine system architecture")?;
-    Ok(arch.trim().to_owned())
+pub(crate) fn to_debian_architecture(arch: &str) -> Result<&str> {
+    let deb_arch = match arch.trim() {
+        "aarch64" => "arm64",
+        "arm" => "armhf",
+        "loongarch64" => "loong64",
+        "m68k" => "m68k",
+        "mips" => "mips",
+        "mips32r6" => "mipsr6",
+        "mips64" => "mips64",
+        "mips64r6" => "mips64r6",
+        "powerpc" => "powerpc",
+        "powerpc64" => "ppc64el",
+        "riscv64" => "riscv64",
+        "s390x" => "s390x",
+        "sparc" => "sparc",
+        "sparc64" => "sparc64",
+        "x86" => "i386",
+        "x86_64" => "amd64",
+        _ => return Err(anyhow!("cannot convert {arch:?} to debian architecture")),
+    };
+    Ok(deb_arch)
 }
 
 #[cfg(test)]
@@ -111,12 +127,13 @@ mod tests {
     use crate::helpers::test_utils::{get_test_filepath, MockCommandRunner};
 
     #[test]
-    fn test_get_architecture() {
-        let mock_calls = vec![((DPKG, vec!["--print-architecture"]), Ok("amd64\n"))];
-        let mock_runner = MockCommandRunner::new(mock_calls);
-        let result = get_architecture(&mock_runner);
+    fn test_to_debian_architecture() {
+        let result = to_debian_architecture("x86_64");
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), "amd64");
+
+        let result = to_debian_architecture("fake_arch");
+        assert!(result.is_err())
     }
 
     #[test]
