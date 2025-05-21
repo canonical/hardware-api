@@ -1,7 +1,7 @@
 [workspace]
 members = ["hwctl", "hwlib"]
 resolver = "2"
-exclude = ["rust-vendor"]
+exclude = ["debian", "rust-vendor"]
 
 [workspace.package]
 license = "GPL-3.0-only"
