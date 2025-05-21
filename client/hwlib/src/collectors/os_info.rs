@@ -144,8 +144,7 @@ mod tests {
 
     #[test]
     fn test_parse_debian_architecture() {
-        let arch = "x86_64";
-        let result = parse_debian_architecture(&arch);
+        let result = parse_debian_architecture("x86_64");
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), "amd64");
     }
