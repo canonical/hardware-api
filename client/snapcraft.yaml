@@ -4,7 +4,7 @@ license: GPL-3.0-only
 summary: Canonical Certified Hardware API Client
 description: |
   `hwctl` is a `hwlib` backed CLI tool for collecting and sending hardware
-  information to a Hardware API server to find testing status of device models.
+  information to a Hardware API server to find certification status of device models.
 
   The production deployment of the Hardware API server is available at
   https://hw.ubuntu.com.
