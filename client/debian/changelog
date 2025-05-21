@@ -2,6 +2,7 @@ rust-hwlib (0.9.1) questing; urgency=medium
 
   * Add AppArmor profile
   * Remove librust-hwlib-dev deb binary package
+  * Replace lsb-release dependency with os-release Rust library
   * Replace dpkg command with Rust ARCH
 
  -- Nadzeya Hutsko <nadzeya.hutsko@canonical.com>  Thu, 15 May 2025 16:44:17 +0200

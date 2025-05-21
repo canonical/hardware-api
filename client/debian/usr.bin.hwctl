@@ -33,7 +33,7 @@ profile hwctl /usr/bin/hwctl {
 
   # for collecting OS information
   /usr/bin/kmod cx,
-  /usr/bin/lsb_release Px -> lsb_release,
+  /etc/os-release      r,
 
   profile kmod /usr/bin/kmod {
     include <abstractions/base>
