@@ -16,7 +16,7 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
 use std::env::consts::ARCH;
 use std::path::PathBuf;
@@ -130,7 +130,9 @@ impl CertificationStatusRequest {
         let model = system_info.product_name;
         let vendor = system_info.manufacturer;
 
-        let architecture = parse_debian_architecture(ARCH)?;
+        let architecture = parse_debian_architecture(ARCH)
+            .with_context(|| format!("cannot parse architecture: {ARCH:?}"))?
+            .to_owned();
         let os = OS::try_new(proc_version_filepath.as_path(), runner)?;
         let pci_peripherals = Vec::new();
         let usb_peripherals = Vec::new();

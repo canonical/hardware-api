@@ -91,7 +91,7 @@ impl KernelPackage {
     }
 }
 
-pub(crate) fn parse_debian_architecture(arch: &str) -> Result<String> {
+pub(crate) fn parse_debian_architecture(arch: &str) -> Result<&str> {
     let deb_arch = match arch.trim() {
         "aarch64" => "arm64",
         "arm" => "armhf",
@@ -101,7 +101,7 @@ pub(crate) fn parse_debian_architecture(arch: &str) -> Result<String> {
         "x86_64" => "amd64",
         _ => arch.trim(),
     };
-    Ok(deb_arch.to_owned())
+    Ok(deb_arch)
 }
 
 pub(super) fn get_codename(runner: &impl CommandRunner) -> Result<String> {
