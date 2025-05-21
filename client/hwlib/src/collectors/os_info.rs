@@ -54,6 +54,7 @@ impl OS {
             version_id: version,
             ..
         } = release;
+
         let kernel = KernelPackage::try_new(proc_version_filepath, runner)?;
         Ok(OS {
             codename,
