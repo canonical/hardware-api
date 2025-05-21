@@ -152,10 +152,13 @@ mod tests {
     use crate::helpers::test_utils::{get_test_filepath, MockCommandRunner};
 
     #[test]
-    fn test_parse_debian_architecture() {
-        let result = parse_debian_architecture("x86_64");
+    fn test_to_debian_architecture() {
+        let result = to_debian_architecture("x86_64");
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), "amd64");
+
+        let result = to_debian_architecture("fake_arch");
+        assert!(result.is_err())
     }
 
     #[test]
