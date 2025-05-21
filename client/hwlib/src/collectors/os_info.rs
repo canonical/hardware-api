@@ -91,17 +91,26 @@ impl KernelPackage {
     }
 }
 
-pub(crate) fn parse_debian_architecture(arch: &str) -> Result<&str> {
-    let deb_arch = match arch.trim() {
-        "aarch64" => "arm64",
-        "arm" => "armhf",
-        "loongarch64" => "loong64",
-        "powerpc64" => "ppc64el",
-        "x86" => "i386",
-        "x86_64" => "amd64",
-        _ => arch.trim(),
-    };
-    Ok(deb_arch)
+pub(crate) fn to_debian_architecture(arch: &str) -> Result<&str> {
+    match arch.trim() {
+        "aarch64" => Ok("arm64"),
+        "arm" => Ok("armhf"),
+        "loongarch64" => Ok("loong64"),
+        "m68k" => Ok("m68k"),
+        "mips" => Ok("mips"),
+        "mips32r6" => Ok("mipsr6"),
+        "mips64" => Ok("mips64"),
+        "mips64r6" => Ok("mips64r6"),
+        "powerpc" => Ok("powerpc"),
+        "powerpc64" => Ok("ppc64el"),
+        "riscv64" => Ok("riscv64"),
+        "s390x" => Ok("s390x"),
+        "sparc" => Ok("sparc"),
+        "sparc64" => Ok("sparc64"),
+        "x86" => Ok("i386"),
+        "x86_64" => Ok("amd64"),
+        _ => Err(anyhow!("Unsupported architecture: {arch:?}")),
+    }
 }
 
 pub(super) fn get_codename(runner: &impl CommandRunner) -> Result<String> {
