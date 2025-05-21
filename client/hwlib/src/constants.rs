@@ -21,8 +21,11 @@ pub const CERT_STATUS_ENDPOINT: &str = "/v1/certification/status";
 pub const CPU_MAX_FREQ_FILE_PATH: &str = "/sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq";
 pub const PROC_CPUINFO_FILE_PATH: &str = "/proc/cpuinfo";
 pub const PROC_DEVICE_TREE_DIR_PATH: &str = "/proc/device-tree/";
-pub const OS_RELEASE_FILE_PATH: &str = env!("OS_RELEASE_FILE_PATH", "/etc/os-release");
 pub const PROC_VERSION_FILE_PATH: &str = "/proc/version";
+
+// The os-release file path is set by a build-time environment variable
+// to allow for snap packaging, which exposes the file in a different location.
+pub const OS_RELEASE_FILE_PATH: &str = env!("OS_RELEASE_FILE_PATH", "/etc/os-release");
 
 pub const DPKG: &str = "/usr/bin/dpkg";
 pub const LSMOD: &str = "/usr/bin/lsmod";
