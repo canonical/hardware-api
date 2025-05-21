@@ -198,6 +198,10 @@ Files: rust-vendor/openssl-macros/*
 Copyright: 2022 Steven Fackler
 License: MIT or Apache-2.0
 
+Files: rust-vendor/os-release/*
+Copyright: 2018 System76
+License: MIT
+
 Files: rust-vendor/percent-encoding/*
 Copyright: 2013-2022 The rust-url developers
 License: MIT or Apache-2.0

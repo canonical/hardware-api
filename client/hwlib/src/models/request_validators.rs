@@ -16,7 +16,7 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::{anyhow, Result};
+use anyhow::{anyhow, Context, Result};
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
@@ -48,18 +48,27 @@ pub struct Paths {
     pub cpuinfo_filepath: PathBuf,
     pub max_cpu_frequency_filepath: PathBuf,
     pub device_tree_dirpath: PathBuf,
+    pub os_release_filepath: PathBuf,
     pub proc_version_filepath: PathBuf,
 }
 
 impl Default for Paths {
     fn default() -> Self {
+        let smbios_entry_filepath = PathBuf::from(smbioslib::SYS_ENTRY_FILE);
+        let smbios_table_filepath = PathBuf::from(smbioslib::SYS_TABLE_FILE);
+        let cpuinfo_filepath = PathBuf::from(constants::PROC_CPUINFO_FILE_PATH);
+        let max_cpu_frequency_filepath = PathBuf::from(constants::CPU_MAX_FREQ_FILE_PATH);
+        let device_tree_dirpath = PathBuf::from(constants::PROC_DEVICE_TREE_DIR_PATH);
+        let os_release_filepath = PathBuf::from(constants::OS_RELEASE_FILE_PATH);
+        let proc_version_filepath = PathBuf::from(constants::PROC_VERSION_FILE_PATH);
         Self {
-            smbios_entry_filepath: PathBuf::from(smbioslib::SYS_ENTRY_FILE),
-            smbios_table_filepath: PathBuf::from(smbioslib::SYS_TABLE_FILE),
-            cpuinfo_filepath: PathBuf::from(constants::PROC_CPUINFO_FILE_PATH),
-            max_cpu_frequency_filepath: PathBuf::from(constants::CPU_MAX_FREQ_FILE_PATH),
-            device_tree_dirpath: PathBuf::from(constants::PROC_DEVICE_TREE_DIR_PATH),
-            proc_version_filepath: PathBuf::from(constants::PROC_VERSION_FILE_PATH),
+            smbios_entry_filepath,
+            smbios_table_filepath,
+            cpuinfo_filepath,
+            max_cpu_frequency_filepath,
+            device_tree_dirpath,
+            os_release_filepath,
+            proc_version_filepath,
         }
     }
 }
@@ -93,6 +102,7 @@ impl CertificationStatusRequest {
             smbios_entry_filepath,
             smbios_table_filepath,
             max_cpu_frequency_filepath,
+            os_release_filepath,
             proc_version_filepath,
             ..
         } = paths;
@@ -130,7 +140,8 @@ impl CertificationStatusRequest {
         let vendor = system_info.manufacturer;
 
         let architecture = get_architecture(runner)?;
-        let os = OS::try_new(proc_version_filepath.as_path(), runner)?;
+        let os = OS::try_new(&os_release_filepath, &proc_version_filepath, runner)
+            .context("cannot read OS release information")?;
         let pci_peripherals = Vec::new();
         let usb_peripherals = Vec::new();
 
@@ -154,6 +165,7 @@ impl CertificationStatusRequest {
             cpuinfo_filepath,
             max_cpu_frequency_filepath,
             device_tree_dirpath,
+            os_release_filepath,
             proc_version_filepath,
             ..
         } = paths;
@@ -163,7 +175,11 @@ impl CertificationStatusRequest {
         let board = Board::try_from(device_tree_dirpath.as_path())?;
         let chassis = None;
         let model = cpu_info.model;
-        let os = OS::try_new(proc_version_filepath.as_path(), runner)?;
+        let os = OS::try_new(
+            os_release_filepath.as_path(),
+            proc_version_filepath.as_path(),
+            runner,
+        )?;
         let pci_peripherals = Vec::new();
         let processor = Processor::try_from((
             cpuinfo_filepath.as_path(),
@@ -239,13 +255,12 @@ mod tests {
             max_cpu_frequency_filepath: get_test_filepath(
                 format!("{dir_path}/cpuinfo_max_freq").as_str(),
             ),
+            os_release_filepath: get_test_filepath(format!("{dir_path}/os-release").as_str()),
             proc_version_filepath: get_test_filepath(format!("{dir_path}/version").as_str()),
             cpuinfo_filepath: PathBuf::from("./none"),
             device_tree_dirpath: PathBuf::from("./none"),
         };
 
-        let codename_str = format!("Codename: {codename}\n");
-        let release_str = format!("No LSB modules are available.\nRelease: {release}\n");
         let lsmod_output: String = std::iter::once("Module Size Used by\n".to_owned())
             .chain(
                 kernel_modules
@@ -256,19 +271,7 @@ mod tests {
 
         let mock_calls = vec![
             ((constants::DPKG, vec!["--print-architecture"]), Ok("amd64")),
-            (
-                (constants::LSB_RELEASE, vec!["-c"]),
-                Ok(codename_str.as_str()),
-            ),
-            (
-                (constants::LSB_RELEASE, vec!["-i"]),
-                Ok("Distributor ID: Ubuntu\n"),
-            ),
-            (
-                (constants::LSB_RELEASE, vec!["-r"]),
-                Ok(release_str.as_str()),
-            ),
-            ((constants::LSMOD, vec![]), Ok(lsmod_output.as_str())),
+            ((constants::LSMOD, Vec::new()), Ok(lsmod_output.as_str())),
         ];
         let mock_runner = MockCommandRunner::new(mock_calls);
 

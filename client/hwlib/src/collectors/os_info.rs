@@ -16,13 +16,12 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::{anyhow, Context, Result};
-use lazy_static::lazy_static;
-use regex::Regex;
+use anyhow::{Context, Result};
+use os_release::OsRelease;
 use std::{fs::read_to_string, path::Path, process::Command};
 
 use crate::{
-    constants::{DPKG, LSB_RELEASE, LSMOD},
+    constants::{DPKG, LSMOD},
     models::software::{KernelPackage, OS},
 };
 
@@ -42,12 +41,20 @@ impl CommandRunner for SystemCommandRunner {
 
 impl OS {
     pub(crate) fn try_new(
+        os_release_filepath: &Path,
         proc_version_filepath: &Path,
         runner: &impl CommandRunner,
     ) -> Result<Self> {
-        let codename = get_codename(runner)?;
-        let distributor = get_distributor(runner)?;
-        let version = get_version(runner)?;
+        let release = OsRelease::new_from(os_release_filepath).with_context(|| {
+            format!("cannot read OS release information from: {os_release_filepath:?}",)
+        })?;
+        let OsRelease {
+            version_codename: codename,
+            name: distributor,
+            version_id: version,
+            ..
+        } = release;
+
         let kernel = KernelPackage::try_new(proc_version_filepath, runner)?;
         Ok(OS {
             codename,
@@ -98,39 +105,6 @@ pub(crate) fn get_architecture(runner: &impl CommandRunner) -> Result<String> {
     Ok(arch.trim().to_owned())
 }
 
-pub(super) fn get_codename(runner: &impl CommandRunner) -> Result<String> {
-    lazy_static! {
-        static ref CODENAME_RE: Regex = Regex::new(r"Codename:\s*(\S+)").unwrap();
-    }
-    get_lsb_release_info("-c", &CODENAME_RE, runner)
-}
-
-pub(super) fn get_distributor(runner: &impl CommandRunner) -> Result<String> {
-    lazy_static! {
-        static ref DISTRIBUTOR_RE: Regex = Regex::new(r"Distributor ID:\s*(\S+)").unwrap();
-    }
-    get_lsb_release_info("-i", &DISTRIBUTOR_RE, runner)
-}
-
-pub(super) fn get_version(runner: &impl CommandRunner) -> Result<String> {
-    lazy_static! {
-        static ref VERSION_RE: Regex = Regex::new(r"Release:\s*(\S+)").unwrap();
-    }
-    get_lsb_release_info("-r", &VERSION_RE, runner)
-}
-
-fn get_lsb_release_info(flag: &str, re: &Regex, runner: &impl CommandRunner) -> Result<String> {
-    let lsb_release_output = runner
-        .run_command(LSB_RELEASE, &[flag])
-        .with_context(|| "cannot get release info using lsb_release {flag}")?;
-    re.captures(&lsb_release_output)
-        .and_then(|caps| caps.get(1))
-        .map(|m| m.as_str().to_string())
-        .ok_or_else(
-            || anyhow!("cannot parse output from lsb_release {flag}: {lsb_release_output}",),
-        )
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -147,17 +121,10 @@ mod tests {
 
     #[test]
     fn test_os_try_new() {
-        let mock_calls = vec![
-            ((LSB_RELEASE, vec!["-c"]), Ok("Codename: focal\n")),
-            ((LSB_RELEASE, vec!["-i"]), Ok("Distributor ID: Ubuntu\n")),
-            (
-                (LSB_RELEASE, vec!["-r"]),
-                Ok("No LSB modules are available.\nRelease: 20.04\n"),
-            ),
-            ((LSMOD, vec![]), Ok("Module Size Used\nsnd 61440 1\n")),
-        ];
+        let mock_calls = vec![((LSMOD, Vec::new()), Ok("Module Size Used\nsnd 61440 1\n"))];
         let mock_runner = MockCommandRunner::new(mock_calls);
         let result = OS::try_new(
+            get_test_filepath("arm64/rpi4b8g/os-release").as_path(),
             get_test_filepath("arm64/rpi4b8g/version").as_path(),
             &mock_runner,
         );
