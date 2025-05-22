@@ -1,33 +1,28 @@
 [package]
 name = "hwlib"
 description = "Collects and sends hardware information to hwapi to find testing status of the device model"
-license = "GPL-3.0-only"
-version = "0.9.1"
-edition = "2021"
-authors = [
-  "Canonical Hardware Certification <canonical-hw-cert@lists.launchpad.net>",
-  "Nadzeya Hutsko <nadzeya.hutsko@canonical.com>",
-  "Matias Piipari <matias.piipari@canonical.com>",
-]
-documentation = "https://github.com/canonical/hardware-api/"
-homepage = "https://github.com/canonical/hardware-api/"
-repository = "https://github.com/canonical/hardware-api/"
-exclude = ["debian/*",]
+license = "LGPL-3.0-only"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+documentation.workspace = true
+homepage.workspace = true
+repository.workspace = true
 
 [lib]
 name = "hwlib"
-crate-type = [ "cdylib", "rlib",]
+crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 os-release = { version = "0.1.0" }
-serde_json = "~1.0.0"
+serde_json = { workspace = true }
 reqwest = { version = "0.12.0", features = ["json"] }
 serde = { version = "~1.0.0", features = ["derive"] }
-tokio = { version = "1.43.1", features = ["rt", "rt-multi-thread", "test-util"], default-features = false }
+tokio = { workspace = true, features = ["rt", "rt-multi-thread", "test-util"] }
 pyo3 = { version = "0.25.0", features = ["extension-module"] }
 smbios-lib = "0.9.0"
 regex = "1.10.0"
-anyhow = "~1.0.0"
+anyhow = { workspace = true }
 itertools = "0.14.0"
 lazy_static = "1.5.0"
 
