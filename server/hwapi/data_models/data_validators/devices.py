@@ -16,7 +16,6 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
 
-from datetime import date
 from pydantic import BaseModel
 
 from hwapi.data_models.enums import DeviceStatus
@@ -35,7 +34,7 @@ class BiosValidator(BaseModel):
     version: str
     revision: str | None
     firmware_revision: str | None
-    release_date: date | None
+    release_date: str | None
 
 
 class BoardValidator(BaseModel):
