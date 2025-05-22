@@ -26,12 +26,6 @@ jobs:
         working-directory: integration-tests
     steps:
     - uses: actions/checkout@v4
-    - name: Set up docker buildx
-      uses: docker/setup-buildx-action@v3
-      with:
-        config-inline: |
-          [registry."docker.io"]
-          mirrors = ["https://github-runner-dockerhub-cache.canonical.com:5000"]
     - name: Install docker compose
       run: |
         sudo apt update
