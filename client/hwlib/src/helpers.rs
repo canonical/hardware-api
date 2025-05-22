@@ -50,7 +50,7 @@ pub(crate) mod test_utils {
                     Ok(output) => Ok(output.to_string()),
                     Err(e) => Err(anyhow!(e.to_string())),
                 },
-                None => Err(anyhow!("missing mock: cmd={cmd:?} args={args:?}")),
+                None => Err(anyhow!(format!("missing mock: cmd={cmd:?} args={args:?}"))),
             }
         }
     }

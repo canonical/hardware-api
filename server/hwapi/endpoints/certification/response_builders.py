@@ -40,7 +40,9 @@ def build_related_certified_response(
             version=bios.version,
             revision=bios.revision,
             firmware_revision=bios.firmware_revision,
-            release_date=bios.release_date,
+            release_date=(
+                bios.release_date.strftime("%m/%d/%Y") if bios.release_date else None
+            ),
         )
         if bios
         else None
@@ -85,7 +87,9 @@ def build_certified_response(
             version=bios.version,
             revision=bios.revision,
             firmware_revision=bios.firmware_revision,
-            release_date=bios.release_date,
+            release_date=(
+                bios.release_date.strftime("%m/%d/%Y") if bios.release_date else None
+            ),
         )
         if bios
         else None
@@ -129,7 +133,9 @@ def build_certified_image_exists_response(
             version=bios.version,
             revision=bios.revision,
             firmware_revision=bios.firmware_revision,
-            release_date=bios.release_date,
+            release_date=(
+                bios.release_date.strftime("%m/%d/%Y") if bios.release_date else None
+            ),
         )
         if bios
         else None

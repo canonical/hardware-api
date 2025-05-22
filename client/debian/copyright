@@ -68,10 +68,6 @@ Files:
 Copyright: 2014, 2016 Alex Crichton
 License: MIT or Apache-2.0
 
-Files: rust-vendor/deranged/*
-Copyright: 2024 Jacob Pratt et al
-License: MIT or Apache-2.0
-
 Files: rust-vendor/diff/*
 Copyright: 2015 Utkarsh Kukreti
 License: MIT or Apache-2.0
@@ -190,10 +186,6 @@ Files: rust-vendor/native-tls/*
 Copyright: 2016 The rust-native-tls Developers
 License: MIT or Apache-2.0
 
-Files: rust-vendor/num-conv/*
-Copyright: 2023 Jacob Pratt
-License: MIT or Apache-2.0
-
 Files: rust-vendor/openssl-macros/*
 Copyright: 2022 Steven Fackler
 License: MIT or Apache-2.0
@@ -214,16 +206,12 @@ Files: rust-vendor/pin-utils/*
 Copyright: 2018 The pin-utils authors
 License: MIT or Apache-2.0
 
-Files: rust-vendor/powerfmt/*
-Copyright: 2023 Jacob Pratt et al
-License: MIT or Apache-2.0
-
 Files: rust-vendor/pretty_assertions/*
 Copyright: 2016 rust-derive-builder contributors
 License: MIT or Apache-2.0
 
 Files: rust-vendor/pyo3*/*
-Copyright: 2023-present PyO3 Project and Contributors.  https://github.com/PyO3
+Copyright: 2023-present PyO3 Project and Contributors.
 License: MIT or Apache-2.0
 
 Files: rust-vendor/reqwest/*
@@ -283,10 +271,6 @@ License: Apache-2.0
 Files: rust-vendor/synstructure/*
 Copyright: 2016 Nika Layzell
 License: MIT
-
-Files: rust-vendor/time*/*
-Copyright: Jacob Pratt et al
-License: MIT or Apache-2.0
 
 Files:
   rust-vendor/tokio/*
