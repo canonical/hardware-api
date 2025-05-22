@@ -27,8 +27,7 @@ components:
           title: Firmware Revision
         release_date:
           anyOf:
-          - format: date
-            type: string
+          - type: string
           - type: 'null'
           title: Release Date
         revision:

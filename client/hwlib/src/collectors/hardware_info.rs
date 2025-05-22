@@ -27,11 +27,10 @@ use std::{
     io::{Error as IoError, ErrorKind},
     path::Path,
 };
-use time::macros::format_description;
 
 use crate::{
     collectors::cpuinfo::{CpuFrequency, CpuInfo},
-    helpers::{append_to_pathbuf, parse_date},
+    helpers::append_to_pathbuf,
     models::devices::{Bios, Board, Chassis, Processor},
 };
 
@@ -39,10 +38,7 @@ impl TryFrom<&SMBiosInformation<'_>> for Bios {
     type Error = anyhow::Error;
 
     fn try_from(bios_info: &SMBiosInformation) -> Result<Self> {
-        let release_date_str = bios_info.release_date().to_string();
-        let parsed_date = parse_date(&release_date_str)?;
-        let output_format = format_description!("[year]-[month]-[day]");
-        let release_date = parsed_date.format(&output_format)?;
+        let release_date = bios_info.release_date().to_string();
 
         let firmware_revision = match (
             bios_info.system_bios_major_release(),
@@ -245,7 +241,7 @@ mod tests {
         assert!(bios.revision.is_some());
         assert_eq!(bios.vendor, "American Megatrends Inc.");
         assert_eq!(bios.version, "0406");
-        assert_eq!(bios.release_date.unwrap(), "2018-08-27");
+        assert_eq!(bios.release_date.unwrap(), "08/27/2018");
         assert_eq!(bios.firmware_revision.unwrap(), "5.11");
         assert_eq!(bios.revision.unwrap(), "0406");
     }
@@ -260,7 +256,7 @@ mod tests {
         let bios_info_vec = smbios_data.collect::<SMBiosInformation>();
         let bios_info = bios_info_vec.first().unwrap();
         let bios = Bios::try_from(bios_info).unwrap();
-        assert_eq!(bios.release_date.unwrap(), "1998-02-02");
+        assert_eq!(bios.release_date.unwrap(), "2/2/98");
     }
 
     #[test]

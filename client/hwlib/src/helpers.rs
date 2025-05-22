@@ -16,46 +16,12 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use anyhow::{anyhow, Context, Result};
 use std::path::PathBuf;
-use time::Date;
 
 pub(crate) fn append_to_pathbuf(p: PathBuf, s: &str) -> PathBuf {
     let mut p = p.into_os_string();
     p.push(s);
     p.into()
-}
-
-pub(crate) fn parse_date(raw_date: &str) -> Result<Date> {
-    let [raw_month, raw_day, raw_year] = raw_date
-        .trim()
-        .split('/')
-        .collect::<Vec<_>>()
-        .try_into()
-        .map_err(|_| anyhow!("expected 3 components in date"))
-        .with_context(|| format!("cannot parse date {raw_date:?}"))?;
-
-    let month = raw_month
-        .parse::<u8>()
-        .context(format!("cannot parse month: {raw_month}"))?;
-    let day = raw_day
-        .parse::<u8>()
-        .context(format!("cannot parse day: {raw_day}"))?;
-    let year = match raw_year.len() {
-        2 => {
-            let yy = raw_year
-                .parse::<i32>()
-                .context(format!("cannot parse year: {raw_year}"))?;
-            1900 + yy
-        }
-        4 => raw_year
-            .parse::<i32>()
-            .context(format!("cannot parse year: {raw_year}"))?,
-        _ => return Err(anyhow!(format!("invalid year format: {raw_year}"))),
-    };
-
-    Date::from_calendar_date(year, month.try_into()?, day)
-        .context(format!("cannot construct date from {raw_date}"))
 }
 
 #[cfg(test)]

@@ -392,6 +392,8 @@ class CertificationStatusTestHelper:
             "vendor": bios.vendor.name,
             "version": bios.version,
             "revision": bios.revision,
-            "release_date": bios.release_date.strftime("%Y-%m-%d"),
+            "release_date": (
+                bios.release_date.strftime("%m/%d/%Y") if bios.release_date else None
+            ),
             "firmware_revision": bios.firmware_revision,
         }
