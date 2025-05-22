@@ -26,12 +26,17 @@ jobs:
         working-directory: integration-tests
     steps:
     - uses: actions/checkout@v4
+    - name: Create Docker config with mirror
+      run: |
+        MIRROR_URL="${DOCKERHUB_MIRROR:-https://github-runner-dockerhub-cache.canonical.com:5000}"
+        mkdir -p ~/.docker
+        echo "{\"registry-mirrors\": [\"${MIRROR_URL}\"]}" > ~/.docker/daemon.json
+        echo '[registry."docker.io"]' > $GITHUB_WORKSPACE/buildkitd.toml
+        echo "  mirrors = [\"${MIRROR_URL}\"]" >> $GITHUB_WORKSPACE/buildkitd.toml
     - name: Set up docker buildx
       uses: docker/setup-buildx-action@v3
       with:
-        config-inline: |
-          [registry."docker.io"]
-          mirrors = ["https://github-runner-dockerhub-cache.canonical.com:5000"]
+        buildkitd-config: ${{ github.workspace }}/buildkitd.toml
     - name: Install docker compose
       run: |
         sudo apt update
