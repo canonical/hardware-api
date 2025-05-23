@@ -3,6 +3,7 @@ Upstream-Name: hardware-api client
 Source: https://github.com/canonical/hardware-api/tree/main/client/
 
 Files: *
+Files-Excluded: rust-vendor/*
 Copyright: Copyright 2024 Canonical Ltd.
 License: GPL-3
 
