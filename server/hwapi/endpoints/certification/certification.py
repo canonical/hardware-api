@@ -58,6 +58,7 @@ def check_certification(
     # Check against vendor
     vendor = repository.get_vendor_by_name(db, system_info.vendor)
     if not vendor:
+        logging.warning("Failed to match vendor: %s", system_info.vendor)
         return NotCertifiedResponse()
 
     # Match against board and bios
@@ -68,7 +69,7 @@ def check_certification(
             db, system_info.architecture, board, bioses
         )
     except ValueError:
-        logging.error(
+        logging.warning(
             (
                 "Hardware cannot be found. Machine vendor: %s, model: %s"
                 ", board model: %s, board version: %s, bios version: %s"
