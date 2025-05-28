@@ -162,6 +162,10 @@ Files: rust-vendor/ipnet/*
 Copyright: 2017 Juniper Networks, Inc.
 License: MIT or Apache-2.0
 
+Files: rust-vendor/iri-string/*
+Copyright: 2019-2024 YOSHIOKA Takuma
+License: MIT or Apache-2.0
+
 Files: rust-vendor/itertools/*
 Copyright: 2015 Jack Wrenn
 License: MIT or Apache-2.0
@@ -305,7 +309,7 @@ Files:
   rust-vendor/tokio-util/*
   rust-vendor/tower*/*
   rust-vendor/tracing*/*
-Copyright: 2019 Tokio Contributors
+Copyright: 2019-2021 Tokio Contributors
 License: MIT
 
 Files: rust-vendor/tokio-macros/*
