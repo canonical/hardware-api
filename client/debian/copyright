@@ -243,7 +243,6 @@ License: MIT or Apache-2.0
 
 Files:
   rust-vendor/rustls/*
-  rust-vendor/rustls-pemfile/*
 Copyright: 2016 Joseph Birr-Pixton
 License: MIT or Apache-2.0
 
