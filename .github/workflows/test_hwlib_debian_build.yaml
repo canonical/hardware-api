@@ -1,13 +1,15 @@
 name: Test build hwlib Rust package with sbuild
+permissions:
+  contents: read
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
       - client/**
       - Cargo.*
       - ".github/workflows/test_hwlib_debian_build.yaml"
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
       - client/**
       - Cargo.*
@@ -15,7 +17,6 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
 
 jobs:
   validate-version:
@@ -27,11 +28,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+          persist-credentials: false
+      - name: Install Rust toolchain
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustup override set stable
       - name: Get version from git tag
         id: get-version
         run: |
@@ -46,22 +48,26 @@ jobs:
           echo "Git tag base version: $BASE_VERSION"
       - name: Check hwlib and hwctl Cargo versions
         run: |
-          echo "Using Git tag version: ${{ steps.get-version.outputs.version }}"
+          echo "Using Git tag version: $GIT_TAG_VERSION"
           for manifest in hwlib/Cargo.toml hwctl/Cargo.toml; do
             CARGO_VERSION=$(cargo metadata --manifest-path "$manifest" --no-deps --format-version 1 | jq -r '.packages[0].version')
-            if [[ $CARGO_VERSION != ${{ steps.get-version.outputs.version }} ]]; then
-              echo "Version mismatch in $manifest: $CARGO_VERSION (expected ${{ steps.get-version.outputs.version }})"
+            if [[ $CARGO_VERSION != $GIT_TAG_VERSION ]]; then
+              echo "Version mismatch in $manifest: $CARGO_VERSION (expected $GIT_TAG_VERSION)"
               exit 1
             fi
           done
+        env:
+          GIT_TAG_VERSION: ${{ steps.get-version.outputs.version }}
       - name: Check Debian changelog version
         run: |
-          echo "Using Git tag version: ${{ steps.get-version.outputs.version }}"
+          echo "Using Git tag version: $GIT_TAG_VERSION"
           DEBIAN_VERSION=$(dpkg-parsechangelog --show-field Version | cut -d'~' -f1)
-          if [[ $DEBIAN_VERSION != ${{ steps.get-version.outputs.version }} ]]; then
-            echo "Debian changelog version mismatch: $DEBIAN_VERSION (expected ${{ steps.get-version.outputs.version }})"
+          if [[ $DEBIAN_VERSION != $GIT_TAG_VERSION ]]; then
+            echo "Debian changelog version mismatch: $DEBIAN_VERSION (expected $GIT_TAG_VERSION)"
             exit 1
           fi
+        env:
+          GIT_TAG_VERSION: ${{ steps.get-version.outputs.version }}
 
   build:
     runs-on: [self-hosted, linux, large, noble, x64]
@@ -70,63 +76,67 @@ jobs:
         working-directory: client
     needs: [validate-version]
     steps:
-    - name: Checkout the repository
-      uses: actions/checkout@v4
-    # Prevent lxd-agent from getting restarted on apt upgrades.
-    # https://warthogs.atlassian.net/browse/ISD-2139
-    - name: Disable lxd-agent restart
-      run: |
-        mkdir -p /etc/needrestart/conf.d
-        echo '$nrconf{override_rc}{qr(^lxd-agent.service$)} = 0;' | sudo tee /etc/needrestart/conf.d/lxdagent.conf
-    - name: Download dependencies
-      run: |
-        set -xeu
-        sudo DEBIAN_FRONTEND=noninteractive apt -y update
-        sudo DEBIAN_FRONTEND=noninteractive apt install -y \
-          sbuild \
-          schroot \
-          debootstrap \
-          ubuntu-dev-tools \
-          distro-info-data \
-          dh-cargo \
-          dh-apparmor \
-          pkg-config \
-          libssl-dev
-    - uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: stable
-        override: true
-    - name: Vendor the dependencies
-      run: |
-        cargo install cargo-vendor-filterer
-        ./debian/vendor-rust.sh
-    - name: Generate checksums
-      run: ./debian/generate_checksums.py
-    - run: dpkg-buildpackage -us -uc -S
-    - name: Setup sbuild and build the package
-      run: |
-        set -xeu
+      - name: Checkout the repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      # Prevent lxd-agent from getting restarted on apt upgrades.
+      # https://warthogs.atlassian.net/browse/ISD-2139
+      - name: Disable lxd-agent restart
+        run: |
+          mkdir -p /etc/needrestart/conf.d
+          echo '$nrconf{override_rc}{qr(^lxd-agent.service$)} = 0;' | sudo tee /etc/needrestart/conf.d/lxdagent.conf
+      - name: Download dependencies
+        run: |
+          set -xeu
+          sudo DEBIAN_FRONTEND=noninteractive apt -y update
+          sudo DEBIAN_FRONTEND=noninteractive apt install -y \
+            sbuild \
+            schroot \
+            debootstrap \
+            ubuntu-dev-tools \
+            distro-info-data \
+            dh-cargo \
+            dh-apparmor \
+            pkg-config \
+            libssl-dev
+      - name: Install Rust toolchain
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustup override set stable
+      - name: Vendor the dependencies
+        run: |
+          cargo install cargo-vendor-filterer
+          ./debian/vendor-rust.sh
+      - name: Generate checksums
+        run: ./debian/generate_checksums.py
+      - run: dpkg-buildpackage -us -uc -S
+      - name: Setup sbuild and build the package
+        run: |
+          set -xeu
 
-        sudo sbuild-adduser $USER
-        cp /usr/share/doc/sbuild/examples/example.sbuildrc /home/$USER/.sbuildrc
+          sudo sbuild-adduser $USER
+          cp /usr/share/doc/sbuild/examples/example.sbuildrc /home/$USER/.sbuildrc
 
-        sg sbuild -c "mk-sbuild questing"
+          sg sbuild -c "mk-sbuild questing"
 
-        PACKAGE_DSC=$(find ../ -name "*.dsc" | head -n 1)
-        if [ -z "$PACKAGE_DSC" ]; then
-          echo "No .dsc file found"
-          exit 1
-        fi
-        echo "Running sbuild for $PACKAGE_DSC"
-        sg sbuild -c "sbuild $PACKAGE_DSC -d questing -v --resolve-alternatives --no-clean-source --no-run-lintian"
+          PACKAGE_DSC=$(find ../ -name "*.dsc" | head -n 1)
+          if [ -z "$PACKAGE_DSC" ]; then
+            echo "No .dsc file found"
+            exit 1
+          fi
+          echo "Running sbuild for $PACKAGE_DSC"
+          sg sbuild -c "sbuild $PACKAGE_DSC -d questing -v --resolve-alternatives --no-clean-source --no-run-lintian"
 
-        mv *.deb '${{ runner.temp }}'
-    # TODO: Uncomment this step one lintian gets updated
-    # - run: lintian --pedantic --verbose
-    - name: Archive artifacts
-      uses: actions/upload-artifact@v4
-      with:
-        name: ci-debs-questing
-        path: '${{ runner.temp }}/*.deb'
-        retention-days: 3
+          mv *.deb "$RUNNER_TEMP"
+        env:
+          RUNNER_TEMP: ${{ runner.temp }}
+      # TODO: Uncomment this step one lintian gets updated
+      # - run: lintian --pedantic --verbose
+      - name: Archive artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-debs-questing
+          path: "${{ runner.temp }}/*.deb"
+          retention-days: 3

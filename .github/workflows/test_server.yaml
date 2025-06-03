@@ -1,12 +1,14 @@
 name: Test API server
+permissions:
+  contents: read
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
       - server/**
       - ".github/workflows/test_server.yaml"
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
       - server/**
       - ".github/workflows/test_server.yaml"
@@ -24,7 +26,8 @@ jobs:
       - name: Checkout repo & submodules
         uses: actions/checkout@v4
         with:
-          submodules: "true"
+          persist-credentials: false
+          submodules: true
       - name: Install docker-compose
         run: |
           COMPOSE_URL="https://github.com/docker/compose/releases/download/1.29.2/docker-compose-$(uname -s)-$(uname -m)"
@@ -57,13 +60,13 @@ jobs:
         with:
           name: test_coverage
       - name: Report Coverage and annotate PR (if exists)
-        uses: orgoro/coverage@v3
+        uses: orgoro/coverage@3f13a558c5af7376496aa4848bf0224aead366ac # v3.2
         with:
-            coverageFile: coverage.xml
-            token: ${{ secrets.GITHUB_TOKEN }}
-            thresholdAll: 0.70
-            thresholdNew: 0.80
-            thresholdModified: 0.0
+          coverageFile: coverage.xml
+          token: ${{ secrets.GITHUB_TOKEN }}
+          thresholdAll: 0.70
+          thresholdNew: 0.80
+          thresholdModified: 0.0
 
   compare-openapi:
     runs-on: [self-hosted, linux, large, noble, x64]
@@ -72,6 +75,8 @@ jobs:
         working-directory: server
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"

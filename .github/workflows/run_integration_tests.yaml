@@ -1,14 +1,16 @@
 name: Run integration tests
+permissions:
+  contents: read
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
       - server/**
       - client/**
       - tests/**
       - ".github/workflows/run_integration_tests.yaml"
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
       - server/**
       - client/**
@@ -25,11 +27,13 @@ jobs:
       run:
         working-directory: integration-tests
     steps:
-    - uses: actions/checkout@v4
-    - name: Install docker compose
-      run: |
-        sudo apt update
-        sudo apt install -y docker-compose-v2
-    - name: Build and run integration tests
-      run: |
-        docker compose up --build --abort-on-container-exit
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Install docker compose
+        run: |
+          sudo apt update
+          sudo apt install -y docker-compose-v2
+      - name: Build and run integration tests
+        run: |
+          docker compose up --build --abort-on-container-exit

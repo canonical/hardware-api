@@ -1,13 +1,15 @@
 name: Test client lib and CLI tool
+permissions:
+  contents: read
 on:
   push:
-    branches: [ main ]
+    branches: [main]
     paths:
       - client/**
       - Cargo.*
       - ".github/workflows/test_client.yaml"
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
       - client/**
       - Cargo.*
@@ -15,7 +17,6 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
 
 jobs:
   lint-and-test:
@@ -25,15 +26,17 @@ jobs:
         working-directory: client
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Install dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y pkgconf libssl-dev build-essential
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - name: Install Rust toolchain
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustup override set stable
       - run: cargo install cargo-vendor-filterer
       - name: Vendor the dependencies
         run: |
@@ -65,15 +68,17 @@ jobs:
     needs: lint-and-test
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Install system dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y pkgconf libssl-dev build-essential
-      - uses: actions-rs/toolchain@v1
-        with:
-          profile: minimal
-          toolchain: stable
-          override: true
+      - name: Install Rust toolchain
+        run: |
+          rustup toolchain install stable --profile minimal
+          rustup default stable
+          rustup override set stable
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
