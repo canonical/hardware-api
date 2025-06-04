@@ -77,12 +77,12 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Install poetry
+        run: pipx install poetry
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
-      - uses: Gr1N/setup-poetry@12c727a3dcf8c1a548d8d041c9d5ef5cebb3ba2e
-        with:
-          poetry-version: "2.0.0"
+          cache: poetry
       - run: poetry install
       - name: Start FastAPI application
         run: poetry run uvicorn hwapi.main:app --port 8001 &
