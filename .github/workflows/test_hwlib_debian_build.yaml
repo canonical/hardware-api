@@ -30,10 +30,9 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Install Rust toolchain
-        run: |
-          rustup toolchain install stable --profile minimal
-          rustup default stable
-          rustup override set stable
+        uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # v1
+        with:
+          toolchain: stable
       - name: Get version from git tag
         id: get-version
         run: |
@@ -101,10 +100,9 @@ jobs:
             pkg-config \
             libssl-dev
       - name: Install Rust toolchain
-        run: |
-          rustup toolchain install stable --profile minimal
-          rustup default stable
-          rustup override set stable
+        uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # v1
+        with:
+          toolchain: stable
       - name: Vendor the dependencies
         run: |
           cargo install cargo-vendor-filterer

@@ -33,10 +33,10 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pkgconf libssl-dev build-essential
       - name: Install Rust toolchain
-        run: |
-          rustup toolchain install stable --profile minimal
-          rustup default stable
-          rustup override set stable
+        uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # v1
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
       - run: cargo install cargo-vendor-filterer
       - name: Vendor the dependencies
         run: |
@@ -50,12 +50,8 @@ jobs:
           cat ~/.cargo/config.toml
       - run: cargo build --offline
       - run: cargo check
-      - run: |
-          rustup component add rustfmt
-          cargo fmt --all -- --check
-      - run: |
-          rustup component add clippy
-          cargo clippy --all-features --verbose
+      - run: cargo fmt --all -- --check
+      - run: cargo clippy --all-features --verbose
       - run: cargo clippy --tests --verbose
       - name: Run cargo test
         run: cargo test
@@ -75,15 +71,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y pkgconf libssl-dev build-essential
       - name: Install Rust toolchain
-        run: |
-          rustup toolchain install stable --profile minimal
-          rustup default stable
-          rustup override set stable
+        uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # v1
+        with:
+          toolchain: stable
       - uses: actions/setup-python@v5
         with:
           python-version: "3.13"
       - name: Install tox
-        run: |
-          pip install tox
+        run: pip install tox
       - name: Run tox
         run: tox
