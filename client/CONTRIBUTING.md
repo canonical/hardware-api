@@ -1,5 +1,11 @@
 # Contributing to the Hardware API Client
 
+This document provides the information needed to contribute to the Hardware API
+Client.
+
+For basic usage of the `hardware-api` client, refer to the client
+[readme](./README.md).
+
 For general contribution guidelines for the `hardware-api` project,
 refer to the [contribution guide](../CONTRIBUTING.md).
 
@@ -266,7 +272,7 @@ directory:
 
 ## Refresh Cargo Dependencies
 
-To update the dependencies' versiions, simply run `cargo update`.
+To update the dependencies' versions, simply run `cargo update`.
 
 However, this also requires updating the `XS-Vendored-Sources-Rust` header in
 [`debian/control`](./debian/control). You can get the new header value from the

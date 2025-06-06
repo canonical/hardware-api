@@ -1,5 +1,8 @@
 # Contributing to the Hardware API Server
 
+This document provides the information needed to contribute to the Hardware API
+Server.
+
 For general contribution guidelines for the `hardware-api` project,
 refer to the [contribution guide](../CONTRIBUTING.md).
 
