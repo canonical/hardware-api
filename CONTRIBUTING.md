@@ -10,6 +10,12 @@ Hardware API is hosted and managed on [GitHub]. If you're not familiar with
 how GitHub works, their [quickstart documentation][github-quickstart] provides
 an excellent introduction to all the tools and processes you'll need to know.
 
+For server-specific contribution guidelines, refer to the
+[server contribution guide](./server/CONTRIBUTING.md).
+
+For client-specific contribution guidelines, refer to the
+[client contribution guide](./client/CONTRIBUTING.md).
+
 ## Pre-requisites
 
 Before you can begin, you will need to:

@@ -15,7 +15,7 @@ It consists of both the `hwlib` library and `hwctl` CLI tool.
 ## Basic Usage
 
 To check the machine certification status, simply run `hwctl` with
-`sudo`[^sudo] privileges:
+root[^sudo] privileges:
 
 ```shell
 sudo hwctl
@@ -38,10 +38,16 @@ On snap-ready systems, you can install it on the command-line with:
 sudo snap install hwctl
 ```
 
+On Questing Quokka (25.10), you can also install it using `apt`:
+
+```shell
+sudo apt-get install hwctl
+```
+
 ## Community and Support
 
 You can report any issues, bugs, or feature requests on the project's
-[GitHub repository][github].
+[GitHub repository][github-issues].
 
 ## Contribute to the Hardware API Client
 
@@ -61,12 +67,11 @@ The Hardware API Client is released under the following licenses:
 
 [^sudo]:
     The client requires root access since we collect the hardware information
-    using SMBIOS data. If you're running it on a device that doesn't have SMBIOS
-    data available, root privileges are not required.
+    using SMBIOS data.
 
 [snapcraft-badge]: https://snapcraft.io/hwctl/badge.svg
 [snapcraft-site]: https://snapcraft.io/hwctl
 [test-badge]: https://github.com/canonical/hardware-api/actions/workflows/test_client.yaml/badge.svg
 [test-site]: https://github.com/canonical/hardware-api/actions/workflows/test_client.yaml
 [hw-server]: https://hw.ubuntu.com
-[github]: https://github.com/canonical/hardware-api
+[github-issues]: https://github.com/canonical/hardware-api/issues

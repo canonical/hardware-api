@@ -11,17 +11,6 @@ refer to the [contribution guide](../CONTRIBUTING.md).
 
 ## Build the Package
 
-### Cargo Builds
-
-To build the project with Rust, run the following:
-
-```shell
-sudo apt-get install -y pkgconf libssl-dev
-cargo build
-# to build only the library: cargo build --package=hwlib
-# to build only the CLI tool: cargo build --package=hwctl
-```
-
 ### Offline Mode
 
 To build the package using the vendored dependencies and then run it in offline
@@ -123,7 +112,7 @@ To create a new version of the client package, follow these steps:
    field in [`Cargo.toml`](./Cargo.toml). Make sure to commit these changes
    along with the updated changelog.
 
-#### Build Client Debian Package
+#### Build the Package
 
 You need to vendor the Rust dependencies:
 
@@ -148,7 +137,7 @@ dpkg-buildpackage -S # -k=<key-to-sign> if you have more than one GPG key for th
 You can also `lintian --pedantic` to statically check the files under
 [`debian/`](./debian/).
 
-#### Test Debian Package Build
+#### Test the Package Build
 
 You can test your package and ubild it with [`sbuild`][sbuild]. In this example,
 we do it for the questing distro, but you can replace it with the desired one:
@@ -220,7 +209,7 @@ autopkgtest \
   -- qemu --ram-size 4096 /var/lib/adt-images/autopkgtest-questing-amd64.img
 ```
 
-#### Publish the Debian Package
+#### Upload the Package to a PPA
 
 After the archive is created and you've tested the build locally, you can
 publish the package by running:
