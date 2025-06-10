@@ -12,4 +12,4 @@ opened in GitHub.
 
 The information regarding how to build the client source package and
 refresh cargo dependencies is located in the [client
-README.md](../README.md).
+CONTRIBUTING.md](../CONTRIBUTING.md).
