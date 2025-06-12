@@ -54,3 +54,10 @@ parts:
       craftctl set version="$version"
     build-environment:
       - OS_RELEASE_FILE_PATH: /var/lib/snapd/hostfs/etc/os-release
+    override-build: |
+      craftctl default
+      cp hwctl.1 $CRAFT_PART_INSTALL/hwctl.1
+    organize:
+      # Snap does not support manpages. In order to enable them, execute:
+      # sudo ln -s /snap/hwctl/current/man/man1/hwctl.1 /usr/share/man/man1/hwctl.1
+      hwctl.1: man/man1/hwctl.1
