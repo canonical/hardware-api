@@ -1,11 +1,49 @@
 type: charm
-bases:
-  - build-on:
-      - name: ubuntu
-        channel: "22.04"
-    run-on:
-      - name: ubuntu
-        channel: "22.04"
+name: hardware-api
+title: Hardware API Server
+summary: Determine if a given hardware configuration is Ubuntu Certified.
+description: |
+  Canonical Hardware API Server is a RESTful API server that provides access to
+  hardware information for a given machine, in particular helping you determine
+  if a given hardware configuration is Ubuntu Certified, matches partially to a
+  Certified system, or is not Certified.
+
+  For schema, see https://canonical.github.io/hardware-api.
+
+links:
+  contact: https://github.com/canonical/hardware-api/issues
+  issues: https://github.com/canonical/hardware-api/issues
+  source: https://github.com/canonical/hardware-api/tree/main/server
+  website:
+    - https://hw.ubuntu.com
+    - https://canonical.github.io/hardware-api
+
+base: ubuntu@22.04
+platforms:
+  amd64:
+
+containers:
+  hardware-api:
+    resource: hardware-api-image
+
+resources:
+  hardware-api-image:
+    type: oci-image
+    description: OCI image for hardware-api
+    upstream-source: ghcr.io/canonical/hardware-api/hwapi:main
+
+requires:
+  nginx-route:
+    interface: nginx-route
+
+charm-libs:
+  - lib: nginx_ingress_integrator.nginx_route
+    version: "0"
+
+parts:
+  hardware-api:
+    plugin: charm
+    source: .
 
 config:
   options:
