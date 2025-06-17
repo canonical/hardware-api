@@ -44,6 +44,7 @@ pub async fn send_certification_status_request(
     let mut server_url = url.clone();
     server_url.push_str(CERT_STATUS_ENDPOINT);
     let response = client.post(server_url).json(request).send().await?;
+    response.error_for_status_ref()?;
     let response_text = response.text().await?;
     let typed_response: CertificationStatusResponse = serde_json::from_str(&response_text)?;
 
