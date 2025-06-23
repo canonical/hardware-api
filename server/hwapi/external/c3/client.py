@@ -18,8 +18,12 @@
 
 import requests
 import logging
+import time
+from http import HTTPStatus
 from typing import Callable, Type
 from pydantic import BaseModel
+from requests.adapters import HTTPAdapter
+from urllib3.util.retry import Retry
 
 from sqlite3 import IntegrityError as SQLite3IntegrityError
 from sqlalchemy.orm import Session
@@ -44,6 +48,100 @@ class C3Client:
 
     def __init__(self, db: Session):
         self.db = db
+        self.session = self._create_session_with_retries()
+
+    def _create_session_with_retries(self):
+        """Create a requests session with retry strategy"""
+        session = requests.Session()
+
+        retry_strategy = Retry(
+            total=5,  # Total number of retries
+            backoff_factor=2,  # Wait time between retries (2**retry_count seconds)
+            status_forcelist=[
+                HTTPStatus.TOO_MANY_REQUESTS,
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+                HTTPStatus.BAD_GATEWAY,
+                HTTPStatus.SERVICE_UNAVAILABLE,
+                HTTPStatus.GATEWAY_TIMEOUT,
+            ],  # HTTP status codes to retry
+            allowed_methods=["HEAD", "GET", "OPTIONS"],  # Only retry safe methods
+            raise_on_status=False,  # Don't raise exception on retry-able status codes
+        )
+
+        # Mount adapter with retry strategy
+        adapter = HTTPAdapter(max_retries=retry_strategy)
+        session.mount("http://", adapter)
+        session.mount("https://", adapter)
+
+        return session
+
+    def _make_request_with_retries(
+        self, url: str, max_retries=5, base_delay=2, max_delay=60
+    ):
+        """Make HTTP request with custom retry logic for timeout errors"""
+        for attempt in range(max_retries):
+            try:
+                logger.debug(
+                    "Attempting request to %s (attempt %d/%d)",
+                    url,
+                    attempt + 1,
+                    max_retries,
+                )
+                response = self.session.get(url, timeout=90)
+                response.raise_for_status()
+                return response
+
+            except (
+                requests.exceptions.ReadTimeout,
+                requests.exceptions.ConnectTimeout,
+                requests.exceptions.ConnectionError,
+            ) as e:
+
+                if attempt == max_retries - 1:  # Last attempt
+                    logger.error(
+                        "Failed to fetch %s after %d attempts", url, max_retries
+                    )
+                    raise e
+
+                # Calculate delay with exponential backoff
+                delay = min(base_delay * (2**attempt), max_delay)
+                logger.warning(
+                    "Request to %s failed (attempt %d/%d): %s. Retrying in %d seconds...",
+                    url,
+                    attempt + 1,
+                    max_retries,
+                    e,
+                    delay,
+                )
+                time.sleep(delay)
+
+            except requests.exceptions.HTTPError as e:
+                # For HTTP errors, check if it's worth retrying
+                status_code = HTTPStatus(e.response.status_code)
+                if (
+                    status_code.is_server_error
+                    or status_code == HTTPStatus.TOO_MANY_REQUESTS
+                ):
+                    if attempt == max_retries - 1:
+                        logger.error(
+                            "Failed to fetch %s after %d attempts", url, max_retries
+                        )
+                        raise e
+
+                    delay = min(base_delay * (2**attempt), max_delay)
+                    logger.warning(
+                        "HTTP error %d for %s (attempt %d/%d). Retrying in %d seconds...",
+                        status_code,
+                        url,
+                        attempt + 1,
+                        max_retries,
+                        delay,
+                    )
+                    time.sleep(delay)
+                else:
+                    # Don't retry for client errors (4xx except 429)
+                    logger.error("Non-retryable HTTP error for %s: %s", url, e)
+                    raise e
 
     def load_hardware_data(self):
         """Orchestrator that calls the loaders in the correct order"""
@@ -74,8 +172,7 @@ class C3Client:
         )
 
     def _import_cpu_ids(self, url: str):
-        response = requests.get(url, timeout=60)
-        response.raise_for_status()
+        response = self._make_request_with_retries(url)
         response_json = response.json()
         for codename, ids in response_json.items():
             for cpu_id in ids:
@@ -87,6 +184,7 @@ class C3Client:
     def _import_from_c3(self, url: str, loader: Callable, resp_model: Type[BaseModel]):
         """
         A general method to load some kind of data from the specified C3 endpoint
+        with retry logic
 
         :param url: C3 API endpoint (full URL)
         :param loader: the private method to use for loading data from response
@@ -95,17 +193,24 @@ class C3Client:
         next_url = url
         counter = 0
         previous_ratio = -1
+        total = None
+
         while next_url is not None:
             logging.debug(f"Retrieving {next_url}")
-            response = requests.get(next_url, timeout=90)
-            response.raise_for_status()
+
+            # Use retry logic for each request
+            response = self._make_request_with_retries(next_url)
             response_json = response.json()
+
             if counter == 0:
-                # since count is always the same, update total only the first time
+                # Since count is always the same, update total only the first time
                 # we retrieve the data from C3
                 total = response_json["count"]
+                logger.info("Total items to process: %d", total)
+
             next_url = response_json["next"]
             objects = response_json["results"]
+
             for obj in objects:
                 instance = resp_model(**obj)
                 try:
@@ -113,7 +218,7 @@ class C3Client:
                     counter += 1
                     # Don't print progress bar with the same percentage, because
                     # it slows down the script
-                    if 1000 * counter // total != previous_ratio:
+                    if total and 1000 * counter // total != previous_ratio:
                         progress_bar(counter, total)
                         previous_ratio = 1000 * counter // total
                     if total == counter:
