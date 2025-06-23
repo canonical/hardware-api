@@ -108,7 +108,7 @@ class C3Client:
                 if e.response.status_code in [429, 500, 502, 503, 504]:
                     if attempt == max_retries - 1:
                         logger.error(
-                            f"Failed to fetch {url} after {max_retries} attempts"
+                            "Failed to fetch %s after %d attempts", url, max_retries
                         )
                         raise e
 
