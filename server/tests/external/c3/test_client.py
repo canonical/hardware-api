@@ -16,14 +16,16 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
 from datetime import date, timedelta
-
 from fastapi.testclient import TestClient
+import pytest
+from requests.exceptions import ReadTimeout, ConnectTimeout, ConnectionError, HTTPError
 from requests_mock import Mocker
 from sqlalchemy.orm import Session
+from unittest.mock import patch
 
 from hwapi.data_models import models
-from hwapi.external.c3.client import C3Client
 from tests.data_generator import DataGenerator
+from hwapi.external.c3.client import C3Client
 
 
 def test_load_certificates(db_session: Session, requests_mock: Mocker):
@@ -484,3 +486,450 @@ def test_import_cpuids(
     cpu_id = db_session.query(models.CpuId).filter_by(id_pattern="0x906ea").first()
     assert cpu_id is not None
     assert cpu_id.codename == "Coffee Lake"
+
+
+def test_retry_on_read_timeout(db_session: Session, requests_mock: Mocker):
+    """Test that client retries on ReadTimeout and eventually succeeds."""
+    # First two requests timeout, third succeeds
+    requests_mock.get(
+        "https://c3_url/api/v2/cpuids/",
+        [
+            {"exc": ReadTimeout("Read timeout occurred")},
+            {"exc": ReadTimeout("Read timeout occurred")},
+            {"json": {"Coffee Lake": ["0x806ea"]}},
+        ],
+    )
+
+    requests_mock.get(
+        "https://c3_url/api/v2/public-certificates/",
+        json={"count": 0, "next": None, "previous": None, "results": []},
+    )
+
+    requests_mock.get(
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        json={"count": 0, "next": None, "previous": None, "results": []},
+    )
+
+    c3_client = C3Client(db=db_session)
+
+    # Should succeed despite initial timeouts
+    with patch("time.sleep") as mock_sleep:  # Speed up test by mocking sleep
+        c3_client.load_hardware_data()
+
+    # Verify it made retry attempts (2 sleeps for 2 failed attempts)
+    assert mock_sleep.call_count == 2
+
+    # Verify data was loaded successfully
+    assert db_session.query(models.CpuId).count() == 1
+
+
+def test_retry_on_connection_error(db_session: Session, requests_mock: Mocker):
+    """Test that client retries on ConnectionError."""
+    requests_mock.get(
+        "https://c3_url/api/v2/cpuids/",
+        [
+            {"exc": ConnectionError("Connection failed")},
+            {"json": {"Skylake": ["0x506e3"]}},
+        ],
+    )
+
+    requests_mock.get(
+        "https://c3_url/api/v2/public-certificates/",
+        json={"count": 0, "next": None, "previous": None, "results": []},
+    )
+
+    requests_mock.get(
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        json={"count": 0, "next": None, "previous": None, "results": []},
+    )
+
+    c3_client = C3Client(db=db_session)
+
+    with patch("time.sleep"):
+        c3_client.load_hardware_data()
+
+    assert db_session.query(models.CpuId).count() == 1
+
+
+def test_retry_on_server_errors(db_session: Session, requests_mock: Mocker):
+    """Test that client retries on 5xx server errors."""
+    requests_mock.get(
+        "https://c3_url/api/v2/cpuids/",
+        [
+            {"status_code": 503, "text": "Service Unavailable"},
+            {"status_code": 502, "text": "Bad Gateway"},
+            {"json": {"Ice Lake": ["0x706e5"]}},
+        ],
+    )
+
+    requests_mock.get(
+        "https://c3_url/api/v2/public-certificates/",
+        json={"count": 0, "next": None, "previous": None, "results": []},
+    )
+
+    requests_mock.get(
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        json={"count": 0, "next": None, "previous": None, "results": []},
+    )
+
+    c3_client = C3Client(db=db_session)
+
+    with patch("time.sleep"):
+        c3_client.load_hardware_data()
+
+    assert db_session.query(models.CpuId).count() == 1
+
+
+def test_retry_on_rate_limit(db_session: Session, requests_mock: Mocker):
+    """Test that client retries on 429 (Too Many Requests)."""
+    requests_mock.get(
+        "https://c3_url/api/v2/cpuids/",
+        [
+            {"status_code": 429, "text": "Too Many Requests"},
+            {"json": {"Tiger Lake": ["0x806c1"]}},
+        ],
+    )
+
+    requests_mock.get(
+        "https://c3_url/api/v2/public-certificates/",
+        json={"count": 0, "next": None, "previous": None, "results": []},
+    )
+
+    requests_mock.get(
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        json={"count": 0, "next": None, "previous": None, "results": []},
+    )
+
+    c3_client = C3Client(db=db_session)
+
+    with patch("time.sleep"):
+        c3_client.load_hardware_data()
+
+    assert db_session.query(models.CpuId).count() == 1
+
+
+def test_no_retry_on_client_errors(db_session: Session, requests_mock: Mocker):
+    """Test that client does NOT retry on 4xx client errors (except 429)."""
+    requests_mock.get(
+        "https://c3_url/api/v2/cpuids/", status_code=404, text="Not Found"
+    )
+
+    c3_client = C3Client(db=db_session)
+
+    # Should raise HTTPError immediately without retries
+    with pytest.raises(HTTPError):
+        c3_client._import_cpu_ids("https://c3_url/api/v2/cpuids/")
+
+
+def test_max_retries_exceeded(db_session: Session, requests_mock: Mocker):
+    """Test that client eventually gives up after max retries."""
+    # All 5 requests (1 initial + 4 retries) will timeout
+    requests_mock.get(
+        "https://c3_url/api/v2/cpuids/", exc=ReadTimeout("Persistent timeout")
+    )
+
+    c3_client = C3Client(db=db_session)
+
+    with patch("time.sleep") as mock_sleep:
+        with pytest.raises(ReadTimeout):
+            c3_client._import_cpu_ids("https://c3_url/api/v2/cpuids/")
+
+        # Should have made exactly 4 retry sleep calls (5 attempts - 1 initial = 4 retries)
+        assert mock_sleep.call_count == 4
+
+
+def test_exponential_backoff_timing(db_session: Session):
+    """Test that exponential backoff delays increase correctly."""
+    c3_client = C3Client(db=db_session)
+
+    with patch("time.sleep") as mock_sleep:
+        with patch.object(c3_client.session, "get") as mock_get:
+            # Configure mock to always raise timeout
+            mock_get.side_effect = ReadTimeout("Timeout")
+
+            with pytest.raises(ReadTimeout):
+                c3_client._make_request_with_retries("https://test.com")
+
+            # Check that sleep was called with increasing delays: 2, 4, 8, 16
+            # (4 retries for 5 total attempts)
+            expected_delays = [2, 4, 8, 16]
+            actual_delays = [call[0][0] for call in mock_sleep.call_args_list]
+            assert actual_delays == expected_delays
+
+
+def test_retry_with_pagination(
+    db_session: Session, requests_mock: Mocker, generator: DataGenerator
+):
+    """Test retry logic works correctly with paginated responses."""
+    vendor = generator.gen_vendor()
+    platform = generator.gen_platform(vendor, name="Test Platform")
+    configuration = generator.gen_configuration(platform)
+    machine = generator.gen_machine(configuration, canonical_id="test-123")
+    certificate = generator.gen_certificate(
+        machine, generator.gen_release(), name="test-cert"
+    )
+
+    requests_mock.get("https://c3_url/api/v2/cpuids/", json={})
+    requests_mock.get(
+        "https://c3_url/api/v2/public-certificates/",
+        json={"count": 0, "next": None, "previous": None, "results": []},
+    )
+
+    # First page succeeds immediately
+    requests_mock.get(
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        json={
+            "count": 2,
+            "next": "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000&offset=1000",
+            "previous": None,
+            "results": [
+                {
+                    "machine_canonical_id": machine.canonical_id,
+                    "certificate_name": certificate.name,
+                    "device": {
+                        "name": "Test Device 1",
+                        "subproduct_name": None,
+                        "vendor": "Test Vendor",
+                        "device_type": None,
+                        "bus": "pci",
+                        "identifier": "1111:2222",
+                        "subsystem": "1111:3333",
+                        "version": None,
+                        "category": "OTHER",
+                        "codename": "",
+                    },
+                    "driver_name": "test_driver",
+                    "cpu_codename": "",
+                }
+            ],
+        },
+    )
+
+    # Second page fails once, then succeeds
+    requests_mock.get(
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000&offset=1000",
+        [
+            {"exc": ReadTimeout("Page 2 timeout")},
+            {
+                "json": {
+                    "count": 2,
+                    "next": None,
+                    "previous": None,
+                    "results": [
+                        {
+                            "machine_canonical_id": machine.canonical_id,
+                            "certificate_name": certificate.name,
+                            "device": {
+                                "name": "Test Device 2",
+                                "subproduct_name": None,
+                                "vendor": "Test Vendor",
+                                "device_type": None,
+                                "bus": "pci",
+                                "identifier": "3333:4444",
+                                "subsystem": "3333:5555",
+                                "version": None,
+                                "category": "OTHER",
+                                "codename": "",
+                            },
+                            "driver_name": "test_driver2",
+                            "cpu_codename": "",
+                        }
+                    ],
+                }
+            },
+        ],
+    )
+
+    c3_client = C3Client(db=db_session)
+
+    with patch("time.sleep"):
+        c3_client.load_hardware_data()
+
+    # Both devices should be loaded despite the timeout on page 2
+    assert db_session.query(models.Device).count() == 2
+    assert (
+        db_session.query(models.Device).filter_by(identifier="1111:2222").first()
+        is not None
+    )
+    assert (
+        db_session.query(models.Device).filter_by(identifier="3333:4444").first()
+        is not None
+    )
+
+
+def test_retry_logging(db_session: Session, requests_mock: Mocker, caplog):
+    """Test that retry attempts are properly logged."""
+    requests_mock.get(
+        "https://c3_url/api/v2/cpuids/",
+        [
+            {"exc": ReadTimeout("First timeout")},
+            {"exc": ReadTimeout("Second timeout")},
+            {"json": {"Test": ["0x12345"]}},
+        ],
+    )
+
+    requests_mock.get(
+        "https://c3_url/api/v2/public-certificates/",
+        json={"count": 0, "next": None, "previous": None, "results": []},
+    )
+
+    requests_mock.get(
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        json={"count": 0, "next": None, "previous": None, "results": []},
+    )
+
+    c3_client = C3Client(db=db_session)
+
+    with patch("time.sleep"):
+        c3_client.load_hardware_data()
+
+    # Check that retry warnings were logged
+    warning_logs = [
+        record for record in caplog.records if record.levelname == "WARNING"
+    ]
+    assert len(warning_logs) == 2
+    assert "Retrying in" in warning_logs[0].message
+    assert "attempt 1/5" in warning_logs[0].message
+    assert "attempt 2/5" in warning_logs[1].message
+
+
+def test_session_reuse(db_session: Session):
+    """Test that the same session with retry configuration is reused."""
+    c3_client = C3Client(db=db_session)
+
+    assert c3_client.session is not None
+    assert hasattr(c3_client.session, "adapters")
+
+    # Make multiple calls and ensure same session is used
+    session1 = c3_client.session
+    session2 = c3_client.session
+    assert session1 is session2
+
+
+def test_intermittent_failures_recovery(
+    db_session: Session, requests_mock: Mocker, generator: DataGenerator
+):
+    """Test recovery from intermittent failures during large data imports."""
+    # Set up test data
+    vendor = generator.gen_vendor()
+    platform = generator.gen_platform(vendor, name="Test Platform")
+    configuration = generator.gen_configuration(platform)
+    machine = generator.gen_machine(configuration, canonical_id="test-456")
+    certificate = generator.gen_certificate(
+        machine, generator.gen_release(), name="test-cert-2"
+    )
+
+    requests_mock.get("https://c3_url/api/v2/cpuids/", json={})
+    requests_mock.get(
+        "https://c3_url/api/v2/public-certificates/",
+        json={"count": 0, "next": None, "previous": None, "results": []},
+    )
+
+    # Simulate intermittent failures: success, failure, success pattern
+    requests_mock.get(
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        [
+            # First request succeeds
+            {
+                "json": {
+                    "count": 3,
+                    "next": "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000&offset=1000",
+                    "results": [
+                        {
+                            "machine_canonical_id": machine.canonical_id,
+                            "certificate_name": certificate.name,
+                            "device": {
+                                "name": "Device 1",
+                                "subproduct_name": None,
+                                "vendor": "Vendor 1",
+                                "device_type": None,
+                                "bus": "pci",
+                                "identifier": "aaaa:bbbb",
+                                "subsystem": "aaaa:cccc",
+                                "version": None,
+                                "category": "OTHER",
+                                "codename": "",
+                            },
+                            "driver_name": "driver1",
+                            "cpu_codename": "",
+                        }
+                    ],
+                }
+            }
+        ],
+    )
+
+    # Second page: fails then succeeds
+    requests_mock.get(
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000&offset=1000",
+        [
+            {"exc": ConnectTimeout("Intermittent connection issue")},
+            {
+                "json": {
+                    "count": 3,
+                    "next": "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000&offset=2000",
+                    "results": [
+                        {
+                            "machine_canonical_id": machine.canonical_id,
+                            "certificate_name": certificate.name,
+                            "device": {
+                                "name": "Device 2",
+                                "subproduct_name": None,
+                                "vendor": "Vendor 2",
+                                "device_type": None,
+                                "bus": "pci",
+                                "identifier": "cccc:dddd",
+                                "subsystem": "cccc:eeee",
+                                "version": None,
+                                "category": "OTHER",
+                                "codename": "",
+                            },
+                            "driver_name": "driver2",
+                            "cpu_codename": "",
+                        }
+                    ],
+                }
+            },
+        ],
+    )
+
+    # Third page: succeeds immediately
+    requests_mock.get(
+        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000&offset=2000",
+        json={
+            "count": 3,
+            "next": None,
+            "results": [
+                {
+                    "machine_canonical_id": machine.canonical_id,
+                    "certificate_name": certificate.name,
+                    "device": {
+                        "name": "Device 3",
+                        "subproduct_name": None,
+                        "vendor": "Vendor 3",
+                        "device_type": None,
+                        "bus": "pci",
+                        "identifier": "eeee:ffff",
+                        "subsystem": "eeee:aaaa",
+                        "version": None,
+                        "category": "OTHER",
+                        "codename": "",
+                    },
+                    "driver_name": "driver3",
+                    "cpu_codename": "",
+                }
+            ],
+        },
+    )
+
+    c3_client = C3Client(db=db_session)
+
+    with patch("time.sleep"):
+        c3_client.load_hardware_data()
+
+    # All devices should be successfully imported despite intermittent failure
+    assert db_session.query(models.Device).count() == 3
+    device_identifiers = [d.identifier for d in db_session.query(models.Device).all()]
+    assert "aaaa:bbbb" in device_identifiers
+    assert "cccc:dddd" in device_identifiers
+    assert "eeee:ffff" in device_identifiers
