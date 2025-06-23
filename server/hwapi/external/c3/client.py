@@ -190,7 +190,7 @@ class C3Client:
                 # Since count is always the same, update total only the first time
                 # we retrieve the data from C3
                 total = response_json["count"]
-                logger.info(f"Total items to process: {total}")
+                logger.info("Total items to process: %d", total)
 
             next_url = response_json["next"]
             objects = response_json["results"]
