@@ -19,6 +19,7 @@
 import requests
 import logging
 import time
+from http import HTTPStatus
 from typing import Callable, Type
 from pydantic import BaseModel
 from requests.adapters import HTTPAdapter
@@ -56,7 +57,13 @@ class C3Client:
         retry_strategy = Retry(
             total=5,  # Total number of retries
             backoff_factor=2,  # Wait time between retries (2**retry_count seconds)
-            status_forcelist=[429, 500, 502, 503, 504],  # HTTP status codes to retry
+            status_forcelist=[
+                HTTPStatus.TOO_MANY_REQUESTS,
+                HTTPStatus.INTERNAL_SERVER_ERROR,
+                HTTPStatus.BAD_GATEWAY,
+                HTTPStatus.SERVICE_UNAVAILABLE,
+                HTTPStatus.GATEWAY_TIMEOUT,
+            ],  # HTTP status codes to retry
             allowed_methods=["HEAD", "GET", "OPTIONS"],  # Only retry safe methods
             raise_on_status=False,  # Don't raise exception on retry-able status codes
         )
@@ -75,7 +82,10 @@ class C3Client:
         for attempt in range(max_retries):
             try:
                 logger.debug(
-                    "Attempting request to %s (attempt %d/%d)", url, attempt + 1, max_retries
+                    "Attempting request to %s (attempt %d/%d)",
+                    url,
+                    attempt + 1,
+                    max_retries,
                 )
                 response = self.session.get(url, timeout=90)
                 response.raise_for_status()
@@ -88,7 +98,9 @@ class C3Client:
             ) as e:
 
                 if attempt == max_retries - 1:  # Last attempt
-                    logger.error("Failed to fetch %s after %d attempts", url, max_retries)
+                    logger.error(
+                        "Failed to fetch %s after %d attempts", url, max_retries
+                    )
                     raise e
 
                 # Calculate delay with exponential backoff
@@ -105,7 +117,11 @@ class C3Client:
 
             except requests.exceptions.HTTPError as e:
                 # For HTTP errors, check if it's worth retrying
-                if e.response.status_code in [429, 500, 502, 503, 504]:
+                status_code = HTTPStatus(e.response.status_code)
+                if (
+                    status_code.is_server_error
+                    or status_code == HTTPStatus.TOO_MANY_REQUESTS
+                ):
                     if attempt == max_retries - 1:
                         logger.error(
                             "Failed to fetch %s after %d attempts", url, max_retries
