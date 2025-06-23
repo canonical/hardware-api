@@ -88,7 +88,7 @@ class C3Client:
             ) as e:
 
                 if attempt == max_retries - 1:  # Last attempt
-                    logger.error(f"Failed to fetch {url} after {max_retries} attempts")
+                    logger.error("Failed to fetch %s after %d attempts", url, max_retries)
                     raise e
 
                 # Calculate delay with exponential backoff
