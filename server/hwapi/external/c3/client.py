@@ -124,7 +124,7 @@ class C3Client:
                     time.sleep(delay)
                 else:
                     # Don't retry for client errors (4xx except 429)
-                    logger.error(f"Non-retryable HTTP error for {url}: {e}")
+                    logger.error("Non-retryable HTTP error for %s: %s", url, e)
                     raise e
 
     def load_hardware_data(self):
