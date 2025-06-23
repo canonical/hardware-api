@@ -114,8 +114,12 @@ class C3Client:
 
                     delay = min(base_delay * (2**attempt), max_delay)
                     logger.warning(
-                        f"HTTP error {e.response.status_code} for {url} "
-                        f"(attempt {attempt + 1}/{max_retries}). Retrying in {delay} seconds..."
+                        "HTTP error %d for %s (attempt %d/%d). Retrying in %d seconds...",
+                        status_code,
+                        url,
+                        attempt + 1,
+                        max_retries,
+                        delay,
                     )
                     time.sleep(delay)
                 else:
