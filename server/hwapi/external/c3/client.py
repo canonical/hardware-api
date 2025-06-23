@@ -75,7 +75,7 @@ class C3Client:
         for attempt in range(max_retries):
             try:
                 logger.debug(
-                    f"Attempting request to {url} (attempt {attempt + 1}/{max_retries})"
+                    "Attempting request to %s (attempt %d/%d)", url, attempt + 1, max_retries
                 )
                 response = self.session.get(url, timeout=90)
                 response.raise_for_status()
