@@ -94,8 +94,12 @@ class C3Client:
                 # Calculate delay with exponential backoff
                 delay = min(base_delay * (2**attempt), max_delay)
                 logger.warning(
-                    f"Request to {url} failed (attempt {attempt + 1}/{max_retries}): {str(e)}. "
-                    f"Retrying in {delay} seconds..."
+                    "Request to %s failed (attempt %d/%d): %s. Retrying in %d seconds...",
+                    url,
+                    attempt + 1,
+                    max_retries,
+                    e,
+                    delay,
                 )
                 time.sleep(delay)
 
