@@ -17,6 +17,7 @@
 
 from pytest import LogCaptureFixture
 from fastapi.testclient import TestClient
+from hwapi.data_models.enums import DeviceCategory
 from tests.data_generator import DataGenerator, CertificationStatusTestHelper
 
 
@@ -184,6 +185,44 @@ def test_all_criteria_matched(generator: DataGenerator, test_client: TestClient)
         os_codename=release.codename,
         # Raport Lake CPU ID
         processor_id=[0x71, 0x06, 0x0B, 0x00, 0xFF, 0xFB, 0xEB, 0xBF],
+    )
+    response = test_client.post("/v1/certification/status", json=request)
+
+    CertificationStatusTestHelper.assert_certified_response(
+        response, board, bios, release, report.kernel
+    )
+
+
+def test_match_with_board_as_system(generator: DataGenerator, test_client: TestClient):
+    """
+    Test that all criteria still match even if the board is classified as SYSTEM in DB
+    """
+    vendor = generator.gen_vendor()
+    bios = generator.gen_bios(vendor, version="SWAARGSW")
+    release = generator.gen_release(release="22.04", codename="jammy")
+    machine = generator.gen_machine(
+        configuration=generator.gen_configuration(
+            platform=generator.gen_platform(vendor=vendor),
+        ),
+    )
+    certificate = generator.gen_certificate(machine, release)
+    report = generator.gen_report(certificate, generator.gen_kernel(), bios)
+    processor = generator.gen_processor(
+        vendor=generator.gen_vendor(name="Intel Corp."), reports=[report]
+    )
+    generator.gen_cpuid_object("0x106ca", processor.codename)
+    board = generator.gen_board(
+        vendor, reports=[report], category=DeviceCategory.SYSTEM
+    )
+
+    request = CertificationStatusTestHelper.create_default_request(
+        bios_vendor=bios.vendor.name,
+        bios_version=bios.version,
+        bios_revision=bios.revision,
+        os_version=release.release,
+        os_codename=release.codename,
+        # Pineview CPU ID
+        processor_id=[0xCA, 0x06, 0x01, 0x00, 0xFF, 0xFB, 0xEB, 0xBF],
     )
     response = test_client.post("/v1/certification/status", json=request)
 

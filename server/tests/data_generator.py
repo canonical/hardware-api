@@ -176,6 +176,7 @@ class DataGenerator:
         name: str = "Test Board",
         version: str = "v1.0",
         reports: list[models.Report] | None = None,
+        category: DeviceCategory = DeviceCategory.BOARD,
     ) -> models.Device:
         return self.gen_device(
             vendor=vendor,
@@ -183,7 +184,7 @@ class DataGenerator:
             name=name,
             version=version,
             bus=BusType.dmi,
-            category=DeviceCategory.BOARD,
+            category=category,
             reports=reports,
         )
 
