@@ -1,0 +1,45 @@
+name: Publish hwlib to crates.io
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: [self-hosted, linux, large, noble, x64]
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+          persist-credentials: false
+    - name: Set up Rust
+      uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # v1
+      with:
+        toolchain: stable
+    - name: Extract version from tag
+      id: get_version
+      run: |
+        TAG=${GITHUB_REF#refs/tags/v}
+        echo "version=$TAG" >> $GITHUB_OUTPUT
+        echo "Tag version: $TAG"
+    - name: Verify version matches Cargo.toml
+      working-directory: client
+      env:
+        TAG_VERSION: ${{ steps.get_version.outputs.version }}
+      run: |
+        CARGO_VERSION=$(grep '^version =' Cargo.toml | head -1 | sed 's/.*= "//' | sed 's/"//')
+        echo "Cargo.toml version: $CARGO_VERSION"
+        echo "Tag version: $TAG_VERSION"
+        if [ "$CARGO_VERSION" != "$TAG_VERSION" ]; then
+          echo "Error: Version mismatch between tag ($TAG_VERSION) and Cargo.toml ($CARGO_VERSION)"
+          exit 1
+        fi
+    - name: Publish hwlib to crates.io
+      env:
+        CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+      working-directory: client
+      run: cargo publish -p hwlib --locked --verbose
