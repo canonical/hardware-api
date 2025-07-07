@@ -20,6 +20,7 @@ concurrency:
 
 jobs:
   lint-and-test:
+    name: Lint and test client
     runs-on: [self-hosted, linux, large, noble, x64]
     defaults:
       run:
@@ -57,6 +58,7 @@ jobs:
         run: cargo test
 
   py-bindings-test:
+    name: Test Python bindings
     runs-on: [self-hosted, linux, large, noble, x64]
     defaults:
       run:

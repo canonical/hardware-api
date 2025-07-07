@@ -20,6 +20,7 @@ concurrency:
 
 jobs:
   validate-version:
+    name: Validate version consistency
     runs-on: [self-hosted, linux, large, noble, x64]
     defaults:
       run:
@@ -33,42 +34,31 @@ jobs:
         uses: dtolnay/rust-toolchain@b3b07ba8b418998c39fb20f53e8b695cdcc8de1b # v1
         with:
           toolchain: stable
-      - name: Get version from git tag
-        id: get-version
+      - name: Check version consistency between Cargo.toml and debian/changelog
         run: |
-          VERSION=$(git describe --tags --match 'v*.*.*' --dirty)
-          if [[ $VERSION == *-dirty ]]; then
-            echo "Version includes -dirty. Ensure working tree is clean before building."
-            exit 1
-          fi
-          # Extract base version (strip 'v', commit count, and hash)
-          BASE_VERSION=$(echo "$VERSION" | sed -E 's/^v([0-9]+\.[0-9]+\.[0-9]+)(-.*)?$/\1/')
-          echo "version=$BASE_VERSION" >> $GITHUB_OUTPUT
-          echo "Git tag base version: $BASE_VERSION"
-      - name: Check hwlib and hwctl Cargo versions
-        run: |
-          echo "Using Git tag version: $GIT_TAG_VERSION"
-          for manifest in hwlib/Cargo.toml hwctl/Cargo.toml; do
-            CARGO_VERSION=$(cargo metadata --manifest-path "$manifest" --no-deps --format-version 1 | jq -r '.packages[0].version')
-            if [[ $CARGO_VERSION != $GIT_TAG_VERSION ]]; then
-              echo "Version mismatch in $manifest: $CARGO_VERSION (expected $GIT_TAG_VERSION)"
-              exit 1
-            fi
-          done
-        env:
-          GIT_TAG_VERSION: ${{ steps.get-version.outputs.version }}
-      - name: Check Debian changelog version
-        run: |
-          echo "Using Git tag version: $GIT_TAG_VERSION"
+          HWLIB_VERSION=$(cargo metadata --manifest-path hwlib/Cargo.toml --no-deps --format-version 1 | jq -r '.packages[0].version')
+          echo "hwlib Cargo.toml version: $HWLIB_VERSION"
+
+          HWCTL_VERSION=$(cargo metadata --manifest-path hwctl/Cargo.toml --no-deps --format-version 1 | jq -r '.packages[0].version')
+          echo "hwctl Cargo.toml version: $HWCTL_VERSION"
+
           DEBIAN_VERSION=$(dpkg-parsechangelog --show-field Version | cut -d'~' -f1)
-          if [[ $DEBIAN_VERSION != $GIT_TAG_VERSION ]]; then
-            echo "Debian changelog version mismatch: $DEBIAN_VERSION (expected $GIT_TAG_VERSION)"
+          echo "debian/changelog version: $DEBIAN_VERSION"
+
+          if [[ $HWLIB_VERSION != $HWCTL_VERSION ]]; then
+            echo "Version mismatch between hwlib and hwctl: $HWLIB_VERSION != $HWCTL_VERSION"
             exit 1
           fi
-        env:
-          GIT_TAG_VERSION: ${{ steps.get-version.outputs.version }}
+
+          if [[ $HWLIB_VERSION != $DEBIAN_VERSION ]]; then
+            echo "Version mismatch between Cargo.toml and debian/changelog: $HWLIB_VERSION != $DEBIAN_VERSION"
+            exit 1
+          fi
+
+          echo "All versions match: $HWLIB_VERSION"
 
   build:
+    name: Build Debian package
     runs-on: [self-hosted, linux, large, noble, x64]
     defaults:
       run:

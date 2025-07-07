@@ -16,6 +16,7 @@ concurrency:
 
 jobs:
   deploy-openapi-html:
+    name: Deploy OpenAPI documentation to GitHub Pages
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}

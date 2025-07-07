@@ -22,6 +22,7 @@ concurrency:
 
 jobs:
   test:
+    name: Run integration tests
     runs-on: [self-hosted, linux, large, noble, x64]
     defaults:
       run:
