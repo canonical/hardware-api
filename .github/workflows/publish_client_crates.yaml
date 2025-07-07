@@ -10,6 +10,7 @@ permissions:
 
 jobs:
   publish:
+    name: Publish hwlib to crates.io
     runs-on: [self-hosted, linux, large, noble, x64]
     steps:
     - name: Checkout code

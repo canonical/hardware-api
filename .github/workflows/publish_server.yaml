@@ -1,3 +1,4 @@
+name: Publish server image and charm
 permissions:
   contents: read
   actions: read
@@ -16,6 +17,7 @@ env:
 
 jobs:
   build-and-push-image:
+    name: Build and push Docker image
     runs-on: [self-hosted, linux, jammy, x64]
     permissions:
       contents: read
@@ -51,6 +53,7 @@ jobs:
           labels: ${{ steps.meta.outputs.labels }}
 
   build-and-push-charm:
+    name: Build and push charm
     runs-on: [self-hosted, linux, xlarge, jammy, x64]
     needs: build-and-push-image
     permissions:

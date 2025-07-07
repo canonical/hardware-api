@@ -20,6 +20,7 @@ concurrency:
 
 jobs:
   validate-version:
+    name: Validate version consistency
     runs-on: [self-hosted, linux, large, noble, x64]
     defaults:
       run:
@@ -57,6 +58,7 @@ jobs:
           echo "All versions match: $HWLIB_VERSION"
 
   build:
+    name: Build Debian package
     runs-on: [self-hosted, linux, large, noble, x64]
     defaults:
       run:

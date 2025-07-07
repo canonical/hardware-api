@@ -18,6 +18,7 @@ concurrency:
 
 jobs:
   test:
+    name: Test server
     runs-on: [self-hosted, linux, large, noble, x64]
     defaults:
       run:
@@ -51,6 +52,7 @@ jobs:
           retention-days: 2
 
   report-coverage:
+    name: Report test coverage
     runs-on: [self-hosted, linux, large, noble, x64]
     if: github.event_name == 'pull_request'
     needs: [test]
@@ -72,6 +74,7 @@ jobs:
           thresholdModified: 0.0
 
   compare-openapi:
+    name: Compare OpenAPI schemas
     runs-on: [self-hosted, linux, large, noble, x64]
     defaults:
       run:
