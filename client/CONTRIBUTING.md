@@ -98,19 +98,13 @@ To create a new version of the client package, follow these steps:
    is approved for publication to the main repository, remove the `~ppaN` suffix
    to finalize the version.
 
-3. Create a matching git tag. Ensure the version is correctly tagged in git. The
-   tag should follow the format `vMAJOR.MINOR.PATCH` and must be annotated to the
-   same commit as the changelog entry:
-
-   ```shell
-   git tag -a v1.2.3 <commit_hash>
-   git push origin v1.2.3
-   ```
-
-4. Update cargo versions. If the new version includes changes to the `MAJOR`,
+3. Update cargo versions. If the new version includes changes to the `MAJOR`,
    `MINOR`, or `PATCH` version numbers, update the `workspace.package.version`
    field in [`Cargo.toml`](./Cargo.toml). Make sure to commit these changes
    along with the updated changelog.
+
+After the changes with the version update get merged, please create [a new GitHub
+tag and release](https://github.com/canonical/hardware-api/releases/new).
 
 #### Build the Package
 
