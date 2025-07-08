@@ -10,10 +10,6 @@ Files: hwlib/*
 Copyright: 2024 Canonical Ltd.
 License: LGPL-3
 
-Files: rust-vendor/aho-corasick/*
-Copyright: 2015 Andrew Gallant
-License: MIT
-
 Files:
   rust-vendor/anyhow/*
   rust-vendor/indoc/*
@@ -27,12 +23,6 @@ Files:
 Copyright: 2024 David Tolnay
 License: MIT or Apache-2.0
 
-Files: rust-vendor/atomic-waker/*
-Copyright:
-  2016 Alex Crichton,
-  2017 The Tokio Authors
-License: MIT or Apache-2.0
-
 Files: rust-vendor/autocfg/*
 Copyright: 2018 Josh Stone
 License: MIT or Apache-2.0
@@ -42,7 +32,6 @@ Copyright: 2015 Alice Maz
 License: MIT or Apache-2.0
 
 Files:
-  rust-vendor/bitflags/*
   rust-vendor/getopts/*
   rust-vendor/heck/*
   rust-vendor/lazy_static/*
@@ -60,12 +49,29 @@ License: MIT
 Files:
   rust-vendor/cc/*
   rust-vendor/cfg-if/*
-  rust-vendor/futures-*/*
   rust-vendor/openssl-probe/*
   rust-vendor/openssl-sys/*
   rust-vendor/pkg-config/*
   rust-vendor/socket2/*
 Copyright: 2014, 2016 Alex Crichton
+License: MIT or Apache-2.0
+
+Files: rust-vendor/cookie/*
+Copyright:
+  2017 Sergio Benitez
+  2014 Alex Crichton
+License: MIT or Apache-2.0
+
+Files: rust-vendor/cookie_store/*
+Copyright: 2017 Patrick Fernie
+License: MIT or Apache-2.0
+
+Files: rust-vendor/crc32fast/*
+Copyright: 2018 Sam Rijs, Alex Crichton and contributors
+License: MIT or Apache-2.0
+
+Files: rust-vendor/deranged/*
+Copyright: 2024 Jacob Pratt et al.
 License: MIT or Apache-2.0
 
 Files: rust-vendor/diff/*
@@ -76,8 +82,8 @@ Files: rust-vendor/displaydoc/*
 Copyright: 2024 Manish Goregaokar, Jane Losare-Lusby
 License: MIT or Apache-2.0
 
-Files: rust-vendor/either/*
-Copyright: 2015 Josh Stone, Jack Wrenn
+Files: rust-vendor/document-features/*
+Copyright: 2020 Olivier Goffart
 License: MIT or Apache-2.0
 
 Files: rust-vendor/encoding_rs/*
@@ -94,21 +100,9 @@ Files: rust-vendor/fnv/*
 Copyright: 2017 Simon Sapin
 License: MIT or Apache-2.0
 
-Files: rust-vendor/foreign-*/*
-Copyright: 2017 The foreign-types Developers
-License: MIT or Apache-2.0
-
 Files: rust-vendor/form_urlencoded/*
 Copyright: 2013-2016 The rust-url developers
 License: MIT or Apache-2.0
-
-Files: rust-vendor/getrandom-*/*
-Copyright: 2018-2024 The rust-random Project Developers
-License: MIT or Apache-2.0
-
-Files: rust-vendor/h2/*
-Copyright: 2017 h2 authors
-License: MIT
 
 Files: rust-vendor/hashbrown/*
 Copyright: 2016 Amanieu d'Antras
@@ -120,21 +114,6 @@ License: MIT or Apache-2.0
 
 Files: rust-vendor/httparse/*
 Copyright: 2015-2025 Sean McArthur
-License: MIT or Apache-2.0
-
-Files: rust-vendor/http-body*/*
-Copyright: 2019-2024 Sean McArthur & Hyper Contributors
-License: MIT
-
-Files:
-  rust-vendor/hyper/*
-  rust-vendor/hyper-tls/*
-  rust-vendor/hyper-util/*
-Copyright: 2017, 2013-2025 Sean McArthur
-License: MIT
-
-Files: rust-vendor/hyper-rustls/*
-Copyright: 2016 Joseph Birr-Pixton <jpixton@gmail.com>
 License: MIT or Apache-2.0
 
 Files:
@@ -156,14 +135,6 @@ License: MIT or Apache-2.0
 
 Files: rust-vendor/indexmap/*
 Copyright: 2016-2017 Josh Stone
-License: MIT or Apache-2.0
-
-Files: rust-vendor/ipnet/*
-Copyright: 2017 Juniper Networks, Inc.
-License: MIT or Apache-2.0
-
-Files: rust-vendor/iri-string/*
-Copyright: 2019-2024 YOSHIOKA Takuma
 License: MIT or Apache-2.0
 
 Files: rust-vendor/itertools/*
@@ -301,23 +272,6 @@ License: MIT
 Files: rust-vendor/target-lexicon/*
 Copyright: 2018 Dan Gohman
 License: Apache-2.0 and LLVM-exception
-
-Files:
-  rust-vendor/tokio/*
-  rust-vendor/tokio-native-tls/*
-  rust-vendor/tokio-util/*
-  rust-vendor/tower*/*
-  rust-vendor/tracing*/*
-Copyright: 2019-2021 Tokio Contributors
-License: MIT
-
-Files: rust-vendor/tokio-macros/*
-Copyright: 2019 Yoshua Wuyts
-License: MIT
-
-Files: rust-vendor/tokio-rustls/*
-Copyright: 2017 quininer kel
-License: MIT or Apache-2.0
 
 Files: rust-vendor/try-lock/*
 Copyright: 2018-2023 Sean McArthur

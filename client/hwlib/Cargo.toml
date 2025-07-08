@@ -16,15 +16,11 @@ crate-type = ["cdylib", "rlib"]
 [dependencies]
 os-release = { version = "0.1.0" }
 serde_json = { workspace = true }
-reqwest = { version = "0.12.0", features = ["json"] }
+ureq = { version = "3.0", features = ["json", "native-tls"], default-features = false }
 serde = { version = "~1.0.0", features = ["derive"] }
-tokio = { workspace = true, features = ["rt", "rt-multi-thread", "test-util"] }
 pyo3 = { version = "0.25.0", features = ["extension-module"] }
 smbios-lib = "0.9.0"
-regex = "1.10.0"
 anyhow = { workspace = true }
-itertools = "0.14.0"
-lazy_static = "1.5.0"
 
 [dev-dependencies]
 simple_test_case = "1.2.0"

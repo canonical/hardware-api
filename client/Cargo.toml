@@ -18,9 +18,11 @@ repository = "https://github.com/canonical/hardware-api/"
 [workspace.dependencies]
 anyhow = "~1.0.0"
 serde_json = "~1.0.0"
-tokio = { version = "1.43.1", default-features = false }
 
 [workspace.metadata.vendor-filter]
 platforms = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"]
 tier = "2"
 all-features = false
+exclude-crate-paths = [ { name = "*", exclude = "tests" },
+                        { name = "*", exclude = "examples" },
+                      ]

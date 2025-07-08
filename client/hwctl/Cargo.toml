@@ -15,7 +15,6 @@ tier = "2"
 all-features = false
 
 [target.'cfg(target_os = "linux")'.dependencies]
-tokio = { workspace = true, features = ["rt", "macros"] }
 hwlib = { path = "../hwlib" }
 serde_json = { workspace = true }
 anyhow = { workspace = true }

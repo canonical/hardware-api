@@ -20,7 +20,6 @@ use crate::{
     models::request_validators::{CertificationStatusRequest, Paths},
     send_certification_status_request as native_send_certification_status_request,
 };
-use lazy_static::lazy_static;
 use pyo3::{
     exceptions::PyRuntimeError,
     prelude::*,
@@ -28,11 +27,6 @@ use pyo3::{
     wrap_pyfunction, {PyObject, PyResult, Python},
 };
 use serde_json;
-use tokio::runtime::Runtime;
-
-lazy_static! {
-    static ref RT: Runtime = Runtime::new().expect("failed to create Tokio runtime");
-}
 
 /// This function creates and sends the certification status request to the specified
 /// hardware-api server URL.
@@ -41,8 +35,7 @@ fn send_certification_request(py: Python, url: String) -> PyResult<PyObject> {
     let request_body = CertificationStatusRequest::new(Paths::default())
         .map_err(|e| PyRuntimeError::new_err(format!("failed to create request: {}", e)))?;
 
-    let response =
-        RT.block_on(async { native_send_certification_status_request(url, &request_body).await });
+    let response = native_send_certification_status_request(url, &request_body);
 
     match response {
         Ok(response_value) => {
