@@ -59,8 +59,8 @@ fn assert_response_matches_expected(
             board,
             available_releases,
             ..
-        } |
-        CertificationStatusResponse::CertifiedImageExists {
+        }
+        | CertificationStatusResponse::CertifiedImageExists {
             architecture,
             bios,
             board,
@@ -80,8 +80,8 @@ fn assert_response_matches_expected(
             board,
             available_releases,
             ..
-        } |
-        CertificationStatusResponse::CertifiedImageExists {
+        }
+        | CertificationStatusResponse::CertifiedImageExists {
             architecture,
             bios,
             board,
@@ -94,18 +94,21 @@ fn assert_response_matches_expected(
     assert_eq!(actual_arch, expected_arch, "Architecture mismatch");
     assert_eq!(actual_bios, expected_bios, "BIOS mismatch");
     assert_eq!(actual_board, expected_board, "Board mismatch");
-    assert_eq!(actual_releases, expected_releases, "Available releases mismatch");
+    assert_eq!(
+        actual_releases, expected_releases,
+        "Available releases mismatch"
+    );
 }
 
 #[test_case("amd64/dgx_station"; "dgx_station")]
 #[test_case("amd64/dell_xps13"; "dell_xps13")]
 #[test_case("amd64/thinkstation_p620"; "thinkstation_p620")]
-#[tokio::test]
-async fn test_certification_request(dir_path: &str) -> Result<()> {
+#[test]
+fn test_certification_request(dir_path: &str) -> Result<()> {
     let api_url = std::env::var("API_URL").expect("API_URL environment variable must be specified");
 
     let cert_request = CertificationStatusRequest::new(get_test_device_paths(dir_path))?;
-    let response = send_certification_status_request(api_url, &cert_request).await?;
+    let response = send_certification_status_request(api_url, &cert_request)?;
 
     let response_json_file = PathBuf::from("/app/client/hwlib/test_data")
         .join(dir_path)
@@ -116,13 +119,12 @@ async fn test_certification_request(dir_path: &str) -> Result<()> {
     Ok(())
 }
 
-#[tokio::test]
-async fn test_server_connection_error() -> Result<()> {
+#[test]
+fn test_server_connection_error() -> Result<()> {
     let result = send_certification_status_request(
         "http://non-existent-server:8080".to_string(),
         &CertificationStatusRequest::new(get_test_device_paths("amd64/dell_xps13"))?,
-    )
-    .await;
+    );
 
     assert!(result.is_err());
     Ok(())
