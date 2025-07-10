@@ -39,10 +39,6 @@ Files:
 Copyright: 2010, 2014-2020 The Rust Project Developers
 License: MIT or Apache-2.0
 
-Files: rust-vendor/bytes/*
-Copyright: 2018 Carl Lerche
-License: MIT
-
 Files:
   rust-vendor/cc/*
   rust-vendor/cfg-if/*
@@ -91,7 +87,7 @@ Copyright: 2017 Jim McGrath
 License: MIT or Apache-2.0
 
 Files: rust-vendor/yansi/*
-Copyright: 2017-2018 Sergio Benitez
+Copyright: 2017 Sergio Benitez
 License: MIT or Apache-2.0
 
 License: GPL-3
