@@ -96,7 +96,7 @@ jobs:
       - name: Vendor the dependencies
         run: |
           cargo install cargo-vendor-filterer
-          ./debian/vendor-rust.sh
+          cargo vendor-filterer rust-vendor
       - name: Generate checksums
         run: ./debian/generate_checksums.py
       - run: dpkg-buildpackage -us -uc -S

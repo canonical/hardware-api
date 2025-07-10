@@ -24,6 +24,6 @@ platforms = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"]
 tier = "2"
 all-features = false
 exclude-crate-paths = [ { name = "*", exclude = "tests" },
-			{ name = "*", exclude = "examples" },
+                        { name = "*", exclude = "examples" },
                         { name = "*", exclude = "test-data" },
                       ]
