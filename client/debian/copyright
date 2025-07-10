@@ -31,13 +31,19 @@ Files: rust-vendor/base64/*
 Copyright: 2015 Alice Maz
 License: MIT or Apache-2.0
 
+Files: rust-vendor/base64ct/*
+Copyright:
+  2014 Steve "Sc00bz" Thomas (steve at tobtu dot com)
+  2021-2025 The RustCrypto Project Developers
+License: MIT or Apache-2.0
+
 Files:
+  rust-vendor/bitflags/*
   rust-vendor/getopts/*
   rust-vendor/heck/*
   rust-vendor/lazy_static/*
   rust-vendor/libc/*
   rust-vendor/log/*
-  rust-vendor/regex*/*
   rust-vendor/unicode-width/*
 Copyright: 2010, 2014-2020 The Rust Project Developers
 License: MIT or Apache-2.0
@@ -52,7 +58,6 @@ Files:
   rust-vendor/openssl-probe/*
   rust-vendor/openssl-sys/*
   rust-vendor/pkg-config/*
-  rust-vendor/socket2/*
 Copyright: 2014, 2016 Alex Crichton
 License: MIT or Apache-2.0
 
@@ -66,12 +71,19 @@ Files: rust-vendor/cookie_store/*
 Copyright: 2017 Patrick Fernie
 License: MIT or Apache-2.0
 
-Files: rust-vendor/crc32fast/*
-Copyright: 2018 Sam Rijs, Alex Crichton and contributors
+Files:
+  rust-vendor/der/*
+  rust-vendor/pem-rfc7468/*
+  rust-vendor/zeroize/*
+Copyright: 2018-2023 The RustCrypto Project Developers
 License: MIT or Apache-2.0
 
-Files: rust-vendor/deranged/*
-Copyright: 2024 Jacob Pratt et al.
+Files:
+  rust-vendor/deranged/*
+  rust-vendor/num-conv/*
+  rust-vendor/powerfmt/*
+  rust-vendor/time*/*
+Copyright: 2023-2024 Jacob Pratt et al.
 License: MIT or Apache-2.0
 
 Files: rust-vendor/diff/*
@@ -86,18 +98,18 @@ Files: rust-vendor/document-features/*
 Copyright: 2020 Olivier Goffart
 License: MIT or Apache-2.0
 
-Files: rust-vendor/encoding_rs/*
-Copyright:
-  Mozilla Foundation
-  WHATWG (Apple, Google, Mozilla, Microsoft)
-License: MIT or Apache-2.0 or WHATWG
-
 Files: rust-vendor/equivalent/*
 Copyright: 2016-2023 Josh Stone
 License: MIT or Apache-2.0
 
 Files: rust-vendor/fnv/*
 Copyright: 2017 Simon Sapin
+License: MIT or Apache-2.0
+
+Files:
+  rust-vendor/foreign-types/*
+  rust-vendor/foreign-types-shared/*
+Copyright: 2017 The foreign-types Developers
 License: MIT or Apache-2.0
 
 Files: rust-vendor/form_urlencoded/*
@@ -137,12 +149,8 @@ Files: rust-vendor/indexmap/*
 Copyright: 2016-2017 Josh Stone
 License: MIT or Apache-2.0
 
-Files: rust-vendor/itertools/*
-Copyright: 2015 Jack Wrenn
-License: MIT or Apache-2.0
-
-Files: rust-vendor/itoa/*
-Copyright: 2024 Jack Wrenn
+Files: rust-vendor/litrs/*
+Copyright: 2020 Project Developers
 License: MIT or Apache-2.0
 
 Files: rust-vendor/memchr/*
@@ -151,14 +159,6 @@ License: MIT
 
 Files: rust-vendor/memoffset/*
 Copyright: 2017 Gilad Naaman
-License: MIT
-
-Files: rust-vendor/mime/*
-Copyright: 2014 Sean McArthur
-License: MIT or Apache-2.0
-
-Files: rust-vendor/mio/*
-Copyright: 2014 Carl Lerche and other MIO contributors
 License: MIT
 
 Files: rust-vendor/native-tls/*
@@ -188,50 +188,25 @@ Files: rust-vendor/percent-encoding/*
 Copyright: 2013-2022 The rust-url developers
 License: MIT or Apache-2.0
 
-Files: rust-vendor/pin-project-lite/*
-Copyright: 2024 Taiki Endo
-License: MIT or Apache-2.0
-
-Files: rust-vendor/pin-utils/*
-Copyright: 2018 The pin-utils authors
-License: MIT or Apache-2.0
-
 Files: rust-vendor/pretty_assertions/*
 Copyright: 2016 rust-derive-builder contributors
 License: MIT or Apache-2.0
 
 Files: rust-vendor/pyo3*/*
-Copyright: 2023-present PyO3 Project and Contributors.
+Copyright: 2023-present PyO3 Project and Contributors
 License: MIT or Apache-2.0
 
-Files: rust-vendor/reqwest/*
-Copyright: 2016-2025 Sean McArthur
-License: MIT or Apache-2.0
-
-Files: rust-vendor/ring/*
-Copyright: 2024 Brian Smith
-License: MIT or Apache-2.0
-
-Files:
-  rust-vendor/rustls/*
+Files: rust-vendor/rustls-pemfile/*
 Copyright: 2016 Joseph Birr-Pixton
-License: MIT or Apache-2.0
+License: MIT or Apache-2.0 or ISC
 
 Files: rust-vendor/rustls-pki-types/*
 Copyright: 2023 Dirkjan Ochtman
 License: MIT or Apache-2.0
 
-Files: rust-vendor/rustls-webpki/*
-Copyright: 2015 Brian Smith
-License: ISC
-
 Files: rust-vendor/ryu/*
 Copyright: 2018 David Tolnay
 License: Apache-2.0 or BSL-1.0
-
-Files: rust-vendor/serde_urlencoded/*
-Copyright: 2016 Anthony Ramine
-License: MIT or Apache-2.0
 
 Files: rust-vendor/shlex/*
 Copyright: 2015 Nicholas Allegra
@@ -239,10 +214,6 @@ License: MIT or Apache-2.0
 
 Files: rust-vendor/simple_test_case/*
 Copyright: 2020 Innes Anderson-Morrison
-License: MIT
-
-Files: rust-vendor/slab/*
-Copyright: 2019 Carl Lerche
 License: MIT
 
 Files: rust-vendor/smallvec/*
@@ -257,14 +228,6 @@ Files: rust-vendor/stable_deref_trait/*
 Copyright: 2017 Robert Grosse
 License: MIT or Apache-2.0
 
-Files: rust-vendor/subtle/*
-Copyright: 2016-2017 Isis Agora Lovecruft, Henry de Valence
-License: MIT
-
-Files: rust-vendor/sync_wrapper/*
-Copyright: 2024 Ronald Kuhn
-License: Apache-2.0
-
 Files: rust-vendor/synstructure/*
 Copyright: 2016 Nika Layzell
 License: MIT
@@ -273,24 +236,23 @@ Files: rust-vendor/target-lexicon/*
 Copyright: 2018 Dan Gohman
 License: Apache-2.0 and LLVM-exception
 
-Files: rust-vendor/try-lock/*
-Copyright: 2018-2023 Sean McArthur
-License: MIT
-
 Files: rust-vendor/unicode-ident/*
 Copyright: 1991-2023 Unicode, Inc.
 License: MIT or Apache-2.0 or Unicode
 
-Files: rust-vendor/untrusted/*
-Copyright: 2015-2016 Brian Smith
-License: ISC
+Files: rust-vendor/ureq*/*
+Copyright: 2019, 2022 Martin Algesten
+License: MIT or Apache-2.0
 
 Files: rust-vendor/url/*
 Copyright: 2013-2022 The rust-url developers
 License: MIT or Apache-2.0
 
-Files:
-  rust-vendor/utf8_iter/*
+Files: rust-vendor/utf-8/*
+Copyright: 2014 Simon Sapin
+License: MIT or Apache-2.0
+
+Files: rust-vendor/utf8_iter/*
 Copyright: Mozilla Foundation
 License: MIT or Apache-2.0
 
@@ -298,17 +260,15 @@ Files: rust-vendor/vcpkg/*
 Copyright: 2017 Jim McGrath
 License: MIT or Apache-2.0
 
-Files: rust-vendor/want/*
+Files:
+  rust-vendor/version_check/*
+  rust-vendor/yansi/*
+Copyright: 2017-2018 Sergio Benitez
+License: MIT or Apache-2.0
+
+Files: rust-vendor/webpki-root-certs*/*
 Copyright: 2018-2019 Sean McArthur
-License: MIT
-
-Files: rust-vendor/yansi/*
-Copyright: 2017 Sergio Benitez
-License: MIT or Apache-2.0
-
-Files: rust-vendor/zeroize/*
-Copyright: 2018-2021 The RustCrypto Project Developers
-License: MIT or Apache-2.0
+License: CDLA-Permissive-2.0
 
 License: GPL-3
  This program is free software: you can redistribute it and/or modify
@@ -405,6 +365,68 @@ License: BSL-1.0
  OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
 
+License: CDLA-Permissive-2.0
+ This is the Community Data License Agreement - Permissive, Version
+ 2.0 (the "agreement"). Data Provider(s) and Data Recipient(s) agree
+ as follows:
+ .
+ 1. Provision of the Data
+ .
+ 1.1. A Data Recipient may use, modify, and share the Data made
+ available by Data Provider(s) under this agreement if that Data
+ Recipient follows the terms of this agreement.
+ .
+ 1.2. This agreement does not impose any restriction on a Data
+ Recipient's use, modification, or sharing of any portions of the Data
+ that are in the public domain or that may be used, modified, or
+ shared under any other legal exception or limitation.
+ .
+ 2. Conditions for Sharing Data
+ .
+ 2.1. A Data Recipient may share Data, with or without modifications,
+ so long as the Data Recipient makes available the text of this
+ agreement with the shared Data.
+ .
+ 3. No Restrictions on Results
+ .
+ 3.1. This agreement does not impose any restriction or obligations
+ with respect to the use, modification, or sharing of Results.
+ .
+ 4. No Warranty; Limitation of Liability
+ .
+ 4.1. All Data Recipients receive the Data subject to the following
+ terms:
+ .
+ THE DATA IS PROVIDED ON AN "AS IS" BASIS, WITHOUT REPRESENTATIONS,
+ WARRANTIES OR CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED
+ INCLUDING, WITHOUT LIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE,
+ NON-INFRINGEMENT, MERCHANTABILITY OR FITNESS FOR A PARTICULAR
+ PURPOSE.
+ .
+ NO DATA PROVIDER SHALL HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT,
+ INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING
+ WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND ON ANY THEORY OF
+ LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE DATA OR
+ RESULTS, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
+ .
+ 5. Definitions
+ .
+ 5.1. "Data" means the material received by a Data Recipient under
+ this agreement.
+ .
+ 5.2. "Data Provider" means any person who is the source of Data
+ provided under this agreement and in reliance on a Data Recipient's
+ agreement to its terms.
+ .
+ 5.3. "Data Recipient" means any person who receives Data directly or
+ indirectly from a Data Provider and agrees to the terms of this
+ agreement.
+ .
+ 5.4. "Results" means any outcome obtained by computational analysis
+ of Data, including for example machine learning models and models'
+ insights.
+
 License: ISC
  Permission to use, copy, modify, and/or distribute this software for any
  purpose with or without fee is hereby granted, provided that the above
@@ -417,32 +439,6 @@ License: ISC
  WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
  ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
  OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
-
-License: WHATWG
- Redistribution and use in source and binary forms, with or without
- modification, are permitted provided that the following conditions are met:
- .
- 1. Redistributions of source code must retain the above copyright notice, this
-    list of conditions and the following disclaimer.
- .
- 2. Redistributions in binary form must reproduce the above copyright notice,
-    this list of conditions and the following disclaimer in the documentation
-    and/or other materials provided with the distribution.
- .
- 3. Neither the name of the copyright holder nor the names of its
-    contributors may be used to endorse or promote products derived from
-    this software without specific prior written permission.
- .
- THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
- AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
- FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
- DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER
- CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY,
- OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 License: LLVM-exception
  As an exception, if, as a result of your compiling your source code,
