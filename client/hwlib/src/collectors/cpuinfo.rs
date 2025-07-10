@@ -17,7 +17,6 @@
  */
 
 use anyhow::{Context, Result};
-use itertools::Itertools;
 use std::{collections::HashMap, fs::read_to_string, io::ErrorKind::NotFound, path::Path};
 
 #[derive(Debug)]
@@ -51,7 +50,7 @@ impl CpuInfo {
                 continue;
             }
 
-            if let Some((key, value)) = trimmed_line.split(':').collect_tuple() {
+            if let Some((key, value)) = trimmed_line.split_once(':') {
                 let key = key.trim_end();
                 if key == "processor" {
                     cores_count += 1;

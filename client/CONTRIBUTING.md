@@ -17,7 +17,8 @@ To build the package using the vendored dependencies and then run it in offline
 mode, execute the following commands:
 
 ```shell
-./debian/vendor-rust.sh
+cargo install cargo-vendor-filterer
+cargo vendor-filterer rust-vendor
 ```
 
 Then modify `~/.cargo/config.toml` (or `~/.cargo/config` if you use an older
@@ -111,7 +112,8 @@ tag and release](https://github.com/canonical/hardware-api/releases/new).
 You need to vendor the Rust dependencies:
 
 ```shell
-./debian/vendor-rust.sh
+cargo install cargo-vendor-filterer
+cargo vendor-filterer rust-vendor
 ```
 
 `dh-cargo` requires the `debian/cargo-checksum.json` file to be present in the
@@ -262,7 +264,8 @@ However, this also requires updating the `XS-Vendored-Sources-Rust` header in
 expected seciton of this command's output:
 
 ```shell
-./debian/vendor-rust.sh
+cargo install cargo-vendor-filterer
+cargo vendor-filterer rust-vendor
 export CARGO_VENDOR_DIR=$(pwd)/rust-vendor/
 /usr/share/cargo/bin/dh-cargo-vendored-sources
 ```

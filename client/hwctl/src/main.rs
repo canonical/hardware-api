@@ -25,9 +25,8 @@ use hwlib::{
     send_certification_status_request,
 };
 
-#[tokio::main]
-async fn main() -> ExitCode {
-    match run().await {
+fn main() -> ExitCode {
+    match run() {
         Ok(_) => ExitCode::SUCCESS,
         Err(e) => {
             eprintln!("ERROR: {e:?}");
@@ -36,13 +35,12 @@ async fn main() -> ExitCode {
     }
 }
 
-async fn run() -> Result<()> {
+fn run() -> Result<()> {
     let cert_status_request =
         CertificationStatusRequest::new(Paths::default()).context("cannot collect system data")?;
 
     let url = env::var("HW_API_URL").unwrap_or_else(|_| String::from("https://hw.ubuntu.com"));
     let response = send_certification_status_request(url, &cert_status_request)
-        .await
         .context("cannot send certification status request")?;
 
     let response_json =

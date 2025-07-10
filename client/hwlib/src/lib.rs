@@ -28,7 +28,6 @@ pub mod models;
 pub mod py_bindings;
 
 use anyhow::Result;
-use reqwest::Client;
 
 use constants::CERT_STATUS_ENDPOINT;
 use models::{
@@ -36,17 +35,15 @@ use models::{
     response_validators::CertificationStatusResponse,
 };
 
-pub async fn send_certification_status_request(
+pub fn send_certification_status_request(
     url: String,
     request: &CertificationStatusRequest,
 ) -> Result<CertificationStatusResponse> {
-    let client = Client::new();
     let mut server_url = url.clone();
     server_url.push_str(CERT_STATUS_ENDPOINT);
-    let response = client.post(server_url).json(request).send().await?;
-    response.error_for_status_ref()?;
-    let response_text = response.text().await?;
-    let typed_response: CertificationStatusResponse = serde_json::from_str(&response_text)?;
-
-    Ok(typed_response)
+    let response = minreq::post(&server_url)
+        .with_json(request)?
+        .send()?
+        .json()?;
+    Ok(response)
 }
