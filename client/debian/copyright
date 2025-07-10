@@ -13,6 +13,7 @@ License: LGPL-3
 Files:
   rust-vendor/anyhow/*
   rust-vendor/indoc/*
+  rust-vendor/itoa/*
   rust-vendor/proc-macro2/*
   rust-vendor/quote/*
   rust-vendor/serde/*
@@ -25,16 +26,6 @@ License: MIT or Apache-2.0
 
 Files: rust-vendor/autocfg/*
 Copyright: 2018 Josh Stone
-License: MIT or Apache-2.0
-
-Files: rust-vendor/base64/*
-Copyright: 2015 Alice Maz
-License: MIT or Apache-2.0
-
-Files: rust-vendor/base64ct/*
-Copyright:
-  2014 Steve "Sc00bz" Thomas (steve at tobtu dot com)
-  2021-2025 The RustCrypto Project Developers
 License: MIT or Apache-2.0
 
 Files:
@@ -61,49 +52,8 @@ Files:
 Copyright: 2014, 2016 Alex Crichton
 License: MIT or Apache-2.0
 
-Files: rust-vendor/cookie/*
-Copyright:
-  2017 Sergio Benitez
-  2014 Alex Crichton
-License: MIT or Apache-2.0
-
-Files: rust-vendor/cookie_store/*
-Copyright: 2017 Patrick Fernie
-License: MIT or Apache-2.0
-
-Files:
-  rust-vendor/der/*
-  rust-vendor/pem-rfc7468/*
-  rust-vendor/zeroize/*
-Copyright: 2018-2023 The RustCrypto Project Developers
-License: MIT or Apache-2.0
-
-Files:
-  rust-vendor/deranged/*
-  rust-vendor/num-conv/*
-  rust-vendor/powerfmt/*
-  rust-vendor/time*/*
-Copyright: 2023-2024 Jacob Pratt et al.
-License: MIT or Apache-2.0
-
 Files: rust-vendor/diff/*
 Copyright: 2015 Utkarsh Kukreti
-License: MIT or Apache-2.0
-
-Files: rust-vendor/displaydoc/*
-Copyright: 2024 Manish Goregaokar, Jane Losare-Lusby
-License: MIT or Apache-2.0
-
-Files: rust-vendor/document-features/*
-Copyright: 2020 Olivier Goffart
-License: MIT or Apache-2.0
-
-Files: rust-vendor/equivalent/*
-Copyright: 2016-2023 Josh Stone
-License: MIT or Apache-2.0
-
-Files: rust-vendor/fnv/*
-Copyright: 2017 Simon Sapin
 License: MIT or Apache-2.0
 
 Files:
@@ -112,101 +62,9 @@ Files:
 Copyright: 2017 The foreign-types Developers
 License: MIT or Apache-2.0
 
-Files: rust-vendor/form_urlencoded/*
-Copyright: 2013-2016 The rust-url developers
-License: MIT or Apache-2.0
-
-Files: rust-vendor/hashbrown/*
-Copyright: 2016 Amanieu d'Antras
-License: MIT or Apache-2.0
-
-Files: rust-vendor/http/*
-Copyright: 2017 http-rs authors
-License: MIT or Apache-2.0
-
-Files: rust-vendor/httparse/*
-Copyright: 2015-2025 Sean McArthur
-License: MIT or Apache-2.0
-
-Files:
-  rust-vendor/icu_*/*
-  rust-vendor/litemap/*
-  rust-vendor/potential_utf/*
-  rust-vendor/tinystr/*
-  rust-vendor/writeable/*
-  rust-vendor/yoke*/*
-  rust-vendor/zerofrom*/*
-  rust-vendor/zerotrie*/*
-  rust-vendor/zerovec*/*
-Copyright: 2020-2024 Unicode
-License: Unicode
-
-Files: rust-vendor/idna*/*
-Copyright: 2013-2022 The rust-url developers
-License: MIT or Apache-2.0
-
-Files: rust-vendor/indexmap/*
-Copyright: 2016-2017 Josh Stone
-License: MIT or Apache-2.0
-
-Files: rust-vendor/litrs/*
-Copyright: 2020 Project Developers
-License: MIT or Apache-2.0
-
-Files: rust-vendor/memchr/*
-Copyright: 2015 Andrew Gallant
-License: MIT
-
-Files: rust-vendor/memoffset/*
-Copyright: 2017 Gilad Naaman
-License: MIT
-
-Files: rust-vendor/native-tls/*
-Copyright: 2016 The rust-native-tls Developers
-License: MIT or Apache-2.0
-
-Files: rust-vendor/once_cell/*
-Copyright: 2018 Alex Kladov
-License: MIT or Apache-2.0
-
-Files: rust-vendor/openssl/*
-Copyright:
-  2011-2017 Google Inc.
-  2013 Jack Lloyd
-  2013-2014 Steven Fackler
-License: Apache-2.0
-
-Files: rust-vendor/openssl-macros/*
-Copyright: 2022 Steven Fackler
-License: MIT or Apache-2.0
-
-Files: rust-vendor/os-release/*
-Copyright: 2018 System76
-License: MIT
-
-Files: rust-vendor/percent-encoding/*
-Copyright: 2013-2022 The rust-url developers
-License: MIT or Apache-2.0
-
-Files: rust-vendor/pretty_assertions/*
-Copyright: 2016 rust-derive-builder contributors
-License: MIT or Apache-2.0
-
-Files: rust-vendor/pyo3*/*
-Copyright: 2023-present PyO3 Project and Contributors
-License: MIT or Apache-2.0
-
-Files: rust-vendor/rustls-pemfile/*
-Copyright: 2016 Joseph Birr-Pixton
-License: MIT or Apache-2.0 or ISC
-
-Files: rust-vendor/rustls-pki-types/*
-Copyright: 2023 Dirkjan Ochtman
-License: MIT or Apache-2.0
-
-Files: rust-vendor/ryu/*
-Copyright: 2018 David Tolnay
-License: Apache-2.0 or BSL-1.0
+Files: rust-vendor/minreq/*
+Copyright: 2018 Jens Pitkanen
+License: ISC
 
 Files: rust-vendor/shlex/*
 Copyright: 2015 Nicholas Allegra
@@ -216,20 +74,8 @@ Files: rust-vendor/simple_test_case/*
 Copyright: 2020 Innes Anderson-Morrison
 License: MIT
 
-Files: rust-vendor/smallvec/*
-Copyright: 2018 The Servo Project Developers
-License: MIT or Apache-2.0
-
 Files: rust-vendor/smbios-lib/*
 Copyright: 2021 jrgerber
-License: MIT
-
-Files: rust-vendor/stable_deref_trait/*
-Copyright: 2017 Robert Grosse
-License: MIT or Apache-2.0
-
-Files: rust-vendor/synstructure/*
-Copyright: 2016 Nika Layzell
 License: MIT
 
 Files: rust-vendor/target-lexicon/*
@@ -240,35 +86,13 @@ Files: rust-vendor/unicode-ident/*
 Copyright: 1991-2023 Unicode, Inc.
 License: MIT or Apache-2.0 or Unicode
 
-Files: rust-vendor/ureq*/*
-Copyright: 2019, 2022 Martin Algesten
-License: MIT or Apache-2.0
-
-Files: rust-vendor/url/*
-Copyright: 2013-2022 The rust-url developers
-License: MIT or Apache-2.0
-
-Files: rust-vendor/utf-8/*
-Copyright: 2014 Simon Sapin
-License: MIT or Apache-2.0
-
-Files: rust-vendor/utf8_iter/*
-Copyright: Mozilla Foundation
-License: MIT or Apache-2.0
-
 Files: rust-vendor/vcpkg/*
 Copyright: 2017 Jim McGrath
 License: MIT or Apache-2.0
 
-Files:
-  rust-vendor/version_check/*
-  rust-vendor/yansi/*
+Files: rust-vendor/yansi/*
 Copyright: 2017-2018 Sergio Benitez
 License: MIT or Apache-2.0
-
-Files: rust-vendor/webpki-root-certs*/*
-Copyright: 2018-2019 Sean McArthur
-License: CDLA-Permissive-2.0
 
 License: GPL-3
  This program is free software: you can redistribute it and/or modify
@@ -364,68 +188,6 @@ License: BSL-1.0
  LIABILITY, WHETHER IN CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT
  OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  THE SOFTWARE.
-
-License: CDLA-Permissive-2.0
- This is the Community Data License Agreement - Permissive, Version
- 2.0 (the "agreement"). Data Provider(s) and Data Recipient(s) agree
- as follows:
- .
- 1. Provision of the Data
- .
- 1.1. A Data Recipient may use, modify, and share the Data made
- available by Data Provider(s) under this agreement if that Data
- Recipient follows the terms of this agreement.
- .
- 1.2. This agreement does not impose any restriction on a Data
- Recipient's use, modification, or sharing of any portions of the Data
- that are in the public domain or that may be used, modified, or
- shared under any other legal exception or limitation.
- .
- 2. Conditions for Sharing Data
- .
- 2.1. A Data Recipient may share Data, with or without modifications,
- so long as the Data Recipient makes available the text of this
- agreement with the shared Data.
- .
- 3. No Restrictions on Results
- .
- 3.1. This agreement does not impose any restriction or obligations
- with respect to the use, modification, or sharing of Results.
- .
- 4. No Warranty; Limitation of Liability
- .
- 4.1. All Data Recipients receive the Data subject to the following
- terms:
- .
- THE DATA IS PROVIDED ON AN "AS IS" BASIS, WITHOUT REPRESENTATIONS,
- WARRANTIES OR CONDITIONS OF ANY KIND, EITHER EXPRESS OR IMPLIED
- INCLUDING, WITHOUT LIMITATION, ANY WARRANTIES OR CONDITIONS OF TITLE,
- NON-INFRINGEMENT, MERCHANTABILITY OR FITNESS FOR A PARTICULAR
- PURPOSE.
- .
- NO DATA PROVIDER SHALL HAVE ANY LIABILITY FOR ANY DIRECT, INDIRECT,
- INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING
- WITHOUT LIMITATION LOST PROFITS), HOWEVER CAUSED AND ON ANY THEORY OF
- LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE DATA OR
- RESULTS, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGES.
- .
- 5. Definitions
- .
- 5.1. "Data" means the material received by a Data Recipient under
- this agreement.
- .
- 5.2. "Data Provider" means any person who is the source of Data
- provided under this agreement and in reliance on a Data Recipient's
- agreement to its terms.
- .
- 5.3. "Data Recipient" means any person who receives Data directly or
- indirectly from a Data Provider and agrees to the terms of this
- agreement.
- .
- 5.4. "Results" means any outcome obtained by computational analysis
- of Data, including for example machine learning models and models'
- insights.
 
 License: ISC
  Permission to use, copy, modify, and/or distribute this software for any

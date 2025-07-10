@@ -41,9 +41,9 @@ pub fn send_certification_status_request(
 ) -> Result<CertificationStatusResponse> {
     let mut server_url = url.clone();
     server_url.push_str(CERT_STATUS_ENDPOINT);
-    let response = ureq::post(&server_url)
-        .send_json(request)?
-        .body_mut()
-        .read_json()?;
+    let response = minreq::post(&server_url)
+        .with_json(request)?
+        .send()?
+        .json()?;
     Ok(response)
 }

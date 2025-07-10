@@ -1,7 +1,7 @@
 rust-hwlib (0.9.2) questing; urgency=medium
 
-  * Remove tokio, rehex, itertools, lazy_static crate dependencies
-  * Use ureq crate instead of reqwest
+  * Remove tokio, regex, itertools, lazy_static Rust dependencies
+  * Use minreq crate instead of reqwest and adjust the code
   * Remove the debian/vendor-rust.sh script
   * Remove examples and tests from rust-vendor/ directory
 
