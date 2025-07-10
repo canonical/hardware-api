@@ -45,6 +45,5 @@ pub fn send_certification_status_request(
         .send_json(request)?
         .body_mut()
         .read_json()?;
-
     Ok(response)
 }

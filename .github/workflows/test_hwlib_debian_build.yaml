@@ -115,7 +115,7 @@ jobs:
             exit 1
           fi
           echo "Running sbuild for $PACKAGE_DSC"
-          sg sbuild -c "sbuild $PACKAGE_DSC -d questing -v --resolve-alternatives --no-clean-source --no-run-lintian"
+          sg sbuild -c "sbuild $PACKAGE_DSC -d questing -v"
 
           mv *.deb "$RUNNER_TEMP"
         env:
