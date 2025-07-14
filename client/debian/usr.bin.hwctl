@@ -41,7 +41,7 @@ profile hwctl /usr/bin/hwctl {
   profile kmod /usr/bin/kmod {
     include <abstractions/base>
 
-    /usr/bin/kmod             rm,
+    /usr/bin/kmod             mr,
     @{PROC}/{cmdline,modules} r,
     @{sys}/module/**          r,  # for fetching kernel modules
   }
