@@ -6,6 +6,11 @@
 .Nd CLI tool to check hardware certification status
 .Sh SYNOPSIS
 .Nm
+.Pp
+.Nm
+.Op Fl h | \-help
+.Op Fl V | \-version
+.Op Fl \-server Ar URL
 .Sh DESCRIPTION
 The
 .Nm
@@ -24,9 +29,16 @@ visit
 .Pp
 Note that root privileges are typically required to run this command.
 .Sh OPTIONS
-The
-.Nm
-utility does not accept any command-line options.
+.Bl -tag -width ".Fl \-server"
+.It Fl h , \-help
+Print help information and exit.
+.It Fl V , \-version
+Print version information and exit.
+.It Fl \-server Ar URL
+Specify the API server URL. This overrides the default value and the
+.Ev HW_API_URL
+environment variable.
+.El
 .Sh ENVIRONMENT
 .Bl -tag -width "HW_API_URL" -compact
 .It Ev HW_API_URL

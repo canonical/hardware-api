@@ -33,7 +33,7 @@ use serde_json;
 #[pyfunction]
 fn send_certification_request(py: Python, url: String) -> PyResult<PyObject> {
     let request_body = CertificationStatusRequest::new(Paths::default())
-        .map_err(|e| PyRuntimeError::new_err(format!("failed to create request: {}", e)))?;
+        .map_err(|e| PyRuntimeError::new_err(format!("failed to create request: {e}")))?;
 
     let response = native_send_certification_status_request(url, &request_body);
 
@@ -47,8 +47,7 @@ fn send_certification_request(py: Python, url: String) -> PyResult<PyObject> {
             Ok(json_object)
         }
         Err(e) => Err(PyErr::new::<PyRuntimeError, _>(format!(
-            "Request failed: {}",
-            e
+            "Request failed: {e}"
         ))),
     }
 }
