@@ -1,6 +1,6 @@
 [package]
 name = "hwctl"
-description = "hwlib backed CLI tool for collecting and sending hardware information to hwapi to find testing status of device models"
+description = "CLI tool to check hardware certification status"
 license = "GPL-3.0-only"
 version.workspace = true
 edition.workspace = true
@@ -18,3 +18,6 @@ all-features = false
 hwlib = { path = "../hwlib" }
 serde_json = { workspace = true }
 anyhow = { workspace = true }
+
+[dependencies]
+clap = { version = "4.5.41", features = ["derive", "env"] }

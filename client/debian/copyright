@@ -11,6 +11,14 @@ Copyright: 2024 Canonical Ltd.
 License: LGPL-3
 
 Files:
+  rust-vendor/anstream*/*
+  rust-vendor/clap*/*
+  rust-vendor/colorchoice*/*
+  rust-vendor/is_terminal_polyfill/*
+Copyright: 2015-2025 Individual contributors
+License: MIT or Apache-2.0
+
+Files:
   rust-vendor/anyhow/*
   rust-vendor/indoc/*
   rust-vendor/itoa/*
@@ -74,13 +82,24 @@ Files: rust-vendor/smbios-lib/*
 Copyright: 2021 jrgerber
 License: MIT
 
+Files: rust-vendor/strsim/*
+Copyright:
+  2015 Danny Guo
+  2016 Titus Wormer <tituswormer@gmail.com>
+  2018 Akash Kurdekar
+License: MIT
+
 Files: rust-vendor/target-lexicon/*
 Copyright: 2018 Dan Gohman
 License: Apache-2.0 and LLVM-exception
 
 Files: rust-vendor/unicode-ident/*
 Copyright: 1991-2023 Unicode, Inc.
-License: MIT or Apache-2.0 or Unicode
+License: (MIT or Apache-2.0) and Unicode
+
+Files: rust-vendor/utf8parse/*
+Copyright: 2016 Joe Wilm
+License: MIT or Apache-2.0
 
 Files: rust-vendor/vcpkg/*
 Copyright: 2017 Jim McGrath

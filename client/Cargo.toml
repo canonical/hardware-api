@@ -23,8 +23,7 @@ serde_json = "~1.0.0"
 platforms = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"]
 tier = "2"
 all-features = false
-exclude-crate-paths = [ { name = "*", exclude = "examples" },
-                        { name = "*", exclude = "test" },
+exclude-crate-paths = [ { name = "*", exclude = "test" },
                         { name = "*", exclude = "tests" },
                         { name = "*", exclude = "test-data" },
                         { name = "*", exclude = "benches" },

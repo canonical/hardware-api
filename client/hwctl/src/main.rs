@@ -18,15 +18,37 @@
  */
 
 use anyhow::{Context, Result};
-use std::{env, process::ExitCode};
+use clap::Parser;
+use std::process::ExitCode;
 
-use hwlib::{
-    models::request_validators::{CertificationStatusRequest, Paths},
-    send_certification_status_request,
-};
+use hwlib::models::request_validators::{CertificationStatusRequest, Paths};
+use hwlib::send_certification_status_request;
+
+/// CLI tool to check hardware certification status.
+///
+/// The utility checks the Ubuntu Hardware Certification status of your
+/// system. It verifies whether your exact machine model or a similar system has been
+/// certified and displays which Ubuntu releases the certification covers for it.
+///
+/// For more information about the Ubuntu Hardware Certification Program, visit
+/// the certification website: https://ubuntu.com/certified
+///
+/// Note that root privileges are typically required to run this command.
+#[derive(Parser, Debug)]
+#[command(version, about, long_about, verbatim_doc_comment)]
+struct Args {
+    #[arg(
+        long = "server",
+        env = "HW_API_URL",
+        default_value = "https://hw.ubuntu.com",
+        help = "API server URL"
+    )]
+    hw_api_url: String,
+}
 
 fn main() -> ExitCode {
-    match run() {
+    let args = Args::parse();
+    match run(args.hw_api_url) {
         Ok(_) => ExitCode::SUCCESS,
         Err(e) => {
             eprintln!("ERROR: {e:?}");
@@ -35,17 +57,14 @@ fn main() -> ExitCode {
     }
 }
 
-fn run() -> Result<()> {
+fn run(server_url: String) -> Result<()> {
     let cert_status_request =
         CertificationStatusRequest::new(Paths::default()).context("cannot collect system data")?;
-
-    let url = env::var("HW_API_URL").unwrap_or_else(|_| String::from("https://hw.ubuntu.com"));
-    let response = send_certification_status_request(url, &cert_status_request)
+    let response = send_certification_status_request(server_url, &cert_status_request)
         .context("cannot send certification status request")?;
-
     let response_json =
         serde_json::to_string_pretty(&response).context("cannot serialize response as JSON")?;
-    println!("{}", response_json);
+    println!("{response_json}");
 
     Ok(())
 }
