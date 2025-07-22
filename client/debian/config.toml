@@ -1,8 +1,0 @@
-# Use the vendorized sources to produce the Cargo.lock file. This
-# can be performed by pointing $CARGO_HOME to the path containing
-# this file.
-[source.crates-io]
-replace-with = "vendored-sources"
-
-[source.vendored-sources]
-directory = "rust-vendor"
