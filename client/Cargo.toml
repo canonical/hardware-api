@@ -1,7 +1,6 @@
 [workspace]
 members = ["hwctl", "hwlib"]
 resolver = "2"
-exclude = ["debian", "rust-vendor"]
 
 [workspace.package]
 version = "0.9.2"
@@ -18,13 +17,3 @@ repository = "https://github.com/canonical/hardware-api/"
 [workspace.dependencies]
 anyhow = "~1.0.0"
 serde_json = "~1.0.0"
-
-[workspace.metadata.vendor-filter]
-platforms = ["x86_64-unknown-linux-gnu", "aarch64-unknown-linux-gnu"]
-tier = "2"
-all-features = false
-exclude-crate-paths = [ { name = "*", exclude = "test" },
-                        { name = "*", exclude = "tests" },
-                        { name = "*", exclude = "test-data" },
-                        { name = "*", exclude = "benches" },
-                      ]

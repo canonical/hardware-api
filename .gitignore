@@ -3,18 +3,3 @@ dist
 cargo-checksum.json
 *.snap
 
-# debian/ source files to ignore
-.debhelper/
-dep8-rust-hwlib/
-*/debian/files
-*/debian/cargo_registry
-*.deb
-*.ddeb
-*.buildinfo
-*.changes
-*.ppa.upload
-*.dsc
-*.tar.*
-*.dsc
-*.build
-*.log
