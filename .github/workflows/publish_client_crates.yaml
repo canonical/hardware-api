@@ -47,4 +47,4 @@ jobs:
       env:
         CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
       working-directory: client
-      run: cargo publish -p hwlib --locked --verbose
+      run: cargo publish --locked --verbose

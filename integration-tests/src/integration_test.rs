@@ -29,7 +29,7 @@ use std::{
 };
 
 fn get_test_device_paths(device_type: &str) -> Paths {
-    let base_path = PathBuf::from("/app/client/hwlib/test_data").join(device_type);
+    let base_path = PathBuf::from("/app/client/test_data").join(device_type);
     Paths {
         smbios_entry_filepath: base_path.join("smbios_entry_point"),
         smbios_table_filepath: base_path.join("DMI"),
@@ -110,7 +110,7 @@ fn test_certification_request(dir_path: &str) -> Result<()> {
     let cert_request = CertificationStatusRequest::new(get_test_device_paths(dir_path))?;
     let response = send_certification_status_request(api_url, &cert_request)?;
 
-    let response_json_file = PathBuf::from("/app/client/hwlib/test_data")
+    let response_json_file = PathBuf::from("/app/client/test_data")
         .join(dir_path)
         .join("response.json");
     let expected_response = load_response_file(&response_json_file);

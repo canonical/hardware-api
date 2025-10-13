@@ -8,9 +8,9 @@ hardware configurations.
 
 It consists of both the `hwlib` library and `hwctl` CLI tool.
 
-- [`hwlib`](./hwlib): Rust library for communicating with
+- `hwlib`: Rust library for communicating with
   [the API server](../server/).
-- [`hwctl`](./hwctl): CLI tool leveraging the `hwlib` library.
+- `hwctl`: CLI tool leveraging the `hwlib` library.
 
 ## Basic Usage
 
@@ -58,10 +58,7 @@ If you're interested, start with the
 
 ## License and Copyright
 
-The Hardware API Client is released under the following licenses:
-
-- `hwlib` is released under the [LGPL-3.0 license](./hwlib/LICENSE).
-- `hwctl` is released under the [GPL-3.0 license](./hwctl/LICENSE).
+The Hardware API Client is released under the under the [LGPL-3.0 license](./LICENSE)
 
 © 2025 Canonical Ltd.
 
