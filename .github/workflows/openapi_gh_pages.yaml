@@ -26,8 +26,8 @@ jobs:
         working-directory: server
     permissions:
       contents: read
-      pages: write
-      id-token: write
+      pages: write  # necessary to create gh pages
+      id-token: write  # necessary to request openid connect jwt token
     steps:
       - uses: actions/checkout@v4
         with:
