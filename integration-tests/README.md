@@ -42,7 +42,7 @@ components:
   - Sends requests to the server container
   - Validates responses against expected results
   - Test data location:
-    [client/hwlib/test\_data/](../client/hwlib/test_data/)
+    [client/test\_data/](../client/test_data/)
 
 Test Flow:
 
@@ -59,7 +59,7 @@ Test Data:
 - Server mock data:
   [server/scripts/c3\_test\_data/](../server/scripts/c3_test_data/)
 - Client test data:
-  [client/hwlib/test\_data/](../client/hwlib/test_data/)
+  [client/test\_data/](../client/test_data/)
 - Expected responses: `response.json` files in test directories
 
 ## Contributing

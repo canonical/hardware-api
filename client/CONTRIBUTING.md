@@ -65,8 +65,7 @@ $ sudo /path/to/venv/bin/python3  # or `python3`
 ## Test
 
 Since we're using Python bindings, this library contains tests for both Rust
-and Python code. To execute them, run the following commands in the `hwlib/`
-directory:
+and Python code. To execute them, run the following commands:
 
 - Run Rust tests: `$ cargo test`
 - Run Python tests: You need to have [`tox`][tox] (`pip install tox`). Then you

@@ -1,8 +1,6 @@
-[workspace]
-members = ["hwctl", "hwlib"]
-resolver = "2"
-
-[workspace.package]
+[package]
+name = "hwlib"
+description = "Tool for checking Ubuntu hardware certification status"
 version = "0.9.3"
 edition = "2021"
 authors = [
@@ -10,10 +8,29 @@ authors = [
     "Nadzeya Hutsko <nadzeya.hutsko@canonical.com>",
     "Matias Piipari <matias.piipari@canonical.com>",
 ]
+license = "LGPL-3.0-only"
 documentation = "https://github.com/canonical/hardware-api/"
 homepage = "https://github.com/canonical/hardware-api/"
 repository = "https://github.com/canonical/hardware-api/"
 
-[workspace.dependencies]
+[lib]
+name = "hwlib"
+crate-type = ["cdylib", "rlib"]
+
+[[bin]]
+name = "hwctl"
+path = "bin/hwctl.rs"
+
+[dependencies]
 anyhow = "~1.0.0"
+clap = { version = "4.5.41", features = ["derive", "env"] }
+minreq = { version = "2.14.0", features = ["native-tls", "json-using-serde"], default-features = false }
+os-release = { version = "0.1.0" }
+pyo3 = { version = "0.25.0", features = ["extension-module"] }
+serde = { version = "~1.0.0", features = ["derive"] }
 serde_json = "~1.0.0"
+smbios-lib = "0.9.0"
+
+[dev-dependencies]
+pretty_assertions = "1.4.1"
+simple_test_case = "1.2.0"

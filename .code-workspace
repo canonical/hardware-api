@@ -13,27 +13,15 @@
             }
         },
         {
-            "name": "hwctl",
-            "path": "client/hwctl",
-            "extensions": {
-                "recommendations": [
-                    "matklad.rust-analyzer"
-                ]
-            },
-            "settings": {
-                "rust-analyzer.linkedProjects": ["client/hwctl/Cargo.toml"]
-            }
-        },
-        {
             "name": "hwlib",
-            "path": "client/hwlib",
+            "path": "client",
             "extensions": {
                 "recommendations": [
                     "matklad.rust-analyzer"
                 ]
             },
             "settings": {
-                "rust-analyzer.linkedProjects": ["client/hwlib/Cargo.toml"]
+                "rust-analyzer.linkedProjects": ["client/Cargo.toml"]
             }
         }
     ]

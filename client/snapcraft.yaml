@@ -29,7 +29,7 @@ architectures:
 
 apps:
   hwctl:
-    command: hwctl
+    command: bin/hwctl
     plugs:
       - hardware-observe
       - kernel-module-observe
