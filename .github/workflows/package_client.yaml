@@ -36,7 +36,7 @@ jobs:
           persist-credentials: false
       - name: Build
         id: snapcraft
-        uses: canonical/snapcraft-multiarch-action@64be34b955c6f5085a086ab4e299e9f483652dee # v1.10.0
+        uses: canonical/snapcraft-multiarch-action@0c3495a6cead8eeacc35e1254fee7d2381e550e4 # v1.10.1
         with:
           path: client
           architecture: ${{ matrix.arch }}
