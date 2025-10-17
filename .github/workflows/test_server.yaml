@@ -61,7 +61,7 @@ jobs:
       pull-requests: write  # necessary to write coverage comment
     steps:
       - name: Download build tests coverage report
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v5
         with:
           name: test_coverage
       - name: Report Coverage and annotate PR (if exists)
