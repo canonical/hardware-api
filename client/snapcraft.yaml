@@ -20,12 +20,12 @@ source-code: https://github.com/canonical/hardware-api/tree/main/client
 issues: https://github.com/canonical/hardware-api/issues
 contact: https://github.com/canonical/hardware-api/issues
 
-base: core22
+base: core24
 grade: stable
 confinement: strict
 
-architectures:
-  - build-on: [amd64]
+platforms:
+  amd64:
 
 apps:
   hwctl:
