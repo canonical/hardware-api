@@ -42,12 +42,6 @@ environment to be configured to work with it:
 virtualenv venv
 source venv/bin/activate
 pip install maturin
-```
-
-Then run the following commands:
-
-```shell
-cd hwlib
 maturin develop --features pybindings
 ```
 
