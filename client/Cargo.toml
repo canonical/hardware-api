@@ -27,7 +27,7 @@ anyhow = "~1.0.0"
 clap = { version = "4.5.41", features = ["derive", "env"], optional = true }
 minreq = { version = "2.14.0", features = ["native-tls", "json-using-serde"], default-features = false }
 os-release = { version = "0.1.0" }
-pyo3 = { version = "0.26.0", features = ["extension-module"] }
+pyo3 = { version = "0.26.0", features = ["extension-module"], optional = true }
 serde = { version = "~1.0.0", features = ["derive"] }
 serde_json = "~1.0.0"
 smbios-lib = "0.9.0"
@@ -38,3 +38,4 @@ simple_test_case = "1.2.0"
 
 [features]
 cli = ["clap"]
+pybindings = ["pyo3"]
