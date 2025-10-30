@@ -38,13 +38,13 @@ jobs:
         with:
           toolchain: stable
           components: rustfmt, clippy
-      - run: cargo build
-      - run: cargo check
+      - run: cargo build --all-features
+      - run: cargo check --all-features
       - run: cargo fmt --all -- --check
       - run: cargo clippy --all-features --verbose
-      - run: cargo clippy --tests --verbose
+      - run: cargo clippy --all-features --tests --verbose
       - name: Run cargo test
-        run: cargo test
+        run: cargo test --all-features
 
   py-bindings-test:
     name: Test Python bindings
