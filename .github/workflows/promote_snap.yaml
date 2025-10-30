@@ -31,6 +31,10 @@ on:
           - latest/beta
           - latest/edge
 
+concurrency:
+  group: ${{ github.workflow }}-${{ inputs.snap }}-${{ inputs.from-channel }}-${{ inputs.to-channel }}
+  cancel-in-progress: true
+
 jobs:
   promote:
     name: Promote Snap
