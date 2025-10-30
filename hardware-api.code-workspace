@@ -1,28 +1,21 @@
 {
-    "folders": [
-        {
-            "name": "Server",
-            "path": "server",
-            "extensions": {
-                "recommendations": [
-                    "ms-python.python"
-                ]
-            },
-            "settings": {
-                "python.pythonPath": "server/.venv/bin/python"
-            }
-        },
-        {
-            "name": "hwlib",
-            "path": "client",
-            "extensions": {
-                "recommendations": [
-                    "matklad.rust-analyzer"
-                ]
-            },
-            "settings": {
-                "rust-analyzer.linkedProjects": ["client/Cargo.toml"]
-            }
-        }
+  "folders": [
+    {
+      "name": "Server",
+      "path": "server",
+    },
+    {
+      "name": "Client",
+      "path": "client",
+    }
+  ],
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "rust-lang.rust-analyzer"
     ]
+  },
+  "settings": {
+    "rust-analyzer.cargo.features": "all",
+  },
 }
