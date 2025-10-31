@@ -42,13 +42,7 @@ environment to be configured to work with it:
 virtualenv venv
 source venv/bin/activate
 pip install maturin
-```
-
-Then run the following commands:
-
-```shell
-cd hwlib
-maturin develop
+maturin develop --features pybindings
 ```
 
 Now you can use the library in your Python code. The library requires root
@@ -70,7 +64,6 @@ and Python code. To execute them, run the following commands:
 - Run Rust tests: `$ cargo test`
 - Run Python tests: You need to have [`tox`][tox] (`pip install tox`). Then you
   can run Python tests with `$ tox`
-
 
 [snap]: https://snapcraft.io/hwctl
 [snapcraft]: https://github.com/canonical/snapcraft

@@ -25,6 +25,7 @@ pub mod collectors;
 mod constants;
 mod helpers;
 pub mod models;
+#[cfg(feature = "pybindings")]
 pub mod py_bindings;
 
 use anyhow::Result;

@@ -40,6 +40,7 @@ apps:
 parts:
   hwctl:
     plugin: rust
+    rust-features: ["cli"]
     source: .
     build-packages:
       - jq
