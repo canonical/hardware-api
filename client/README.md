@@ -1,6 +1,7 @@
 # Hardware API Client
 
 [![Snapcraft][snapcraft-badge]][snapcraft-site]
+[![Crates.io][crate-badge]][crate-site]
 [![Test client lib and CLI tool][test-badge]][test-site]
 
 The **Hardware API Client** is the tool to check the certification status of
@@ -68,6 +69,8 @@ The Hardware API Client is released under the under the [LGPL-3.0 license](./LIC
 
 [snapcraft-badge]: https://snapcraft.io/hwctl/badge.svg
 [snapcraft-site]: https://snapcraft.io/hwctl
+[crate-badge]: https://img.shields.io/crates/v/hwlib.svg
+[crate-site]: https://crates.io/crates/hwlib
 [test-badge]: https://github.com/canonical/hardware-api/actions/workflows/test_client.yaml/badge.svg
 [test-site]: https://github.com/canonical/hardware-api/actions/workflows/test_client.yaml
 [hw-server]: https://hw.ubuntu.com
