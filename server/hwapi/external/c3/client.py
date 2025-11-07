@@ -96,7 +96,6 @@ class C3Client:
                 requests.exceptions.ConnectTimeout,
                 requests.exceptions.ConnectionError,
             ) as e:
-
                 if attempt == max_retries - 1:  # Last attempt
                     logger.error(
                         "Failed to fetch %s after %d attempts", url, max_retries

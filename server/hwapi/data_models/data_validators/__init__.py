@@ -16,7 +16,6 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 """Data validator models for machine specific components"""
 
-
 from hwapi.data_models.data_validators.devices import (
     AudioValidator,
     BiosValidator,

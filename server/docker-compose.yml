@@ -25,7 +25,7 @@ services:
         DB_URL: sqlite:////home/server/test.db
     command: >
       bash -c '
-        black --check hwapi/ scripts/ tests/ &&
+        ruff format --check hwapi/ scripts/ tests/ &&
         ruff check hwapi/ scripts/ tests/ --no-cache &&
         mypy hwapi/ scripts/ tests/ &&
         coverage run --source "hwapi/" -m pytest tests/ -vv &&
