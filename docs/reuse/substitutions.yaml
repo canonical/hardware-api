@@ -1,0 +1,2 @@
+# Key/value substitutions to use within the Sphinx doc.
+{ hwctl_version: "0.10.1", hwapi_version: "0.1.0" }
