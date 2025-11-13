@@ -40,7 +40,7 @@ jobs:
       - run: |
           npx @redocly/cli build-docs ./schemas/openapi.yaml -o ./dist/index.html
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v4
         with:
           path: "./server/dist"
       - name: Deploy to GitHub Pages
