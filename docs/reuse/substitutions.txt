@@ -1,0 +1,2 @@
+.. |hwctl_version| replace:: 0.10.1
+.. |hwapi_version| replace:: 0.1.0
