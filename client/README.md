@@ -73,7 +73,7 @@ The Hardware API Client is released under the under the [LGPL-3.0 license](./LIC
 [crate-badge]: https://img.shields.io/crates/v/hwlib.svg
 [crate-site]: https://crates.io/crates/hwlib
 [rtd-badge]: https://readthedocs.com/projects/canonical-hardware-api/badge/?version=latest
-[rtd-latest]: https://canonical-hardware-api.readthedocs-hosted.com/en/latest/
+[rtd-latest]: https://canonical-hardware-api.readthedocs-hosted.com/latest/
 [test-badge]: https://github.com/canonical/hardware-api/actions/workflows/test_client.yaml/badge.svg
 [test-site]: https://github.com/canonical/hardware-api/actions/workflows/test_client.yaml
 [hw-server]: https://hw.ubuntu.com
