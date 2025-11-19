@@ -1,0 +1,8 @@
+.. _Ubuntu HWAPI: https://hw.ubuntu.com/
+.. _canonical/hardware-api: https://github.com/canonical/hardware-api
+.. _hwapi schema: https://canonical.github.io/hardware-api/
+.. _snap: https://snapcraft.io/hwctl
+
+
+.. SHORTCUTS
+.. |RST| replace:: :abbr:`reST (reStructuredText)`

@@ -1,5 +1,7 @@
 # Hardware API
 
+[![Documentation status][rtd-badge]][rtd-latest]
+
 **Hardware API** is the system to retrieve hardware information to
 check the certification status of hardware configurations.
 
@@ -21,4 +23,6 @@ The Hardware API is open source. Contributions are welcome.
 
 If you're interested, start with the [contribution guide](./CONTRIBUTING.md).
 
+[rtd-badge]: https://readthedocs.com/projects/canonical-hardware-api/badge/?version=latest
+[rtd-latest]: https://canonical-hardware-api.readthedocs-hosted.com/en/latest/
 [github]: https://github.com/canonical/hardware-api

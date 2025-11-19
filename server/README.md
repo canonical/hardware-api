@@ -1,6 +1,7 @@
 # Hardware API Server
 
 [![Charmcraft][charmcraft-badge]][charmcraft-site]
+[![Documentation status][rtd-badge]][rtd-latest]
 [![Test API server][test-badge]][test-site]
 [![Poetry][poetry-badge]][poetry-site]
 [![Ruff status][ruff-badge]][ruff-site]
@@ -48,6 +49,8 @@ The Hardware API Sserver is released under the [AGPL-3.0 license](./LICENSE).
 
 [charmcraft-badge]: https://charmhub.io/hardware-api/badge.svg
 [charmcraft-site]: https://charmhub.io/hardware-api
+[rtd-badge]: https://readthedocs.com/projects/canonical-hardware-api/badge/?version=latest
+[rtd-latest]: https://canonical-hardware-api.readthedocs-hosted.com/en/latest/
 [test-badge]: https://github.com/canonical/hardware-api/actions/workflows/test_server.yaml/badge.svg
 [test-site]: https://github.com/canonical/hardware-api/actions/workflows/test_server.yaml
 [poetry-badge]: https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json
