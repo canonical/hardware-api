@@ -2,7 +2,8 @@
 .. _canonical/hardware-api: https://github.com/canonical/hardware-api
 .. _hwapi schema: https://canonical.github.io/hardware-api/
 .. _snap: https://snapcraft.io/hwctl
-
+.. _Contribute: https://github.com/canonical/hardware-api/blob/main/CONTRIBUTING.md
+.. _Code of conduct: https://ubuntu.com/community/docs/ethos/code-of-conduct
 
 .. SHORTCUTS
 .. |RST| replace:: :abbr:`reST (reStructuredText)`
