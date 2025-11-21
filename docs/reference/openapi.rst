@@ -15,7 +15,7 @@ OpenAPI
         window.addEventListener("load", function () {
             // The OpenAPI spec file is copied to the root of the `docs/` directory during build
             // by Sphinx using the `html_extra_path` option in `conf.py`.
-            const specUrl = new URL("/openapi.yaml", window.location.href).toString();
+            const specUrl = new URL("../../openapi.yaml", window.location.href).toString();
             SwaggerUIBundle({
                 url: specUrl,
                 dom_id: "#openapi-swagger",
