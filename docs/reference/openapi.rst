@@ -1,6 +1,7 @@
 OpenAPI 
 =======
 
+.. vale off
 
 .. raw:: html
 
@@ -26,3 +27,5 @@ OpenAPI
             });
         });
     </script>
+
+.. vale on
