@@ -48,3 +48,12 @@ Cryptography
 The information is transmitted securely to the Hardware API server using
 :abbr:`TLS (Transport Layer Security)`, ensuring that the data is protected
 during transit.
+
+Security Reporting and Disclosure
+---------------------------------
+
+Please refer to the `Security Policy`_ in the `canonical/hardware-api`_
+repository for details on reporting security issues.
+
+The Ubuntu `Security reporting and disclosure policy`_ contains more information
+about what you can expect when you contact us and what we expect from you.
