@@ -20,11 +20,12 @@ exploit known vulnerabilities in specific hardware components or configurations.
 Information Security
 --------------------
 
-The Hardware API client collects and processes hardware information, gathered
-from `SMBIOS`_. The information collected by Hardware API is sensitive, but does
-not include :abbr:`PII (Personally Identifiable Information)`. The information
-collected is limited to manufacturer/vendor, model, and versions of hardware
-components, firmware, kernel, OS, and BIOS.
+The Hardware API client collects and processes hardware information of the
+running system, gathered from `SMBIOS`_. The information collected by Hardware
+API is sensitive, but does not include
+:abbr:`PII (Personally Identifiable Information)`, user credentials, or
+activity. The information collected is limited to manufacturer/vendor, model,
+and versions of hardware components, firmware, kernel, OS, and BIOS.
 
 Isolation & Containerization
 ----------------------------
