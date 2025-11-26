@@ -6,6 +6,7 @@ OpenAPI
 .. raw:: html
 
     <link rel="stylesheet" type="text/css" href="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui.css" />
+    <link rel="stylesheet" type="text/css" href="../../_static/swagger-custom.css" />
     <div id="openapi-swagger"></div>
     <script src="https://unpkg.com/swagger-ui-dist@5.11.0/swagger-ui-bundle.js" charset="UTF-8"
         crossorigin="anonymous"></script>
