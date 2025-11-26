@@ -4,6 +4,7 @@
 .. _snap: https://snapcraft.io/hwctl
 .. _Contribute: https://github.com/canonical/hardware-api/blob/main/CONTRIBUTING.md
 .. _Code of conduct: https://ubuntu.com/community/docs/ethos/code-of-conduct
+.. _Security reporting and disclosure policy: https://ubuntu.com/security/disclosure-policy
 
 .. SHORTCUTS
 .. |RST| replace:: :abbr:`reST (reStructuredText)`
