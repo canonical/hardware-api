@@ -2,6 +2,10 @@
 .. _canonical/hardware-api: https://github.com/canonical/hardware-api
 .. _hwapi schema: https://canonical.github.io/hardware-api/
 .. _snap: https://snapcraft.io/hwctl
+.. _Security Policy: https://github.com/canonical/hardware-api/blob/main/SECURITY.md
+.. _Security reporting and disclosure policy: https://ubuntu.com/security/disclosure-policy
+.. _SMBIOS: https://www.dmtf.org/standards/smbios
+.. _AppArmor: https://www.apparmor.net/
 
 
 .. SHORTCUTS

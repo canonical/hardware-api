@@ -12,6 +12,7 @@ library that backs the `hwctl` command-line tool.
    :maxdepth: 2
 
    Tutorials </tutorial/index>
+   Explanation </explanation/index>
 
 In this documentation
 ---------------------
@@ -23,3 +24,11 @@ In this documentation
       :link-type: doc
 
       **Start here**: a hands-on introduction to Hardware API for new users 
+
+.. grid:: 1 1 2 2
+
+   .. grid-item-card:: Explanation
+      :link: /explanation/index
+      :link-type: doc
+
+      **Discussion and clarification** of key topics
