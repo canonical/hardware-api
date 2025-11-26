@@ -13,6 +13,7 @@ library that backs the `hwctl` command-line tool.
 
    Tutorials </tutorial/index>
    Reference </reference/index>
+   Explanation </explanation/index>
 
 In this documentation
 ---------------------
@@ -31,6 +32,14 @@ In this documentation
       :link-type: doc
 
       **Technical information**: understand the API and its usage
+
+
+   .. grid-item-card:: Explanation
+      :link: /explanation/index
+      :link-type: doc
+
+      **Discussion and clarification** of key topics
+
 
 Project and community
 ---------------------
