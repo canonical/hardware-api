@@ -25,7 +25,8 @@ running system, gathered from `SMBIOS`_. The information collected by Hardware
 API is sensitive, but does not include
 :abbr:`PII (Personally Identifiable Information)`, user credentials, or
 activity. The information collected is limited to manufacturer/vendor, model,
-and versions of hardware components, firmware, kernel, OS, and BIOS.
+and versions of hardware components, firmware, kernel, OS, and BIOS. These are
+listed in detail in :ref:`certification_status`.
 
 Isolation & Containerization
 ----------------------------

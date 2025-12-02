@@ -3,10 +3,12 @@
 .. _Code of conduct: https://ubuntu.com/community/docs/ethos/code-of-conduct
 .. _Contribute: https://github.com/canonical/hardware-api/blob/main/CONTRIBUTING.md
 .. _hwapi schema: https://canonical.github.io/hardware-api/
+.. _Hardware Certification documentation: https://certification.canonical.com/docs/programmes/
 .. _Security Policy: https://github.com/canonical/hardware-api/blob/main/SECURITY.md
 .. _Security reporting and disclosure policy: https://ubuntu.com/security/disclosure-policy
 .. _SMBIOS: https://www.dmtf.org/standards/smbios
 .. _snap: https://snapcraft.io/hwctl
+.. _Ubuntu Certified: https://ubuntu.com/certified
 .. _Ubuntu HWAPI: https://hw.ubuntu.com/
 
 
