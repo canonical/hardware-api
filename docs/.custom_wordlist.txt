@@ -67,3 +67,6 @@ hwapi
 hwlib
 hwctl
 Quokka
+openapi
+SKU
+SKUs
