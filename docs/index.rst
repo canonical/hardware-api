@@ -26,6 +26,7 @@ In this documentation
 
       **Start here**: a hands-on introduction to Hardware API for new users 
 
+.. grid:: 1 1 2 2
 
    .. grid-item-card:: Reference
       :link: /reference/index
