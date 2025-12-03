@@ -60,9 +60,9 @@ Based on the collected information, Hardware API assigns one of the following
 certification statuses to the system:
 
 - **Not Seen**: Hardware API was unable to uniquely identify the system's
-  platform and configuration. This response is typically returned for systems
-  that are not yet certified or for which insufficient information could be
-  collected.
+  platform or configuration as part of the certification program. This response
+  is typically returned for systems that are not yet certified or for which
+  insufficient information could be collected.
 - **Certified**: Hardware API was able to uniquely identify the system's
   platform and configuration, and a matching certified configuration exists in
   the database.
