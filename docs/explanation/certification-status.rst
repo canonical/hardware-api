@@ -64,8 +64,9 @@ certification statuses to the system:
   is typically returned for systems that are not yet certified or for which
   insufficient information could be collected.
 - **Certified**: Hardware API was able to uniquely identify the system's
-  platform and configuration, and a matching certified configuration exists in
-  the database.
+  platform and configuration. A matching certified configuration/platform exists
+  in the database and the machine is running the OS that the
+  configuration/platform is certified to work on.
 - **Related Certified System Exists**: Hardware API was able to identify the
   system's platform. The system's configuration is either not certified or could
   not be uniquely identified. However, there exists at least one certified
