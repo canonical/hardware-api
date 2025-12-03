@@ -1,3 +1,5 @@
+:relatedlinks: [Ubuntu&#32;Certified](https://ubuntu.com/certified), [Hardware&#32;Certification&#32;documentation](https://certification.canonical.com/docs/programmes/)
+
 .. _certification_status:
 
 Certification Status
