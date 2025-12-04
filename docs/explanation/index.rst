@@ -7,6 +7,11 @@ Explanations provide a wider perspective of Hardware API. They aid in
 understanding the concepts and relationships of Hardware API as a complete
 system.
 
+Hardware API
+------------
+
+- :ref:`certification_status`
+
 Security
 --------
 
@@ -16,4 +21,5 @@ Security
     :maxdepth: 1
     :hidden:
 
+    certification-status
     security
