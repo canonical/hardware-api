@@ -2,8 +2,6 @@ target
 cargo_home
 .cargo-checksum.json
 __pycache__/
-
-# In a workspace, packages should share the same Cargo.lock file.
-# See https://doc.rust-lang.org/book/ch14-03-cargo-workspaces.html for more
-hwlib/Cargo.lock
-hwctl/Cargo.lock
+*.profraw
+*.profdata
+coverage*
