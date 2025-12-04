@@ -46,6 +46,16 @@ jobs:
       - run: cargo clippy --all-features --tests --verbose
       - name: Run cargo test
         run: cargo test --all-features
+      - run: cargo install cargo-llvm-cov
+      - name: Run coverage tests
+        run: cargo llvm-cov --all-features --cobertura --output-path=coverage.xml
+      - name: Upload coverage.xml as an artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: client_coverage
+          path: client/coverage.xml
+          if-no-files-found: error
+          retention-days: 2
 
   py-bindings-test:
     name: Test Python bindings
