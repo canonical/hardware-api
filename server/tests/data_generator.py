@@ -22,6 +22,9 @@ from sqlalchemy.orm import Session
 from hwapi.data_models import models
 from hwapi.data_models.enums import BusType, DeviceCategory
 
+NOW = datetime.now()
+NOW_DATE = NOW.date()
+
 
 class DataGenerator:
     def __init__(self, db_session: Session):
@@ -61,8 +64,8 @@ class DataGenerator:
         self,
         codename: str = "noble",
         release: str = "24.04",
-        release_date: date = datetime.now().date() - timedelta(days=365),
-        supported_until: date = datetime.now().date() + timedelta(days=3650),
+        release_date: date = NOW_DATE - timedelta(days=365),
+        supported_until: date = NOW_DATE + timedelta(days=3650),
     ) -> models.Release:
         created_release = models.Release(
             codename=codename,
@@ -79,11 +82,11 @@ class DataGenerator:
     ) -> models.Certificate:
         certificate = models.Certificate(
             machine=machine,
-            created_at=datetime.now(),
+            created_at=NOW,
             release=release,
             name=name
             or f"Certificate for {machine.canonical_id} with {release.codename}",
-            completed=datetime.now() + timedelta(days=10),
+            completed=NOW + timedelta(days=10),
         )
         self.db_session.add(certificate)
         self.db_session.commit()
@@ -103,7 +106,7 @@ class DataGenerator:
     def gen_bios(
         self,
         vendor: models.Vendor,
-        release_date: date = datetime.now() - timedelta(days=365),
+        release_date: date = NOW - timedelta(days=365),
         revision: str = "A01",
         version: str = "1.0.2",
     ) -> models.Bios:
