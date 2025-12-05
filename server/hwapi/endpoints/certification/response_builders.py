@@ -17,12 +17,12 @@
 
 from sqlalchemy.orm import Session
 
+from hwapi.data_models import data_validators, models, repository
 from hwapi.endpoints.certification.response_validators import (
+    CertifiedImageExistsResponse,
     CertifiedResponse,
     RelatedCertifiedSystemExistsResponse,
-    CertifiedImageExistsResponse,
 )
-from hwapi.data_models import repository, data_validators, models
 
 
 def build_related_certified_response(

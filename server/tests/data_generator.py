@@ -15,8 +15,10 @@
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
-from datetime import datetime, timedelta, date
+from datetime import date, datetime, timedelta
+
 from sqlalchemy.orm import Session
+
 from hwapi.data_models import models
 from hwapi.data_models.enums import BusType, DeviceCategory
 
