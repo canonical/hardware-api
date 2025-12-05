@@ -16,29 +16,28 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 """The module for working with C3 API"""
 
-import requests
 import logging
 import time
 from http import HTTPStatus
+from sqlite3 import IntegrityError as SQLite3IntegrityError
 from typing import Callable, Type
+
+import requests
 from pydantic import BaseModel
 from requests.adapters import HTTPAdapter
+from sqlalchemy.exc import IntegrityError
+from sqlalchemy.orm import Session
 from urllib3.util.retry import Retry
 
-from sqlite3 import IntegrityError as SQLite3IntegrityError
-from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError
-
-from hwapi.data_models import models, enums
+from hwapi.data_models import enums, models
 from hwapi.data_models.repository import (
+    get_certificate_by_name,
+    get_machine_by_canonical_id,
     get_or_create,
     get_vendor_by_name,
-    get_machine_by_canonical_id,
-    get_certificate_by_name,
 )
 from hwapi.external.c3 import response_models, urls
 from hwapi.external.c3.helpers import progress_bar
-
 
 logger = logging.getLogger(__name__)
 

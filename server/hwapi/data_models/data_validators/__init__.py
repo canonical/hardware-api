@@ -25,16 +25,14 @@ from hwapi.data_models.data_validators.devices import (
     NetworkAdapterValidator,
     PCIPeripheralValidator,
     ProcessorValidator,
+    USBPeripheralValidator,
     VideoCaptureValidator,
     WirelessAdapterValidator,
-    USBPeripheralValidator,
 )
-
 from hwapi.data_models.data_validators.software import (
     KernelPackageValidator,
     OSValidator,
 )
-
 
 __all__ = [
     "AudioValidator",

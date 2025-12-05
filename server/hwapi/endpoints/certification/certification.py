@@ -17,6 +17,7 @@
 """The endpoints for working with certification status"""
 
 import logging
+
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
 
@@ -25,10 +26,10 @@ from hwapi.data_models.setup import get_db
 from hwapi.endpoints.certification import logic, response_builders
 from hwapi.endpoints.certification.request_validators import CertificationStatusRequest
 from hwapi.endpoints.certification.response_validators import (
+    CertifiedImageExistsResponse,
     CertifiedResponse,
     NotCertifiedResponse,
     RelatedCertifiedSystemExistsResponse,
-    CertifiedImageExistsResponse,
 )
 
 router = APIRouter()

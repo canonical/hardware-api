@@ -19,16 +19,15 @@
 from datetime import date, datetime
 
 from sqlalchemy import (
-    ForeignKey,
-    String,
-    UniqueConstraint,
-    Table,
     Column,
-    Integer,
     Enum,
+    ForeignKey,
+    Integer,
+    String,
+    Table,
+    UniqueConstraint,
 )
-from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 from .enums import BusType, DeviceCategory
 

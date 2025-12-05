@@ -22,7 +22,6 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from hwapi.router import router
 
-
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
 app = FastAPI(redirect_slashes=False)
