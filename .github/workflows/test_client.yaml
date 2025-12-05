@@ -6,13 +6,11 @@ on:
     branches: [main]
     paths:
       - client/**
-      - Cargo.*
       - ".github/workflows/test_client.yaml"
   pull_request:
     branches: [main]
     paths:
       - client/**
-      - Cargo.*
       - ".github/workflows/test_client.yaml"
   workflow_dispatch:
 concurrency:
