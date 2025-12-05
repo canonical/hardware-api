@@ -68,7 +68,7 @@ jobs:
         with:
           persist-credentials: false
       - name: Upload charm to charmhub
-        uses: canonical/charming-actions/upload-charm@1753e0803f70445132e92acd45c905aba6473225 # 2.7.0
+        uses: canonical/charming-actions/upload-charm@2.7.0
         with:
           charm-path: "server/charm"
           credentials: "${{ secrets.CHARMHUB_TOKEN }}"

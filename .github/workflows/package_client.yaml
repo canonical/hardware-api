@@ -40,7 +40,7 @@ jobs:
           persist-credentials: false
       - name: Build
         id: snapcraft
-        uses: canonical/snapcraft-multiarch-action@0c3495a6cead8eeacc35e1254fee7d2381e550e4 # v1.10.1
+        uses: canonical/snapcraft-multiarch-action@v1
         with:
           path: client
           architecture: ${{ matrix.arch }}
@@ -59,7 +59,7 @@ jobs:
           path: ${{ steps.snapcraft.outputs.snap }}
       - name: Publish
         if: github.ref == 'refs/heads/main'
-        uses: snapcore/action-publish@214b86e5ca036ead1668c79afb81e550e6c54d40 # v1.2.0
+        uses: snapcore/action-publish@v1
         env:
           SNAPCRAFT_STORE_CREDENTIALS: ${{ secrets.SNAP_STORE_LOGIN }}
         with:
