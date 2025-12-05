@@ -6,6 +6,27 @@ Server.
 For general contribution guidelines for the `hardware-api` project,
 refer to the [contribution guide](../CONTRIBUTING.md).
 
+## Development Environment
+
+You can create an environment for development with [`poetry`][poetry]:
+
+```shell
+poetry install
+```
+
+## Testing
+
+This project uses [`tox`][tox] for managing test environments. There are some
+pre-configured environments that can be used for linting and formatting code
+when you're preparing contributions to the project:
+
+```shell
+tox run -e format  # update your code according to linting rules
+tox run -e lint    # code style
+tox run -e unit    # unit (coverage) tests
+tox                # runs 'format', 'lint', and 'unit'
+```
+
 ## Deploy the Server
 
 ### Deploy with Docker
@@ -57,15 +78,6 @@ specifying the `C3_URL` environment variable:
 ```bash
 export C3_URL=http://your.c3.instance  # e.g., https://certification.canonical.com
 docker compose up --attach-dependencies --build hwapi-dev
-```
-
-#### Run Tests with `docker-compose`
-
-To run tests inside a Docker container (again, using `--build` when iterating
-on source code changes, to force the image to be rebuilt):
-
-```shell
-docker compose up --attach-dependencies --force-recreate --abort-on-container-exit --build hwapi-test
 ```
 
 ## Access the API Schema
