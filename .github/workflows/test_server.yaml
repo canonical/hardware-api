@@ -51,28 +51,12 @@ jobs:
           path: server/coverage/coverage.xml
           if-no-files-found: error
           retention-days: 2
-
-  report-coverage:
-    name: Report test coverage
-    runs-on: [self-hosted, linux, large, noble, x64]
-    if: github.event_name == 'pull_request'
-    needs: [test]
-    permissions:
-      contents: read
-      pull-requests: write  # necessary to write coverage comment
-    steps:
-      - name: Download build tests coverage report
-        uses: actions/download-artifact@v6
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
         with:
-          name: server_coverage
-      - name: Report Coverage and annotate PR (if exists)
-        uses: orgoro/coverage@3f13a558c5af7376496aa4848bf0224aead366ac # v3.2
-        with:
-          coverageFile: coverage.xml
-          token: ${{ secrets.GITHUB_TOKEN }}
-          thresholdAll: 0.70
-          thresholdNew: 0.80
-          thresholdModified: 0.0
+          files: server/coverage/coverage.xml
+          flags: server
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   compare-openapi:
     name: Compare OpenAPI schemas

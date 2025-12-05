@@ -54,6 +54,12 @@ jobs:
           path: client/coverage.xml
           if-no-files-found: error
           retention-days: 2
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
+        with:
+          files: client/coverage.xml
+          flags: client
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   py-bindings-test:
     name: Test Python bindings
