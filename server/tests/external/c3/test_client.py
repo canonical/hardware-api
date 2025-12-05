@@ -19,8 +19,8 @@ from datetime import date, timedelta
 from unittest.mock import patch
 
 import pytest
+import requests.exceptions
 from fastapi.testclient import TestClient
-from requests.exceptions import ConnectionError, ConnectTimeout, HTTPError, ReadTimeout
 from requests_mock import Mocker
 from sqlalchemy.orm import Session
 
@@ -495,8 +495,8 @@ def test_retry_on_read_timeout(db_session: Session, requests_mock: Mocker):
     requests_mock.get(
         CPU_IDS_URL,
         [
-            {"exc": ReadTimeout("Read timeout occurred")},
-            {"exc": ReadTimeout("Read timeout occurred")},
+            {"exc": requests.exceptions.ReadTimeout("Read timeout occurred")},
+            {"exc": requests.exceptions.ReadTimeout("Read timeout occurred")},
             {"json": {"Coffee Lake": ["0x806ea"]}},
         ],
     )
@@ -529,7 +529,7 @@ def test_retry_on_connection_error(db_session: Session, requests_mock: Mocker):
     requests_mock.get(
         CPU_IDS_URL,
         [
-            {"exc": ConnectionError("Connection failed")},
+            {"exc": requests.exceptions.ConnectionError("Connection failed")},
             {"json": {"Skylake": ["0x506e3"]}},
         ],
     )
@@ -616,19 +616,21 @@ def test_no_retry_on_client_errors(db_session: Session, requests_mock: Mocker):
     c3_client = C3Client(db=db_session)
 
     # Should raise HTTPError immediately without retries
-    with pytest.raises(HTTPError):
+    with pytest.raises(requests.exceptions.HTTPError):
         c3_client._import_cpu_ids(CPU_IDS_URL)
 
 
 def test_max_retries_exceeded(db_session: Session, requests_mock: Mocker):
     """Test that client eventually gives up after max retries."""
     # All 5 requests (1 initial + 4 retries) will timeout
-    requests_mock.get(CPU_IDS_URL, exc=ReadTimeout("Persistent timeout"))
+    requests_mock.get(
+        CPU_IDS_URL, exc=requests.exceptions.ReadTimeout("Persistent timeout")
+    )
 
     c3_client = C3Client(db=db_session)
 
     with patch("time.sleep") as mock_sleep:
-        with pytest.raises(ReadTimeout):
+        with pytest.raises(requests.exceptions.ReadTimeout):
             c3_client._import_cpu_ids(CPU_IDS_URL)
 
         # Should have made exactly 4 retry sleep calls (5 attempts - 1 initial = 4 retries)
@@ -642,9 +644,9 @@ def test_exponential_backoff_timing(db_session: Session):
     with patch("time.sleep") as mock_sleep:
         with patch.object(c3_client.session, "get") as mock_get:
             # Configure mock to always raise timeout
-            mock_get.side_effect = ReadTimeout("Timeout")
+            mock_get.side_effect = requests.exceptions.ReadTimeout("Timeout")
 
-            with pytest.raises(ReadTimeout):
+            with pytest.raises(requests.exceptions.ReadTimeout):
                 c3_client._make_request_with_retries("https://test.com")
 
             # Check that sleep was called with increasing delays: 2, 4, 8, 16
@@ -706,7 +708,7 @@ def test_retry_with_pagination(
     requests_mock.get(
         f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}&offset=1000",
         [
-            {"exc": ReadTimeout("Page 2 timeout")},
+            {"exc": requests.exceptions.ReadTimeout("Page 2 timeout")},
             {
                 "json": {
                     "count": 2,
@@ -759,8 +761,8 @@ def test_retry_logging(db_session: Session, requests_mock: Mocker, caplog):
     requests_mock.get(
         CPU_IDS_URL,
         [
-            {"exc": ReadTimeout("First timeout")},
-            {"exc": ReadTimeout("Second timeout")},
+            {"exc": requests.exceptions.ReadTimeout("First timeout")},
+            {"exc": requests.exceptions.ReadTimeout("Second timeout")},
             {"json": {"Test": ["0x12345"]}},
         ],
     )
@@ -860,7 +862,11 @@ def test_intermittent_failures_recovery(
     requests_mock.get(
         f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}&offset=1000",
         [
-            {"exc": ConnectTimeout("Intermittent connection issue")},
+            {
+                "exc": requests.exceptions.ConnectTimeout(
+                    "Intermittent connection issue"
+                )
+            },
             {
                 "json": {
                     "count": 3,
