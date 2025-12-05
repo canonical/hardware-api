@@ -7,11 +7,13 @@ on:
     paths:
       - .github/actions/**
       - .github/workflows/**
+      - .github/zizmor.yml
   push:
     branches: [main]
     paths:
       - .github/actions/**
       - .github/workflows/**
+      - .github/zizmor.yml
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
