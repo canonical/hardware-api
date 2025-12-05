@@ -20,7 +20,7 @@ from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
-from requests.exceptions import ReadTimeout, ConnectTimeout, ConnectionError, HTTPError
+from requests.exceptions import ConnectionError, ConnectTimeout, HTTPError, ReadTimeout
 from requests_mock import Mocker
 from sqlalchemy.orm import Session
 
