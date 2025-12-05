@@ -4,6 +4,7 @@
 [![Crates.io][crate-badge]][crate-site]
 [![Documentation status][rtd-badge]][rtd-latest]
 [![Test client lib and CLI tool][test-badge]][test-site]
+[![codecov][cov-badge]][cov-latest]
 
 The **Hardware API Client** is the tool to check the certification status of
 hardware configurations.
@@ -60,7 +61,7 @@ If you're interested, start with the
 
 ## License and Copyright
 
-The Hardware API Client is released under the under the [LGPL-3.0 license](./LICENSE)
+The Hardware API Client is released under the [LGPL-3.0 license](./LICENSE)
 
 © 2025 Canonical Ltd.
 
@@ -76,5 +77,7 @@ The Hardware API Client is released under the under the [LGPL-3.0 license](./LIC
 [rtd-latest]: https://canonical-hardware-api.readthedocs-hosted.com/latest/
 [test-badge]: https://github.com/canonical/hardware-api/actions/workflows/test_client.yaml/badge.svg
 [test-site]: https://github.com/canonical/hardware-api/actions/workflows/test_client.yaml
+[cov-badge]: https://codecov.io/gh/canonical/hardware-api/graph/badge.svg?token=p0h9tTp2F3&component=client
+[cov-latest]: https://codecov.io/gh/canonical/hardware-api
 [hw-server]: https://hw.ubuntu.com
 [github-issues]: https://github.com/canonical/hardware-api/issues
