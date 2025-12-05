@@ -16,23 +16,30 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
 from datetime import date, timedelta
-from fastapi.testclient import TestClient
-import pytest
-from requests.exceptions import ReadTimeout, ConnectTimeout, ConnectionError, HTTPError
-from requests_mock import Mocker
-from sqlalchemy.orm import Session
 from unittest.mock import patch
 
+import pytest
+import requests.exceptions
+from fastapi.testclient import TestClient
+from requests_mock import Mocker
+from sqlalchemy.orm import Session
+
 from hwapi.data_models import models
-from tests.data_generator import DataGenerator
 from hwapi.external.c3.client import C3Client
+from hwapi.external.c3.urls import (
+    CPU_IDS_URL,
+    PUBLIC_CERTIFICATES_URL,
+    PUBLIC_DEVICES_URL,
+    get_limit_offset,
+)
+from tests.data_generator import DataGenerator
 
 
 def test_load_certificates(db_session: Session, requests_mock: Mocker):
     """Test that certificates and related hardware data are imported correctly."""
-    requests_mock.get("https://c3_url/api/v2/cpuids/", json={})
+    requests_mock.get(CPU_IDS_URL, json={})
     requests_mock.get(
-        "https://c3_url/api/v2/public-certificates/",
+        PUBLIC_CERTIFICATES_URL,
         json={
             "count": 1,
             "next": None,
@@ -70,7 +77,7 @@ def test_load_certificates(db_session: Session, requests_mock: Mocker):
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}",
         json={"count": 0, "next": None, "previous": None, "results": []},
     )
 
@@ -92,9 +99,9 @@ def test_load_certificates_with_missing_kernel_bios(
     db_session: Session, requests_mock: Mocker
 ):
     """Test handling of missing kernel or BIOS data."""
-    requests_mock.get("https://c3_url/api/v2/cpuids/", json={})
+    requests_mock.get(CPU_IDS_URL, json={})
     requests_mock.get(
-        "https://c3_url/api/v2/public-certificates/",
+        PUBLIC_CERTIFICATES_URL,
         json={
             "count": 1,
             "next": None,
@@ -127,7 +134,7 @@ def test_load_certificates_with_missing_kernel_bios(
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}",
         json={"count": 0, "next": None, "previous": None, "results": []},
     )
 
@@ -159,9 +166,9 @@ def test_load_devices(
         machine2, generator.gen_release(), name="2404-10612"
     )
 
-    requests_mock.get("https://c3_url/api/v2/cpuids/", json={})
+    requests_mock.get(CPU_IDS_URL, json={})
     requests_mock.get(
-        "https://c3_url/api/v2/public-certificates/",
+        PUBLIC_CERTIFICATES_URL,
         json={
             "count": 0,
             "next": None,
@@ -171,13 +178,10 @@ def test_load_devices(
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}",
         json={
             "count": 1,
-            "next": (
-                "https://c3_url/api/v2/public-devices/"
-                "?pagination=limitoffset&limit=1000&offset=1000"
-            ),
+            "next": f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}&offset=1000",
             "previous": None,
             "results": [
                 {
@@ -202,10 +206,7 @@ def test_load_devices(
         },
     )
     requests_mock.get(
-        (
-            "https://c3_url/api/v2/public-devices/?pagination=limitoffset"
-            "&limit=1000&offset=1000"
-        ),
+        f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}&offset=1000",
         json={
             "count": 1,
             "next": None,
@@ -287,9 +288,9 @@ def test_load_devices_duplicate_names(
         machine, generator.gen_release(), name="2204-10686"
     )
 
-    requests_mock.get("https://c3_url/api/v2/cpuids/", json={})
+    requests_mock.get(CPU_IDS_URL, json={})
     requests_mock.get(
-        "https://c3_url/api/v2/public-certificates/",
+        PUBLIC_CERTIFICATES_URL,
         json={
             "count": 0,
             "next": None,
@@ -299,7 +300,7 @@ def test_load_devices_duplicate_names(
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/",
+        PUBLIC_DEVICES_URL,
         json={
             "count": 3,
             "next": None,
@@ -395,10 +396,10 @@ def test_load_devices_cpu_codename(
         machine, generator.gen_release(), name="2204-10681"
     )
 
-    requests_mock.get("https://c3_url/api/v2/cpuids/", json={})
+    requests_mock.get(CPU_IDS_URL, json={})
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-certificates/",
+        PUBLIC_CERTIFICATES_URL,
         json={
             "count": 0,
             "next": None,
@@ -408,7 +409,7 @@ def test_load_devices_cpu_codename(
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}",
         json={
             "count": 1,
             "next": None,
@@ -450,12 +451,12 @@ def test_import_cpuids(
     db_session: Session, requests_mock: Mocker, test_client: TestClient
 ):
     requests_mock.get(
-        "https://c3_url/api/v2/cpuids/",
+        CPU_IDS_URL,
         json={"Coffee Lake": ["0x806ea", "0x906ea"]},
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-certificates/",
+        PUBLIC_CERTIFICATES_URL,
         json={
             "count": 0,
             "next": None,
@@ -465,7 +466,7 @@ def test_import_cpuids(
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}",
         json={
             "count": 1,
             "next": None,
@@ -492,21 +493,21 @@ def test_retry_on_read_timeout(db_session: Session, requests_mock: Mocker):
     """Test that client retries on ReadTimeout and eventually succeeds."""
     # First two requests timeout, third succeeds
     requests_mock.get(
-        "https://c3_url/api/v2/cpuids/",
+        CPU_IDS_URL,
         [
-            {"exc": ReadTimeout("Read timeout occurred")},
-            {"exc": ReadTimeout("Read timeout occurred")},
+            {"exc": requests.exceptions.ReadTimeout("Read timeout occurred")},
+            {"exc": requests.exceptions.ReadTimeout("Read timeout occurred")},
             {"json": {"Coffee Lake": ["0x806ea"]}},
         ],
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-certificates/",
+        PUBLIC_CERTIFICATES_URL,
         json={"count": 0, "next": None, "previous": None, "results": []},
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}",
         json={"count": 0, "next": None, "previous": None, "results": []},
     )
 
@@ -526,20 +527,20 @@ def test_retry_on_read_timeout(db_session: Session, requests_mock: Mocker):
 def test_retry_on_connection_error(db_session: Session, requests_mock: Mocker):
     """Test that client retries on ConnectionError."""
     requests_mock.get(
-        "https://c3_url/api/v2/cpuids/",
+        CPU_IDS_URL,
         [
-            {"exc": ConnectionError("Connection failed")},
+            {"exc": requests.exceptions.ConnectionError("Connection failed")},
             {"json": {"Skylake": ["0x506e3"]}},
         ],
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-certificates/",
+        PUBLIC_CERTIFICATES_URL,
         json={"count": 0, "next": None, "previous": None, "results": []},
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}",
         json={"count": 0, "next": None, "previous": None, "results": []},
     )
 
@@ -554,7 +555,7 @@ def test_retry_on_connection_error(db_session: Session, requests_mock: Mocker):
 def test_retry_on_server_errors(db_session: Session, requests_mock: Mocker):
     """Test that client retries on 5xx server errors."""
     requests_mock.get(
-        "https://c3_url/api/v2/cpuids/",
+        CPU_IDS_URL,
         [
             {"status_code": 503, "text": "Service Unavailable"},
             {"status_code": 502, "text": "Bad Gateway"},
@@ -563,12 +564,12 @@ def test_retry_on_server_errors(db_session: Session, requests_mock: Mocker):
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-certificates/",
+        PUBLIC_CERTIFICATES_URL,
         json={"count": 0, "next": None, "previous": None, "results": []},
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}",
         json={"count": 0, "next": None, "previous": None, "results": []},
     )
 
@@ -583,7 +584,7 @@ def test_retry_on_server_errors(db_session: Session, requests_mock: Mocker):
 def test_retry_on_rate_limit(db_session: Session, requests_mock: Mocker):
     """Test that client retries on 429 (Too Many Requests)."""
     requests_mock.get(
-        "https://c3_url/api/v2/cpuids/",
+        CPU_IDS_URL,
         [
             {"status_code": 429, "text": "Too Many Requests"},
             {"json": {"Tiger Lake": ["0x806c1"]}},
@@ -591,12 +592,12 @@ def test_retry_on_rate_limit(db_session: Session, requests_mock: Mocker):
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-certificates/",
+        PUBLIC_CERTIFICATES_URL,
         json={"count": 0, "next": None, "previous": None, "results": []},
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}",
         json={"count": 0, "next": None, "previous": None, "results": []},
     )
 
@@ -610,29 +611,27 @@ def test_retry_on_rate_limit(db_session: Session, requests_mock: Mocker):
 
 def test_no_retry_on_client_errors(db_session: Session, requests_mock: Mocker):
     """Test that client does NOT retry on 4xx client errors (except 429)."""
-    requests_mock.get(
-        "https://c3_url/api/v2/cpuids/", status_code=404, text="Not Found"
-    )
+    requests_mock.get(CPU_IDS_URL, status_code=404, text="Not Found")
 
     c3_client = C3Client(db=db_session)
 
     # Should raise HTTPError immediately without retries
-    with pytest.raises(HTTPError):
-        c3_client._import_cpu_ids("https://c3_url/api/v2/cpuids/")
+    with pytest.raises(requests.exceptions.HTTPError):
+        c3_client._import_cpu_ids(CPU_IDS_URL)
 
 
 def test_max_retries_exceeded(db_session: Session, requests_mock: Mocker):
     """Test that client eventually gives up after max retries."""
     # All 5 requests (1 initial + 4 retries) will timeout
     requests_mock.get(
-        "https://c3_url/api/v2/cpuids/", exc=ReadTimeout("Persistent timeout")
+        CPU_IDS_URL, exc=requests.exceptions.ReadTimeout("Persistent timeout")
     )
 
     c3_client = C3Client(db=db_session)
 
     with patch("time.sleep") as mock_sleep:
-        with pytest.raises(ReadTimeout):
-            c3_client._import_cpu_ids("https://c3_url/api/v2/cpuids/")
+        with pytest.raises(requests.exceptions.ReadTimeout):
+            c3_client._import_cpu_ids(CPU_IDS_URL)
 
         # Should have made exactly 4 retry sleep calls (5 attempts - 1 initial = 4 retries)
         assert mock_sleep.call_count == 4
@@ -642,19 +641,21 @@ def test_exponential_backoff_timing(db_session: Session):
     """Test that exponential backoff delays increase correctly."""
     c3_client = C3Client(db=db_session)
 
-    with patch("time.sleep") as mock_sleep:
-        with patch.object(c3_client.session, "get") as mock_get:
-            # Configure mock to always raise timeout
-            mock_get.side_effect = ReadTimeout("Timeout")
+    with (
+        patch("time.sleep") as mock_sleep,
+        patch.object(c3_client.session, "get") as mock_get,
+    ):
+        # Configure mock to always raise timeout
+        mock_get.side_effect = requests.exceptions.ReadTimeout("Timeout")
 
-            with pytest.raises(ReadTimeout):
-                c3_client._make_request_with_retries("https://test.com")
+        with pytest.raises(requests.exceptions.ReadTimeout):
+            c3_client._make_request_with_retries("https://test.com")
 
-            # Check that sleep was called with increasing delays: 2, 4, 8, 16
-            # (4 retries for 5 total attempts)
-            expected_delays = [2, 4, 8, 16]
-            actual_delays = [call[0][0] for call in mock_sleep.call_args_list]
-            assert actual_delays == expected_delays
+        # Check that sleep was called with increasing delays: 2, 4, 8, 16
+        # (4 retries for 5 total attempts)
+        expected_delays = [2, 4, 8, 16]
+        actual_delays = [call[0][0] for call in mock_sleep.call_args_list]
+        assert actual_delays == expected_delays
 
 
 def test_retry_with_pagination(
@@ -669,18 +670,18 @@ def test_retry_with_pagination(
         machine, generator.gen_release(), name="test-cert"
     )
 
-    requests_mock.get("https://c3_url/api/v2/cpuids/", json={})
+    requests_mock.get(CPU_IDS_URL, json={})
     requests_mock.get(
-        "https://c3_url/api/v2/public-certificates/",
+        PUBLIC_CERTIFICATES_URL,
         json={"count": 0, "next": None, "previous": None, "results": []},
     )
 
     # First page succeeds immediately
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}",
         json={
             "count": 2,
-            "next": "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000&offset=1000",
+            "next": f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}&offset=1000",
             "previous": None,
             "results": [
                 {
@@ -707,9 +708,9 @@ def test_retry_with_pagination(
 
     # Second page fails once, then succeeds
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000&offset=1000",
+        f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}&offset=1000",
         [
-            {"exc": ReadTimeout("Page 2 timeout")},
+            {"exc": requests.exceptions.ReadTimeout("Page 2 timeout")},
             {
                 "json": {
                     "count": 2,
@@ -760,21 +761,21 @@ def test_retry_with_pagination(
 def test_retry_logging(db_session: Session, requests_mock: Mocker, caplog):
     """Test that retry attempts are properly logged."""
     requests_mock.get(
-        "https://c3_url/api/v2/cpuids/",
+        CPU_IDS_URL,
         [
-            {"exc": ReadTimeout("First timeout")},
-            {"exc": ReadTimeout("Second timeout")},
+            {"exc": requests.exceptions.ReadTimeout("First timeout")},
+            {"exc": requests.exceptions.ReadTimeout("Second timeout")},
             {"json": {"Test": ["0x12345"]}},
         ],
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-certificates/",
+        PUBLIC_CERTIFICATES_URL,
         json={"count": 0, "next": None, "previous": None, "results": []},
     )
 
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}",
         json={"count": 0, "next": None, "previous": None, "results": []},
     )
 
@@ -819,21 +820,21 @@ def test_intermittent_failures_recovery(
         machine, generator.gen_release(), name="test-cert-2"
     )
 
-    requests_mock.get("https://c3_url/api/v2/cpuids/", json={})
+    requests_mock.get(CPU_IDS_URL, json={})
     requests_mock.get(
-        "https://c3_url/api/v2/public-certificates/",
+        PUBLIC_CERTIFICATES_URL,
         json={"count": 0, "next": None, "previous": None, "results": []},
     )
 
     # Simulate intermittent failures: success, failure, success pattern
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000",
+        f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}",
         [
             # First request succeeds
             {
                 "json": {
                     "count": 3,
-                    "next": "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000&offset=1000",
+                    "next": f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}&offset=1000",
                     "results": [
                         {
                             "machine_canonical_id": machine.canonical_id,
@@ -861,13 +862,17 @@ def test_intermittent_failures_recovery(
 
     # Second page: fails then succeeds
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000&offset=1000",
+        f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}&offset=1000",
         [
-            {"exc": ConnectTimeout("Intermittent connection issue")},
+            {
+                "exc": requests.exceptions.ConnectTimeout(
+                    "Intermittent connection issue"
+                )
+            },
             {
                 "json": {
                     "count": 3,
-                    "next": "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000&offset=2000",
+                    "next": f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}&offset=2000",
                     "results": [
                         {
                             "machine_canonical_id": machine.canonical_id,
@@ -895,7 +900,7 @@ def test_intermittent_failures_recovery(
 
     # Third page: succeeds immediately
     requests_mock.get(
-        "https://c3_url/api/v2/public-devices/?pagination=limitoffset&limit=1000&offset=2000",
+        f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}&offset=2000",
         json={
             "count": 3,
             "next": None,

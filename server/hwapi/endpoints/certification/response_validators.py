@@ -17,9 +17,9 @@
 """Validator models for request/response bodies"""
 
 from typing import Literal
+
 from pydantic import BaseModel
 
-from hwapi.data_models.enums import CertificationStatus
 from hwapi.data_models.data_validators import (
     AudioValidator,
     BiosValidator,
@@ -33,6 +33,7 @@ from hwapi.data_models.data_validators import (
     VideoCaptureValidator,
     WirelessAdapterValidator,
 )
+from hwapi.data_models.enums import CertificationStatus
 
 
 class CertifiedResponse(BaseModel):

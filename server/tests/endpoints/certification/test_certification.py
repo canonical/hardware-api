@@ -15,10 +15,11 @@
 # Written by:
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
-from pytest import LogCaptureFixture
 from fastapi.testclient import TestClient
+from pytest import LogCaptureFixture
+
 from hwapi.data_models.enums import DeviceCategory
-from tests.data_generator import DataGenerator, CertificationStatusTestHelper
+from tests.data_generator import CertificationStatusTestHelper, DataGenerator
 
 
 def test_vendor_not_found(generator: DataGenerator, test_client: TestClient):

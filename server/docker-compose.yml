@@ -15,28 +15,6 @@ services:
     ports:
       - "8080:8080"
 
-  hwapi-test:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      args:
-        IMPORT_TOOL_PATH: ""
-        C3_URL: https://c3_url
-        DB_URL: sqlite:////home/server/test.db
-    command: >
-      bash -c '
-        ruff format --check hwapi/ scripts/ tests/ &&
-        ruff check hwapi/ scripts/ tests/ --no-cache &&
-        mypy hwapi/ scripts/ tests/ &&
-        coverage run --source "hwapi/" -m pytest tests/ -vv &&
-        cd .. && cp server/.coverage . &&
-        coverage xml -o server/coverage/coverage.xml'
-    working_dir: /home/server
-    volumes:
-      - ./coverage:/home/server/coverage
-    ports:
-      - "8080:8080"
-
   hwapi:
     build:
       context: .

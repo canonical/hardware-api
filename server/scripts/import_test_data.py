@@ -17,12 +17,13 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 """Script for importing test machine data using mocked C3 responses"""
 
-import os
 import json
 import logging
+import os
+from importlib.util import module_from_spec, spec_from_file_location
 from pathlib import Path
 from typing import Any, Dict
-from importlib.util import spec_from_file_location, module_from_spec
+
 from requests_mock import Mocker
 
 logging.basicConfig(
@@ -123,7 +124,7 @@ def main() -> None:
 
     except Exception as e:
         logger.error("Import failed: %s", str(e))
-        raise SystemExit(1)
+        raise SystemExit(1) from e
 
 
 if __name__ == "__main__":

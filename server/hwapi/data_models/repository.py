@@ -17,7 +17,8 @@
 """Functions for working with the DB using SQLAlchemy ORM"""
 
 from typing import Any, Sequence
-from sqlalchemy import select, and_, null
+
+from sqlalchemy import and_, null, select
 from sqlalchemy.orm import Session, selectinload
 
 from hwapi.data_models import models

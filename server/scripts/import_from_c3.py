@@ -18,13 +18,12 @@
 """Import data from C3"""
 
 import logging
-from requests.exceptions import HTTPError
 
+from requests.exceptions import HTTPError
 from sqlalchemy.orm import Session
 
 from hwapi.data_models.setup import engine
 from hwapi.external.c3.client import C3Client
-
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)

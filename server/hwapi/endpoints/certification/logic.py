@@ -18,10 +18,10 @@
 
 from sqlalchemy.orm import Session
 
-from hwapi.data_models import repository, models
+from hwapi.data_models import models, repository
 from hwapi.data_models.data_validators import (
-    BoardValidator,
     BiosValidator,
+    BoardValidator,
     ProcessorValidator,
 )
 
