@@ -1,7 +1,7 @@
 name: Publish server image and charm
 permissions:
   contents: read
-  actions: read  # necessary for workflow dispatch
+  actions: read # necessary for workflow dispatch
 on:
   push:
     branches: ["main"]
@@ -23,8 +23,8 @@ jobs:
     name: Build and push Docker image
     runs-on: [self-hosted, linux, jammy, x64]
     permissions:
-      contents: read  # necessary to pull repository
-      packages: write  # necessary to push image to ghcr
+      contents: read # necessary to pull repository
+      packages: write # necessary to push image to ghcr
     env:
       IMAGE_NAME: ${{ github.repository }}/hwapi
     timeout-minutes: 600 # 10 hours
@@ -60,8 +60,8 @@ jobs:
     runs-on: [self-hosted, linux, xlarge, jammy, x64]
     needs: build-and-push-image
     permissions:
-      contents: write  # necessary to create tag
-      packages: read  # necessary to pull ghcr package
+      contents: write # necessary to create tag
+      packages: read # necessary to pull ghcr package
     steps:
       - name: Checkout
         uses: actions/checkout@v5
