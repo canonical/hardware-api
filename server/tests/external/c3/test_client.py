@@ -641,19 +641,21 @@ def test_exponential_backoff_timing(db_session: Session):
     """Test that exponential backoff delays increase correctly."""
     c3_client = C3Client(db=db_session)
 
-    with patch("time.sleep") as mock_sleep:
-        with patch.object(c3_client.session, "get") as mock_get:
-            # Configure mock to always raise timeout
-            mock_get.side_effect = requests.exceptions.ReadTimeout("Timeout")
+    with (
+        patch("time.sleep") as mock_sleep,
+        patch.object(c3_client.session, "get") as mock_get,
+    ):
+        # Configure mock to always raise timeout
+        mock_get.side_effect = requests.exceptions.ReadTimeout("Timeout")
 
-            with pytest.raises(requests.exceptions.ReadTimeout):
-                c3_client._make_request_with_retries("https://test.com")
+        with pytest.raises(requests.exceptions.ReadTimeout):
+            c3_client._make_request_with_retries("https://test.com")
 
-            # Check that sleep was called with increasing delays: 2, 4, 8, 16
-            # (4 retries for 5 total attempts)
-            expected_delays = [2, 4, 8, 16]
-            actual_delays = [call[0][0] for call in mock_sleep.call_args_list]
-            assert actual_delays == expected_delays
+        # Check that sleep was called with increasing delays: 2, 4, 8, 16
+        # (4 retries for 5 total attempts)
+        expected_delays = [2, 4, 8, 16]
+        actual_delays = [call[0][0] for call in mock_sleep.call_args_list]
+        assert actual_delays == expected_delays
 
 
 def test_retry_with_pagination(

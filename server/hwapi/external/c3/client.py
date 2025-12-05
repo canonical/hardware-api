@@ -369,13 +369,13 @@ class C3Client:
             created,
         )
 
+        # If there is already device.codename filled, don't overwrite it with Unknown value
         if (
             device.category == enums.DeviceCategory.PROCESSOR
             and device_instance.cpu_codename
+            and not (device_instance.cpu_codename == "Unknown" and device.codename)
         ):
-            # If there is already device.codename filled, don't overwrite it with Unknown value
-            if not (device_instance.cpu_codename == "Unknown" and device.codename):
-                device.codename = device_instance.cpu_codename
+            device.codename = device_instance.cpu_codename
 
         report, created = get_or_create(
             self.db,
