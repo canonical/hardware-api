@@ -60,7 +60,7 @@ If you're interested, start with the
 
 ## License and Copyright
 
-The Hardware API Client is released under the under the [LGPL-3.0 license](./LICENSE)
+The Hardware API Client is released under the [LGPL-3.0 license](./LICENSE)
 
 © 2025 Canonical Ltd.
 
