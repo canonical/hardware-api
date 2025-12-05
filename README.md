@@ -1,6 +1,7 @@
 # Hardware API
 
 [![Documentation status][rtd-badge]][rtd-latest]
+[![codecov][cov-badge]][cov-latest]
 
 **Hardware API** is the system to retrieve hardware information to
 check the certification status of hardware configurations.
@@ -25,4 +26,6 @@ If you're interested, start with the [contribution guide](./CONTRIBUTING.md).
 
 [rtd-badge]: https://readthedocs.com/projects/canonical-hardware-api/badge/?version=latest
 [rtd-latest]: https://canonical-hardware-api.readthedocs-hosted.com/latest/
+[cov-badge]: https://codecov.io/gh/canonical/hardware-api/graph/badge.svg?token=p0h9tTp2F3
+[cov-latest]: https://codecov.io/gh/canonical/hardware-api
 [github]: https://github.com/canonical/hardware-api
