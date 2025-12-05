@@ -14,7 +14,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write  # necessary to add library status label
+      pull-requests: write # necessary to add library status label
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -22,7 +22,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Check libraries
-        uses: canonical/charming-actions/check-libraries@1753e0803f70445132e92acd45c905aba6473225 # 2.7.0
+        uses: canonical/charming-actions/check-libraries@2.7.0
         with:
           charm-path: server/charm
           credentials: ${{ secrets.CHARMHUB_TOKEN }}

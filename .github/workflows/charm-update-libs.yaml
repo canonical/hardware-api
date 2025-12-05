@@ -16,7 +16,7 @@ jobs:
       contents: write # necesssary to create branches
       pull-requests: write # necessary to create update PRs
       issues: write # necessary to create issue on major version updates
-    uses: canonical/observability/.github/workflows/charm-update-libs.yaml@c13b2b9fedaf3e22861bd15ae4e53ad6506b5523 # v1
+    uses: canonical/observability/.github/workflows/charm-update-libs.yaml@v1
     secrets:
       CHARMHUB_TOKEN: ${{ secrets.CHARMHUB_TOKEN }}
       OBSERVABILITY_NOCTUA_TOKEN: ${{ secrets.OBSERVABILITY_TOKEN }}

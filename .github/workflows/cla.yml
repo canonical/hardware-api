@@ -11,7 +11,7 @@ jobs:
     name: Check CLA
     runs-on: ubuntu-latest
     permissions:
-      pull-requests: read  # necessary to fetch contributor email
+      pull-requests: read # necessary to fetch contributor email
     steps:
       - name: Check if CLA is signed
-        uses: canonical/has-signed-canonical-cla@1c20438ad54b4d37105e777000545881d2293ba4 # 2.2.0
+        uses: canonical/has-signed-canonical-cla@v2
