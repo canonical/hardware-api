@@ -47,8 +47,8 @@ jobs:
       - name: Upload coverage.xml as an artifact
         uses: actions/upload-artifact@v5
         with:
-          name: test_coverage
-          path: ./server/coverage/coverage.xml
+          name: server_coverage
+          path: server/coverage/coverage.xml
           if-no-files-found: error
           retention-days: 2
 
@@ -64,7 +64,7 @@ jobs:
       - name: Download build tests coverage report
         uses: actions/download-artifact@v6
         with:
-          name: test_coverage
+          name: server_coverage
       - name: Report Coverage and annotate PR (if exists)
         uses: orgoro/coverage@3f13a558c5af7376496aa4848bf0224aead366ac # v3.2
         with:
