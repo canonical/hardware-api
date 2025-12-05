@@ -17,6 +17,7 @@
 """The endpoints for working with certification status"""
 
 import logging
+from typing import Annotated
 
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
@@ -45,7 +46,7 @@ router = APIRouter()
     ),
 )
 def check_certification(
-    system_info: CertificationStatusRequest, db: Session = Depends(get_db)
+    system_info: CertificationStatusRequest, db: Annotated[Session, Depends(get_db)]
 ) -> (
     CertifiedResponse
     | NotCertifiedResponse
