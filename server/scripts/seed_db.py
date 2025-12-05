@@ -17,14 +17,13 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 """Populate SQLite DB with dummy data"""
 
-from datetime import datetime, timedelta
 import logging
+from datetime import datetime, timedelta
 
 from sqlalchemy.orm import Session
 
 from hwapi.data_models import models
 from hwapi.data_models.setup import engine
-
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
