@@ -30,7 +30,7 @@ jobs:
     timeout-minutes: 600 # 10 hours
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
       - name: Set up docker buildx
@@ -64,7 +64,7 @@ jobs:
       packages: read # necessary to pull ghcr package
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
       - name: Upload charm to charmhub
