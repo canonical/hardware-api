@@ -66,7 +66,7 @@ def build_related_certified_response(
                     signature=kernel.signature,
                 ),
             )
-            for release, kernel in zip(releases, kernels)
+            for release, kernel in zip(releases, kernels, strict=True)
         ],
     )
 
@@ -113,7 +113,7 @@ def build_certified_response(
                     signature=kernel.signature,
                 ),
             )
-            for release, kernel in zip(releases, kernels)
+            for release, kernel in zip(releases, kernels, strict=True)
         ],
     )
 
@@ -159,6 +159,6 @@ def build_certified_image_exists_response(
                     signature=kernel.signature,
                 ),
             )
-            for release, kernel in zip(releases, kernels)
+            for release, kernel in zip(releases, kernels, strict=True)
         ],
     )
