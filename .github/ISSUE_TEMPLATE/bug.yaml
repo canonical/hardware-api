@@ -1,0 +1,44 @@
+name: Bug report
+description: Report a bug
+type: bug
+body:
+  - type: checkboxes
+    id: check-existing-issues
+    attributes:
+      label: Check existing issues
+      options:
+        - label: I've verified that this bug isn't described by any existing issues.
+          required: true
+  - type: textarea
+    id: description
+    attributes:
+      label: Bug description
+      placeholder: >
+        A clear and concise description of what the bug is.
+        If applicable, add screenshots to explain the problem you are facing.
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: >
+        We need to know a bit more about the context in which you face the issue.
+      placeholder: |
+        - OS [e.g., Ubuntu 22.04]:
+        - hwctl type [Deb, Snap, Crate]:
+        - hwctl version [e.g., 0.10.1]:
+        - Hardware model [e.g., Dell PowerEdge R640]:
+        - ...
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant log output
+      description: >
+        Please copy and paste any relevant log output.
+        This will be automatically formatted into code, so no need for backticks.
+      render: shell
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional context
