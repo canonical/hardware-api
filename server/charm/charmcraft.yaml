@@ -42,8 +42,9 @@ charm-libs:
 
 parts:
   hardware-api:
-    plugin: charm
+    plugin: uv
     source: .
+    build-snaps: [astral-uv]
 
 config:
   options:
