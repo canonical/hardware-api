@@ -72,7 +72,7 @@ class HardwareApiCharm(ops.CharmBase):
             "services": {
                 "hardware-api": {
                     "override": "replace",
-                    "summary": "test observer API server",
+                    "summary": "Hardware API server",
                     "command": " ".join(
                         [
                             "uvicorn",
