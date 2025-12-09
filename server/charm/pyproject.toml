@@ -1,3 +1,20 @@
+[project]
+name = "hardware-api-charm"
+version = "0.0.1"
+requires-python = ">=3.10"
+readme = "README.md"
+license-files = ["LICENSE"]
+
+dependencies = ["ops>=3.4,<4"]
+
+[dependency-groups]
+# Dependencies of linting and static type checks
+lint = ["ruff", "codespell", "pyright"]
+# Dependencies of unit tests
+unit = ["coverage[toml]", "ops[testing]", "pytest"]
+# Dependencies of integration tests
+integration = ["pytest-operator", "pytest", "juju"]
+
 # Testing tools configuration
 [tool.coverage.run]
 branch = true
