@@ -95,4 +95,6 @@ You can retrieve the API schema in HTML, YAML, and JSON formats:
 - To access the JSON schema, run the server and access the `/openapi.json`
   endpoint.
 
+[poetry]: https://python-poetry.org/docs/
+[tox]: https://tox.wiki/en/latest/index.html
 [canonical.github.io/hardware-api]: https://canonical.github.io/hardware-api
