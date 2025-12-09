@@ -3,9 +3,7 @@
 # See LICENSE file for licensing details.
 #
 # Learn more at: https://juju.is/docs/sdk
-"""
-Hardware API Charm
-"""
+"""Hardware API Charm."""
 
 import logging
 
@@ -50,9 +48,7 @@ class HardwareApiCharm(ops.CharmBase):
         if log_level in VALID_LOG_LEVELS:
             container = self.unit.get_container("hardware-api")
             if container.can_connect():
-                container.add_layer(
-                    "hardware-api", self._pebble_layer, combine=True
-                )
+                container.add_layer("hardware-api", self._pebble_layer, combine=True)
                 container.replan()
                 logger.debug("Log level changed to '%s'", log_level)
                 self.unit.status = ops.ActiveStatus()
@@ -60,9 +56,7 @@ class HardwareApiCharm(ops.CharmBase):
                 event.defer()
                 self.unit.status = ops.WaitingStatus("waiting for Pebble API")
         else:
-            self.unit.status = ops.BlockedStatus(
-                "invalid log level: '{log_level}'"
-            )
+            self.unit.status = ops.BlockedStatus("invalid log level: '{log_level}'")
 
     @property
     def _app_environment(self):
