@@ -6,6 +6,7 @@
 """Hardware API Charm."""
 
 import logging
+import shlex
 
 import ops
 from charms.nginx_ingress_integrator.v0.nginx_route import require_nginx_route
@@ -73,13 +74,14 @@ class HardwareApiCharm(ops.CharmBase):
                 "hardware-api": {
                     "override": "replace",
                     "summary": "Hardware API server",
-                    "command": " ".join(
+                    "command": shlex.join(
                         [
                             "uvicorn",
                             "hwapi.main:app",
                             "--host",
                             "0.0.0.0",
-                            f"--port={self.config['port']}",
+                            "--port",
+                            f"{self.config['port']}",
                             "--log-level",
                             self.model.config["log-level"],
                         ]
