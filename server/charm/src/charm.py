@@ -69,7 +69,7 @@ class HardwareApiCharm(ops.CharmBase):
     @property
     def _pebble_layer(self) -> ops.pebble.LayerDict:
         return {
-            "summary": "httpbin layer",
+            "summary": "Hardware API",
             "description": "pebble config layer for hardware-api",
             "services": {
                 "hardware-api": {
