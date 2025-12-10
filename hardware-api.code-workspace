@@ -5,6 +5,10 @@
       "path": "server",
     },
     {
+      "name": "Server Charm",
+      "path": "server/charm",
+    },
+    {
       "name": "Client",
       "path": "client",
     },
