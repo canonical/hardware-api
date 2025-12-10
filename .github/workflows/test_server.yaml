@@ -158,6 +158,13 @@ jobs:
         run: sudo concierge prepare --verbose --juju-channel=3/stable --charmcraft-channel=latest/stable -p microk8s
       - name: Pack charm
         run: charmcraft pack --verbose
+      - name: Upload charm as an artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: charm
+          path: server/charm/*.charm
+          if-no-files-found: error
+          retention-days: 2
       - name: Run integration tests
         run: uvx tox run -e integration
 
