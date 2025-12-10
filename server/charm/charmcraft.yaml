@@ -1,22 +1,24 @@
 type: charm
 name: hardware-api
-title: Hardware API Server
+title: Hardware API
 summary: Determine if a given hardware configuration is Ubuntu Certified.
 description: |
-  Canonical Hardware API Server is a RESTful API server that provides access to
-  hardware information for a given machine, in particular helping you determine
-  if a given hardware configuration is Ubuntu Certified, matches partially to a
+  Hardware API is a RESTful API server that provides access to hardware
+  information for a given machine. In particular, it helps you determine if a
+  given hardware configuration is Ubuntu Certified, matches partially to a
   Certified system, or is not Certified.
 
-  For schema, see https://canonical.github.io/hardware-api.
+  For more information on Hardware API, please visit the
+  [official documentation](https://canonical-hardware-api.readthedocs-hosted.com/latest/).
+
+  The official deployment of Hardware API is available on
+  [hw.ubuntu.com](https://hw.ubuntu.com/).
 
 links:
-  contact: https://github.com/canonical/hardware-api/issues
+  contact: certification@canonical.com
   issues: https://github.com/canonical/hardware-api/issues
-  source: https://github.com/canonical/hardware-api/tree/main/server
-  website:
-    - https://hw.ubuntu.com
-    - https://canonical.github.io/hardware-api
+  source: https://github.com/canonical/hardware-api/tree/main/server/charm
+  website: https://charmhub.io/hardware-api
 
 base: ubuntu@22.04
 platforms:
