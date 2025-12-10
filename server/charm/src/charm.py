@@ -45,19 +45,20 @@ class HardwareApiCharm(ops.CharmBase):
 
     def _on_config_changed(self, event: ops.ConfigChangedEvent):
         log_level = self.model.config["log-level"].lower()
+        if log_level not in VALID_LOG_LEVELS:
+            self.unit.status = ops.BlockedStatus(f"invalid log level: '{log_level}'")
+            return
 
-        if log_level in VALID_LOG_LEVELS:
-            container = self.unit.get_container("hardware-api")
-            if container.can_connect():
-                container.add_layer("hardware-api", self._pebble_layer, combine=True)
-                container.replan()
-                logger.debug("Log level changed to '%s'", log_level)
-                self.unit.status = ops.ActiveStatus()
-            else:
-                event.defer()
-                self.unit.status = ops.WaitingStatus("waiting for Pebble API")
-        else:
-            self.unit.status = ops.BlockedStatus("invalid log level: '{log_level}'")
+        container = self.unit.get_container("hardware-api")
+        if not container.can_connect():
+            self.unit.status = ops.WaitingStatus("waiting for Pebble API")
+            event.defer()
+            return
+
+        container.add_layer("hardware-api", self._pebble_layer, combine=True)
+        container.replan()
+        logger.debug("Log level changed to '%s'", log_level)
+        self.unit.status = ops.ActiveStatus()
 
     @property
     def _app_environment(self):
