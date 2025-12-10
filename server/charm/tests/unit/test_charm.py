@@ -2,68 +2,99 @@
 # See LICENSE file for licensing details.
 #
 # Learn more about testing at: https://juju.is/docs/sdk/testing
+"""Unit tests for Hardware API Charm."""
 
-import unittest
+import logging
+from unittest.mock import patch
 
 import ops
-import ops.testing
+from ops import testing
 
-from charm import CharmCharm
+from charm import HardwareApiCharm
+
+logger = logging.getLogger(__name__)
 
 
-class TestCharm(unittest.TestCase):
-    def setUp(self):
-        self.harness = ops.testing.Harness(CharmCharm)
-        self.addCleanup(self.harness.cleanup)
-        self.harness.begin()
-
-    def test_httpbin_pebble_ready(self):
-        # Expected plan after Pebble ready with default config
-        expected_plan = {
-            "services": {
-                "httpbin": {
-                    "override": "replace",
-                    "summary": "httpbin",
-                    "command": "gunicorn -b 0.0.0.0:80 httpbin:app -k gevent",
-                    "startup": "enabled",
-                    "environment": {"GUNICORN_CMD_ARGS": "--log-level info"},
-                }
-            },
+def test_pebble_layer():
+    """Tests that the Pebble layer is correctly set up."""
+    ctx = testing.Context(HardwareApiCharm)
+    container = testing.Container(name="hardware-api", can_connect=True)
+    state_in = testing.State(
+        config={"port": 30000, "hostname": "hw", "log-level": "info"},
+        containers={container},
+        leader=True,
+    )
+    state_out = ctx.run(ctx.on.pebble_ready(container), state_in)
+    expected_plan = {
+        "services": {
+            "hardware-api": {
+                "override": "replace",
+                "summary": "Hardware API server",
+                "command": "uvicorn hwapi.main:app --host 0.0.0.0 --port 30000 --log-level info",
+                "startup": "enabled",
+                # Since environment is empty, Layer.to_dict() omits it.
+            }
         }
-        # Simulate the container coming up and emission of pebble-ready event
-        self.harness.container_pebble_ready("httpbin")
-        # Get the plan now we've run PebbleReady
-        updated_plan = self.harness.get_container_pebble_plan("httpbin").to_dict()
-        # Check we've got the plan we expected
-        self.assertEqual(expected_plan, updated_plan)
-        # Check the service was started
-        service = self.harness.model.unit.get_container("httpbin").get_service("httpbin")
-        self.assertTrue(service.is_running())
-        # Ensure we set an ActiveStatus with no message
-        self.assertEqual(self.harness.model.unit.status, ops.ActiveStatus())
+    }
+    assert state_out.get_container(container.name).plan == expected_plan
+    assert state_out.unit_status == testing.ActiveStatus()
+    assert (
+        state_out.get_container(container.name).service_statuses["hardware-api"]
+        == ops.pebble.ServiceStatus.ACTIVE
+    )
 
-    def test_config_changed_valid_can_connect(self):
-        # Ensure the simulated Pebble API is reachable
-        self.harness.set_can_connect("httpbin", True)
-        # Trigger a config-changed event with an updated value
-        self.harness.update_config({"log-level": "debug"})
-        # Get the plan now we've run PebbleReady
-        updated_plan = self.harness.get_container_pebble_plan("httpbin").to_dict()
-        updated_env = updated_plan["services"]["httpbin"]["environment"]
-        # Check the config change was effective
-        self.assertEqual(updated_env, {"GUNICORN_CMD_ARGS": "--log-level debug"})
-        self.assertEqual(self.harness.model.unit.status, ops.ActiveStatus())
 
-    def test_config_changed_valid_cannot_connect(self):
-        # Trigger a config-changed event with an updated value
-        self.harness.update_config({"log-level": "debug"})
-        # Check the charm is in WaitingStatus
-        self.assertIsInstance(self.harness.model.unit.status, ops.WaitingStatus)
+def test_config_changed_invalid_log_level():
+    """Tests that an invalid log level in config_changed sets BlockedStatus."""
+    ctx = testing.Context(HardwareApiCharm)
+    container = testing.Container(name="hardware-api", can_connect=True)
+    state_in = testing.State(
+        config={"port": 30000, "hostname": "hw", "log-level": "invalid"},
+        containers={container},
+        leader=True,
+    )
+    state_out = ctx.run(ctx.on.config_changed(), state_in)
+    assert state_out.unit_status == testing.BlockedStatus("invalid log level: 'invalid'")
 
-    def test_config_changed_invalid(self):
-        # Ensure the simulated Pebble API is reachable
-        self.harness.set_can_connect("httpbin", True)
-        # Trigger a config-changed event with an updated value
-        self.harness.update_config({"log-level": "foobar"})
-        # Check the charm is in BlockedStatus
-        self.assertIsInstance(self.harness.model.unit.status, ops.BlockedStatus)
+
+def test_config_changed_pebble_not_ready():
+    """Tests that config_changed defers event if Pebble is not ready."""
+    ctx = testing.Context(HardwareApiCharm)
+    container = testing.Container(name="hardware-api", can_connect=False)
+    state_in = testing.State(
+        config={"port": 30000, "hostname": "hw", "log-level": "info"},
+        containers={container},
+        leader=True,
+    )
+    with patch("ops.framework.EventBase.defer") as patched_defer:
+        ctx.run(ctx.on.config_changed(), state_in)
+    patched_defer.assert_called_once()
+
+
+def test_config_changed_updates_pebble_layer():
+    """Tests that config_changed updates the Pebble layer with new log level."""
+    ctx = testing.Context(HardwareApiCharm)
+    container = testing.Container(name="hardware-api", can_connect=True)
+    state_in = testing.State(
+        config={"port": 30000, "hostname": "hw", "log-level": "debug"},
+        containers={container},
+        leader=True,
+    )
+    state_out = ctx.run(ctx.on.config_changed(), state_in)
+    expected_plan = {
+        "services": {
+            "hardware-api": {
+                "override": "replace",
+                "summary": "Hardware API server",
+                "command": "uvicorn hwapi.main:app --host 0.0.0.0 --port 30000 --log-level debug",
+                "startup": "enabled",
+                # Since environment is empty, Layer.to_dict() omits it.
+            }
+        }
+    }
+    assert state_out.get_container(container.name).plan == expected_plan
+    assert state_out.unit_status == testing.ActiveStatus()
+    assert (
+        state_out.get_container(container.name).service_statuses["hardware-api"]
+        == ops.pebble.ServiceStatus.ACTIVE
+    )
