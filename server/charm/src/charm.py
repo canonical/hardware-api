@@ -32,7 +32,7 @@ class HardwareApiCharm(ops.CharmBase):
     def _setup_nginx(self):
         require_nginx_route(
             charm=self,
-            service_hostname=self.config["hostname"],
+            service_hostname=str(self.config["hostname"]),
             service_name=self.app.name,
             service_port=int(self.config["port"]),
         )
@@ -44,7 +44,7 @@ class HardwareApiCharm(ops.CharmBase):
         self.unit.status = ops.ActiveStatus()
 
     def _on_config_changed(self, event: ops.ConfigChangedEvent):
-        log_level = self.model.config["log-level"].lower()
+        log_level = str(self.model.config["log-level"]).lower()
         if log_level not in VALID_LOG_LEVELS:
             self.unit.status = ops.BlockedStatus(f"invalid log level: '{log_level}'")
             return
@@ -84,7 +84,7 @@ class HardwareApiCharm(ops.CharmBase):
                             "--port",
                             f"{self.config['port']}",
                             "--log-level",
-                            self.model.config["log-level"],
+                            f"{self.model.config['log-level']}",
                         ]
                     ),
                     "startup": "enabled",
