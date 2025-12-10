@@ -13,7 +13,7 @@ lint = ["ruff", "codespell", "pyright"]
 # Dependencies of unit tests
 unit = ["coverage[toml]", "ops[testing]", "pytest"]
 # Dependencies of integration tests
-integration = ["pytest-operator", "pytest", "juju"]
+integration = ["jubilant", "pytest", "PyYAML"]
 
 # Testing tools configuration
 [tool.coverage.run]
