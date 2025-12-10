@@ -1,35 +1,31 @@
 #!/usr/bin/env python3
 # Copyright 2024 Canonical Ltd
 # See LICENSE file for licensing details.
+"""Integration tests for the Hardware API Charm."""
 
-import asyncio
 import logging
 from pathlib import Path
 
-import pytest
+import jubilant
 import yaml
-from pytest_operator.plugin import OpsTest
 
 logger = logging.getLogger(__name__)
 
-METADATA = yaml.safe_load(Path("./metadata.yaml").read_text())
+METADATA = yaml.safe_load(Path("charmcraft.yaml").read_text(encoding="utf-8"))
 APP_NAME = METADATA["name"]
 
 
-@pytest.mark.abort_on_fail
-async def test_build_and_deploy(ops_test: OpsTest):
-    """Build the charm-under-test and deploy it together with related charms.
+def test_deploy(charm: Path, juju: jubilant.Juju):
+    """Deploy the charm under test."""
+    resources = {
+        "hardware-api-image": METADATA["resources"]["hardware-api-image"]["upstream-source"],
+    }
+    juju.deploy(charm.resolve(), app=APP_NAME, resources=resources)
+    juju.wait(jubilant.all_active)
 
-    Assert on the unit status before any relations/configurations take place.
-    """
-    # Build and deploy charm from local source folder
-    charm = await ops_test.build_charm(".")
-    resources = {"httpbin-image": METADATA["resources"]["httpbin-image"]["upstream-source"]}
 
-    # Deploy the charm and wait for active/idle status
-    await asyncio.gather(
-        ops_test.model.deploy(charm, resources=resources, application_name=APP_NAME),
-        ops_test.model.wait_for_idle(
-            apps=[APP_NAME], status="active", raise_on_blocked=True, timeout=1000
-        ),
-    )
+def test_relate_ingress(juju: jubilant.Juju):
+    """Relate the charm under test to the nginx ingress integrator."""
+    juju.deploy("nginx-ingress-integrator", channel="latest/stable", trust=True)
+    juju.integrate(f"{APP_NAME}:nginx-route", "nginx-ingress-integrator:nginx-route")
+    juju.wait(jubilant.all_active)
