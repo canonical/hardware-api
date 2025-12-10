@@ -72,6 +72,82 @@ jobs:
           flags: server
           token: ${{ secrets.CODECOV_TOKEN }}
 
+  charm-lockfile:
+    name: Test Charm (lockfile)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server/charm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Set up uv
+        uses: astral-sh/setup-uv@ed21f2f24f8dd64503750218de024bcf64c7250a # v7.1.5
+      - name: Check lockfile
+        run: uv lock --check
+
+  charm-lint:
+    name: Test Charm (lint)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server/charm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Set up uv
+        uses: astral-sh/setup-uv@ed21f2f24f8dd64503750218de024bcf64c7250a # v7.1.5
+      - name: Install dependencies
+        run: uv sync --group=lint
+      - name: Lint
+        run: uvx tox run -e lint
+
+  charm-unit:
+    name: Test Charm (unit)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server/charm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Set up uv
+        uses: astral-sh/setup-uv@ed21f2f24f8dd64503750218de024bcf64c7250a # v7.1.5
+      - name: Install dependencies
+        run: uv sync --group=unit
+      - name: Run unit tests
+        run: uvx tox run -e unit
+
+  charm-integration:
+    name: Test Charm (integration)
+    runs-on: [self-hosted, linux, large, noble, amd64]
+    defaults:
+      run:
+        working-directory: server/charm
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Set up uv
+        uses: astral-sh/setup-uv@ed21f2f24f8dd64503750218de024bcf64c7250a # v7.1.5
+      - name: Install dependencies
+        run: uv sync --group=integration
+      - name: Install concierge
+        run: sudo snap install --classic concierge
+      - name: Prepare Juju
+        run: sudo concierge prepare --verbose --juju-channel=3/stable --charmcraft-channel=latest/stable -p microk8s
+      - name: Pack charm
+        run: charmcraft pack --verbose
+      - name: Run integration tests
+        run: uvx tox run -e integration
+
   compare-openapi:
     name: Compare OpenAPI schemas
     runs-on: [self-hosted, linux, large, noble, x64]
