@@ -1,5 +1,9 @@
 # Contributing to Hardware API Charm
 
+This document outlines contribution guidelines specific to the Hardware API charm.
+To learn more about the general contribution guidelines for the Hardware
+API project, refer to the [Hardware API contribution guide](../../CONTRIBUTING.md).
+
 To make contributions to this charm, you'll need a working
 [development setup][juju-setup].
 
