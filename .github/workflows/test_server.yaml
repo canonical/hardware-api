@@ -123,6 +123,19 @@ jobs:
         run: uv sync --group=unit
       - name: Run unit tests
         run: uvx tox run -e unit
+      - name: Upload coverage.xml as an artifact
+        uses: actions/upload-artifact@v5
+        with:
+          name: charm_coverage
+          path: server/charm/coverage.xml
+          if-no-files-found: error
+          retention-days: 2
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@5a1091511ad55cbe89839c7260b706298ca349f7 # v5.5.1
+        with:
+          files: server/charm/coverage.xml
+          flags: server,charm
+          token: ${{ secrets.CODECOV_TOKEN }}
 
   charm-integration:
     name: Test Charm (integration)
