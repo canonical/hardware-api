@@ -46,7 +46,14 @@ parts:
   hardware-api:
     plugin: uv
     source: .
-    build-snaps: [astral-uv]
+    build-snaps: [astral-uv, rustup]
+    override-build: |
+      # pydantic requires a higher version of rustc than what is in the archive
+      # Install rustc and cargo using rustup instead of the Ubuntu archive
+      rustup set profile minimal
+      rustup default stable
+
+      craftctl default
 
 config:
   options:
