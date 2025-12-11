@@ -5,7 +5,7 @@ requires-python = ">=3.10"
 readme = "README.md"
 license-files = ["LICENSE"]
 
-dependencies = ["ops>=3.4,<4"]
+dependencies = ["ops>=3.4,<4", "pydantic>=2.12,<3"]
 
 [dependency-groups]
 # Dependencies of linting and static type checks
