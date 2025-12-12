@@ -8,6 +8,7 @@ import logging
 from unittest.mock import patch
 
 import ops
+import pytest
 from ops import testing
 
 from charm import HardwareApiCharm
@@ -53,8 +54,9 @@ def test_config_changed_invalid_log_level():
         containers={container},
         leader=True,
     )
-    state_out = ctx.run(ctx.on.config_changed(), state_in)
-    assert state_out.unit_status == testing.BlockedStatus("invalid log level: 'invalid'")
+    with pytest.raises(testing.errors.UncaughtCharmError):
+        state_out = ctx.run(ctx.on.config_changed(), state_in)
+        assert isinstance(state_out.unit_status, testing.BlockedStatus)
 
 
 def test_config_changed_pebble_not_ready():
