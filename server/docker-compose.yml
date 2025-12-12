@@ -4,6 +4,7 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
+        DEV: true
         IMPORT_TOOL_PATH: ${IMPORT_TOOL_PATH:-./scripts/import_from_c3.py}
         DB_URL: ${DB_URL:-sqlite:////home/server/hwapi.db}
         C3_URL: ${C3_URL:-https://certification.staging.canonical.com}

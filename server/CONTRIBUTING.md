@@ -8,10 +8,11 @@ refer to the [contribution guide](../CONTRIBUTING.md).
 
 ## Development Environment
 
-You can create an environment for development with [`poetry`][poetry]:
+You can create an environment for development with [`uv`][uv]:
 
 ```shell
-poetry install
+uv sync
+source .venv/bin/activate
 ```
 
 ## Testing
@@ -95,6 +96,6 @@ You can retrieve the API schema in HTML, YAML, and JSON formats:
 - To access the JSON schema, run the server and access the `/openapi.json`
   endpoint.
 
-[poetry]: https://python-poetry.org/docs/
+[uv]: https://docs.astral.sh/uv
 [tox]: https://tox.wiki/en/latest/index.html
 [canonical.github.io/hardware-api]: https://canonical.github.io/hardware-api
