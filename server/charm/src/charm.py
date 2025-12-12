@@ -26,7 +26,7 @@ class HardwareApiConfig(pydantic.BaseModel):
 
 
 class HardwareApiCharm(ops.CharmBase):
-    """Charm the service."""
+    """Hardware API Charm."""
 
     def __init__(self, *args):
         super().__init__(*args)
