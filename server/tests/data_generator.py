@@ -21,6 +21,10 @@ from sqlalchemy.orm import Session
 
 from hwapi.data_models import models
 from hwapi.data_models.enums import BusType, DeviceCategory
+from hwapi.external.certified.urls import (
+    get_certified_configuration_url,
+    get_certified_platform_url,
+)
 
 NOW = datetime.now()
 NOW_DATE = NOW.date()
@@ -274,6 +278,7 @@ class CertificationStatusTestHelper:
     @staticmethod
     def assert_certified_response(
         response,
+        machine: models.Machine,
         board: models.Device,
         bios: models.Bios | None,
         release: models.Release,
@@ -282,6 +287,7 @@ class CertificationStatusTestHelper:
         assert response.status_code == 200
         assert response.json() == {
             "status": "Certified",
+            "certified_url": get_certified_configuration_url(machine.canonical_id),
             "architecture": "amd64",
             "board": {
                 "manufacturer": board.vendor.name,
@@ -312,6 +318,7 @@ class CertificationStatusTestHelper:
     @staticmethod
     def assert_certified_image_exists_response(
         response,
+        machine: models.Machine,
         board: models.Device,
         bios: models.Bios | None,
         release: models.Release,
@@ -320,6 +327,7 @@ class CertificationStatusTestHelper:
         assert response.status_code == 200
         assert response.json() == {
             "status": "Certified Image Exists",
+            "certified_url": get_certified_configuration_url(machine.canonical_id),
             "architecture": "amd64",
             "board": {
                 "manufacturer": board.vendor.name,
@@ -350,6 +358,7 @@ class CertificationStatusTestHelper:
     @staticmethod
     def assert_related_certified_system_exists_response(
         response,
+        platform: models.Platform,
         board: models.Device,
         bios: models.Bios | None,
         release: models.Release,
@@ -358,6 +367,7 @@ class CertificationStatusTestHelper:
         assert response.status_code == 200
         assert response.json() == {
             "status": "Related Certified System Exists",
+            "certified_url": get_certified_platform_url(platform.id),
             "architecture": "amd64",
             "board": {
                 "manufacturer": board.vendor.name,
