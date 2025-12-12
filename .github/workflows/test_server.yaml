@@ -48,16 +48,16 @@ jobs:
         uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - name: Set up Python
-        uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+      - name: Check lockfile
+        run: uv lock --check
       - name: Install dependencies
-        run: sudo apt-get install -yqq python3-poetry tox
+        run: uv sync
       - name: Lint
-        run: tox run -e lint
+        run: uvx tox run -e lint
       - name: Unit
-        run: tox run -e unit
+        run: uvx tox run -e unit
       - name: Upload coverage.xml as an artifact
         uses: actions/upload-artifact@v5
         with:
@@ -178,14 +178,12 @@ jobs:
       - uses: actions/checkout@v6
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-      - name: Install poetry
-        run: pip install poetry
-      - run: poetry install
+      - name: Set up uv
+        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
+      - name: Install dependencies
+        run: uv sync
       - name: Start FastAPI application
-        run: poetry run uvicorn hwapi.main:app --port 8001 &
+        run: uv run uvicorn hwapi.main:app --port 8001 &
         shell: bash
 
       - name: Fetch OpenAPI YAML
