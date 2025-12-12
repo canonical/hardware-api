@@ -1,34 +1,34 @@
-[tool.poetry]
+[project]
 name = "hwapi"
 version = "0.1.0"
 description = "API server for working with hardware information from C3"
 authors = []
 readme = "README.md"
-package-mode = false
+license-files = ["LICENSE"]
+requires-python = ">=3.12"
 
-[tool.poetry.dependencies]
-python = "^3.12"
-fastapi = "^0.121.0"
-uvicorn = "^0.35.0"
-sqlalchemy = "^2.0.0"
-pydantic = "^2.5.0"
-pyyaml = "^6.0.1"
-requests = "^2.32.4"
-starlette = "^0.49.0"
+dependencies = [
+    "fastapi>=0.121,<1",
+    "pydantic>=2.5,<3",
+    "pyyaml>=6.0,<7",
+    "requests>=2.32,<3",
+    "sqlalchemy>=2.0,<3",
+    "starlette>=0.49,<1",
+    "uvicorn>=0.35,<1",
+]
 
-[tool.poetry.group.dev.dependencies]
-ruff = "^0.14.0"
-mypy = "^1.8.0"
-types-pyyaml = "^6.0.0"
-pre-commit = "^4.0.0"
-types-requests = "^2.31.0.20240406"
-
-[tool.poetry.group.test.dependencies]
-pytest = "^8.1.1"
-httpx = "^0.28.0"
-sqlalchemy-utils = "^0.41.2"
-requests-mock = "^1.12.1"
-pytest-cov = "^6.0.0"
+[dependency-groups]
+dev = [
+    "ruff",
+    "mypy",
+    "types-pyyaml",
+    "types-requests",
+    "pytest",
+    "pytest-cov",
+    "requests-mock",
+    "httpx",
+    "sqlalchemy-utils",
+]
 
 [tool.ruff]
 lint.extend-select = [
@@ -44,5 +44,5 @@ lint.extend-select = [
 "**/tests/**.py" = ["S101"]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["uv-build>=0.9,<1"]
+build-backend = "uv_build"
