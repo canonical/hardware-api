@@ -23,6 +23,10 @@ from hwapi.endpoints.certification.response_validators import (
     CertifiedResponse,
     RelatedCertifiedSystemExistsResponse,
 )
+from hwapi.external.certified.urls import (
+    get_certified_configuration_url,
+    get_certified_platform_url,
+)
 
 
 def build_related_certified_response(
@@ -33,6 +37,7 @@ def build_related_certified_response(
     releases: list[models.Release],
     kernels: list[models.Kernel],
 ) -> RelatedCertifiedSystemExistsResponse:
+    certified_url = get_certified_platform_url(machine.configuration.platform_id)
     architecture = repository.get_machine_architecture(db, machine.id)
     bios_validator = (
         data_validators.BiosValidator(
@@ -48,6 +53,7 @@ def build_related_certified_response(
         else None
     )
     return RelatedCertifiedSystemExistsResponse(
+        certified_url=certified_url,
         architecture=architecture,
         board=data_validators.BoardValidator(
             manufacturer=board.vendor.name,
@@ -79,6 +85,7 @@ def build_certified_response(
     releases: list[models.Release],
     kernels: list[models.Kernel],
 ) -> CertifiedResponse:
+    certified_url = get_certified_configuration_url(machine.canonical_id)
     architecture = repository.get_machine_architecture(db, machine.id)
     releases, kernels = repository.get_releases_and_kernels_for_machine(db, machine.id)
     bios_validator = (
@@ -95,6 +102,7 @@ def build_certified_response(
         else None
     )
     return CertifiedResponse(
+        certified_url=certified_url,
         architecture=architecture,
         board=data_validators.BoardValidator(
             manufacturer=board.vendor.name,
@@ -126,6 +134,7 @@ def build_certified_image_exists_response(
     releases: list[models.Release],
     kernels: list[models.Kernel],
 ) -> CertifiedImageExistsResponse:
+    certified_url = get_certified_configuration_url(machine.canonical_id)
     architecture = repository.get_machine_architecture(db, machine.id)
     bios_validator = (
         data_validators.BiosValidator(
@@ -141,6 +150,7 @@ def build_certified_image_exists_response(
         else None
     )
     return CertifiedImageExistsResponse(
+        certified_url=certified_url,
         architecture=architecture,
         board=data_validators.BoardValidator(
             manufacturer=board.vendor.name,
