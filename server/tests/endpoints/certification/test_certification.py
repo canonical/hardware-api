@@ -120,7 +120,7 @@ def test_disqualifying_hardware(generator: DataGenerator, test_client: TestClien
     response = test_client.post("/v1/certification/status", json=request)
 
     CertificationStatusTestHelper.assert_related_certified_system_exists_response(
-        response, board, bios, release, report.kernel
+        response, machine.configuration.platform, board, bios, release, report.kernel
     )
 
 
@@ -156,7 +156,7 @@ def test_correct_hardware_unmatching_os(
     response = test_client.post("/v1/certification/status", json=request)
 
     CertificationStatusTestHelper.assert_certified_image_exists_response(
-        response, board, bios, focal, report.kernel
+        response, machine, board, bios, focal, report.kernel
     )
 
 
@@ -190,7 +190,7 @@ def test_all_criteria_matched(generator: DataGenerator, test_client: TestClient)
     response = test_client.post("/v1/certification/status", json=request)
 
     CertificationStatusTestHelper.assert_certified_response(
-        response, board, bios, release, report.kernel
+        response, machine, board, bios, release, report.kernel
     )
 
 
@@ -228,7 +228,7 @@ def test_match_with_board_as_system(generator: DataGenerator, test_client: TestC
     response = test_client.post("/v1/certification/status", json=request)
 
     CertificationStatusTestHelper.assert_certified_response(
-        response, board, bios, release, report.kernel
+        response, machine, board, bios, release, report.kernel
     )
 
 
@@ -260,7 +260,7 @@ def test_bios_is_none(generator: DataGenerator, test_client: TestClient):
     response = test_client.post("/v1/certification/status", json=request)
 
     CertificationStatusTestHelper.assert_certified_response(
-        response, board, bios=None, release=release, kernel=report.kernel
+        response, machine, board, bios=None, release=release, kernel=report.kernel
     )
 
 
@@ -288,7 +288,7 @@ def test_cpu_id_is_none(generator: DataGenerator, test_client: TestClient):
     response = test_client.post("/v1/certification/status", json=request)
 
     CertificationStatusTestHelper.assert_certified_response(
-        response, board, bios=None, release=release, kernel=report.kernel
+        response, machine, board, bios=None, release=release, kernel=report.kernel
     )
 
 
@@ -330,5 +330,5 @@ def test_hardware_matches_multiple_bios(
     response = test_client.post("/v1/certification/status", json=request)
 
     CertificationStatusTestHelper.assert_certified_response(
-        response, board, bios, release, report.kernel
+        response, machine, board, bios, release, report.kernel
     )
