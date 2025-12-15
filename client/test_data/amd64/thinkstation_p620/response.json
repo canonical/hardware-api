@@ -1,5 +1,6 @@
 {
   "status": "Certified",
+  "certified_url": "https://ubuntu.com/certified/202203-30052",
   "architecture": "amd64",
   "bios": {
     "vendor": "Lenovo",

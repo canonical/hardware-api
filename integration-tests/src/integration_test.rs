@@ -52,45 +52,55 @@ fn assert_response_matches_expected(
     response: &CertificationStatusResponse,
     expected: &CertificationStatusResponse,
 ) {
-    let (actual_arch, actual_bios, actual_board, actual_releases) = match response {
-        CertificationStatusResponse::Certified {
-            architecture,
-            bios,
-            board,
-            available_releases,
-            ..
-        }
-        | CertificationStatusResponse::CertifiedImageExists {
-            architecture,
-            bios,
-            board,
-            available_releases,
-            ..
-        } => (architecture, bios, board, available_releases),
-        _ => panic!(
-            "Expected response to be Certified or Certified Image Exists, but it was {:?}",
-            response
-        ),
-    };
+    let (actual_certified_url, actual_arch, actual_bios, actual_board, actual_releases) =
+        match response {
+            CertificationStatusResponse::Certified {
+                certified_url,
+                architecture,
+                bios,
+                board,
+                available_releases,
+                ..
+            }
+            | CertificationStatusResponse::CertifiedImageExists {
+                certified_url,
+                architecture,
+                bios,
+                board,
+                available_releases,
+                ..
+            } => (certified_url, architecture, bios, board, available_releases),
+            _ => panic!(
+                "Expected response to be Certified or Certified Image Exists, but it was {:?}",
+                response
+            ),
+        };
 
-    let (expected_arch, expected_bios, expected_board, expected_releases) = match expected {
-        CertificationStatusResponse::Certified {
-            architecture,
-            bios,
-            board,
-            available_releases,
-            ..
-        }
-        | CertificationStatusResponse::CertifiedImageExists {
-            architecture,
-            bios,
-            board,
-            available_releases,
-            ..
-        } => (architecture, bios, board, available_releases),
-        _ => panic!("Expected response must contain Certified or CertifiedImageExists status"),
-    };
+    let (expected_certified_url, expected_arch, expected_bios, expected_board, expected_releases) =
+        match expected {
+            CertificationStatusResponse::Certified {
+                certified_url,
+                architecture,
+                bios,
+                board,
+                available_releases,
+                ..
+            }
+            | CertificationStatusResponse::CertifiedImageExists {
+                certified_url,
+                architecture,
+                bios,
+                board,
+                available_releases,
+                ..
+            } => (certified_url, architecture, bios, board, available_releases),
+            _ => panic!("Expected response must contain Certified or CertifiedImageExists status"),
+        };
 
+    assert_eq!(
+        actual_certified_url, expected_certified_url,
+        "Certified URL mismatch"
+    );
     assert_eq!(actual_arch, expected_arch, "Architecture mismatch");
     assert_eq!(actual_bios, expected_bios, "BIOS mismatch");
     assert_eq!(actual_board, expected_board, "Board mismatch");

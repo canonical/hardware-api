@@ -1,5 +1,6 @@
 {
   "status": "Certified",
+  "certified_url": "https://ubuntu.com/certified/202405-34051",
   "architecture": "amd64",
   "bios": {
     "vendor": "Dell",
