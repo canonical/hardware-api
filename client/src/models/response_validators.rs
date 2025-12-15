@@ -30,6 +30,7 @@ use crate::models::{
 #[serde(tag = "status")]
 pub enum CertificationStatusResponse {
     Certified {
+        certified_url: String,
         architecture: String,
         available_releases: Vec<OS>,
         bios: Bios,
@@ -40,6 +41,7 @@ pub enum CertificationStatusResponse {
     NotSeen,
     #[serde(rename = "Certified Image Exists")]
     CertifiedImageExists {
+        certified_url: String,
         architecture: String,
         bios: Bios,
         board: Board,
@@ -48,6 +50,7 @@ pub enum CertificationStatusResponse {
     },
     #[serde(rename = "Related Certified System Exists")]
     RelatedCertifiedSystemExists {
+        certified_url: String,
         architecture: String,
         board: Board,
         bios: Bios,
