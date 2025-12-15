@@ -18,7 +18,7 @@
 
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from hwapi.data_models.data_validators import (
     AudioValidator,
@@ -38,6 +38,10 @@ from hwapi.data_models.enums import CertificationStatus
 
 class CertifiedResponse(BaseModel):
     status: Literal[CertificationStatus.CERTIFIED] = CertificationStatus.CERTIFIED
+
+    certified_url: str = Field(title="Certified URL")
+    """Link to relevant ubuntu.com/certified page."""
+
     architecture: str
     bios: BiosValidator | None
     board: BoardValidator
@@ -53,6 +57,10 @@ class RelatedCertifiedSystemExistsResponse(BaseModel):
     status: Literal[CertificationStatus.RELATED_CERTIFIED_SYSTEM_EXISTS] = (
         CertificationStatus.RELATED_CERTIFIED_SYSTEM_EXISTS
     )
+
+    certified_url: str = Field(title="Certified URL")
+    """Link to relevant ubuntu.com/certified page."""
+
     architecture: str
     board: BoardValidator
     bios: BiosValidator | None
@@ -71,6 +79,10 @@ class CertifiedImageExistsResponse(BaseModel):
     status: Literal[CertificationStatus.CERTIFIED_IMAGE_EXISTS] = (
         CertificationStatus.CERTIFIED_IMAGE_EXISTS
     )
+
+    certified_url: str = Field(title="Certified URL")
+    """Link to relevant ubuntu.com/certified page."""
+
     architecture: str
     bios: BiosValidator | None
     board: BoardValidator

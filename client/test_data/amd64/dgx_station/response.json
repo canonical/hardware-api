@@ -1,5 +1,6 @@
 {
   "status": "Certified",
+  "certified_url": "https://ubuntu.com/certified/201711-25989",
   "architecture": "amd64",
   "bios": {
     "vendor": "American Megatrends Inc.",

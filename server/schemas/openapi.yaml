@@ -129,6 +129,9 @@ components:
           - type: 'null'
         board:
           $ref: '#/components/schemas/BoardValidator'
+        certified_url:
+          title: Certified URL
+          type: string
         chassis:
           anyOf:
           - $ref: '#/components/schemas/ChassisValidator'
@@ -139,6 +142,7 @@ components:
           title: Status
           type: string
       required:
+      - certified_url
       - architecture
       - bios
       - board
@@ -161,6 +165,9 @@ components:
           - type: 'null'
         board:
           $ref: '#/components/schemas/BoardValidator'
+        certified_url:
+          title: Certified URL
+          type: string
         chassis:
           anyOf:
           - $ref: '#/components/schemas/ChassisValidator'
@@ -171,6 +178,7 @@ components:
           title: Status
           type: string
       required:
+      - certified_url
       - architecture
       - bios
       - board
@@ -391,6 +399,9 @@ components:
           - type: 'null'
         board:
           $ref: '#/components/schemas/BoardValidator'
+        certified_url:
+          title: Certified URL
+          type: string
         chassis:
           anyOf:
           - $ref: '#/components/schemas/ChassisValidator'
@@ -441,6 +452,7 @@ components:
           - type: 'null'
           title: Wireless
       required:
+      - certified_url
       - architecture
       - board
       - bios
