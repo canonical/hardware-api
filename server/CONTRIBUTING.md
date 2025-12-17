@@ -22,10 +22,12 @@ pre-configured environments that can be used for linting and formatting code
 when you're preparing contributions to the project:
 
 ```shell
-tox run -e format  # update your code according to linting rules
-tox run -e lint    # code style
-tox run -e unit    # unit (coverage) tests
-tox                # runs 'format', 'lint', and 'unit'
+tox run -e format       # update your code according to linting rules
+tox run -e lint         # code style
+tox run -e unit         # unit (coverage) tests
+tox run -e schema       # update the openapi schema
+tox run -e check-schema # check the openapi schema for updates
+tox                     # runs 'format', 'lint', 'unit', and 'schema'
 ```
 
 ## Deploy the Server
