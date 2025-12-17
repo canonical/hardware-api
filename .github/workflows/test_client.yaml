@@ -48,7 +48,7 @@ jobs:
       - name: Run coverage tests
         run: cargo llvm-cov --all-features --cobertura --output-path=coverage.xml
       - name: Upload coverage.xml as an artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: client_coverage
           path: client/coverage.xml

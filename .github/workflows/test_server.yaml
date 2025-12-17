@@ -59,7 +59,7 @@ jobs:
       - name: Unit
         run: uvx tox run -e unit
       - name: Upload coverage.xml as an artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: server_coverage
           path: server/coverage/coverage.xml
@@ -124,7 +124,7 @@ jobs:
       - name: Run unit tests
         run: uvx tox run -e unit
       - name: Upload coverage.xml as an artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: charm_coverage
           path: server/charm/coverage.xml
@@ -159,7 +159,7 @@ jobs:
       - name: Pack charm
         run: charmcraft pack --verbose
       - name: Upload charm as an artifact
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: charm
           path: server/charm/*.charm
