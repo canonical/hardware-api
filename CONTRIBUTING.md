@@ -37,12 +37,10 @@ The repository contains [`pre-commit`][pre-commit] hook
 - Update the [`openapi.yaml`](./server/schemas/openapi.yaml) schema file before
   committing any changes.
 
-To use these hooks, make sure `pre-commit` is installed on your system (it is
-installed with the server's [`poetry`][poetry] development dependencies). Then
-go to the `server/` directory and run:
+To use these hooks, go to the `server/` directory and run:
 
 ```shell
-poetry run pre-commit install
+uvx pre-commit install
 ```
 
 ## Local Deployment
@@ -63,7 +61,6 @@ To run the server locally, make sure that no other application is using port
 [code-of-conduct]: https://ubuntu.com/community/code-of-conduct
 [cla]: https://ubuntu.com/legal/contributors
 [pre-commit]: https://pre-commit.com
-[poetry]: https://python-poetry.org/
 [docker]: https://docs.docker.com/engine/install/ubuntu/
 [docker-permissions]: https://docs.docker.com/engine/install/linux-postinstall/
 [rust-install]: https://www.rust-lang.org/tools/install

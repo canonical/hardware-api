@@ -4,7 +4,7 @@
 [![Documentation status][rtd-badge]][rtd-latest]
 [![Test API server][test-badge]][test-site]
 [![codecov][cov-badge]][cov-latest]
-[![Poetry][poetry-badge]][poetry-site]
+[![uv Status][uv-badge]][uv-site]
 [![Ruff status][ruff-badge]][ruff-site]
 
 The **Hardware API Server** is the microservice that provides an API to check
@@ -56,8 +56,8 @@ The Hardware API Sserver is released under the [AGPL-3.0 license](./LICENSE).
 [test-site]: https://github.com/canonical/hardware-api/actions/workflows/test_server.yaml
 [cov-badge]: https://codecov.io/gh/canonical/hardware-api/graph/badge.svg?token=p0h9tTp2F3&component=server
 [cov-latest]: https://codecov.io/gh/canonical/hardware-api
-[poetry-badge]: https://img.shields.io/endpoint?url=https://python-poetry.org/badge/v0.json
-[poetry-site]: https://python-poetry.org/
+[uv-badge]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json
+[uv-site]: https://github.com/astral-sh/uv
 [ruff-badge]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json
 [ruff-site]: https://github.com/astral-sh/ruff
 [fastapi]: https://fastapi.tiangolo.com/

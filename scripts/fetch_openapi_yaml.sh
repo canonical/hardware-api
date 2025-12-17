@@ -5,7 +5,7 @@ if git diff --cached --name-only | grep --quiet "server"
 then
     cd server
     # Start FastAPI app in the background
-    poetry run uvicorn hwapi.main:app --port 8002 &
+    uv run uvicorn hwapi.main:app --port 8002 &
 
     # Wait for the server to start
     sleep 5
