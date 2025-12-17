@@ -71,6 +71,8 @@ jobs:
           files: server/coverage/coverage.xml
           flags: server
           token: ${{ secrets.CODECOV_TOKEN }}
+      - name: Check OpenAPI schema
+        run: uvx tox run -e check-schema
 
   charm-lockfile:
     name: Test Charm (lockfile)
@@ -167,27 +169,3 @@ jobs:
           retention-days: 2
       - name: Run integration tests
         run: uvx tox run -e integration
-
-  compare-openapi:
-    name: Compare OpenAPI schemas
-    runs-on: [self-hosted, linux, large, noble, x64]
-    defaults:
-      run:
-        working-directory: server
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-      - name: Set up uv
-        uses: astral-sh/setup-uv@681c641aba71e4a1c380be3ab5e12ad51f415867 # v7.1.6
-      - name: Install dependencies
-        run: uv sync
-      - name: Start FastAPI application
-        run: uv run uvicorn hwapi.main:app --port 8001 &
-        shell: bash
-
-      - name: Fetch OpenAPI YAML
-        run: curl http://localhost:8001/v1/openapi.yaml -o fetched_openapi.yaml
-
-      - name: Compare with repository's openapi.yaml
-        run: diff fetched_openapi.yaml schemas/openapi.yaml
