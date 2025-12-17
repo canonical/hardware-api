@@ -24,7 +24,12 @@ from hwapi.router import router
 
 logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 
-app = FastAPI(redirect_slashes=False)
+app = FastAPI(
+    title="Hardware API (hwapi)",
+    version="1.0.0",
+    description="API server for working with hardware information from C3",
+    redirect_slashes=False,
+)
 
 app.add_middleware(
     CORSMiddleware,
