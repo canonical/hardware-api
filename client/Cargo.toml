@@ -1,7 +1,7 @@
 [package]
 name = "hwlib"
 description = "Tool for checking Ubuntu hardware certification status"
-version = "0.10.1"
+version = "0.11.0"
 edition = "2021"
 authors = [
     "Canonical Hardware Certification <canonical-hw-cert@lists.launchpad.net>",
@@ -25,7 +25,10 @@ features = ["cli"]
 [dependencies]
 anyhow = "~1.0.0"
 clap = { version = "4.5.41", features = ["derive", "env"], optional = true }
-minreq = { version = "2.14.0", features = ["native-tls", "json-using-serde"], default-features = false }
+minreq = { version = "2.14.0", features = [
+    "native-tls",
+    "json-using-serde",
+], default-features = false }
 os-release = { version = "0.1.0" }
 pyo3 = { version = "0.27.0", features = ["extension-module"], optional = true }
 serde = { version = "~1.0.0", features = ["derive"] }
