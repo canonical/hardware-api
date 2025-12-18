@@ -2,19 +2,19 @@
 # Manual edits may be lost in future updates.
 
 provider "registry.terraform.io/juju/juju" {
-  version     = "0.20.0"
-  constraints = "~> 0.20.0"
+  version     = "1.1.1"
+  constraints = "~> 1.1.0"
   hashes = [
-    "h1:8zL3kwPWqWma4TtHEjBxM7VEGoT7mZEC8Bhl3mgbCAA=",
-    "h1:JR23FqH8TjCPVeMOoQ2bNAiHCHfq8SkATtyAp8MZf5A=",
-    "h1:VzGw3+4NSV4E2ir+oBJxB0py3XGAi+svj/ddGYhuvn0=",
-    "h1:fYz4dJuF6Vltk5/01n5HpUCiFRjvgljOHhr7zg39Ics=",
-    "h1:lfv2iUY98axjsAl6400aX1eJ2K2QX2j6SFOPUZ35754=",
-    "zh:09aa75b647903bc0485fce1fdf1a87a99d1b87b508ef75a6643b197a6b7987a6",
-    "zh:4056a6111a64b86e99c3e3d1517214ea1f682ac386ce618a7ea3d956fd7be012",
-    "zh:6ab68c986acddb1c720ea6e77b170b18a58a8696d7c4e46a29667a3f48adb81d",
+    "h1:5iP4qlyaxoJopcS5m4ltgBACghqwM57HpDC+T7ssiV0=",
+    "h1:HUz3FRKIsLA+AAygQ0V2f9Cb/OXrwOOnRHPGSzaIT3U=",
+    "h1:U3JkIUr2wabeLVfvJtul08F8HGHSOfYJqrcyLCilJOg=",
+    "h1:hdws1PKwrvRuPaWCmRDFEgKOHJwBaqFj//ciRCLO/Hk=",
+    "h1:r5C+wa4JHIDLX4uZ3XW+J6arhF4UKD5NNX5GIiazWKc=",
+    "zh:3d07c0ff92cc7148b2afa34fd3e820486165b9a17b9220e499ebe142128fee36",
+    "zh:55a1a865d2449f9a9dca59d83415e8317f6015f282d3da079d777d225bfad813",
+    "zh:57df44a860b7f2ddb6b67b3e5782a4bc05780ab26003d97f6e263525a8f1af3f",
     "zh:753ad16d007180a77a147bd377de2fb334f409123f6fee36d4c50c7fe8b76a29",
-    "zh:9fdd474aa8fca62831c0fb0763cae04a000a2b428185437dbe24d7745dd6c019",
-    "zh:ca49ddd53b449f90a69e3036653aaf2d44b0e3a050cb4be40512e35784627dab",
+    "zh:83c5c076c9164e00380a06f228e32f53efa29ed71322bdd9e1becb92a8a7a843",
+    "zh:f61fc46552ba066344402470f45a5ad956eca49becc3b549272bee37313ec334",
   ]
 }
