@@ -16,9 +16,7 @@
 #        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
 
 
-import yaml
-from fastapi import APIRouter, Response
-from fastapi.openapi.utils import get_openapi
+from fastapi import APIRouter
 
 from .endpoints.certification import certification
 
@@ -31,15 +29,3 @@ router.include_router(
 @router.get("/")
 def root():
     return "Hardware Information API (hwapi) server"
-
-
-@router.get("/v1/openapi.yaml", include_in_schema=False)
-def get_openapi_yaml():
-    """OpenAPI schema in YAML format"""
-    openapi_schema = get_openapi(
-        title="Hardware API (hwapi)",
-        version="1.0.0",
-        description="API server for working with hardware information from C3",
-        routes=router.routes,
-    )
-    return Response(content=yaml.dump(openapi_schema), media_type="application/yaml")

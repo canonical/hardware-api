@@ -29,20 +29,6 @@ Before you can begin, you will need to:
 - Sign the Canonical [contributor license agreement][cla]. This grants us your
   permission to use your contributions in the project.
 
-## Pre-commit Hooks
-
-The repository contains [`pre-commit`][pre-commit] hook
-[rules](./.pre-commit-config.yaml) to:
-
-- Update the [`openapi.yaml`](./server/schemas/openapi.yaml) schema file before
-  committing any changes.
-
-To use these hooks, go to the `server/` directory and run:
-
-```shell
-uvx pre-commit install
-```
-
 ## Local Deployment
 
 - Install [Docker] and [set up permissions][docker-permissions] for the server
@@ -60,7 +46,6 @@ To run the server locally, make sure that no other application is using port
 [conventional commits]: https://www.conventionalcommits.org/en/v1.0.0/
 [code-of-conduct]: https://ubuntu.com/community/code-of-conduct
 [cla]: https://ubuntu.com/legal/contributors
-[pre-commit]: https://pre-commit.com
 [docker]: https://docs.docker.com/engine/install/ubuntu/
 [docker-permissions]: https://docs.docker.com/engine/install/linux-postinstall/
 [rust-install]: https://www.rust-lang.org/tools/install
