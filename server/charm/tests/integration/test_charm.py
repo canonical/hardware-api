@@ -25,7 +25,7 @@ def test_deploy(charm: Path, juju: jubilant.Juju):
 
 
 def test_relate_ingress(juju: jubilant.Juju):
-    """Relate the charm under test to the nginx ingress integrator."""
-    juju.deploy("nginx-ingress-integrator", channel="latest/stable", trust=True)
-    juju.integrate(f"{APP_NAME}:nginx-route", "nginx-ingress-integrator:nginx-route")
+    """Relate the charm under test to the traefik operator."""
+    juju.deploy("traefik-k8s", channel="latest/stable", trust=True)
+    juju.integrate(f"{APP_NAME}:ingress", "traefik-k8s:ingress")
     juju.wait(jubilant.all_active)
