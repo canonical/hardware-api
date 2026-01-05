@@ -17,7 +17,7 @@ variable "hardware_api" {
   })
 }
 
-variable "nginx_ingress_integrator" {
+variable "traefik" {
   type = object({
     app_name = optional(string, "ingress")
     channel  = optional(string, "latest/stable")
