@@ -35,11 +35,12 @@ resources:
     upstream-source: ghcr.io/canonical/hardware-api/hwapi:main
 
 requires:
-  nginx-route:
-    interface: nginx-route
+  traefik-route:
+    interface: traefik_route
+    limit: 1
 
 charm-libs:
-  - lib: nginx_ingress_integrator.nginx_route
+  - lib: traefik_k8s.traefik_route
     version: "0"
 
 parts:
@@ -67,7 +68,3 @@ config:
       default: 30000
       description: The port to listen on for incoming HTTP requests.
       type: int
-    hostname:
-      default: hw
-      description: External hostname for the service.
-      type: string
