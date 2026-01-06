@@ -17,9 +17,26 @@ output "traefik_app_name" {
 }
 
 output "traefik_requires" {
-  value = {}
+  value = {
+    certificates = "certificates"
+  }
 }
 
 output "traefik_provides" {
   value = {}
+}
+
+output "lego_app_name" {
+  description = "The name of the Lego application"
+  value       = juju_application.lego.name
+}
+
+output "lego_requires" {
+  value = {}
+}
+
+output "lego_provides" {
+  value = {
+    certificates = "certificates"
+  }
 }

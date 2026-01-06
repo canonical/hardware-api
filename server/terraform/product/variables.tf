@@ -26,3 +26,13 @@ variable "traefik" {
     units    = optional(number, 1)
   })
 }
+
+variable "lego" {
+  type = object({
+    app_name = optional(string, "lego")
+    channel  = optional(string, "4/stable")
+    config   = optional(map(string), {})
+    revision = optional(number)
+    units    = optional(number, 1)
+  })
+}
