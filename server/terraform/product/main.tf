@@ -27,6 +27,18 @@ resource "juju_application" "traefik" {
   config = var.traefik.config
 }
 
+resource "juju_application" "lego" {
+  name  = var.lego.app_name
+  model = data.juju_model.hardware_api.name
+  charm {
+    name     = "lego"
+    channel  = var.lego.channel
+    revision = var.lego.revision
+  }
+  units  = var.lego.units
+  config = var.lego.config
+}
+
 resource "juju_integration" "hardware_api_ingress" {
   model = data.juju_model.hardware_api.name
   application {
@@ -36,5 +48,17 @@ resource "juju_integration" "hardware_api_ingress" {
   application {
     name     = juju_application.traefik.name
     endpoint = "ingress"
+  }
+}
+
+resource "juju_integration" "traefik_certificates" {
+  model = data.juju_model.hardware_api.name
+  application {
+    name     = juju_application.traefik.name
+    endpoint = "certificates"
+  }
+  application {
+    name     = juju_application.lego.name
+    endpoint = "certificates"
   }
 }

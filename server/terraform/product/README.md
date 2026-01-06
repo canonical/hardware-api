@@ -40,7 +40,9 @@ deployment onto any Kubernetes environment managed by [Juju].
 | --------------------------------------------------------- | ----------- |
 | [juju_model.hardware_api][juju_model]                     | data source |
 | [juju_application.traefik][juju_application]              | resource    |
+| [juju_application.lego][juju_application]                 | resource    |
 | [juju_integration.hardware_api_ingress][juju_integration] | resource    |
+| [juju_integration.traefik_certificates][juju_integration] | resource    |
 
 ## Inputs
 
@@ -49,6 +51,7 @@ deployment onto any Kubernetes environment managed by [Juju].
 | model        | Reference to an existing model resource or data source for the model to deploy to | string |
 | hardware_api | n/a                                                                               | object |
 | traefik      | n/a                                                                               | object |
+| lego         | n/a                                                                               | object |
 
 ## Outputs
 
@@ -60,6 +63,9 @@ deployment onto any Kubernetes environment managed by [Juju].
 | traefik_app_name      | Name of the deployed Traefik application      |
 | traefik_requires      |                                               |
 | traefik_provides      |                                               |
+| lego_app_name         | Name of the deployed LEGO application         |
+| lego_requires         |                                               |
+| lego_provides         |                                               |
 
 [terraform]: https://terraform.io
 [hardware-api-charm]: https://charmhub.io/hardware-api
