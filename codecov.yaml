@@ -14,7 +14,10 @@ component_management:
   individual_components:
     - component_id: server
       name: Server
-      paths: [server/**]
+      paths: [server/**, "!server/charm/**"]
+    - component_id: charm
+      name: Charm
+      paths: [server/charm/**]
     - component_id: client
       name: Client
       paths: [client/**]

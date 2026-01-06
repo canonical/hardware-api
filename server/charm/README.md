@@ -50,7 +50,7 @@ The Hardware API Charm is released under the [Apache-2.0 license](LICENSE).
 [charmcraft-site]: https://charmhub.io/hardware-api
 [test-badge]: https://github.com/canonical/hardware-api/actions/workflows/test_server.yaml/badge.svg
 [test-site]: https://github.com/canonical/hardware-api/actions/workflows/test_server.yaml
-[cov-badge]: https://codecov.io/gh/canonical/hardware-api/graph/badge.svg?token=p0h9tTp2F3&component=server&flags=charm
+[cov-badge]: https://codecov.io/gh/canonical/hardware-api/graph/badge.svg?token=p0h9tTp2F3&component=charm
 [cov-latest]: https://codecov.io/gh/canonical/hardware-api
 [uv-badge]: https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json
 [uv-site]: https://github.com/astral-sh/uv
