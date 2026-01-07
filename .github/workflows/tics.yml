@@ -1,0 +1,69 @@
+name: TiCS
+permissions: {}
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+  schedule:
+    - cron: "0 0 * * 0"
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  analyze:
+    name: TiCS Analysis
+    runs-on: [self-hosted, linux, amd64, tiobe]
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pipx pkgconf libssl-dev build-essential
+
+      # Client
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
+        with:
+          toolchain: stable
+          components: rustfmt, clippy
+      - name: Install cargo-llvm-cov
+        run: cargo install cargo-llvm-cov
+      - name: Gather coverage (client)
+        working-directory: client
+        run: cargo llvm-cov --all-features --cobertura --output-path=coverage.xml
+      - name: Build (client)
+        working-directory: client
+        run: cargo build --all-features
+
+      # Server
+      - name: Set up uv
+        uses: astral-sh/setup-uv@61cb8a9741eeb8a550a1b8544337180c0fc8476b # v7.2.0
+      - name: Gather coverage (server)
+        working-directory: server
+        run: uvx tox run -e unit
+      - name: Install (server)
+        working-directory: server
+        run: |
+          uv export --no-emit-project --frozen --no-hashes --all-groups > requirements.txt
+          pip install -r requirements.txt --break-system-packages
+
+      - name: Combine coverage
+        run: |
+          mkdir .coverage/
+          mv client/coverage.xml .coverage/client_coverage.xml
+          mv server/coverage/coverage.xml .coverage/server_coverage.xml
+
+      - name: Run TiCS Analysis
+        uses: tiobe/tics-github-action@768de18bedf164ee461bc9ef5e2f2fa1a20b122a # v3.7.0
+        with:
+          mode: qserver
+          project: hardware-api
+          branchdir: .
+          viewerUrl: https://canonical.tiobe.com/tiobeweb/TICS/api/cfg?name=default
+          ticsAuthToken: ${{ secrets.TICSAUTHTOKEN }}
+          installTics: true
