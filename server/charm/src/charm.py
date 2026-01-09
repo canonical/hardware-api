@@ -26,7 +26,6 @@ class HardwareApiConfig(pydantic.BaseModel):
 
     log_level: Literal["info", "debug", "warning", "error", "critical"] = "info"
     port: int = 30000
-    hostname: str = "hw"
 
 
 class HardwareApiCharm(ops.CharmBase):
@@ -35,9 +34,7 @@ class HardwareApiCharm(ops.CharmBase):
     def __init__(self, *args):
         super().__init__(*args)
         self.typed_config = self.load_config(HardwareApiConfig, errors="blocked")
-        self.ingress = IngressPerAppRequirer(
-            self, host=self.typed_config.hostname, port=self.typed_config.port
-        )
+        self.ingress = IngressPerAppRequirer(self, port=self.typed_config.port)
         self.framework.observe(self.ingress.on.ready, self._on_ingress_ready)
         self.framework.observe(self.ingress.on.revoked, self._on_ingress_revoked)
         self.framework.observe(
