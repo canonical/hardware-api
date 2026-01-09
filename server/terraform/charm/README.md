@@ -36,15 +36,15 @@ module "hardware_api" {
 Create integrations, for instance:
 
 ```hcl
-resource "juju_integration" "hardware_api_nginx" {
+resource "juju_integration" "hardware_api_ingress" {
   model = juju_model.my_model.name
   application {
     name     = module.hardware_api.app_name
-    endpoint = module.hardware_api.endpoints.nginx_route
+    endpoint = module.hardware_api.endpoints.ingress
   }
   application {
     name     = "ingress"
-    endpoint = "nginx-route"
+    endpoint = "ingress"
   }
 }
 ```

@@ -14,27 +14,51 @@ module "hardware_api" {
   units       = var.hardware_api.units
 }
 
-resource "juju_application" "nginx_ingress_integrator" {
-  name  = var.nginx_ingress_integrator.app_name
+resource "juju_application" "traefik" {
+  name  = var.traefik.app_name
   model = data.juju_model.hardware_api.name
   trust = true
   charm {
-    name     = "nginx-ingress-integrator"
-    channel  = var.nginx_ingress_integrator.channel
-    revision = var.nginx_ingress_integrator.revision
+    name     = "traefik-k8s"
+    channel  = var.traefik.channel
+    revision = var.traefik.revision
   }
-  units  = var.nginx_ingress_integrator.units
-  config = var.nginx_ingress_integrator.config
+  units  = var.traefik.units
+  config = var.traefik.config
+}
+
+resource "juju_application" "lego" {
+  name  = var.lego.app_name
+  model = data.juju_model.hardware_api.name
+  charm {
+    name     = "lego"
+    channel  = var.lego.channel
+    revision = var.lego.revision
+  }
+  units  = var.lego.units
+  config = var.lego.config
 }
 
 resource "juju_integration" "hardware_api_ingress" {
   model = data.juju_model.hardware_api.name
   application {
     name     = module.hardware_api.app_name
-    endpoint = module.hardware_api.endpoints.nginx_route
+    endpoint = module.hardware_api.endpoints.ingress
   }
   application {
-    name     = juju_application.nginx_ingress_integrator.name
-    endpoint = "nginx-route"
+    name     = juju_application.traefik.name
+    endpoint = "ingress"
+  }
+}
+
+resource "juju_integration" "traefik_certificates" {
+  model = data.juju_model.hardware_api.name
+  application {
+    name     = juju_application.traefik.name
+    endpoint = "certificates"
+  }
+  application {
+    name     = juju_application.lego.name
+    endpoint = "certificates"
   }
 }
