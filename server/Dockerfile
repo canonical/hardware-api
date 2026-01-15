@@ -4,7 +4,7 @@ RUN apt-get update -y && apt-get install -y sqlite3
 
 WORKDIR /home/server
 
-COPY --from=ghcr.io/astral-sh/uv:0.9.24 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.9.26 /uv /uvx /bin/
 
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
