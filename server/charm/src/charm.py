@@ -11,7 +11,7 @@ from typing import Literal
 
 import ops
 import pydantic
-from charms.nginx_ingress_integrator.v0.nginx_route import require_nginx_route
+from charms.traefik_k8s.v0.traefik_route import TraefikRouteRequirer
 
 # Log messages can be retrieved using juju debug-log
 logger = logging.getLogger(__name__)
@@ -22,7 +22,6 @@ class HardwareApiConfig(pydantic.BaseModel):
 
     log_level: Literal["info", "debug", "warning", "error", "critical"] = "info"
     port: int = 30000
-    hostname: str = "str"
 
 
 class HardwareApiCharm(ops.CharmBase):
@@ -31,20 +30,22 @@ class HardwareApiCharm(ops.CharmBase):
     def __init__(self, *args):
         super().__init__(*args)
         self.typed_config = self.load_config(HardwareApiConfig, errors="blocked")
-        self._setup_nginx()
+        self.route = TraefikRouteRequirer(
+            self,
+            self.model.get_relation("traefik-route"),  # type: ignore
+            "traefik-route",
+        )
+        self.framework.observe(
+            self.on.traefik_route_relation_changed, self._on_route_relation_changed
+        )
+        self.framework.observe(
+            self.on.traefik_route_relation_joined, self._on_route_relation_changed
+        )
         self.framework.observe(
             self.on["hardware-api"].pebble_ready,
             self._on_hardware_api_pebble_ready,
         )
         self.framework.observe(self.on.config_changed, self._on_config_changed)
-
-    def _setup_nginx(self):
-        require_nginx_route(
-            charm=self,
-            service_hostname=self.typed_config.hostname,
-            service_name=self.app.name,
-            service_port=self.typed_config.port,
-        )
 
     def _on_hardware_api_pebble_ready(self, event: ops.PebbleReadyEvent):
         container = event.workload
@@ -63,6 +64,46 @@ class HardwareApiCharm(ops.CharmBase):
         container.replan()
         logger.debug("Log level changed to '%s'", self.typed_config.log_level)
         self.unit.status = ops.ActiveStatus()
+
+    def _on_route_relation_changed(self, event: ops.RelationChangedEvent):
+        if not self.unit.is_leader():
+            return
+        if not self.route.is_ready():
+            event.defer()
+            return
+        self.unit.status = ops.MaintenanceStatus("configuring route")
+        service_url = (
+            f"http://{self.app.name}.{self.model.name}.svc.cluster.local:{self.typed_config.port}"
+        )
+        identifier = f"{self.model.name}-{self.app.name}"
+        config = {
+            "http": {
+                "middlewares": {
+                    "https-redirect": {"redirectScheme": {"scheme": "https", "permanent": True}}
+                },
+                "routers": {
+                    f"juju-{identifier}-router": {
+                        "rule": f"Host(`{self.route.external_host}`)",
+                        "service": f"juju-{identifier}-service",
+                        "entryPoints": ["web"],
+                        "middlewares": ["https-redirect"],
+                    },
+                    f"juju-{identifier}-router-tls": {
+                        "rule": f"Host(`{self.route.external_host}`)",
+                        "service": f"juju-{identifier}-service",
+                        "entryPoints": ["websecure"],
+                        "tls": {},
+                    },
+                },
+                "services": {
+                    f"juju-{identifier}-service": {
+                        "loadBalancer": {"servers": [{"url": service_url}], "passHostHeader": True}
+                    }
+                },
+            }
+        }
+        logger.info("submitting traefik config for %s", self.route.external_host)
+        self.route.submit_to_traefik(config=config)
 
     @property
     def _app_environment(self):

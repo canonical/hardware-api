@@ -20,13 +20,12 @@ juju deploy hardware-api
 
 - `log-level` (default: `info`): Allows you to set the log level for the server.
 - `port` (default: `30000`): Port to listen on for incoming HTTP requests.
-- `hostname` (default: `hw`): External hostname for the service.
 
 ## Relations / Integrations
 
 Currently, supported relations are:
 
-- `nginx-route`: for interfacing with [`nginx-ingress-integrator`][nginx-ingress-integrator].
+- `traefik-route`: for interfacing with [`traefik_route`][ingress-lib] library.
 
 ## Community and Support
 
@@ -58,4 +57,4 @@ The Hardware API Charm is released under the [Apache-2.0 license](LICENSE).
 [ruff-site]: https://github.com/astral-sh/ruff
 [juju]: https://canonical.com/juju
 [canonical/hardware-api]: https://github.com/canonical/hardware-api
-[nginx-ingress-integrator]: https://charmhub.io/nginx-ingress-integrator
+[ingress-lib]: https://charmhub.io/integrations/traefik_route
