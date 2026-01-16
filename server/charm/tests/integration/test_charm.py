@@ -13,14 +13,15 @@ logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("charmcraft.yaml").read_text(encoding="utf-8"))
 APP_NAME = METADATA["name"]
+PORT = 80
 
 
 def test_deploy(charm: Path, juju: jubilant.Juju):
     """Deploy the charm under test."""
-    resources = {
-        "hardware-api-image": METADATA["resources"]["hardware-api-image"]["upstream-source"],
-    }
-    juju.deploy(charm.resolve(), app=APP_NAME, resources=resources)
+    upstream_source = METADATA["resources"]["hardware-api-image"]["upstream-source"]
+    resources = {"hardware-api-image": upstream_source}
+    config = {"port": PORT}
+    juju.deploy(charm.resolve(), app=APP_NAME, resources=resources, config=config)
     juju.wait(jubilant.all_active)
 
 
