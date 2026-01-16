@@ -5,7 +5,7 @@
 """Unit tests for Hardware API Charm."""
 
 import logging
-from unittest.mock import patch
+from unittest.mock import MagicMock, mock_open, patch
 
 import ops
 import pytest
@@ -100,3 +100,81 @@ def test_config_changed_updates_pebble_layer():
         state_out.get_container(container.name).service_statuses["hardware-api"]
         == ops.pebble.ServiceStatus.ACTIVE
     )
+
+
+@patch("charm.TraefikRouteRequirer.submit_to_traefik")
+def test_route_relation_changed_not_leader(
+    patched_submit_to_traefik: MagicMock, ingress_template: str
+):
+    """Tests that route_relation_changed does nothing if not leader."""
+    ctx = testing.Context(HardwareApiCharm)
+    container = testing.Container(name="hardware-api", can_connect=True)
+    relation = testing.Relation("traefik-route")
+    state_in = testing.State(
+        config={"port": 30000, "log-level": "info"},
+        containers={container},
+        relations={relation},
+        leader=False,
+    )
+    with patch("builtins.open", mock_open(read_data=ingress_template)):
+        ctx.run(ctx.on.relation_changed(relation), state_in)
+    patched_submit_to_traefik.assert_not_called()
+
+
+@patch("charm.TraefikRouteRequirer.submit_to_traefik")
+def test_route_relation_changed_no_external_hostname(patched_submit_to_traefik: MagicMock):
+    """Tests the route relation changed event blocks with no hostname."""
+    ctx = testing.Context(HardwareApiCharm)
+    container = testing.Container(name="hardware-api", can_connect=True)
+    relation = testing.Relation("traefik-route")
+    state_in = testing.State(
+        config={"port": 30000, "log-level": "debug"},
+        containers={container},
+        relations={relation},
+        leader=True,
+    )
+    state_out = ctx.run(ctx.on.relation_changed(relation), state_in)
+    assert isinstance(state_out.unit_status, testing.BlockedStatus)
+    assert state_out.unit_status.message == "external_hostname must be set on traefik-k8s"
+    patched_submit_to_traefik.assert_not_called()
+
+
+@patch("charm.TraefikRouteRequirer.submit_to_traefik")
+def test_route_relation_changed_not_ready(
+    patched_submit_to_traefik: MagicMock, ingress_template: str
+):
+    """Tests the route relation changed event is deferred when not ready."""
+    ctx = testing.Context(HardwareApiCharm)
+    container = testing.Container(name="hardware-api", can_connect=True)
+    remote_app_data = {"external_host": "hw.local"}
+    relation = testing.Relation("traefik-route", remote_app_data=remote_app_data)
+    state_in = testing.State(
+        config={"port": 30000, "log-level": "debug"},
+        containers={container},
+        relations={relation},
+        leader=True,
+    )
+    with (
+        patch("charm.TraefikRouteRequirer.is_ready", MagicMock(return_value=False)),
+        patch("builtins.open", mock_open(read_data=ingress_template)),
+    ):
+        ctx.run(ctx.on.relation_changed(relation), state_in)
+    patched_submit_to_traefik.assert_not_called()
+
+
+@patch("charm.TraefikRouteRequirer.submit_to_traefik")
+def test_route_relation_changed(patched_submit_to_traefik: MagicMock, ingress_template: str):
+    """Tests the route relation changed event on success."""
+    ctx = testing.Context(HardwareApiCharm)
+    container = testing.Container(name="hardware-api", can_connect=True)
+    remote_app_data = {"external_host": "hw.local"}
+    relation = testing.Relation("traefik-route", remote_app_data=remote_app_data)
+    state_in = testing.State(
+        config={"port": 30000, "log-level": "debug"},
+        containers={container},
+        relations={relation},
+        leader=True,
+    )
+    with patch("builtins.open", mock_open(read_data=ingress_template)):
+        ctx.run(ctx.on.relation_changed(relation), state_in)
+    patched_submit_to_traefik.assert_called_once()
