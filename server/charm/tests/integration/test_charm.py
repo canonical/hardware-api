@@ -7,15 +7,18 @@ import logging
 from pathlib import Path
 
 import jubilant
+import requests
 import yaml
 
-from .helpers import app_is_up, retry
+from .helpers import DNSResolverHTTPAdapter, app_is_up, retry
 
 logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("charmcraft.yaml").read_text(encoding="utf-8"))
 APP_NAME = METADATA["name"]
 PORT = 80
+INGRESS_NAME = "ingress"
+EXTERNAL_HOSTNAME = "hw.internal"
 
 
 def test_deploy(charm: Path, juju: jubilant.Juju):
@@ -35,8 +38,22 @@ def test_application_is_up(juju: jubilant.Juju):
     assert app_is_up(base_url)
 
 
-def test_relate_ingress(juju: jubilant.Juju):
-    """Relate the charm under test to the nginx ingress integrator."""
-    juju.deploy("nginx-ingress-integrator", channel="latest/stable", trust=True)
-    juju.integrate(f"{APP_NAME}:nginx-route", "nginx-ingress-integrator:nginx-route")
-    juju.wait(jubilant.all_active)
+def test_deploy_ingress(juju: jubilant.Juju):
+    """Deploy the ingress charm."""
+    config = {"external_hostname": EXTERNAL_HOSTNAME}
+    juju.deploy(
+        "traefik-k8s", channel="latest/stable", app=INGRESS_NAME, config=config, trust=True
+    )
+    juju.integrate(f"{APP_NAME}:traefik-route", f"{INGRESS_NAME}:traefik-route")
+    juju.wait(jubilant.all_active, timeout=600)
+
+
+@retry(retry_num=5, retry_sleep_sec=5)
+def test_ingress_is_up(juju: jubilant.Juju):
+    """Test that the application is reachable via the ingress."""
+    ingress_ip = juju.status().apps[INGRESS_NAME].units[f"{INGRESS_NAME}/0"].address
+    session = requests.Session()
+    session.mount("http://", DNSResolverHTTPAdapter(EXTERNAL_HOSTNAME, ingress_ip))
+    session.mount("https://", DNSResolverHTTPAdapter(EXTERNAL_HOSTNAME, ingress_ip))
+    base_url = f"http://{EXTERNAL_HOSTNAME}/"
+    assert app_is_up(base_url, session=session)
