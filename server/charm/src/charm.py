@@ -72,9 +72,6 @@ class HardwareApiCharm(ops.CharmBase):
             event.defer()
             return
         self.unit.status = ops.MaintenanceStatus("configuring route")
-        if not self.route.external_host:
-            self.unit.status = ops.BlockedStatus("external_hostname must be set on traefik-k8s")
-            return
         service_url = (
             f"http://{self.app.name}.{self.model.name}.svc.cluster.local:{self.typed_config.port}"
         )
