@@ -5,7 +5,13 @@ To learn more about the general contribution guidelines for the Hardware
 API project, refer to the [Hardware API contribution guide](../../CONTRIBUTING.md).
 
 To make contributions to this charm, you'll need a working
-[development setup][juju-setup].
+[development setup][juju-setup]. If you are setting up a VM manually, you may
+want to use [`concierge`][concierge]. This project provides a `concierge.yaml`
+with the necessary packages and providers; to get started run:
+
+```shell
+concierge prepare --verbose
+```
 
 You can create an environment for development with [`uv`][uv] (you can install it as a [snap][uv-snap]):
 
@@ -36,6 +42,7 @@ charmcraft pack
 ```
 
 [juju-setup]: https://documentation.ubuntu.com/juju/3.6/howto/manage-your-deployment/#set-up-your-deployment-local-testing-and-development
+[concierge]: https://snapcraft.io/concierge
 [uv]: https://docs.astral.sh/uv
 [uv-snap]: https://snapcraft.io/astral-uv
 [tox]: https://tox.wiki/en/4.32.0/
