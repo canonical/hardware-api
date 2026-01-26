@@ -154,8 +154,8 @@ jobs:
         run: uv sync --group=integration
       - name: Install concierge
         run: sudo snap install --classic concierge
-      - name: Prepare Juju
-        run: sudo concierge prepare --verbose --juju-channel=3/stable --charmcraft-channel=latest/stable -p microk8s
+      - name: Prepare environment
+        run: sudo concierge prepare --verbose
       - name: Pack charm
         run: charmcraft pack --verbose
       - name: Upload charm as an artifact
