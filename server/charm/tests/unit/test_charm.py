@@ -11,14 +11,11 @@ import ops
 import pytest
 from ops import testing
 
-from charm import HardwareApiCharm
-
 logger = logging.getLogger(__name__)
 
 
-def test_pebble_layer():
+def test_pebble_layer(ctx: testing.Context):
     """Tests that the Pebble layer is correctly set up."""
-    ctx = testing.Context(HardwareApiCharm)
     container = testing.Container(name="hardware-api", can_connect=True)
     state_in = testing.State(
         config={"port": 30000, "hostname": "hw", "log-level": "info"},
@@ -45,9 +42,8 @@ def test_pebble_layer():
     )
 
 
-def test_config_changed_invalid_log_level():
+def test_config_changed_invalid_log_level(ctx: testing.Context):
     """Tests that an invalid log level in config_changed sets BlockedStatus."""
-    ctx = testing.Context(HardwareApiCharm)
     container = testing.Container(name="hardware-api", can_connect=True)
     state_in = testing.State(
         config={"port": 30000, "hostname": "hw", "log-level": "invalid"},
@@ -59,9 +55,8 @@ def test_config_changed_invalid_log_level():
         assert isinstance(state_out.unit_status, testing.BlockedStatus)
 
 
-def test_config_changed_pebble_not_ready():
+def test_config_changed_pebble_not_ready(ctx: testing.Context):
     """Tests that config_changed defers event if Pebble is not ready."""
-    ctx = testing.Context(HardwareApiCharm)
     container = testing.Container(name="hardware-api", can_connect=False)
     state_in = testing.State(
         config={"port": 30000, "hostname": "hw", "log-level": "info"},
@@ -73,9 +68,8 @@ def test_config_changed_pebble_not_ready():
     patched_defer.assert_called_once()
 
 
-def test_config_changed_updates_pebble_layer():
+def test_config_changed_updates_pebble_layer(ctx: testing.Context):
     """Tests that config_changed updates the Pebble layer with new log level."""
-    ctx = testing.Context(HardwareApiCharm)
     container = testing.Container(name="hardware-api", can_connect=True)
     state_in = testing.State(
         config={"port": 30000, "hostname": "hw", "log-level": "debug"},
