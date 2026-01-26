@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (C) 2026 Canonical Ltd.
 # See LICENSE file for licensing details.
+# TODO: Remove once NGINX support is dropped
 """Integration tests for the Hardware API Charm behind NGINX."""
 
 import logging
