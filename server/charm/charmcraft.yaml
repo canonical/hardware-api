@@ -37,6 +37,7 @@ resources:
 requires:
   nginx-route:
     interface: nginx-route
+    limit: 1
 
 charm-libs:
   - lib: nginx_ingress_integrator.nginx_route
