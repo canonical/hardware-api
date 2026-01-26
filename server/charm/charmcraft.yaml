@@ -40,6 +40,8 @@ requires:
     limit: 1
 
 charm-libs:
+  - lib: traefik_k8s.traefik_route
+    version: "0"
   - lib: nginx_ingress_integrator.nginx_route
     version: "0"
 
