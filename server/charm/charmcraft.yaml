@@ -38,6 +38,9 @@ requires:
   nginx-route:
     interface: nginx-route
     limit: 1
+  traefik-route:
+    interface: traefik_route
+    limit: 1
 
 charm-libs:
   - lib: traefik_k8s.traefik_route
