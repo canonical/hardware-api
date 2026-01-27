@@ -73,7 +73,11 @@ config:
       default: 30000
       description: The port to listen on for incoming HTTP requests.
       type: int
+    # TODO: Remove once NGINX support is dropped
     hostname:
       default: hw
-      description: External hostname for the service.
+      description: >
+        External hostname for the service.
+        This is only used when exposing the service with NGINX. For Traefik,
+        configure the Traefik `external_hostname` option.
       type: string
