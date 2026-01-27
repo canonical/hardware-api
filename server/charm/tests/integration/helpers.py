@@ -3,6 +3,7 @@
 
 import functools
 import logging
+import subprocess
 import time
 from urllib.parse import urlparse
 
@@ -49,6 +50,23 @@ def app_is_up(base_url: str, session: requests.Session | None = None) -> bool:
     if not ok:
         logger.error("Response: %s", response)
     return ok
+
+
+def get_k8s_ingress_ip(model_name: str, service_name: str) -> str:
+    """Get the external IP of a Kubernetes service LoadBalancer."""
+    return subprocess.check_output(
+        [
+            "kubectl",
+            "get",
+            "service",
+            service_name,
+            "--namespace",
+            model_name,
+            "--output",
+            "jsonpath={.status.loadBalancer.ingress[0].ip}",
+        ],
+        text=True,
+    ).strip()
 
 
 def retry(retry_num: int, retry_sleep_sec: int):
