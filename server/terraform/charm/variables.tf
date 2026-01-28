@@ -1,6 +1,6 @@
 variable "app_name" {
   type        = string
-  default     = "api"
+  default     = "hwapi"
   description = "Name to give the deployed application"
 }
 

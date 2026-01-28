@@ -7,7 +7,7 @@ variable "model" {
 
 variable "hardware_api" {
   type = object({
-    app_name    = optional(string, "api")
+    app_name    = optional(string, "hwapi")
     channel     = optional(string, "latest/edge")
     config      = optional(map(string), {})
     constraints = optional(string, "arch=amd64")
