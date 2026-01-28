@@ -39,27 +39,25 @@ deployment onto any Kubernetes environment managed by [Juju].
 | Name                                                          | Type        |
 | ------------------------------------------------------------- | ----------- |
 | [juju_model.hardware_api][juju_model]                         | data source |
-| [juju_application.nginx_ingress_integrator][juju_application] | resource    |
-| [juju_integration.hardware_api_ingress][juju_integration]     | resource    |
+| [juju_application.traefik_k8s][juju_application]              | resource    |
+| [juju_integration.traefik_k8s-hardware_api][juju_integration] | resource    |
+| [juju_application.lego][juju_application]                     | resource    |
+| [juju_integration.lego-traefik_k8s][juju_integration]         | resource    |
 
 ## Inputs
 
-| Name                     | Description                                                                       | Type   |
-| ------------------------ | --------------------------------------------------------------------------------- | ------ |
-| model                    | Reference to an existing model resource or data source for the model to deploy to | string |
-| hardware_api             | n/a                                                                               | object |
-| nginx_ingress_integrator | n/a                                                                               | object |
+| Name         | Description                                                                       | Type   |
+| ------------ | --------------------------------------------------------------------------------- | ------ |
+| model        | Reference to an existing model resource or data source for the model to deploy to | string |
+| hardware_api | n/a                                                                               | object |
+| traefik_k8s  | n/a                                                                               | object |
+| lego         | n/a                                                                               | object |
 
 ## Outputs
 
-| Name                              | Description                                               |
-| --------------------------------- | --------------------------------------------------------- |
-| hardware_api_app_name             | Name of the deployed Hardware API application             |
-| hardware_api_requires             |                                                           |
-| hardware_api_provides             |                                                           |
-| nginx_ingress_integrator_app_name | Name of the deployed NGINX Ingress Integrator application |
-| nginx_ingress_integrator_requires |                                                           |
-| nginx_ingress_integrator_provides |                                                           |
+| Name         | Description                            |
+| ------------ | -------------------------------------- |
+| applications | The applications making up the product |
 
 [terraform]: https://terraform.io
 [hardware-api-charm]: https://charmhub.io/hardware-api
