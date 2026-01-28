@@ -38,3 +38,27 @@ resource "juju_integration" "traefik_k8s-hardware_api" {
     endpoint = module.hardware_api.endpoints.traefik_route
   }
 }
+
+resource "juju_application" "lego" {
+  name  = var.lego.app_name
+  model = data.juju_model.hardware_api.name
+  charm {
+    name     = "lego"
+    channel  = var.lego.channel
+    revision = var.lego.revision
+  }
+  units  = 1
+  config = var.lego.config
+}
+
+resource "juju_integration" "lego-traefik_k8s" {
+  model = data.juju_model.hardware_api.name
+  application {
+    name     = juju_application.lego.name
+    endpoint = "certificates"
+  }
+  application {
+    name     = juju_application.traefik_k8s.name
+    endpoint = "certificates"
+  }
+}

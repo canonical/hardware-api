@@ -25,3 +25,12 @@ variable "traefik_k8s" {
     revision = optional(number)
   })
 }
+
+variable "lego" {
+  type = object({
+    app_name = optional(string, "certificates")
+    channel  = optional(string, "latest/stable")
+    config   = optional(map(string), {})
+    revision = optional(number)
+  })
+}
