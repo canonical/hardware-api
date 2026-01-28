@@ -17,12 +17,11 @@ variable "hardware_api" {
   })
 }
 
-variable "nginx_ingress_integrator" {
+variable "traefik_k8s" {
   type = object({
     app_name = optional(string, "ingress")
     channel  = optional(string, "latest/stable")
     config   = optional(map(string), {})
     revision = optional(number)
-    units    = optional(number, 1)
   })
 }
