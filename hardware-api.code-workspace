@@ -20,6 +20,8 @@
   "extensions": {
     "recommendations": [
       "ms-python.python",
+      "charliermarsh.ruff",
+      "astral-sh.ty",
       "rust-lang.rust-analyzer"
     ]
   },
