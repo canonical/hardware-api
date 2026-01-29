@@ -28,6 +28,7 @@ dev = [
     "requests-mock",
     "httpx",
     "sqlalchemy-utils",
+    "types-sqlalchemy-utils",
 ]
 
 [tool.ruff]
