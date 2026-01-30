@@ -20,7 +20,7 @@ dependencies = [
 [dependency-groups]
 dev = [
     "ruff",
-    "mypy",
+    "ty",
     "types-pyyaml",
     "types-requests",
     "pytest",
@@ -28,6 +28,7 @@ dev = [
     "requests-mock",
     "httpx",
     "sqlalchemy-utils",
+    "types-sqlalchemy-utils",
 ]
 
 [tool.ruff]

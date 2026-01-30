@@ -22,10 +22,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import Engine, create_engine
 from sqlalchemy.orm import Session, sessionmaker
-from sqlalchemy_utils import (  # type: ignore
-    create_database,
-    drop_database,
-)
+from sqlalchemy_utils import create_database, drop_database
 
 from hwapi.data_models.models import Base
 from hwapi.data_models.setup import get_db
