@@ -6,6 +6,7 @@ output "app_name" {
 output "endpoints" {
   description = "Map of all endpoints"
   value = {
-    nginx_route = "nginx-route"
+    nginx_route   = "nginx-route"
+    traefik_route = "traefik-route"
   }
 }

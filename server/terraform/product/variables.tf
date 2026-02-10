@@ -7,7 +7,7 @@ variable "model" {
 
 variable "hardware_api" {
   type = object({
-    app_name    = optional(string, "api")
+    app_name    = optional(string, "hwapi")
     channel     = optional(string, "latest/edge")
     config      = optional(map(string), {})
     constraints = optional(string, "arch=amd64")
@@ -17,12 +17,20 @@ variable "hardware_api" {
   })
 }
 
-variable "nginx_ingress_integrator" {
+variable "traefik_k8s" {
   type = object({
     app_name = optional(string, "ingress")
     channel  = optional(string, "latest/stable")
     config   = optional(map(string), {})
     revision = optional(number)
-    units    = optional(number, 1)
+  })
+}
+
+variable "lego" {
+  type = object({
+    app_name = optional(string, "certificates")
+    channel  = optional(string, "latest/stable")
+    config   = optional(map(string), {})
+    revision = optional(number)
   })
 }
