@@ -84,5 +84,7 @@ jobs:
           python-version: "3.13"
       - name: Install tox
         run: pip install tox
-      - name: Run tox
-        run: tox
+      - name: Lint
+        run: tox run -e lint
+      - name: Unit
+        run: tox run -e unit
