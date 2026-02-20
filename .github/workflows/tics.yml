@@ -23,7 +23,7 @@ jobs:
       - name: Install dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y pipx pkgconf libssl-dev build-essential
+          sudo apt-get install -y pipx pkgconf python3-maturin libssl-dev build-essential
 
       # Client
       - name: Install Rust toolchain
@@ -39,6 +39,9 @@ jobs:
       - name: Build (client)
         working-directory: client
         run: cargo build --all-features
+      - name: Install (client pybindings)
+        working-directory: client
+        run: pip install . --break-system-packages
 
       # Server
       - name: Set up uv

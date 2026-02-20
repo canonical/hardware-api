@@ -5,3 +5,7 @@ __pycache__/
 *.profraw
 *.profdata
 coverage*
+.tox/
+.ruff_cache/
+.mypy_cache/
+.venv/

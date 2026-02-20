@@ -34,15 +34,14 @@ sudo snap connect hwctl:system-observe
 ## Use Python Bindings
 
 The `hwlib` library can be used in Python code as well. We're using the
-[`pyo3`][pyo3] library to create Python bindings; to build them, you need to
-have [`maturin`][maturin] installed on your system. It requires a virtual
-environment to be configured to work with it:
+[`pyo3`][pyo3] library to create Python bindings and [`maturin`][maturin] to
+build the Python library. It requires a virtual environment to be configured to
+work with it:
 
 ```shell
-virtualenv venv
-source venv/bin/activate
-pip install maturin
-maturin develop --features pybindings
+python3 -m venv .venv
+source .venv/bin/activate
+pip install .
 ```
 
 Now you can use the library in your Python code. The library requires root
