@@ -41,15 +41,15 @@ def _build_board_validator(
     )
 
 
-def build_related_certified_response(
+def _build_response_kwargs(
     db: Session,
     machine: models.Machine,
     board: models.Device | None,
     bios: models.Bios | None,
     releases: list[models.Release],
     kernels: list[models.Kernel],
-) -> RelatedCertifiedSystemExistsResponse:
-    certified_url = get_certified_platform_url(machine.configuration.platform.name)
+) -> dict:
+    """Build the common kwargs for the response builders."""
     architecture = repository.get_machine_architecture(db, machine.id)
     bios_validator = (
         data_validators.BiosValidator(
@@ -64,24 +64,40 @@ def build_related_certified_response(
         if bios
         else None
     )
+    available_releases = [
+        data_validators.OSValidator(
+            distributor="Ubuntu",
+            version=release.release,
+            codename=release.codename,
+            kernel=data_validators.KernelPackageValidator(
+                name=kernel.name,
+                version=kernel.version,
+                signature=kernel.signature,
+            ),
+        )
+        for release, kernel in zip(releases, kernels, strict=True)
+    ]
+    return {
+        "architecture": architecture,
+        "board": _build_board_validator(board),
+        "bios": bios_validator,
+        "available_releases": available_releases,
+    }
+
+
+def build_related_certified_response(
+    db: Session,
+    machine: models.Machine,
+    board: models.Device | None,
+    bios: models.Bios | None,
+    releases: list[models.Release],
+    kernels: list[models.Kernel],
+) -> RelatedCertifiedSystemExistsResponse:
+    certified_url = get_certified_platform_url(machine.configuration.platform.name)
+    kwargs = _build_response_kwargs(db, machine, board, bios, releases, kernels)
     return RelatedCertifiedSystemExistsResponse(
         certified_url=certified_url,
-        architecture=architecture,
-        board=_build_board_validator(board),
-        bios=bios_validator,
-        available_releases=[
-            data_validators.OSValidator(
-                distributor="Ubuntu",
-                version=release.release,
-                codename=release.codename,
-                kernel=data_validators.KernelPackageValidator(
-                    name=kernel.name,
-                    version=kernel.version,
-                    signature=kernel.signature,
-                ),
-            )
-            for release, kernel in zip(releases, kernels, strict=True)
-        ],
+        **kwargs,
     )
 
 
@@ -94,39 +110,10 @@ def build_certified_response(
     kernels: list[models.Kernel],
 ) -> CertifiedResponse:
     certified_url = get_certified_configuration_url(machine.canonical_id)
-    architecture = repository.get_machine_architecture(db, machine.id)
-    releases, kernels = repository.get_releases_and_kernels_for_machine(db, machine.id)
-    bios_validator = (
-        data_validators.BiosValidator(
-            vendor=bios.vendor.name,
-            version=bios.version,
-            revision=bios.revision,
-            firmware_revision=bios.firmware_revision,
-            release_date=(
-                bios.release_date.strftime("%m/%d/%Y") if bios.release_date else None
-            ),
-        )
-        if bios
-        else None
-    )
+    kwargs = _build_response_kwargs(db, machine, board, bios, releases, kernels)
     return CertifiedResponse(
         certified_url=certified_url,
-        architecture=architecture,
-        board=_build_board_validator(board),
-        bios=bios_validator,
-        available_releases=[
-            data_validators.OSValidator(
-                distributor="Ubuntu",
-                version=release.release,
-                codename=release.codename,
-                kernel=data_validators.KernelPackageValidator(
-                    name=kernel.name,
-                    version=kernel.version,
-                    signature=kernel.signature,
-                ),
-            )
-            for release, kernel in zip(releases, kernels, strict=True)
-        ],
+        **kwargs,
     )
 
 
@@ -139,36 +126,8 @@ def build_certified_image_exists_response(
     kernels: list[models.Kernel],
 ) -> CertifiedImageExistsResponse:
     certified_url = get_certified_configuration_url(machine.canonical_id)
-    architecture = repository.get_machine_architecture(db, machine.id)
-    bios_validator = (
-        data_validators.BiosValidator(
-            vendor=bios.vendor.name,
-            version=bios.version,
-            revision=bios.revision,
-            firmware_revision=bios.firmware_revision,
-            release_date=(
-                bios.release_date.strftime("%m/%d/%Y") if bios.release_date else None
-            ),
-        )
-        if bios
-        else None
-    )
+    kwargs = _build_response_kwargs(db, machine, board, bios, releases, kernels)
     return CertifiedImageExistsResponse(
         certified_url=certified_url,
-        architecture=architecture,
-        board=_build_board_validator(board),
-        bios=bios_validator,
-        available_releases=[
-            data_validators.OSValidator(
-                distributor="Ubuntu",
-                version=release.release,
-                codename=release.codename,
-                kernel=data_validators.KernelPackageValidator(
-                    name=kernel.name,
-                    version=kernel.version,
-                    signature=kernel.signature,
-                ),
-            )
-            for release, kernel in zip(releases, kernels, strict=True)
-        ],
+        **kwargs,
     )
