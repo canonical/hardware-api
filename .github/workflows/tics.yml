@@ -12,7 +12,7 @@ concurrency:
 jobs:
   analyze:
     name: TiCS Analysis
-    runs-on: [self-hosted, linux, amd64, tiobe]
+    runs-on: [self-hosted, linux, amd64, noble, tiobe]
     permissions:
       contents: read
     steps:
