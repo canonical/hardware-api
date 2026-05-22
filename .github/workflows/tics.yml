@@ -62,7 +62,7 @@ jobs:
           mv server/coverage/coverage.xml .coverage/server_coverage.xml
 
       - name: Run TiCS Analysis
-        uses: tiobe/tics-github-action@faf5066082a31b2517574270b45e3df92aa39a35 # v3.7.1
+        uses: tiobe/tics-github-action@016a4d79f3027fe7b4a2901619a58c745ab7cadf # v3.10.0
         with:
           mode: qserver
           project: hardware-api
