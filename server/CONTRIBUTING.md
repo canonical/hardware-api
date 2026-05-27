@@ -34,53 +34,61 @@ tox                     # runs 'format', 'lint', 'unit', and 'schema'
 
 ### Deploy with Docker
 
-The server needs the data from the database to work with; there are several
-options to stand up the environment.
-
-#### Using a Pre-populated Database
-
-You can use this option if you already have the SQLite DB file and
-want to use it. Make sure that the DB is located under the `./server/`
-directory.
-
-You can stand up the environment by running the following commands:
-
-```shell
-# Assuming that the path to the DB file is ./hwapi.db
-docker compose build --build-arg IMPORT_TOOL_PATH="" --build-arg DB_URL=sqlite:///./hwapi.db hwapi-dev
-docker compose up --attach-dependencies hwapi-dev
-```
-
-#### Seed the Database from the Script
-
-This approach doesn't require internet access and populates your DB
-with dummy data using the [`scripts/seed_db.py`](./scripts/seed_db.py) script.
-
-```shell
-export IMPORT_TOOL_PATH=./scripts/seed_db.py
-docker compose up --attach-dependencies --build hwapi-dev
-```
-
-#### Load the Data from C3
-
-This approach populates the database with the data from C3 (staging instance
-by default). Keep in mind that importing data from staging or
-production takes some time, you probably want to consider importing
-data from your local C3 instance with sample data.
-
-To build and run the container with staging data, execute the
-following command:
+The dev stack runs the server against a PostgreSQL container defined in
+[`docker-compose.yml`](./docker-compose.yml). Stand it up with:
 
 ```shell
 docker compose up --attach-dependencies --build hwapi-dev
 ```
 
-Alternatively, you can specify another C3 host (e.g., production or local) by
-specifying the `C3_URL` environment variable:
+The server starts against an empty schema. Populate the database by running
+the one-shot `hwapi-update` service, which executes the script pointed at by
+the `IMPORT_TOOL_PATH` environment variable.
 
-```bash
+#### Populating the Database
+
+The `hwapi-update` service lives behind the `tools` profile and is invoked
+on-demand against the running `db` container. Set `IMPORT_TOOL_PATH` to choose
+which importer to run:
+
+| `IMPORT_TOOL_PATH`               | What it does                                                 |
+| -------------------------------- | ------------------------------------------------------------ |
+| `scripts/update_db.py` (default) | Wait for the DB, ensure schema, pull fresh data from C3      |
+| `scripts/import_from_c3.py`      | Ensure schema, pull data from C3                             |
+| `scripts/seed_db.py`             | Populate the DB with dummy data — no network required        |
+| `scripts/import_test_data.py`    | Import with mocked C3 responses from `scripts/c3_test_data/` |
+
+Run with the default (refresh from C3):
+
+```shell
+docker compose run --rm hwapi-update
+```
+
+Run a specific importer by overriding `IMPORT_TOOL_PATH`:
+
+```shell
+IMPORT_TOOL_PATH=scripts/seed_db.py docker compose run --rm hwapi-update
+```
+
+#### Pointing at a Different C3 Instance
+
+Importing from staging or production C3 takes some time; you may prefer your
+own C3 instance with sample data. Set `C3_URL` before invoking `hwapi-update`:
+
+```shell
 export C3_URL=http://your.c3.instance  # e.g., https://certification.canonical.com
-docker compose up --attach-dependencies --build hwapi-dev
+docker compose run --rm hwapi-update
+```
+
+#### Pointing at a Different Database
+
+By default the dev stack uses the bundled `db` service. To run the server or
+the importer against an existing database, set `DB_URL` to any SQLAlchemy URL
+(PostgreSQL is supported out of the box via `psycopg`):
+
+```shell
+export DB_URL=postgresql+psycopg://user:password@db.example.com:5432/hwapi
+docker compose run --rm hwapi-update
 ```
 
 ## Access the API Schema

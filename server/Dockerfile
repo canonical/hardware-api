@@ -1,7 +1,5 @@
 FROM python:3.13
 
-RUN apt-get update -y && apt-get install -y sqlite3
-
 WORKDIR /home/server
 
 COPY --from=ghcr.io/astral-sh/uv:0.10.0 /uv /uvx /bin/
@@ -19,16 +17,6 @@ RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --locked
 
 ENV PATH="/home/server/.venv/bin:$PATH"
-
-ARG IMPORT_TOOL_PATH=./scripts/import_from_c3.py
-ARG DB_URL=sqlite:////home/server/hwapi.db
-ENV DB_URL=$DB_URL
-ARG C3_URL=https://certification.canonical.com
-ENV C3_URL=$C3_URL
-
-RUN if [ -x $IMPORT_TOOL_PATH ]; then \
-    uv run $IMPORT_TOOL_PATH; \
-    fi
 
 EXPOSE 8080
 
