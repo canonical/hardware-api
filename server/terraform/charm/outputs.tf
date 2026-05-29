@@ -7,5 +7,6 @@ output "endpoints" {
   description = "Map of all endpoints"
   value = {
     nginx_route = "nginx-route"
+    ingress     = "ingress"
   }
 }
