@@ -1,12 +1,10 @@
 # Copyright (C) 2026 Canonical Ltd.
 """Testing fixtures."""
 
-import json
-
 import pytest
 from ops import testing
 
-from charm import HardwareApiCharm
+from charm import CONTAINER_NAME, HardwareApiCharm
 
 
 @pytest.fixture(scope="function")
@@ -16,12 +14,12 @@ def ctx() -> testing.Context:
 
 
 @pytest.fixture(scope="function")
-def ingress_template() -> str:
-    """Create a configuration for the traefik-k8s ingress."""
-    template = {
-        "model": "{{ model }}",
-        "app": "{{ app }}",
-        "public_port": "{{ public_port }}",
-        "external_hostname": "{{ external_hostname }}",
-    }
-    return json.dumps(template)
+def container() -> testing.Container:
+    """Create a container for testing."""
+    return testing.Container(name=CONTAINER_NAME, can_connect=True)
+
+
+@pytest.fixture(scope="function")
+def ingress_relation() -> testing.Relation:
+    """Create an ingress relation for testing."""
+    return testing.Relation("ingress", remote_app_data={"hostname": "hw.local"})
