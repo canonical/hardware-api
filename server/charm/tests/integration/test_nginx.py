@@ -9,6 +9,7 @@ import re
 from pathlib import Path
 
 import jubilant
+import pytest
 import requests
 import yaml
 
@@ -23,15 +24,21 @@ INGRESS_NAME = "ingress"
 EXTERNAL_HOSTNAME = "hw.internal"
 
 
-def test_deploy_ingress(charm: Path, juju: jubilant.Juju):
-    """Deploy the charm under test and the ingress charm."""
+@pytest.mark.juju_setup
+def test_deploy(charm: Path, juju: jubilant.Juju):
+    """Deploy the charm under test."""
     upstream_source = METADATA["resources"]["hardware-api-image"]["upstream-source"]
     resources = {"hardware-api-image": upstream_source}
     config = {"port": PORT, "hostname": EXTERNAL_HOSTNAME}
     juju.deploy(charm.resolve(), app=APP_NAME, resources=resources, config=config)
+    juju.wait(jubilant.all_active)
 
+
+@pytest.mark.juju_setup
+def test_deploy_ingress(juju: jubilant.Juju):
+    """Deploy the ingress charm."""
     juju.deploy("nginx-ingress-integrator", channel="latest/stable", app=INGRESS_NAME, trust=True)
-    juju.integrate(f"{APP_NAME}:nginx-route", f"{INGRESS_NAME}:nginx-route")
+    juju.integrate(f"{APP_NAME}:nginx-route", INGRESS_NAME)
     juju.wait(jubilant.all_active)
 
 
@@ -48,3 +55,10 @@ def test_ingress_is_up(juju: jubilant.Juju):
     session.mount("https://", dns_resolver)
     base_url = f"http://{EXTERNAL_HOSTNAME}"
     assert app_is_up(base_url, session=session)
+
+
+@pytest.mark.juju_teardown
+def test_destroy(juju: jubilant.Juju):
+    """Tear down the charm under test."""
+    juju.remove_application(INGRESS_NAME)
+    juju.remove_application(APP_NAME)
