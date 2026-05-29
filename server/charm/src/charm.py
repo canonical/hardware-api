@@ -145,4 +145,4 @@ class HardwareApiCharm(ops.CharmBase):
 
 
 if __name__ == "__main__":  # pragma: nocover
-    ops.main(HardwareApiCharm)  # type: ignore
+    ops.main(HardwareApiCharm)
