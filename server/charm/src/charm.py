@@ -10,7 +10,11 @@ import shlex
 
 import ops
 from charms.nginx_ingress_integrator.v0.nginx_route import require_nginx_route
-from charms.traefik_k8s.v0.traefik_route import TraefikRouteRequirer
+from charms.traefik_k8s.v2.ingress import (
+    IngressPerAppReadyEvent,
+    IngressPerAppRequirer,
+    IngressPerAppRevokedEvent,
+)
 
 from config import HardwareApiConfig
 
@@ -29,7 +33,7 @@ class HardwareApiCharm(ops.CharmBase):
         self.container = self.unit.get_container(CONTAINER_NAME)
         self.typed_config = self.load_config(HardwareApiConfig, errors="blocked")
         self._setup_nginx()
-        self._setup_traefik()
+        self._setup_ingress()
         self.framework.observe(
             self.on[CONTAINER_NAME].pebble_ready,
             self._on_hardware_api_pebble_ready,
@@ -52,14 +56,13 @@ class HardwareApiCharm(ops.CharmBase):
             self.on.nginx_route_relation_changed, self._on_route_relation_changed
         )
 
-    def _setup_traefik(self):
-        """Set up the Traefik requirer."""
-        self.traefik = TraefikRouteRequirer(
-            self,
-            self.model.get_relation("traefik-route"),  # type: ignore
-            "traefik-route",
-        )
-        self.framework.observe(self.traefik.on.ready, self._on_route_relation_changed)
+    def _setup_ingress(self):
+        """Set up the Ingress requirer."""
+        self.ingress = IngressPerAppRequirer(self, "ingress", port=self.typed_config.port)
+        self.framework.observe(self.on.ingress_relation_changed, self._on_route_relation_changed)
+        self.framework.observe(self.on.ingress_relation_broken, self._on_route_relation_changed)
+        self.framework.observe(self.ingress.on.ready, self._on_ingress_ready)
+        self.framework.observe(self.ingress.on.revoked, self._on_ingress_revoked)
 
     def _on_hardware_api_pebble_ready(self, event: ops.PebbleReadyEvent):
         self.replan()
@@ -77,56 +80,30 @@ class HardwareApiCharm(ops.CharmBase):
 
     def _on_route_relation_changed(self, event: ops.RelationEvent):
         """Handle a route relation change event."""
-        nginx_route = self.model.get_relation("nginx-route")
-        traefik_route = self.model.get_relation("traefik-route")
-        if nginx_route and traefik_route:
-            # TODO: Remove once NGINX support is dropped
+        if len(self.get_active_route_providers()) > 1:
             self.unit.status = ops.BlockedStatus("multiple route providers related")
             return
-        if not self.unit.is_leader():
-            return
-
-        if not self.traefik.is_ready():
-            logger.info("traefik-route relation not ready yet")
-            return
-
-        self.unit.open_port("tcp", self.typed_config.port)
-        self.unit.status = ops.MaintenanceStatus("configuring route")
-        service_url = (
-            f"http://{self.app.name}.{self.model.name}.svc.cluster.local:{self.typed_config.port}"
-        )
-        # HACK: Fallback to internal domain on initial setup
-        external_hostname = self.traefik.external_host or service_url
-        identifier = f"{self.model.name}-{self.app.name}"
-        config = {
-            "http": {
-                "middlewares": {
-                    "https-redirect": {"redirectScheme": {"scheme": "https", "permanent": True}}
-                },
-                "routers": {
-                    f"juju-{identifier}-router": {
-                        "rule": f"Host(`{external_hostname}`)",
-                        "service": f"juju-{identifier}-service",
-                        "entryPoints": ["web"],
-                        "middlewares": ["https-redirect"],
-                    },
-                    f"juju-{identifier}-router-tls": {
-                        "rule": f"Host(`{external_hostname}`)",
-                        "service": f"juju-{identifier}-service",
-                        "entryPoints": ["websecure"],
-                        "tls": {},
-                    },
-                },
-                "services": {
-                    f"juju-{identifier}-service": {
-                        "loadBalancer": {"servers": [{"url": service_url}], "passHostHeader": True}
-                    }
-                },
-            }
-        }
-        logger.info("submitting traefik config for %s", external_hostname)
-        self.traefik.submit_to_traefik(config=config)
         self.unit.status = ops.ActiveStatus()
+
+    def _on_ingress_ready(self, event: IngressPerAppReadyEvent):
+        """Handle the Ingress ready event."""
+        if len(self.get_active_route_providers()) > 1:
+            self.unit.status = ops.BlockedStatus("multiple route providers related")
+            return
+        logger.info("Ingress is ready with URL: %s", event.url)
+
+    def _on_ingress_revoked(self, event: IngressPerAppRevokedEvent):
+        """Handle the Ingress revoked event."""
+        logger.info("Ingress revoked")
+
+    def get_active_route_providers(self):
+        """Return a list of active route providers."""
+        providers = []
+        if self.model.get_relation("nginx-route"):
+            providers.append("nginx-route")
+        if self.model.get_relation("ingress"):
+            providers.append("ingress")
+        return providers
 
     def replan(self):
         """Replan the Pebble layer."""
