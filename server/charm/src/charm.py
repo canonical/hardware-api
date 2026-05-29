@@ -16,17 +16,22 @@ from config import HardwareApiConfig
 
 logger = logging.getLogger(__name__)
 
+CONTAINER_NAME = "hardware-api"
+LAYER_LABEL = "hardware-api"
+SERVICE_NAME = "hardware-api"
+
 
 class HardwareApiCharm(ops.CharmBase):
     """Hardware API Charm."""
 
     def __init__(self, *args):
         super().__init__(*args)
+        self.container = self.unit.get_container(CONTAINER_NAME)
         self.typed_config = self.load_config(HardwareApiConfig, errors="blocked")
         self._setup_nginx()
         self._setup_traefik()
         self.framework.observe(
-            self.on["hardware-api"].pebble_ready,
+            self.on[CONTAINER_NAME].pebble_ready,
             self._on_hardware_api_pebble_ready,
         )
         self.framework.observe(self.on.config_changed, self._on_config_changed)
@@ -57,20 +62,16 @@ class HardwareApiCharm(ops.CharmBase):
         self.framework.observe(self.traefik.on.ready, self._on_route_relation_changed)
 
     def _on_hardware_api_pebble_ready(self, event: ops.PebbleReadyEvent):
-        container = event.workload
-        container.add_layer("hardware-api", self._pebble_layer, combine=True)
-        container.replan()
+        self.replan()
         self.unit.status = ops.ActiveStatus()
 
     def _on_config_changed(self, event: ops.ConfigChangedEvent):
-        container = self.unit.get_container("hardware-api")
-        if not container.can_connect():
+        if not self.container.can_connect():
             self.unit.status = ops.WaitingStatus("waiting for Pebble API")
             event.defer()
             return
 
-        container.add_layer("hardware-api", self._pebble_layer, combine=True)
-        container.replan()
+        self.replan()
         logger.debug("Log level changed to '%s'", self.typed_config.log_level)
         self.unit.status = ops.ActiveStatus()
 
@@ -127,6 +128,11 @@ class HardwareApiCharm(ops.CharmBase):
         self.traefik.submit_to_traefik(config=config)
         self.unit.status = ops.ActiveStatus()
 
+    def replan(self):
+        """Replan the Pebble layer."""
+        self.container.add_layer(LAYER_LABEL, self._pebble_layer, combine=True)
+        self.container.replan()
+
     @property
     def _app_environment(self):
         """Environment variables needed by the application."""
@@ -139,7 +145,7 @@ class HardwareApiCharm(ops.CharmBase):
             "summary": "Hardware API",
             "description": "pebble config layer for hardware-api",
             "services": {
-                "hardware-api": {
+                SERVICE_NAME: {
                     "override": "replace",
                     "summary": "Hardware API server",
                     "command": shlex.join(
