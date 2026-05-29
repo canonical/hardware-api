@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 
 METADATA = yaml.safe_load(Path("charmcraft.yaml").read_text(encoding="utf-8"))
 APP_NAME = METADATA["name"]
+DB_NAME = "db"
 PORT = 80
 
 
@@ -26,6 +27,8 @@ def test_deploy(charm: Path, juju: jubilant.Juju):
     resources = {"hardware-api-image": upstream_source}
     config = {"port": PORT}
     juju.deploy(charm.resolve(), app=APP_NAME, resources=resources, config=config)
+    juju.deploy("postgresql-k8s", channel="14/stable", app=DB_NAME, trust=True)
+    juju.integrate(f"{APP_NAME}:database", DB_NAME)
     juju.wait(jubilant.all_active)
 
 

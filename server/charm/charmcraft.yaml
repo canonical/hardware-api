@@ -41,6 +41,9 @@ requires:
   ingress:
     interface: ingress
     limit: 1
+  database:
+    interface: postgresql_client
+    limit: 1
 
 charm-libs:
   - lib: traefik_k8s.ingress

@@ -12,34 +12,22 @@ import ops
 import pytest
 from ops import testing
 
+from tests.unit.conftest import DatabaseFixture
+
 logger = logging.getLogger(__name__)
 
 
-def test_pebble_layer(ctx: testing.Context, container: testing.Container):
-    """Tests that the Pebble layer is correctly set up."""
+def test_pebble_ready_waits_for_database(ctx: testing.Context, container: testing.Container):
+    """Tests that pebble_ready waits for the database relation before starting."""
     state_in = testing.State(
         config={"port": 30000, "hostname": "hw", "log-level": "info"},
         containers={container},
         leader=True,
     )
-    state_out = ctx.run(ctx.on.pebble_ready(container), state_in)
-    expected_plan = {
-        "services": {
-            "hardware-api": {
-                "override": "replace",
-                "summary": "Hardware API server",
-                "command": "uvicorn hwapi.main:app --host 0.0.0.0 --port 30000 --log-level info",
-                "startup": "enabled",
-                # Since environment is empty, Layer.to_dict() omits it.
-            }
-        }
-    }
-    assert state_out.get_container(container.name).plan == expected_plan
-    assert state_out.unit_status == testing.ActiveStatus()
-    assert (
-        state_out.get_container(container.name).service_statuses["hardware-api"]
-        == ops.pebble.ServiceStatus.ACTIVE
-    )
+    with ctx(ctx.on.pebble_ready(container), state_in) as mgr:
+        with pytest.raises(SystemExit):
+            mgr.run()
+        assert mgr.charm.unit.status == ops.WaitingStatus("waiting for database relation")
 
 
 def test_config_changed_invalid_log_level(ctx: testing.Context, container: testing.Container):
@@ -67,31 +55,17 @@ def test_config_changed_pebble_not_ready(ctx: testing.Context, container: testin
     patched_defer.assert_called_once()
 
 
-def test_config_changed_updates_pebble_layer(ctx: testing.Context, container: testing.Container):
-    """Tests that config_changed updates the Pebble layer with new log level."""
+def test_config_changed_waits_for_database(ctx: testing.Context, container: testing.Container):
+    """Tests that config_changed waits for the database relation before replanning."""
     state_in = testing.State(
         config={"port": 30000, "hostname": "hw", "log-level": "debug"},
         containers={container},
         leader=True,
     )
-    state_out = ctx.run(ctx.on.config_changed(), state_in)
-    expected_plan = {
-        "services": {
-            "hardware-api": {
-                "override": "replace",
-                "summary": "Hardware API server",
-                "command": "uvicorn hwapi.main:app --host 0.0.0.0 --port 30000 --log-level debug",
-                "startup": "enabled",
-                # Since environment is empty, Layer.to_dict() omits it.
-            }
-        }
-    }
-    assert state_out.get_container(container.name).plan == expected_plan
-    assert state_out.unit_status == testing.ActiveStatus()
-    assert (
-        state_out.get_container(container.name).service_statuses["hardware-api"]
-        == ops.pebble.ServiceStatus.ACTIVE
-    )
+    with ctx(ctx.on.config_changed(), state_in) as mgr:
+        with pytest.raises(SystemExit):
+            mgr.run()
+        assert mgr.charm.unit.status == ops.WaitingStatus("waiting for database relation")
 
 
 def test_blocked_status_on_multiple_ingress_providers(
@@ -125,3 +99,74 @@ def test_ingress_relation_broken(
     state_in = testing.State(containers={container}, relations={ingress_relation}, leader=True)
     state_out = ctx.run(ctx.on.relation_broken(ingress_relation), state_in)
     assert isinstance(state_out.unit_status, testing.ActiveStatus)
+
+
+def test_database_relation_sets_db_url(ctx: testing.Context, database: DatabaseFixture):
+    """Tests that credentials from the database relation build the database URL."""
+    container = testing.Container(name="hardware-api", can_connect=True)
+    state_in = testing.State(containers={container}, relations={database.relation}, leader=True)
+    with ctx(ctx.on.relation_changed(database.relation, remote_unit=0), state_in) as mgr:
+        mgr.run()
+        assert mgr.charm.db_url == database.url
+
+
+def test_database_relation_builds_pebble_layer(ctx: testing.Context, database: DatabaseFixture):
+    """Tests that the database URL is injected into the Pebble layer once available."""
+    container = testing.Container(name="hardware-api", can_connect=True)
+    state_in = testing.State(
+        config={"port": 30000, "hostname": "hw", "log-level": "info"},
+        containers={container},
+        relations={database.relation},
+        leader=True,
+    )
+    with ctx(ctx.on.relation_changed(database.relation, remote_unit=0), state_in) as mgr:
+        mgr.run()
+        assert mgr.charm._app_environment == {"DB_URL": database.url}
+        assert mgr.charm._pebble_layer["services"]["hardware-api"] == {
+            "override": "replace",
+            "summary": "Hardware API server",
+            "command": "uvicorn hwapi.main:app --host 0.0.0.0 --port 30000 --log-level info",
+            "startup": "enabled",
+            "environment": {"DB_URL": database.url},
+        }
+
+
+def test_pebble_layer_reflects_log_level(ctx: testing.Context, database: DatabaseFixture):
+    """Tests that the configured log level is propagated to the Pebble command."""
+    container = testing.Container(name="hardware-api", can_connect=True)
+    state_in = testing.State(
+        config={"port": 30000, "hostname": "hw", "log-level": "debug"},
+        containers={container},
+        relations={database.relation},
+        leader=True,
+    )
+    with ctx(ctx.on.relation_changed(database.relation, remote_unit=0), state_in) as mgr:
+        mgr.run()
+        command = mgr.charm._pebble_layer["services"]["hardware-api"]["command"]
+        assert command == "uvicorn hwapi.main:app --host 0.0.0.0 --port 30000 --log-level debug"
+
+
+def test_database_relation_without_credentials_does_not_set_db_url(ctx: testing.Context):
+    """Tests that a relation without provider credentials does not emit resource_created."""
+    container = testing.Container(name="hardware-api", can_connect=True)
+    relation = testing.Relation(
+        "database",
+        interface="postgresql_client",
+        remote_app_name="postgresql",
+        remote_units_data={0: {}},
+    )
+    state_in = testing.State(containers={container}, relations={relation}, leader=True)
+    with ctx(ctx.on.relation_changed(relation, remote_unit=0), state_in) as mgr:
+        mgr.run()
+        with pytest.raises(SystemExit):
+            mgr.charm.db_url
+
+
+def test_db_url_waiting_status_without_relation(ctx: testing.Context):
+    """Tests that db_url blocks with a waiting status when no database is related."""
+    container = testing.Container(name="hardware-api", can_connect=True)
+    state_in = testing.State(containers={container}, leader=True)
+    with ctx(ctx.on.update_status(), state_in) as mgr:
+        with pytest.raises(SystemExit):
+            _ = mgr.charm.db_url
+        assert mgr.charm.unit.status == ops.WaitingStatus("waiting for database relation")
