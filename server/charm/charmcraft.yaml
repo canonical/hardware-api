@@ -47,6 +47,8 @@ charm-libs:
     version: "2"
   - lib: nginx_ingress_integrator.nginx_route
     version: "0"
+  - lib: data_platform_libs.data_interfaces
+    version: "0"
 
 parts:
   hardware-api:
