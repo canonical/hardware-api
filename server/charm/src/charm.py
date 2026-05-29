@@ -7,23 +7,14 @@
 
 import logging
 import shlex
-from typing import Literal
 
 import ops
-import pydantic
 from charms.nginx_ingress_integrator.v0.nginx_route import require_nginx_route
 from charms.traefik_k8s.v0.traefik_route import TraefikRouteRequirer
 
-# Log messages can be retrieved using juju debug-log
+from config import HardwareApiConfig
+
 logger = logging.getLogger(__name__)
-
-
-class HardwareApiConfig(pydantic.BaseModel):
-    """Hardware API Charm configuration."""
-
-    log_level: Literal["info", "debug", "warning", "error", "critical"] = "info"
-    port: int = 30000
-    hostname: str = "hw"
 
 
 class HardwareApiCharm(ops.CharmBase):
