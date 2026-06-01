@@ -8,5 +8,6 @@ output "endpoints" {
   value = {
     nginx_route = "nginx-route"
     ingress     = "ingress"
+    database    = "database"
   }
 }
