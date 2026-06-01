@@ -166,4 +166,11 @@ jobs:
           if-no-files-found: error
           retention-days: 2
       - name: Run integration tests
-        run: uvx tox run -e integration
+        run: uvx tox run -e integration -- --juju-dump-logs logs
+      - name: Upload logs
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v6
+        with:
+          name: juju-dump-logs
+          path: server/charm/logs
+          retention-days: 2

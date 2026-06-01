@@ -1,19 +1,14 @@
 #!/usr/bin/env python3
 # Copyright (C) 2026 Canonical Ltd.
 # See LICENSE file for licensing details.
-# TODO: Remove once NGINX support is dropped
-"""Integration tests for the Hardware API Charm behind NGINX."""
+"""Integration tests for the Hardware API Charm behind Ingress Configurator."""
 
 import logging
-import re
 from pathlib import Path
 
 import jubilant
 import pytest
-import requests
 import yaml
-
-from .helpers import DNSResolverHTTPAdapter, app_is_up, retry
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +24,7 @@ def test_deploy(charm: Path, juju: jubilant.Juju):
     """Deploy the charm under test."""
     upstream_source = METADATA["resources"]["hardware-api-image"]["upstream-source"]
     resources = {"hardware-api-image": upstream_source}
-    config = {"port": PORT, "hostname": EXTERNAL_HOSTNAME}
+    config = {"port": PORT}
     juju.deploy(charm.resolve(), app=APP_NAME, resources=resources, config=config)
     juju.wait(jubilant.all_active)
 
@@ -37,24 +32,15 @@ def test_deploy(charm: Path, juju: jubilant.Juju):
 @pytest.mark.juju_setup
 def test_deploy_ingress(juju: jubilant.Juju):
     """Deploy the ingress charm."""
-    juju.deploy("nginx-ingress-integrator", channel="latest/stable", app=INGRESS_NAME, trust=True)
-    juju.integrate(f"{APP_NAME}:nginx-route", INGRESS_NAME)
+    juju.deploy(
+        "ingress-configurator",
+        channel="latest/edge",
+        app=INGRESS_NAME,
+        config={"hostname": EXTERNAL_HOSTNAME},
+        trust=True,
+    )
+    juju.integrate(f"{APP_NAME}:ingress", INGRESS_NAME)
     juju.wait(jubilant.all_active)
-
-
-@retry(retry_num=5, retry_sleep_sec=5)
-def test_ingress_is_up(juju: jubilant.Juju):
-    """Test that the application is reachable via the ingress."""
-    status_message = juju.status().apps[INGRESS_NAME].app_status.message
-    match = re.search(r"Ingress IP\(s\): ([\d.]+)", status_message)
-    assert match, f"Could not find ingress IP in status: {status_message}"
-    ingress_ip = match.group(1)
-    session = requests.Session()
-    dns_resolver = DNSResolverHTTPAdapter(EXTERNAL_HOSTNAME, ingress_ip)
-    session.mount("http://", dns_resolver)
-    session.mount("https://", dns_resolver)
-    base_url = f"http://{EXTERNAL_HOSTNAME}"
-    assert app_is_up(base_url, session=session)
 
 
 @pytest.mark.juju_teardown
