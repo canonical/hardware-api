@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Copyright (C) 2026 Canonical Ltd.
 # See LICENSE file for licensing details.
-"""Integration tests for the Hardware API Charm behind Traefik."""
+"""Integration tests for the Hardware API Charm behind Ingress Configurator."""
 
 import logging
 from pathlib import Path
