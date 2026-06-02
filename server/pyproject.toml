@@ -17,6 +17,9 @@ dependencies = [
     "uvicorn>=0.35,<1",
 ]
 
+[project.optional-dependencies]
+postgres = ["psycopg[binary]>=3.2,<4"]
+
 [dependency-groups]
 dev = [
     "ruff",
