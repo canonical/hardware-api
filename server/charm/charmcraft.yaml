@@ -38,12 +38,15 @@ requires:
   nginx-route:
     interface: nginx-route
     limit: 1
+    optional: true
   ingress:
     interface: ingress
     limit: 1
+    optional: true
   database:
     interface: postgresql_client
     limit: 1
+    optional: false
 
 charm-libs:
   - lib: traefik_k8s.ingress
