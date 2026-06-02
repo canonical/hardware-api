@@ -55,8 +55,7 @@ copyright = "%s GPL-3.0, %s" % (datetime.date.today().year, author)
 # NOTE: The Open Graph Protocol (OGP) enhances page display in a social graph
 #       and is used by social media platforms; see https://ogp.me/
 
-ogp_site_url = "https://canonical-hardware-api.readthedocs-hosted.com/"
-
+ogp_site_url = "https://ubuntu.com/docs/hardware-api/"
 
 # Preview name of the documentation website
 
@@ -115,7 +114,7 @@ html_theme_options = {
 
 # Project slug; see https://meta.discourse.org/t/what-is-category-slug/87897
 
-slug = "hardware-api"
+slug = 'docs/hardware-api'  # "docs/" prefix required for hosting at ubuntu.com/docs
 
 #######################
 # Sitemap configuration: https://sphinx-sitemap.readthedocs.io/
@@ -123,7 +122,8 @@ slug = "hardware-api"
 
 # Base URL of RTD hosted project
 
-html_baseurl = "https://canonical-hardware-api.readthedocs-hosted.com/"
+html_baseurl = "https://ubuntu.com/docs/hardware-api/"
+sitemap_filename = "doc-sitemap.xml"  # Required to avoid sitemap conflicts
 
 # URL scheme. Add language and version scheme elements.
 # When configured with RTD variables, check for RTD environment so manual runs succeed:
@@ -233,12 +233,16 @@ exclude_patterns = [
 
 # Adds custom CSS files, located under 'html_static_path'
 
-# html_css_files = []
+html_css_files = [
+    "swagger-custom.css",
+]
 
 
 # Adds custom JavaScript files, located under 'html_static_path'
 
-# html_js_files = []
+html_js_files = [
+    "overwrite_links.js",
+]
 
 
 # Specifies a reST snippet to be appended to each .rst file
