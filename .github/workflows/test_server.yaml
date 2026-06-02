@@ -27,11 +27,11 @@ jobs:
       pull-requests: write # necessary to add library status label
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
       - name: Check libraries
-        uses: canonical/charming-actions/check-libraries@2.7.0
+        uses: canonical/charming-actions/check-libraries@1753e0803f70445132e92acd45c905aba6473225 # 2.7.0
         with:
           charm-path: server/charm
           credentials: ${{ secrets.CHARMHUB_TOKEN }}
@@ -45,7 +45,7 @@ jobs:
         working-directory: server
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
       - name: Set up uv
@@ -59,7 +59,7 @@ jobs:
       - name: Unit
         run: uvx tox run -e unit
       - name: Upload coverage.xml as an artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: server_coverage
           path: server/coverage/coverage.xml
@@ -81,7 +81,7 @@ jobs:
         working-directory: server/charm
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
       - name: Set up uv
@@ -97,7 +97,7 @@ jobs:
         working-directory: server/charm
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
       - name: Set up uv
@@ -115,7 +115,7 @@ jobs:
         working-directory: server/charm
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
       - name: Set up uv
@@ -125,7 +125,7 @@ jobs:
       - name: Run unit tests
         run: uvx tox run -e unit
       - name: Upload coverage.xml as an artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: charm_coverage
           path: server/charm/coverage.xml
@@ -145,7 +145,7 @@ jobs:
         working-directory: server/charm
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6.0.3
         with:
           persist-credentials: false
       - name: Set up uv
@@ -159,7 +159,7 @@ jobs:
       - name: Pack charm
         run: charmcraft pack --verbose
       - name: Upload charm as an artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: charm
           path: server/charm/*.charm
@@ -169,7 +169,7 @@ jobs:
         run: uvx tox run -e integration -- --juju-dump-logs logs
       - name: Upload logs
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: juju-dump-logs
           path: server/charm/logs
