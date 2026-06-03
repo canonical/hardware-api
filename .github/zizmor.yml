@@ -1,0 +1,5 @@
+rules:
+  # XXX: This seems like it will be dropped as a blocker in a future zizmor release
+  # We use self-hosted runners, so we don't always have the tools in the runner image
+  superfluous-actions:
+    disable: true
