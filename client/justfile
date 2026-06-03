@@ -1,0 +1,36 @@
+[doc('Describe usage and list the available recipes.')]
+help:
+    @echo '{{ BOLD }}Canonical Hardware API Client{{ NORMAL }}'
+    @echo
+    @echo 'To run tasks for other sub-projects, run {{ CYAN }}`just ..`{{ NORMAL }}.'
+    @echo
+    @just --list --unsorted
+
+[doc('Build crate.')]
+build:
+    cargo build --all-features
+
+[doc('Format.')]
+format:
+    cargo fmt --all
+
+[arg('verbose', long='verbose', value='true')]
+[doc('Lint.')]
+lint verbose='false':
+    cargo fmt --all -- --check
+    cargo clippy --all-features {{ if verbose == 'true' { '--verbose' } else { '' } }}
+    cargo clippy --all-features --tests {{ if verbose == 'true' { '--verbose' } else { '' } }}
+
+[doc('Run unit tests.')]
+test:
+    cargo test --all-features
+
+[arg('output', long='output')]
+[doc('Run unit tests and gather coverage.')]
+unit output='coverage.xml':
+    cargo install cargo-llvm-cov
+    cargo llvm-cov --all-features --cobertura --output-path={{ output }}
+
+[doc('Build the snap package.')]
+snapcraft:
+    snapcraft pack
