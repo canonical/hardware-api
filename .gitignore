@@ -2,4 +2,4 @@ target
 dist
 cargo-checksum.json
 *.snap
-
+.workshop.lock
