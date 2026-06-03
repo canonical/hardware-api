@@ -20,7 +20,7 @@ crate-type = ["cdylib", "rlib"]
 [[bin]]
 name = "hwctl"
 path = "bin/hwctl.rs"
-features = ["cli"]
+required-features = ["cli"]
 
 [dependencies]
 anyhow = "~1.0.0"
