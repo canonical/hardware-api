@@ -1,0 +1,47 @@
+[doc('Describe usage and list the available recipes.')]
+help:
+    @echo '{{ BOLD }}Canonical Hardware API Server Charm{{ NORMAL }}'
+    @echo
+    @echo 'To run tasks for other sub-projects, run {{ CYAN }}`just ..`{{ NORMAL }}.'
+    @echo
+    @just --list --unsorted
+
+[doc('Generate lockfile.')]
+lock:
+    uv lock
+
+[doc('Check lockfile.')]
+check-lock:
+    uv lock --check
+
+[doc("Update the project's environment.")]
+sync:
+    uv sync
+
+[doc('Format.')]
+format:
+    uvx tox run -e format
+
+[doc('Lint.')]
+lint:
+    uvx tox run -e lint
+
+[doc('Run unit tests.')]
+test:
+    uvx tox run -e unit
+
+[doc('Build the snap package.')]
+charmcraft:
+    charmcraft pack
+
+[confirm('Install juju and prepare environment?')]
+[doc('Set up integration test environment.')]
+[private]
+concierge:
+    sudo concierge prepare --verbose
+
+[doc('Run integration tests.')]
+[arg('logs', long='logs')]
+[private]
+integration logs='': concierge charmcraft
+    uvx tox run -e integration {{ if logs != '' { '-- --juju-dump-logs ' + logs } else { '' } }}

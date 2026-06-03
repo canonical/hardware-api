@@ -1,0 +1,46 @@
+# Server Charm sub-commands.
+mod charm
+
+[doc('Describe usage and list the available recipes.')]
+help:
+    @echo '{{ BOLD }}Canonical Hardware API Server{{ NORMAL }}'
+    @echo
+    @echo 'To run tasks for other sub-projects, run {{ CYAN }}`just ..`{{ NORMAL }}.'
+    @echo
+    @just --list --unsorted
+
+[doc('Generate lockfile.')]
+lock:
+    uv lock
+
+[doc('Check lockfile.')]
+check-lock:
+    uv lock --check
+
+[doc("Update the project's environment.")]
+sync:
+    uv sync
+
+[doc('Format.')]
+format:
+    uvx tox run -e format
+
+[doc('Lint.')]
+lint:
+    uvx tox run -e lint
+
+[doc('Run unit tests.')]
+test:
+    uvx tox run -e unit
+
+[doc('Generate OpenAPI schema.')]
+schema:
+    uvx tox run -e schema
+
+[doc('Check OpenAPI schema.')]
+check-schema:
+    uvx tox run -e check-schema
+
+[doc('Run the server.')]
+serve:
+    docker compose up hwapi-dev
