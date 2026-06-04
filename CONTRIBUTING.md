@@ -44,6 +44,33 @@ uv tool install rust-just
 
 Then run `just` from anywhere in the repository for usage.
 
+## Workshop
+
+The project provides a [Workshop] definition to stand up a development
+environment. First install the `workshop` snap:
+
+```shell
+# Workshop requires LXD 6.8+, so make sure to install/update LXD:
+# To install: `sudo snap install --channel 6/stable lxd`
+# To update: `sudo snap refresh --channel 6/stable lxd`
+sudo snap install --classic workshop
+```
+
+Then you can launch the workshop:
+
+```shell
+workshop launch
+```
+
+Now you can:
+
+- List the provided actions: `workshop actions`
+- Run a provided action: `workshop run ...`
+- Connect to workshop: `workshop shell`
+- Execute a command in the workshop: `workshop exec ...`
+
+To learn more, refer to the [Workshop documentation].
+
 ## Local Deployment
 
 - Install [Docker] and [set up permissions][docker-permissions] for the server
@@ -63,6 +90,8 @@ To run the server locally, make sure that no other application is using port
 [cla]: https://ubuntu.com/legal/contributors
 [just]: https://github.com/casey/just
 [just-snap]: https://snapcraft.io/just
+[workshop]: https://github.com/canonical/workshop
+[workshop documentation]: https://ubuntu.com/workshop/docs/
 [docker]: https://docs.docker.com/engine/install/ubuntu/
 [docker-permissions]: https://docs.docker.com/engine/install/linux-postinstall/
 [rust-install]: https://www.rust-lang.org/tools/install
