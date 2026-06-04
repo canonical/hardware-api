@@ -29,6 +29,21 @@ Before you can begin, you will need to:
 - Sign the Canonical [contributor license agreement][cla]. This grants us your
   permission to use your contributions in the project.
 
+## Recommendations
+
+## Task runner
+
+The project uses [just] as a task runner and provides `justfile`s for each
+sub-project.
+
+You can install just as a [snap][just-snap] or with `uv`:
+
+```shell
+uv tool install rust-just
+```
+
+Then run `just` from anywhere in the repository for usage.
+
 ## Local Deployment
 
 - Install [Docker] and [set up permissions][docker-permissions] for the server
@@ -46,6 +61,8 @@ To run the server locally, make sure that no other application is using port
 [conventional commits]: https://www.conventionalcommits.org/en/v1.0.0/
 [code-of-conduct]: https://ubuntu.com/community/code-of-conduct
 [cla]: https://ubuntu.com/legal/contributors
+[just]: https://github.com/casey/just
+[just-snap]: https://snapcraft.io/just
 [docker]: https://docs.docker.com/engine/install/ubuntu/
 [docker-permissions]: https://docs.docker.com/engine/install/linux-postinstall/
 [rust-install]: https://www.rust-lang.org/tools/install
