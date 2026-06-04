@@ -32,9 +32,6 @@ jobs:
         with:
           persist-credentials: false
       - name: Install docker compose
-        run: |
-          sudo apt update
-          sudo apt install -y docker-compose-v2
+        uses: docker/setup-compose-action@16feee727cbdc83b6a014e6cc26fec4a79bcf30c # v2.2.0
       - name: Build and run integration tests
-        run: |
-          docker compose up --build --abort-on-container-exit
+        run: docker compose up --build --exit-code-from integration-tests

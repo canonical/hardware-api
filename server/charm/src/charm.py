@@ -9,6 +9,11 @@ import logging
 import shlex
 
 import ops
+from charms.data_platform_libs.v0.data_interfaces import (
+    DatabaseCreatedEvent,
+    DatabaseEndpointsChangedEvent,
+    DatabaseRequires,
+)
 from charms.nginx_ingress_integrator.v0.nginx_route import require_nginx_route
 from charms.traefik_k8s.v2.ingress import (
     IngressPerAppReadyEvent,
@@ -34,6 +39,7 @@ class HardwareApiCharm(ops.CharmBase):
         self.typed_config = self.load_config(HardwareApiConfig, errors="blocked")
         self._setup_nginx()
         self._setup_ingress()
+        self._setup_db()
         self.framework.observe(
             self.on[CONTAINER_NAME].pebble_ready,
             self._on_hardware_api_pebble_ready,
@@ -64,19 +70,22 @@ class HardwareApiCharm(ops.CharmBase):
         self.framework.observe(self.ingress.on.ready, self._on_ingress_ready)
         self.framework.observe(self.ingress.on.revoked, self._on_ingress_revoked)
 
+    def _setup_db(self):
+        """Set up the database requirer."""
+        self.database = DatabaseRequires(self, relation_name="database", database_name="hwapi")
+        self.framework.observe(self.database.on.database_created, self._on_database_endpoint)
+        self.framework.observe(self.database.on.endpoints_changed, self._on_database_endpoint)
+
     def _on_hardware_api_pebble_ready(self, event: ops.PebbleReadyEvent):
         self.replan()
-        self.unit.status = ops.ActiveStatus()
 
     def _on_config_changed(self, event: ops.ConfigChangedEvent):
         if not self.container.can_connect():
             self.unit.status = ops.WaitingStatus("waiting for Pebble API")
             event.defer()
             return
-
         self.replan()
         logger.debug("Log level changed to '%s'", self.typed_config.log_level)
-        self.unit.status = ops.ActiveStatus()
 
     def _on_route_relation_changed(self, event: ops.RelationEvent):
         """Handle a route relation change event."""
@@ -107,13 +116,33 @@ class HardwareApiCharm(ops.CharmBase):
 
     def replan(self):
         """Replan the Pebble layer."""
+        self.unit.status = ops.MaintenanceStatus("configuring Pebble layer")
         self.container.add_layer(LAYER_LABEL, self._pebble_layer, combine=True)
         self.container.replan()
+        self.unit.status = ops.ActiveStatus()
+
+    def _on_database_endpoint(self, event: DatabaseCreatedEvent | DatabaseEndpointsChangedEvent):
+        """Handle a database endpoint event."""
+        self.replan()
+
+    @property
+    def db_url(self) -> str:
+        """Database URL."""
+        relations = self.database.fetch_relation_data()
+        for data in relations.values():
+            if not data:
+                continue
+            return f"postgresql://{data['username']}:{data['password']}@{data['endpoints']}/hwapi"
+        logger.error("Database URL not available yet")
+        self.unit.status = ops.WaitingStatus("waiting for database relation")
+        raise SystemExit(0)
 
     @property
     def _app_environment(self):
         """Environment variables needed by the application."""
-        env = {}
+        env = {
+            "DB_URL": self.db_url,
+        }
         return env
 
     @property

@@ -1,28 +1,75 @@
 services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-hwapi}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-hwapi}
+      POSTGRES_DB: ${POSTGRES_DB:-hwapi}
+    volumes:
+      - hwapi-db:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-hwapi} -d ${POSTGRES_DB:-hwapi}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
   hwapi-dev:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        IMPORT_TOOL_PATH: ${IMPORT_TOOL_PATH:-./scripts/import_from_c3.py}
-        DB_URL: ${DB_URL:-sqlite:////home/server/hwapi.db}
-        C3_URL: ${C3_URL:-https://certification.staging.canonical.com}
     command: uvicorn hwapi.main:app --host 0.0.0.0 --port 8080 --reload
     working_dir: /home/server
+    environment:
+      DB_URL: ${DB_URL:-postgresql+psycopg://hwapi:hwapi@db:5432/hwapi}
+      C3_URL: ${C3_URL:-https://certification.staging.canonical.com}
     volumes:
-      - ./hwapi:/home/server/hwapi
+      - ./src/hwapi:/home/server/src/hwapi
       - ./scripts:/home/server/scripts
     ports:
       - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
 
   hwapi:
     build:
       context: .
       dockerfile: Dockerfile
-      args:
-        IMPORT_TOOL_PATH: ./scripts/import_from_c3.py
-        DB_URL: sqlite:////home/server/hwapi.db
-        C3_URL: https://certification.canonical.com
+    environment:
+      DB_URL: ${DB_URL:-postgresql+psycopg://hwapi:hwapi@db:5432/hwapi}
+      C3_URL: ${C3_URL:-https://certification.canonical.com}
     working_dir: /home/server
     ports:
       - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  # One-shot importer: runs the script pointed at by IMPORT_TOOL_PATH against
+  # the configured database. Defaults to scripts/update_db.py (schema +
+  # refresh from C3). Other supported values:
+  #   scripts/import_from_c3.py    — schema + import from C3
+  #   scripts/seed_db.py           — populate with dummy data, no network
+  #   scripts/import_test_data.py  — import with mocked C3 responses
+  # Run it on demand with:
+  #   docker compose run --rm hwapi-update
+  #   IMPORT_TOOL_PATH=scripts/seed_db.py docker compose run --rm hwapi-update
+  hwapi-update:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    profiles: ["tools"]
+    command: ["sh", "-c", "exec uv run $$IMPORT_TOOL_PATH"]
+    working_dir: /home/server
+    environment:
+      DB_URL: ${DB_URL:-postgresql+psycopg://hwapi:hwapi@db:5432/hwapi}
+      C3_URL: ${C3_URL:-https://certification.canonical.com}
+      IMPORT_TOOL_PATH: ${IMPORT_TOOL_PATH:-scripts/update_db.py}
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  hwapi-db:

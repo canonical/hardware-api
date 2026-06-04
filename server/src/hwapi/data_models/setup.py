@@ -26,9 +26,13 @@ DB_URL = os.getenv("DB_URL", "sqlite://")
 engine = create_engine(DB_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-DB_PATH = DB_URL.replace("sqlite:///", "")
-if DB_PATH and not os.path.exists(DB_PATH):
-    # Create tables with no data if DB path doesn't exist
+
+def init_db() -> None:
+    """Create any missing tables on the configured database.
+
+    This function is idempotent and safe to call against an existing schema.
+    Intended for use by the update script, not at server import time.
+    """
     Base.metadata.create_all(engine)
 
 

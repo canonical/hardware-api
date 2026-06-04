@@ -1,22 +1,48 @@
 services:
+  # One-shot job: create the schema and load the mocked C3 test data into the
+  # shared SQLite database. Must complete before the server starts.
+  hwapi-test-data-import:
+    build:
+      context: ../server
+      dockerfile: Dockerfile
+    command: ["uv", "run", "scripts/import_test_data.py"]
+    environment:
+      - C3_URL=https://c3_url
+      - DB_URL=sqlite:////data/test-integration.db
+    volumes:
+      - test-db:/data
+
   hwapi-server-integration:
     build:
       context: ../server
       dockerfile: Dockerfile
-      args:
-        IMPORT_TOOL_PATH: ./scripts/import_test_data.py
-        C3_URL: https://c3_url
-        DB_URL: sqlite:////home/server/test-integration.db
+    environment:
+      - DB_URL=sqlite:////data/test-integration.db
+    volumes:
+      - test-db:/data
     ports:
       - "8080:8080"
+    healthcheck:
+      test:
+        ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8080/')"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    depends_on:
+      hwapi-test-data-import:
+        condition: service_completed_successfully
 
   integration-tests:
     build:
       context: .
       dockerfile: Dockerfile
     depends_on:
-      - hwapi-server-integration
+      hwapi-server-integration:
+        condition: service_healthy
     volumes:
       - ../client:/app/client
     environment:
       - API_URL=http://hwapi-server-integration:8080
+
+volumes:
+  test-db:

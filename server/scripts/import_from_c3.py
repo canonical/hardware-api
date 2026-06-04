@@ -22,7 +22,7 @@ import logging
 from requests.exceptions import HTTPError
 from sqlalchemy.orm import Session
 
-from hwapi.data_models.setup import engine
+from hwapi.data_models.setup import engine, init_db
 from hwapi.external.c3.client import C3Client
 
 logger = logging.getLogger(__name__)
@@ -30,6 +30,7 @@ logging.basicConfig(level=logging.INFO)
 
 
 def main():
+    init_db()
     session = Session(bind=engine)
     c3_client = C3Client(db=session)
     logger.info("Importing data from C3")
