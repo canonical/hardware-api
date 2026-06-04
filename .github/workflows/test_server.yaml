@@ -50,14 +50,14 @@ jobs:
           persist-credentials: false
       - name: Set up uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+      - name: Install just
+        run: sudo snap install --classic just
       - name: Check lockfile
-        run: uv lock --check
-      - name: Install dependencies
-        run: uv sync
+        run: just check-lock
       - name: Lint
-        run: uvx tox run -e lint
+        run: just lint
       - name: Unit
-        run: uvx tox run -e unit
+        run: just test
       - name: Upload coverage.xml as an artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -71,7 +71,7 @@ jobs:
           files: server/coverage/coverage.xml
           token: ${{ secrets.CODECOV_TOKEN }}
       - name: Check OpenAPI schema
-        run: uvx tox run -e check-schema
+        run: just check-schema
 
   charm-lockfile:
     name: Test Charm (lockfile)
@@ -86,8 +86,10 @@ jobs:
           persist-credentials: false
       - name: Set up uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+      - name: Install just
+        run: sudo snap install --classic just
       - name: Check lockfile
-        run: uv lock --check
+        run: just check-lock
 
   charm-lint:
     name: Test Charm (lint)
@@ -102,10 +104,10 @@ jobs:
           persist-credentials: false
       - name: Set up uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
-      - name: Install dependencies
-        run: uv sync --group=lint
+      - name: Install just
+        run: sudo snap install --classic just
       - name: Lint
-        run: uvx tox run -e lint
+        run: just lint
 
   charm-unit:
     name: Test Charm (unit)
@@ -120,10 +122,10 @@ jobs:
           persist-credentials: false
       - name: Set up uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
-      - name: Install dependencies
-        run: uv sync --group=unit
+      - name: Install just
+        run: sudo snap install --classic just
       - name: Run unit tests
-        run: uvx tox run -e unit
+        run: just test
       - name: Upload coverage.xml as an artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -150,23 +152,20 @@ jobs:
           persist-credentials: false
       - name: Set up uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
-      - name: Install dependencies
-        run: uv sync --group=integration
       - name: Install concierge
         run: sudo snap install --classic concierge
-      - name: Prepare environment
-        run: sudo concierge prepare --verbose
-      - name: Pack charm
-        run: charmcraft pack --verbose
+      - name: Install just
+        run: sudo snap install --classic just
+      - name: Run integration tests
+        run: just --yes integration --logs logs
       - name: Upload charm as an artifact
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: charm
           path: server/charm/*.charm
           if-no-files-found: error
           retention-days: 2
-      - name: Run integration tests
-        run: uvx tox run -e integration -- --juju-dump-logs logs
       - name: Upload logs
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
