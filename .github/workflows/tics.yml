@@ -24,6 +24,8 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y pipx pkgconf python3-maturin libssl-dev build-essential
+      - name: Install just
+        run: sudo snap install --classic just
 
       # Client
       - name: Install Rust toolchain
@@ -31,14 +33,12 @@ jobs:
         with:
           toolchain: stable
           components: rustfmt, clippy
-      - name: Install cargo-llvm-cov
-        run: cargo install cargo-llvm-cov
       - name: Gather coverage (client)
         working-directory: client
-        run: cargo llvm-cov --all-features --cobertura --output-path=coverage.xml
+        run: just unit --output coverage.xml
       - name: Build (client)
         working-directory: client
-        run: cargo build --all-features
+        run: just build
       - name: Install (client pybindings)
         working-directory: client
         run: pip install . --break-system-packages
@@ -48,7 +48,7 @@ jobs:
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
       - name: Gather coverage (server)
         working-directory: server
-        run: uvx tox run -e unit
+        run: just test
       - name: Install (server)
         working-directory: server
         run: |

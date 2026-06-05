@@ -1,0 +1,20 @@
+name: dev
+base: ubuntu@24.04
+sdks:
+  - name: uv
+  - name: rust
+  - name: docker-ce
+  - name: node
+  - name: just
+  - name: project-hardware-api
+  - name: system
+    plugs:
+      hwapi:
+        interface: tunnel
+        endpoint: 8080
+actions:
+  lint: just lint
+  format: just format
+  test: just test
+  integration: just integration
+  serve: just server::serve
