@@ -18,15 +18,15 @@
  */
 
 use anyhow::{Context, Result};
-use clap::Parser;
 use chrono::{DateTime, Utc};
+use clap::Parser;
 use std::process::ExitCode;
 
+use hwlib::send_certification_status_request;
 use hwlib::{
     models::request_validators::{CertificationStatusRequest, Paths},
     models::response_validators::CertificationStatusResponse,
 };
-use hwlib::send_certification_status_request;
 
 /// CLI tool to check hardware certification status.
 ///
@@ -82,34 +82,46 @@ fn update_fields(response: &mut CertificationStatusResponse, stale: bool) {
 
     let current_utc: DateTime<Utc> = Utc::now();
     match response {
-        CertificationStatusResponse::Certified { stale: s,
-                                                 hardware_mismatch: hm,
-                                                 remote_access_enabled: rae,
-                                                 checked_at: ca,
-                                                 last_attempt_at: laa,
-                                                 expires_at: ea,
-                                                 source: src, .. }
-        | CertificationStatusResponse::NotSeen { stale: s,
-                                                 hardware_mismatch: hm,
-                                                 remote_access_enabled: rae,
-                                                 checked_at: ca,
-                                                 last_attempt_at: laa,
-                                                 expires_at: ea,
-                                                 source: src, .. }
-        | CertificationStatusResponse::CertifiedImageExists { stale: s,
-                                                              hardware_mismatch: hm,
-                                                              remote_access_enabled: rae,
-                                                              checked_at: ca,
-                                                              last_attempt_at: laa,
-                                                              expires_at: ea,
-                                                              source: src, .. }
-        | CertificationStatusResponse::RelatedCertifiedSystemExists { stale: s,
-                                                                      hardware_mismatch: hm,
-                                                                      remote_access_enabled: rae,
-                                                                      checked_at: ca,
-                                                                      last_attempt_at: laa,
-                                                                      expires_at: ea,
-                                                                      source: src, .. } => {
+        CertificationStatusResponse::Certified {
+            stale: s,
+            hardware_mismatch: hm,
+            remote_access_enabled: rae,
+            checked_at: ca,
+            last_attempt_at: laa,
+            expires_at: ea,
+            source: src,
+            ..
+        }
+        | CertificationStatusResponse::NotSeen {
+            stale: s,
+            hardware_mismatch: hm,
+            remote_access_enabled: rae,
+            checked_at: ca,
+            last_attempt_at: laa,
+            expires_at: ea,
+            source: src,
+            ..
+        }
+        | CertificationStatusResponse::CertifiedImageExists {
+            stale: s,
+            hardware_mismatch: hm,
+            remote_access_enabled: rae,
+            checked_at: ca,
+            last_attempt_at: laa,
+            expires_at: ea,
+            source: src,
+            ..
+        }
+        | CertificationStatusResponse::RelatedCertifiedSystemExists {
+            stale: s,
+            hardware_mismatch: hm,
+            remote_access_enabled: rae,
+            checked_at: ca,
+            last_attempt_at: laa,
+            expires_at: ea,
+            source: src,
+            ..
+        } => {
             *s = Some(stale);
             *hm = Some(false);
             *rae = Some(true);
@@ -125,8 +137,7 @@ fn update_fields(response: &mut CertificationStatusResponse, stale: bool) {
 }
 
 fn request(server_url: String) -> CertificationStatusResponse {
-    let cert_status_request =
-        CertificationStatusRequest::new(Paths::default());
+    let cert_status_request = CertificationStatusRequest::new(Paths::default());
     if cert_status_request.is_err() {
         return create_failure(("cannot collect system data").to_string());
     }
@@ -148,14 +159,30 @@ fn run(server_url: String) -> Result<()> {
         serde_json::to_string_pretty(&response).context("cannot serialize response as JSON")?;
     println!("{response_json}");
 
-    let staled:bool;
+    let staled: bool;
     let stale_reason: String;
 
     match response {
-          CertificationStatusResponse::Certified { stale: s, stale_reason: sr, .. }
-        | CertificationStatusResponse::NotSeen { stale: s, stale_reason: sr, .. }
-        | CertificationStatusResponse::CertifiedImageExists { stale: s, stale_reason: sr, .. }
-        | CertificationStatusResponse::RelatedCertifiedSystemExists { stale: s, stale_reason: sr, .. } => {
+        CertificationStatusResponse::Certified {
+            stale: s,
+            stale_reason: sr,
+            ..
+        }
+        | CertificationStatusResponse::NotSeen {
+            stale: s,
+            stale_reason: sr,
+            ..
+        }
+        | CertificationStatusResponse::CertifiedImageExists {
+            stale: s,
+            stale_reason: sr,
+            ..
+        }
+        | CertificationStatusResponse::RelatedCertifiedSystemExists {
+            stale: s,
+            stale_reason: sr,
+            ..
+        } => {
             staled = s.unwrap_or(false);
             stale_reason = sr.unwrap_or("".to_string());
         }
