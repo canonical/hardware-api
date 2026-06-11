@@ -77,6 +77,9 @@ fn create_failure(reason: String) -> CertificationStatusResponse {
 }
 
 fn update_fields(response: &mut CertificationStatusResponse, stale: bool) {
+    // This function updates the common fields of the response based on the provided stale status and current time.
+    // When the cache functionality is implemented, the logic for updating these fields will be adjusted accordingly.
+
     let current_utc: DateTime<Utc> = Utc::now();
     match response {
         CertificationStatusResponse::Certified { stale: s,
