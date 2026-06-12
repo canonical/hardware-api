@@ -63,7 +63,7 @@ fn main() -> ExitCode {
 
 fn create_failure(reason: String) -> CertificationStatusResponse {
     let mut retval = CertificationStatusResponse::NotSeen {
-        stale: None,
+        stale: Some(true),
         stale_reason: Some(reason),
         last_attempt_at: None,
         checked_at: None,
@@ -72,11 +72,11 @@ fn create_failure(reason: String) -> CertificationStatusResponse {
         remote_access_enabled: None,
         source: None,
     };
-    update_fields(&mut retval, true);
+    update_fields(&mut retval);
     return retval;
 }
 
-fn update_fields(response: &mut CertificationStatusResponse, stale: bool) {
+fn update_fields(response: &mut CertificationStatusResponse) {
     // This function updates the common fields of the response based on the provided stale status and current time.
     // When the cache functionality is implemented, the logic for updating these fields will be adjusted accordingly.
 
@@ -122,13 +122,15 @@ fn update_fields(response: &mut CertificationStatusResponse, stale: bool) {
             source: src,
             ..
         } => {
-            *s = Some(stale);
+            if *s == None {
+                *s = Some(false);
+            }
             *hm = Some(false);
             *rae = Some(true);
             *laa = Some(current_utc.to_rfc3339());
             *src = Some("server".to_string());
 
-            if !stale {
+            if !((*s).unwrap()) {
                 *ca = Some(current_utc.to_rfc3339());
                 *ea = Some((current_utc + chrono::Duration::days(30)).to_rfc3339());
             }
@@ -149,7 +151,7 @@ fn request(server_url: String) -> CertificationStatusResponse {
     }
 
     let mut response2 = response.ok().unwrap();
-    update_fields(&mut response2, false);
+    update_fields(&mut response2);
     response2
 }
 
