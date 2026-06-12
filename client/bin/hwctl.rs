@@ -18,11 +18,15 @@
  */
 
 use anyhow::{Context, Result};
+use chrono::{DateTime, Utc};
 use clap::Parser;
 use std::process::ExitCode;
 
-use hwlib::models::request_validators::{CertificationStatusRequest, Paths};
 use hwlib::send_certification_status_request;
+use hwlib::{
+    models::request_validators::{CertificationStatusRequest, Paths},
+    models::response_validators::CertificationStatusResponse,
+};
 
 /// CLI tool to check hardware certification status.
 ///
@@ -57,14 +61,138 @@ fn main() -> ExitCode {
     }
 }
 
+fn create_failure(reason: String) -> CertificationStatusResponse {
+    let mut retval = CertificationStatusResponse::NotSeen {
+        stale: Some(true),
+        stale_reason: Some(reason),
+        last_attempt_at: None,
+        checked_at: None,
+        expires_at: None,
+        hardware_mismatch: None,
+        remote_access_enabled: None,
+        source: None,
+    };
+    update_fields(&mut retval);
+    return retval;
+}
+
+fn update_fields(response: &mut CertificationStatusResponse) {
+    // This function updates the common fields of the response based on the provided stale status and current time.
+    // When the cache functionality is implemented, the logic for updating these fields will be adjusted accordingly.
+
+    let current_utc: DateTime<Utc> = Utc::now();
+    match response {
+        CertificationStatusResponse::Certified {
+            stale: s,
+            hardware_mismatch: hm,
+            remote_access_enabled: rae,
+            checked_at: ca,
+            last_attempt_at: laa,
+            expires_at: ea,
+            source: src,
+            ..
+        }
+        | CertificationStatusResponse::NotSeen {
+            stale: s,
+            hardware_mismatch: hm,
+            remote_access_enabled: rae,
+            checked_at: ca,
+            last_attempt_at: laa,
+            expires_at: ea,
+            source: src,
+            ..
+        }
+        | CertificationStatusResponse::CertifiedImageExists {
+            stale: s,
+            hardware_mismatch: hm,
+            remote_access_enabled: rae,
+            checked_at: ca,
+            last_attempt_at: laa,
+            expires_at: ea,
+            source: src,
+            ..
+        }
+        | CertificationStatusResponse::RelatedCertifiedSystemExists {
+            stale: s,
+            hardware_mismatch: hm,
+            remote_access_enabled: rae,
+            checked_at: ca,
+            last_attempt_at: laa,
+            expires_at: ea,
+            source: src,
+            ..
+        } => {
+            if *s == None {
+                *s = Some(false);
+            }
+            *hm = Some(false);
+            *rae = Some(true);
+            *laa = Some(current_utc.to_rfc3339());
+            *src = Some("server".to_string());
+
+            if !((*s).unwrap()) {
+                *ca = Some(current_utc.to_rfc3339());
+                *ea = Some((current_utc + chrono::Duration::days(30)).to_rfc3339());
+            }
+        }
+    }
+}
+
+fn request(server_url: String) -> CertificationStatusResponse {
+    let cert_status_request = CertificationStatusRequest::new(Paths::default());
+    if cert_status_request.is_err() {
+        return create_failure(("cannot collect system data").to_string());
+    }
+
+    let cert_status_request = cert_status_request.unwrap();
+    let response = send_certification_status_request(server_url, &cert_status_request);
+    if response.is_err() {
+        return create_failure("cannot send certification status request".to_string());
+    }
+
+    let mut response2 = response.ok().unwrap();
+    update_fields(&mut response2);
+    response2
+}
+
 fn run(server_url: String) -> Result<()> {
-    let cert_status_request =
-        CertificationStatusRequest::new(Paths::default()).context("cannot collect system data")?;
-    let response = send_certification_status_request(server_url, &cert_status_request)
-        .context("cannot send certification status request")?;
+    let response = request(server_url);
     let response_json =
         serde_json::to_string_pretty(&response).context("cannot serialize response as JSON")?;
     println!("{response_json}");
+
+    let staled: bool;
+    let stale_reason: String;
+
+    match response {
+        CertificationStatusResponse::Certified {
+            stale: s,
+            stale_reason: sr,
+            ..
+        }
+        | CertificationStatusResponse::NotSeen {
+            stale: s,
+            stale_reason: sr,
+            ..
+        }
+        | CertificationStatusResponse::CertifiedImageExists {
+            stale: s,
+            stale_reason: sr,
+            ..
+        }
+        | CertificationStatusResponse::RelatedCertifiedSystemExists {
+            stale: s,
+            stale_reason: sr,
+            ..
+        } => {
+            staled = s.unwrap_or(false);
+            stale_reason = sr.unwrap_or("".to_string());
+        }
+    }
+
+    if staled {
+        return Err(anyhow::anyhow!(stale_reason));
+    }
 
     Ok(())
 }

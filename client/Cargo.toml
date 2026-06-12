@@ -25,6 +25,7 @@ required-features = ["cli"]
 [dependencies]
 anyhow = "~1.0.0"
 clap = { version = "4.5.41", features = ["derive", "env"], optional = true }
+chrono = "0.4.21"
 minreq = { version = "2.14.0", features = [
     "native-tls",
     "json-using-serde",
