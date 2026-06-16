@@ -74,7 +74,7 @@ impl Default for Paths {
     }
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub struct CertificationStatusRequest {
     pub architecture: String,
     pub bios: Option<Bios>,

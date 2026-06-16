@@ -25,7 +25,7 @@ pub struct Audio {
     pub vendor: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct Bios {
     pub firmware_revision: Option<String>,
     pub release_date: Option<String>,
@@ -34,14 +34,14 @@ pub struct Bios {
     pub version: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Default)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Default, Clone)]
 pub struct Board {
     pub manufacturer: String,
     pub product_name: String,
     pub version: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct Chassis {
     pub chassis_type: String,
     pub manufacturer: String,
@@ -49,7 +49,7 @@ pub struct Chassis {
     pub version: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct GPU {
     pub codename: Option<String>,
     pub identifier: String,
@@ -58,7 +58,7 @@ pub struct GPU {
     pub version: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct NetworkAdapter {
     pub bus: String,
     pub capacity: i32,
@@ -67,7 +67,7 @@ pub struct NetworkAdapter {
     pub vendor: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct PCIPeripheral {
     pub pci_id: String,
     pub name: String,
@@ -75,7 +75,7 @@ pub struct PCIPeripheral {
     pub vendor: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct Processor {
     pub identifier: Option<[u8; 8]>,
     pub frequency: u64,
@@ -83,7 +83,7 @@ pub struct Processor {
     pub version: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct USBPeripheral {
     pub usb_id: String,
     pub name: String,
@@ -91,7 +91,7 @@ pub struct USBPeripheral {
     pub vendor: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct VideoCapture {
     pub identifier: String,
     pub model: String,
@@ -99,7 +99,7 @@ pub struct VideoCapture {
     pub vendor: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub struct WirelessAdapter {
     pub identifier: String,
     pub model: String,
@@ -107,7 +107,7 @@ pub struct WirelessAdapter {
     pub vendor: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
 pub enum DeviceStatus {
     Working,
     Breaking,

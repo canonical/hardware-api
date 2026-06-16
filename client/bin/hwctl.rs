@@ -21,8 +21,8 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use std::process::ExitCode;
 
+use hwlib::check_certification_status;
 use hwlib::models::request_validators::{CertificationStatusRequest, Paths};
-use hwlib::send_certification_status_request;
 
 /// CLI tool to check hardware certification status.
 ///
@@ -58,10 +58,16 @@ fn main() -> ExitCode {
 }
 
 fn run(server_url: String) -> Result<()> {
-    let cert_status_request =
+    let current_hardware =
         CertificationStatusRequest::new(Paths::default()).context("cannot collect system data")?;
-    let response = send_certification_status_request(server_url, &cert_status_request)
-        .context("cannot send certification status request")?;
+
+    let response = check_certification_status(
+        server_url,
+        hwlib::CheckCertificationMode::Normal,
+        &current_hardware,
+    )
+    .context("Failed")?;
+
     let response_json =
         serde_json::to_string_pretty(&response).context("cannot serialize response as JSON")?;
     println!("{response_json}");
