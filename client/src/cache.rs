@@ -213,8 +213,19 @@ impl HWCache {
         now > expires_at.unwrap()
     }
 
-    pub fn set_remote_access_enabled(&mut self, enabled: bool) {
-        self.data.remote_access_enabled = enabled;
+    pub fn set_remote_access_enabled(&mut self, new_state: bool) {
+        self.data.remote_access_enabled = new_state;
+        if !new_state {
+            // invalidate the cache if remote access is disabled, to
+            // ensure to force a new check if remote access is re-enabled.
+            self.data.stale = StaleStatus::Valid;
+            self.data.stale_reason = None;
+            self.data.certification_status = CertificationStatus::Unknown;
+            self.data.expires_at = None;
+            self.data.checked_at = None;
+            self.data.last_attempt_at = None;
+            self.data.hardware_data = None;
+        }
         self.save();
     }
 
