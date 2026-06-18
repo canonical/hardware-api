@@ -89,7 +89,7 @@ pub fn check_certification_status(
     mode: CheckCertificationMode,
     hardware_info: &CertificationStatusRequest,
 ) -> Result<PublicCertificationStatus> {
-    let mut cache = HWCache::new();
+    let mut cache = HWCache::new(None);
 
     if mode == CheckCertificationMode::Cached {
         return Ok(create_answer(
