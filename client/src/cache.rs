@@ -39,12 +39,24 @@ pub enum CertificationStatus {
     Unknown,
 }
 
+impl Default for CertificationStatus {
+    fn default() -> Self {
+        CertificationStatus::Unknown
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 pub enum StaleStatus {
     Connecting,
     ConnectingError,
     ServerError,
     Valid,
+}
+
+impl Default for StaleStatus {
+    fn default() -> Self {
+        StaleStatus::Valid
+    }
 }
 
 /// A cache for the hardware data and certification status.
@@ -54,7 +66,7 @@ pub struct HWCache {
     cache_path: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Default)]
 struct HWCacheData {
     certification_status: CertificationStatus,
     stale: StaleStatus,
@@ -86,15 +98,7 @@ impl HWCache {
     pub fn new(cache_folder: Option<String>) -> Self {
         let mut built_cache = HWCache {
             data: HWCacheData {
-                certification_status: CertificationStatus::Unknown,
-                stale: StaleStatus::Valid,
-                stale_reason: None,
-                last_attempt_at: None,
-                checked_at: None,
-                expires_at: None,
-                hardware_data: None,
-                remote_access_enabled: false,
-                server: None,
+                ..Default::default()
             },
             current_hardware_data: None,
             cache_path: HWCache::get_cache_path(cache_folder),
@@ -147,9 +151,9 @@ impl HWCache {
     /// whether it was a connection error or a server error.
     /// reason: The reason for the failure if it was a server error.
     pub fn end_failed_certification(&mut self, status: StaleStatus, reason: String) {
-        match status {
-            StaleStatus::ConnectingError | StaleStatus::ServerError => {}
-            _ => return,
+        // Only update the stale status if it is a connection error or a server error.
+        if status != StaleStatus::ConnectingError && status != StaleStatus::ServerError {
+            return;
         }
         self.data.stale = status;
         self.data.stale_reason = Some(reason);
