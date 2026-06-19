@@ -408,4 +408,72 @@ mod tests {
 
         keep_temp_dir_alive(&temp_dir);
     }
+
+    #[test]
+    fn test_cache_expiration_date_for_certified() {
+        let (temp_dir, temp_dir_path) = set_snap_data_env_var();
+
+        let mut cache = HWCache::new(Some(temp_dir_path));
+        assert!(!cache.get_remote_access_enabled());
+        cache.set_remote_access_enabled(true);
+        assert!(cache.get_remote_access_enabled());
+
+        cache.begin_certification(None, &create_test_hardware_data("test_model".to_string()));
+        cache.end_success_certification(CertificationStatus::Certified);
+
+        let expires_at_certified = cache.data.expires_at.clone();
+        assert!(expires_at_certified.is_some());
+        let checked_at_certified = cache.data.checked_at.clone();
+        assert!(checked_at_certified.is_some());
+
+        let expires_date =
+            chrono::DateTime::parse_from_rfc3339(expires_at_certified.unwrap().as_str());
+        assert!(expires_date.is_ok());
+        let checked_date =
+            chrono::DateTime::parse_from_rfc3339(checked_at_certified.unwrap().as_str());
+        assert!(checked_date.is_ok());
+        assert!(
+            expires_date.unwrap()
+                == checked_date.unwrap()
+                    + chrono::Duration::seconds(
+                        crate::constants::CACHE_EXPIRATION_IF_CERTIFIED as i64
+                    )
+        );
+
+        keep_temp_dir_alive(&temp_dir);
+    }
+
+    #[test]
+    fn test_cache_expiration_date_for_not_seen() {
+        let (temp_dir, temp_dir_path) = set_snap_data_env_var();
+
+        let mut cache = HWCache::new(Some(temp_dir_path));
+        assert!(!cache.get_remote_access_enabled());
+        cache.set_remote_access_enabled(true);
+        assert!(cache.get_remote_access_enabled());
+
+        cache.begin_certification(None, &create_test_hardware_data("test_model".to_string()));
+        cache.end_success_certification(CertificationStatus::NotSeen);
+
+        let expires_at_not_seen = cache.data.expires_at.clone();
+        assert!(expires_at_not_seen.is_some());
+        let checked_at_not_seen = cache.data.checked_at.clone();
+        assert!(checked_at_not_seen.is_some());
+
+        let expires_date =
+            chrono::DateTime::parse_from_rfc3339(expires_at_not_seen.unwrap().as_str());
+        assert!(expires_date.is_ok());
+        let checked_date =
+            chrono::DateTime::parse_from_rfc3339(checked_at_not_seen.unwrap().as_str());
+        assert!(checked_date.is_ok());
+        assert!(
+            expires_date.unwrap()
+                == checked_date.unwrap()
+                    + chrono::Duration::seconds(
+                        crate::constants::CACHE_EXPIRATION_IF_NOT_CERTIFIED as i64
+                    )
+        );
+
+        keep_temp_dir_alive(&temp_dir);
+    }
 }
