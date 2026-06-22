@@ -20,7 +20,7 @@ jobs:
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: [self-hosted, linux, large, noble, x64]
+    runs-on: self-hosted-linux-amd64-noble-large
     defaults:
       run:
         working-directory: server

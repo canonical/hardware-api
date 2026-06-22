@@ -39,7 +39,7 @@ jobs:
 
   test:
     name: Test server
-    runs-on: [self-hosted, linux, large, noble, x64]
+    runs-on: self-hosted-linux-amd64-noble-large
     defaults:
       run:
         working-directory: server
@@ -141,7 +141,7 @@ jobs:
 
   charm-integration:
     name: Test Charm (integration)
-    runs-on: [self-hosted, linux, large, noble, amd64]
+    runs-on: self-hosted-linux-amd64-noble-large
     defaults:
       run:
         working-directory: server/charm
