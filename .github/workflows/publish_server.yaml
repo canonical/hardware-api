@@ -21,7 +21,7 @@ env:
 jobs:
   build-and-push-image:
     name: Build and push Docker image
-    runs-on: [self-hosted, linux, jammy, x64]
+    runs-on: self-hosted-linux-amd64-jammy-medium
     permissions:
       contents: read # necessary to pull repository
       packages: write # necessary to push image to ghcr
@@ -57,7 +57,7 @@ jobs:
 
   build-and-push-charm:
     name: Build and push charm
-    runs-on: [self-hosted, linux, xlarge, jammy, x64]
+    runs-on: self-hosted-linux-amd64-jammy-xlarge
     needs: build-and-push-image
     permissions:
       contents: write # necessary to create tag

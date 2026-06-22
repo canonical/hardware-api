@@ -20,7 +20,7 @@ concurrency:
 jobs:
   lint-and-test:
     name: Lint and test client
-    runs-on: [self-hosted, linux, large, noble, x64]
+    runs-on: self-hosted-linux-amd64-noble-large
     defaults:
       run:
         working-directory: client
@@ -60,7 +60,7 @@ jobs:
 
   py-bindings-test:
     name: Test Python bindings
-    runs-on: [self-hosted, linux, large, noble, x64]
+    runs-on: self-hosted-linux-amd64-noble-large
     defaults:
       run:
         working-directory: client
