@@ -1,5 +1,6 @@
 data "juju_model" "hardware_api" {
-  name = var.model
+  name  = var.model
+  owner = var.owner
 }
 
 module "hardware_api" {
@@ -7,34 +8,46 @@ module "hardware_api" {
   app_name    = var.hardware_api.app_name
   channel     = var.hardware_api.channel
   config      = var.hardware_api.config
-  model       = data.juju_model.hardware_api.name
+  model_uuid  = data.juju_model.hardware_api.uuid
   constraints = var.hardware_api.constraints
   revision    = var.hardware_api.revision
   base        = var.hardware_api.base
   units       = var.hardware_api.units
 }
 
-resource "juju_application" "nginx_ingress_integrator" {
-  name  = var.nginx_ingress_integrator.app_name
-  model = data.juju_model.hardware_api.name
-  trust = true
+resource "juju_application" "ingress_configurator" {
+  name       = var.ingress_configurator.app_name
+  model_uuid = data.juju_model.hardware_api.uuid
+  trust      = true
   charm {
-    name     = "nginx-ingress-integrator"
-    channel  = var.nginx_ingress_integrator.channel
-    revision = var.nginx_ingress_integrator.revision
+    name     = "ingress-configurator"
+    channel  = var.ingress_configurator.channel
+    revision = var.ingress_configurator.revision
   }
-  units  = var.nginx_ingress_integrator.units
-  config = var.nginx_ingress_integrator.config
+  units  = var.ingress_configurator.units
+  config = var.ingress_configurator.config
 }
 
 resource "juju_integration" "hardware_api_ingress" {
-  model = data.juju_model.hardware_api.name
+  model_uuid = data.juju_model.hardware_api.uuid
   application {
-    name     = module.hardware_api.app_name
-    endpoint = module.hardware_api.endpoints.nginx_route
+    name     = module.hardware_api.application.name
+    endpoint = module.hardware_api.requires.ingress
   }
   application {
-    name     = juju_application.nginx_ingress_integrator.name
-    endpoint = "nginx-route"
+    name     = juju_application.ingress_configurator.name
+    endpoint = "ingress"
+  }
+}
+
+resource "juju_integration" "ingress_configurator_haproxy" {
+  count      = var.haproxy_offer != null ? 1 : 0
+  model_uuid = data.juju_model.hardware_api.uuid
+  application {
+    name     = juju_application.ingress_configurator.name
+    endpoint = "haproxy-route"
+  }
+  application {
+    offer_url = var.haproxy_offer
   }
 }
