@@ -1,6 +1,10 @@
 resource "juju_application" "hardware_api" {
-  name  = var.app_name
-  model = var.model
+  name        = var.app_name
+  model_uuid  = var.model_uuid
+  constraints = var.constraints
+  config      = var.config
+  units       = var.units
+
 
   charm {
     name     = "hardware-api"
@@ -8,8 +12,4 @@ resource "juju_application" "hardware_api" {
     channel  = var.channel
     revision = var.revision
   }
-
-  config      = var.config
-  constraints = var.constraints
-  units       = var.units
 }

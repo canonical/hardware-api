@@ -56,13 +56,13 @@ The complete list of available integrations can be found
 
 | Name                  | Version   |
 | --------------------- | --------- |
-| [juju][juju-provider] | ~> 0.17.0 |
+| [juju][juju-provider] | ~> 2.0 |
 
 ## Providers
 
 | Name                  | Version   |
 | --------------------- | --------- |
-| [juju][juju-provider] | ~> 0.17.0 |
+| [juju][juju-provider] | ~> 2.0 |
 
 ## Modules
 
