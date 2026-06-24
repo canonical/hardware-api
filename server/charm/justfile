@@ -45,10 +45,15 @@ test:
     @uvx tox run -e unit
 
 [arg('logs', long='logs', help='Dump juju logs to this directory.')]
+[arg('no-setup', long='no-setup', value='true', help='Skip setup and use existing models.')]
+[arg('no-teardown', long='no-teardown', value='true', help='Skip destroying the models.')]
 [doc('Run integration tests.')]
 [group('test')]
-integration logs='': charmcraft
-    @uvx tox run -e integration {{ if logs != '' { '-- --juju-dump-logs ' + logs } else { '' } }}
+integration logs='' no-setup='false' no-teardown='false': charmcraft
+    @uvx tox run -e integration -- \
+        {{ if logs != '' { '--juju-dump-logs ' + logs } else { '' } }} \
+        {{ if no-setup == 'true' { '--no-juju-setup' } else { '' } }} \
+        {{ if no-teardown == 'true' { '--no-juju-teardown' } else { '' } }}
 
 [doc('Build the charm package.')]
 [group('package')]
