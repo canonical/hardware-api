@@ -10,17 +10,18 @@ providers:
       - rbac
       - metallb:10.64.140.43-10.64.140.49
       - ingress
+    image-registry:
+      url: $DOCKERHUB_MIRROR
   lxd:
     enable: true
+    bootstrap: true
 host:
   packages:
     - python3-pip
     - python3-venv
   snaps:
     astral-uv:
-      channel: latest/stable
     charmcraft:
-      channel: latest/stable
     jhack:
       channel: latest/edge
       connections:

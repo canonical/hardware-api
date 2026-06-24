@@ -4,8 +4,24 @@ import os
 from pathlib import Path
 
 import pytest
+import pytest_jubilant
 
 logger = logging.getLogger(__name__)
+
+
+@pytest.fixture(scope="session")
+def machine_controller():
+    """Return the name of the machine controller to use for testing."""
+    controller = os.environ.get("JUJU_MACHINE_CONTROLLER")
+    if not controller:
+        pytest.fail("JUJU_MACHINE_CONTROLLER environment variable is not set")
+    return controller
+
+
+@pytest.fixture(scope="module")
+def machine_juju(juju_factory: pytest_jubilant.JujuFactory, machine_controller: str):
+    """Create temporary Juju machine model for running tests."""
+    yield juju_factory.get_juju(suffix="machine", controller=machine_controller)
 
 
 @pytest.fixture(scope="session")

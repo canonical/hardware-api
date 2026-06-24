@@ -152,12 +152,22 @@ jobs:
           persist-credentials: false
       - name: Set up uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
-      - name: Install concierge
-        run: sudo snap install --classic concierge
-      - name: Install just
-        run: sudo snap install --classic just
-      - name: Run integration tests
-        run: just --yes integration --logs logs
+      - run: sudo snap install --classic just
+      - run: just --yes setup
+      - name: Export Juju controller names
+        id: controllers
+        run: |
+          LXD_CONTROLLER=$(juju controllers --format=json | jq -r '.controllers | to_entries[] | select(.value.cloud == "localhost") | .key')
+          if [[ -z "$LXD_CONTROLLER" ]]
+          then
+            echo "No LXD controller found."
+            juju controllers
+            exit 1
+          fi
+          echo "lxd_controller=$LXD_CONTROLLER" >> "$GITHUB_OUTPUT"
+      - run: just integration --logs logs
+        env:
+          JUJU_MACHINE_CONTROLLER: ${{ steps.controllers.outputs.lxd_controller }}
       - name: Upload charm as an artifact
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
