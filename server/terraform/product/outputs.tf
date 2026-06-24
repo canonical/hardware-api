@@ -1,29 +1,12 @@
-output "hardware_api_app_name" {
-  description = "The name of the Hardware API application"
-  value       = module.hardware_api.app_name
-}
-
-output "hardware_api_requires" {
+output "models" {
+  description = "Map of the key of the model and the components deployed in the model"
   value = {
-    nginx_route = "nginx-route"
-  }
-}
-
-output "hardware_api_provides" {
-  value = {}
-}
-
-output "nginx_ingress_integrator_app_name" {
-  description = "The name of the NGINX Ingress Integrator application"
-  value       = juju_application.nginx_ingress_integrator.name
-}
-
-output "nginx_ingress_integrator_requires" {
-  value = {}
-}
-
-output "nginx_ingress_integrator_provides" {
-  value = {
-    nginx_route = "nginx-route"
+    hardware_api = {
+      model_uuid = data.juju_model.hardware_api.uuid
+      components = {
+        hardware_api         = module.hardware_api.application
+        ingress_configurator = juju_application.ingress_configurator
+      }
+    }
   }
 }

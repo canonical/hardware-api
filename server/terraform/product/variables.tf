@@ -1,8 +1,12 @@
 variable "model" {
   type        = string
-  nullable    = true
-  default     = null
   description = "Reference to an existing model resource or data source for the model to deploy to"
+}
+
+variable "owner" {
+  type        = string
+  default     = null
+  description = "Reference to the owner of the model to deploy to"
 }
 
 variable "hardware_api" {
@@ -15,14 +19,24 @@ variable "hardware_api" {
     base        = optional(string, "ubuntu@22.04")
     units       = optional(number, 1)
   })
+  default = {}
 }
 
-variable "nginx_ingress_integrator" {
+variable "ingress_configurator" {
   type = object({
-    app_name = optional(string, "ingress")
-    channel  = optional(string, "latest/stable")
+    app_name = optional(string, "ingress-configurator")
+    channel  = optional(string, "latest/edge")
     config   = optional(map(string), {})
     revision = optional(number)
     units    = optional(number, 1)
   })
+  default = {}
 }
+
+variable "haproxy_offer" {
+  type        = string
+  nullable    = true
+  default     = null
+  description = "URL to the haproxy offer for ingress relation. If null, the integration is not created."
+}
+

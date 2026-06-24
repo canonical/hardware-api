@@ -25,15 +25,14 @@ variable "config" {
 
 variable "constraints" {
   type        = string
-  default     = "arch=amd64"
+  nullable    = true
+  default     = null
   description = "String listing constraints for this application"
 }
 
-variable "model" {
+variable "model_uuid" {
   type        = string
-  nullable    = true
-  default     = null
-  description = "Reference to an existing model resource or data source for the model to deploy to"
+  description = "Reference to an existing model uuid"
 }
 
 variable "revision" {
