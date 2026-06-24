@@ -31,11 +31,9 @@ jobs:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Install docker compose
-        run: |
-          sudo apt update
-          sudo apt install -y docker-compose-v2
-      - name: Install just
-        run: sudo snap install --classic just
-      - name: Build and run integration tests
-        run: just integration
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+      - name: Set up Docker Compose
+        uses: docker/setup-compose-action@16feee727cbdc83b6a014e6cc26fec4a79bcf30c # v2.2.0
+      - run: sudo snap install --classic just
+      - run: just integration
