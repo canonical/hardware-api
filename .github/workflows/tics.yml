@@ -20,12 +20,11 @@ jobs:
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+      - run: sudo snap install --classic just
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y pipx pkgconf python3-maturin libssl-dev build-essential
-      - name: Install just
-        run: sudo snap install --classic just
+          just client::setup
+          sudo apt-get install -y pipx python3-maturin
 
       # Client
       - name: Install Rust toolchain
