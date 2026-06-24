@@ -26,7 +26,7 @@ check-lock:
 [doc("Update the project's environment.")]
 [group('venv')]
 venv:
-    @uv sync
+    @uv sync --all-groups
     @echo 'Activate the Python environment: {{ CYAN }}source .venv/bin/activate{{ NORMAL }}'
 
 [doc('Format all files.')]
