@@ -23,12 +23,13 @@ import it like shown below:
 
 ```hcl
 data "juju_model" "my_model" {
-  name = var.model
+  name = "model"
+  owner = "admin"
 }
 
 module "hardware_api" {
  source = "git::https://github.com/canonical/hardware-api//server/terraform/charm
- model  = juju_model.my_model.name
+ model_uuid  = juju_model.my_model.uuid
  # Customize configuration variables if needed
 }
 ```
@@ -36,15 +37,15 @@ module "hardware_api" {
 Create integrations, for instance:
 
 ```hcl
-resource "juju_integration" "hardware_api_nginx" {
+resource "juju_integration" "hardware_api_ingress" {
   model = juju_model.my_model.name
   application {
     name     = module.hardware_api.app_name
-    endpoint = module.hardware_api.endpoints.nginx_route
+    endpoint = module.hardware_api.endpoints.ingress
   }
   application {
-    name     = "ingress"
-    endpoint = "nginx-route"
+    name     = "traefik-k8s"
+    endpoint = "ingress"
   }
 }
 ```
@@ -54,15 +55,15 @@ The complete list of available integrations can be found
 
 ## Requirements
 
-| Name                  | Version   |
-| --------------------- | --------- |
-| [juju][juju-provider] | ~> 2.0 |
+| Name                  | Version |
+| --------------------- | ------- |
+| [juju][juju-provider] | ~> 2.0  |
 
 ## Providers
 
-| Name                  | Version   |
-| --------------------- | --------- |
-| [juju][juju-provider] | ~> 2.0 |
+| Name                  | Version |
+| --------------------- | ------- |
+| [juju][juju-provider] | ~> 2.0  |
 
 ## Modules
 
@@ -76,23 +77,23 @@ No modules.
 
 ## Inputs
 
-| Name        | Type        | Description                                                                       | Default     |
-| ----------- | ----------- | --------------------------------------------------------------------------------- | ----------- |
-| app_name    | string      | Name to give the deployed application                                             | api         |
-| base        | string      | The operating system on which to deploy                                           | null        |
-| channel     | string      | Channel of the charm                                                              | latest/edge |
-| config      | map(string) | Map for config options                                                            | {}          |
-| constraints | string      | String listing constraints for this application                                   | arch=amd64  |
-| model       | string      | Reference to an existing model resource or data source for the model to deploy to | null        |
-| revision    | number      | Revision number of the charm                                                      | null        |
-| units       | number      | Unit count/scale                                                                  | 1           |
+| Name        | Type        | Description                                     | Default     |
+| ----------- | ----------- | ----------------------------------------------- | ----------- |
+| app_name    | string      | Name to give the deployed application           | api         |
+| base        | string      | The operating system on which to deploy         | null        |
+| channel     | string      | Channel of the charm                            | latest/edge |
+| config      | map(string) | Map for config options                          | {}          |
+| constraints | string      | String listing constraints for this application | arch=amd64  |
+| model_uuid  | string      | Reference to an existing model uuid             | null        |
+| revision    | number      | Revision number of the charm                    | null        |
+| units       | number      | Unit count/scale                                | 1           |
 
 ## Outputs
 
-| Name      | Type        | Description                      |
-| --------- | ----------- | -------------------------------- |
-| app_name  | string      | Name of the deployed application |
-| endpoints | map(string) | Map of all endpoints             |
+| Name        | Type        | Description                                  |
+| ----------- | ----------- | -------------------------------------------- |
+| application | object      | Object representing the deployed application |
+| requires    | map(string) | Map of requires integration endpoints        |
 
 [terraform]: https://terraform.io
 [hardware-api-charm]: https://charmhub.io/hardware-api

@@ -1,5 +1,5 @@
 output "application" {
-  description = "Name of the deployed application"
+  description = "Object representing the deployed application"
   value       = juju_application.hardware_api
 }
 
