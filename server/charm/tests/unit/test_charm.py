@@ -94,21 +94,6 @@ def test_config_changed_updates_pebble_layer(ctx: testing.Context, container: te
     )
 
 
-def test_blocked_status_on_multiple_ingress_providers(
-    ctx: testing.Context, container: testing.Container, ingress_relation: testing.Relation
-):
-    """Tests that status is blocked when both ingress providers are connected."""
-    # TODO: Remove once NGINX support is dropped
-    nginx_relation = testing.Relation("nginx-route")
-    state_in = testing.State(
-        containers={container},
-        leader=True,
-        relations={ingress_relation, nginx_relation},
-    )
-    state_out = ctx.run(ctx.on.relation_changed(ingress_relation), state_in)
-    assert isinstance(state_out.unit_status, testing.BlockedStatus)
-
-
 def test_ingress_relation_changed(
     ctx: testing.Context, container: testing.Container, ingress_relation: testing.Relation
 ):

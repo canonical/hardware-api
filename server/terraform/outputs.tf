@@ -6,7 +6,6 @@ output "application" {
 output "requires" {
   description = "Map of requires integration endpoints"
   value = {
-    nginx_route = "nginx-route"
-    ingress     = "ingress"
+    ingress = "ingress"
   }
 }

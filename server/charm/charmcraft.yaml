@@ -35,9 +35,6 @@ resources:
     upstream-source: ghcr.io/canonical/hardware-api/hwapi:main
 
 requires:
-  nginx-route:
-    interface: nginx-route
-    limit: 1
   ingress:
     interface: ingress
     limit: 1
@@ -45,8 +42,6 @@ requires:
 charm-libs:
   - lib: traefik_k8s.ingress
     version: "2"
-  - lib: nginx_ingress_integrator.nginx_route
-    version: "0"
 
 parts:
   hardware-api:
