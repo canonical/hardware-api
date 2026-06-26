@@ -41,7 +41,7 @@ parts:
   hwctl:
     plugin: rust
     rust-features: ["cli"]
-    source: .
+    source: client/.
     build-packages:
       - jq
       - libssl-dev

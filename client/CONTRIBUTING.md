@@ -12,7 +12,7 @@ refer to the [contribution guide](../CONTRIBUTING.md).
 ## Snap Package
 
 `hwctl` is packaged as a [snap]. To build the snap package locally, install
-[`snapcraft`][snapcraft] and run the following command:
+[`snapcraft`][snapcraft] and run the following command in the repository top folder:
 
 ```shell
 snapcraft pack
@@ -27,7 +27,7 @@ sudo snap install --dangerous hwctl_<version>_<architecture>.snap
 # The following interfaces are required to run the snap package
 # They are not automatically connected when installing a local package
 sudo snap connect hwctl:hardware-observe
-sudo snap connect hwctl:kenrel-module-observe
+sudo snap connect hwctl:kernel-module-observe
 sudo snap connect hwctl:system-observe
 ```
 

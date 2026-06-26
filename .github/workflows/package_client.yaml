@@ -42,7 +42,7 @@ jobs:
         id: snapcraft
         uses: canonical/snapcraft-multiarch-action@0c3495a6cead8eeacc35e1254fee7d2381e550e4 # v1.10.1
         with:
-          path: client
+          path: .
           architecture: ${{ matrix.arch }}
       - name: Upload snapcraft logs
         if: failure()
