@@ -20,7 +20,6 @@ use anyhow::Result;
 use hwlib::{
     models::request_validators::{CertificationStatusRequest, Paths},
     models::response_validators::CertificationStatusResponse,
-    send_certification_status_request,
 };
 use simple_test_case::test_case;
 use std::{
