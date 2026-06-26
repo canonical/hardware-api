@@ -20,7 +20,6 @@ juju deploy hardware-api
 
 - `log-level` (default: `info`): Allows you to set the log level for the server.
 - `port` (default: `30000`): Port to listen on for incoming HTTP requests.
-- `hostname` (default: `hw`): External hostname for the service.
 
 ## Relations / Integrations
 
