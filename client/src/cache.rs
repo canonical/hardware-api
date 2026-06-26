@@ -64,6 +64,7 @@ pub struct HWCache {
 #[derive(Serialize, Deserialize, Debug, Default)]
 struct HWCacheData {
     certification_status: CertificationStatus,
+    certification_status_url: Option<String>,
     stale: StaleStatus,
     stale_reason: Option<String>,
     last_attempt_at: Option<String>,
@@ -163,10 +164,15 @@ impl HWCache {
     /// and which is the new certification status of the system.
     ///
     /// status: The new certification status of the system.
-    pub fn end_success_certification(&mut self, status: CertificationStatus) {
+    pub fn end_success_certification(
+        &mut self,
+        status: CertificationStatus,
+        status_url: Option<String>,
+    ) {
         self.data.certification_status = status;
         let now = self.get_now();
         self.data.checked_at = Some(now.to_rfc3339());
+        self.data.certification_status_url = status_url;
         match self.data.certification_status {
             CertificationStatus::Certified => {
                 self.data.expires_at = Some(
@@ -192,9 +198,17 @@ impl HWCache {
     }
 
     /// Returns the current certification status, stale status, and stale reason (if any).
-    pub fn get_status(&self) -> (CertificationStatus, StaleStatus, Option<String>) {
-        return(
+    pub fn get_status(
+        &self,
+    ) -> (
+        CertificationStatus,
+        Option<String>,
+        StaleStatus,
+        Option<String>,
+    ) {
+        return (
             self.data.certification_status.clone(),
+            self.data.certification_status_url.clone(),
             self.data.stale.clone(),
             self.data.stale_reason.clone(),
         );
@@ -345,7 +359,16 @@ mod tests {
         assert!(cache.is_expired());
 
         cache.begin_certification(None, &create_test_hardware_data("test_model".to_string()));
-        cache.end_success_certification(CertificationStatus::Certified);
+        cache.end_success_certification(
+            CertificationStatus::Certified,
+            Some("https://example.com/certified".to_string()),
+        );
+
+        assert!(cache.data.certification_status_url.is_some());
+        assert!(
+            cache.data.certification_status_url.as_ref().unwrap()
+                == "https://example.com/certified"
+        );
 
         assert!(!cache.is_expired());
         assert!(cache.get_remote_access_enabled());
@@ -371,7 +394,16 @@ mod tests {
         assert!(cache.get_remote_access_enabled());
 
         cache.begin_certification(None, &create_test_hardware_data("test_model1".to_string()));
-        cache.end_success_certification(CertificationStatus::Certified);
+        cache.end_success_certification(
+            CertificationStatus::Certified,
+            Some("https://example.com/certified".to_string()),
+        );
+
+        assert!(cache.data.certification_status_url.is_some());
+        assert!(
+            cache.data.certification_status_url.as_ref().unwrap()
+                == "https://example.com/certified"
+        );
 
         assert!(cache.compare_hardware_data(&create_test_hardware_data("test_model1".to_string())));
 
@@ -388,23 +420,29 @@ mod tests {
         cache.set_remote_access_enabled(true);
         assert!(cache.get_remote_access_enabled());
 
-        let (status, stale_status, _) = cache.get_status();
+        let (status, status_url, stale_status, _) = cache.get_status();
         assert_eq!(status, CertificationStatus::Unknown);
         assert_eq!(stale_status, StaleStatus::Valid);
+        assert!(status_url.is_none());
 
         cache.begin_certification(None, &create_test_hardware_data("test_model".to_string()));
-        cache.end_success_certification(CertificationStatus::Certified);
+        cache.end_success_certification(
+            CertificationStatus::Certified,
+            Some("https://example.com/certified".to_string()),
+        );
 
-        let (status, stale_status, _) = cache.get_status();
+        let (status, status_url, stale_status, _) = cache.get_status();
         assert_eq!(status, CertificationStatus::Certified);
+        assert_eq!(status_url.unwrap(), "https://example.com/certified");
         assert_eq!(stale_status, StaleStatus::Valid);
 
         cache.begin_certification(None, &create_test_hardware_data("test_model".to_string()));
         cache
             .end_failed_certification(StaleStatus::ConnectingError, "Connection error".to_string());
 
-        let (status, stale_status, stale_reason) = cache.get_status();
+        let (status, status_url, stale_status, stale_reason) = cache.get_status();
         assert_eq!(status, CertificationStatus::Certified);
+        assert_eq!(status_url.unwrap(), "https://example.com/certified");
         assert_eq!(stale_status, StaleStatus::ConnectingError);
         assert_eq!(stale_reason.unwrap(), "Connection error");
 
@@ -421,7 +459,16 @@ mod tests {
         assert!(cache.get_remote_access_enabled());
 
         cache.begin_certification(None, &create_test_hardware_data("test_model".to_string()));
-        cache.end_success_certification(CertificationStatus::Certified);
+        cache.end_success_certification(
+            CertificationStatus::Certified,
+            Some("https://example.com/certified".to_string()),
+        );
+
+        assert!(cache.data.certification_status_url.is_some());
+        assert!(
+            cache.data.certification_status_url.as_ref().unwrap()
+                == "https://example.com/certified"
+        );
 
         let expires_at_certified = cache.data.expires_at.clone();
         assert!(expires_at_certified.is_some());
@@ -455,7 +502,9 @@ mod tests {
         assert!(cache.get_remote_access_enabled());
 
         cache.begin_certification(None, &create_test_hardware_data("test_model".to_string()));
-        cache.end_success_certification(CertificationStatus::NotSeen);
+        cache.end_success_certification(CertificationStatus::NotSeen, None);
+
+        assert!(cache.data.certification_status_url.is_none());
 
         let expires_at_not_seen = cache.data.expires_at.clone();
         assert!(expires_at_not_seen.is_some());

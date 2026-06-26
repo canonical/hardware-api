@@ -56,6 +56,7 @@ pub enum CertificationSource {
 #[derive(Serialize, Debug)]
 pub struct PublicCertificationStatus {
     status: CertificationStatus,
+    status_url: Option<String>,
     valid_cache: bool,
     hardware_mismatch: bool,
     stale: bool,
@@ -69,10 +70,12 @@ fn create_answer(
     source: CertificationSource,
     hardware_info: &CertificationStatusRequest,
 ) -> PublicCertificationStatus {
-    let (certification_status, stale_status, stale_reason) = cache.get_status();
+    let (certification_status, certification_status_url, stale_status, stale_reason) =
+        cache.get_status();
     let hardware_mismatch = !cache.compare_hardware_data(hardware_info);
     return PublicCertificationStatus {
         status: certification_status,
+        status_url: certification_status_url,
         valid_cache: !cache.is_expired(),
         hardware_mismatch: hardware_mismatch,
         stale: stale_status != StaleStatus::Valid,
@@ -91,9 +94,9 @@ pub fn check_certification_status(
 
     let cache_answer = |cache: &HWCache| {
         Ok(create_answer(
-                cache,
-                CertificationSource::Cache,
-                hardware_info,
+            cache,
+            CertificationSource::Cache,
+            hardware_info,
         ))
     };
 
@@ -131,22 +134,27 @@ pub fn check_certification_status(
     }
     let response = response.unwrap();
     let certification_status: CertificationStatus;
+    let certification_status_url: Option<String>;
     match response {
-        CertificationStatusResponse::Certified { .. } => {
+        CertificationStatusResponse::Certified { certified_url, .. } => {
             certification_status = CertificationStatus::Certified;
+            certification_status_url = Some(certified_url);
         }
-        CertificationStatusResponse::CertifiedImageExists { .. } => {
-            certification_status = CertificationStatus::Certified;
+        CertificationStatusResponse::CertifiedImageExists { certified_url, .. } => {
+            certification_status = CertificationStatus::CertifiedImageExists;
+            certification_status_url = Some(certified_url);
         }
-        CertificationStatusResponse::RelatedCertifiedSystemExists { .. } => {
+        CertificationStatusResponse::RelatedCertifiedSystemExists { certified_url, .. } => {
             certification_status = CertificationStatus::RelatedCertifiedSystemExists;
+            certification_status_url = Some(certified_url);
         }
         _ => {
             certification_status = CertificationStatus::NotSeen;
+            certification_status_url = None;
         }
     }
 
-    cache.end_success_certification(certification_status);
+    cache.end_success_certification(certification_status, certification_status_url);
     return Ok(create_answer(
         &mut cache,
         CertificationSource::Server,
