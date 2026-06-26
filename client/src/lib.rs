@@ -234,8 +234,8 @@ fn send_request(
         });
     }
 
-    if only_url.starts_with("related_certified_system_exists_") {
-        let arch = only_url.split("_").nth(4).unwrap();
+    if only_url.starts_with("relatedcertifiedsystemexists_") {
+        let arch = only_url.split("_").nth(1).unwrap();
         return Result::Ok(CertificationStatusResponse::RelatedCertifiedSystemExists {
             certified_url: format!("https://certification.ubuntu.com/hardware/{}", arch),
             architecture: arch.to_string(),
@@ -253,8 +253,8 @@ fn send_request(
         });
     }
 
-    if only_url.starts_with("certified_image_exists_") {
-        let arch = only_url.split("_").nth(3).unwrap();
+    if only_url.starts_with("certifiedimageexists_") {
+        let arch = only_url.split("_").nth(1).unwrap();
         return Result::Ok(CertificationStatusResponse::CertifiedImageExists {
             certified_url: format!("https://certification.ubuntu.com/hardware/{}", arch),
             architecture: arch.to_string(),
@@ -328,7 +328,7 @@ mod tests {
 
         let hardware_info = create_test_hardware_data("x86_64".to_string());
         let result = check_certification_status(
-            "certified_image_exists_x86_64".to_string(),
+            "certifiedimageexists_x86_64".to_string(),
             CheckCertificationMode::Normal,
             &hardware_info,
             Some(&mut cache),
@@ -374,7 +374,7 @@ mod tests {
 
         let hardware_info = create_test_hardware_data("x86_64".to_string());
         let result = check_certification_status(
-            "related_certified_system_exists_x86_64".to_string(),
+            "relatedcertifiedsystemexists_x86_64".to_string(),
             CheckCertificationMode::Normal,
             &hardware_info,
             Some(&mut cache),
