@@ -69,3 +69,19 @@ and Python code. To execute them, run the following commands:
 [pyo3]: https://github.com/PyO3/pyo3
 [maturin]: https://github.com/PyO3/maturin
 [tox]: https://github.com/tox-dev/tox
+
+## Formatting check
+
+To ensure syntax consistency, the `cargo fmt --all --check` command is used in
+the tests, so it's a good idea to add it to your GIT hooks by editing the file
+`.git/hooks/pre-commit` and adding these lines:
+
+    #!/bin/bash
+    set -e
+    pushd client
+    cargo fmt --all --check
+    popd
+
+and mark it as executable. This will check the format before a commit, and abort
+if there are errors. To fix them automatically, just run `cargo fmt --all`
+inside the `client` folder.
