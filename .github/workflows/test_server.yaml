@@ -39,7 +39,7 @@ jobs:
 
   test:
     name: Test server
-    runs-on: self-hosted-linux-amd64-noble-large
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: server
@@ -50,14 +50,10 @@ jobs:
           persist-credentials: false
       - name: Set up uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
-      - name: Install just
-        run: sudo snap install --classic just
-      - name: Check lockfile
-        run: just check-lock
-      - name: Lint
-        run: just lint
-      - name: Unit
-        run: just test
+      - run: sudo snap install --classic just
+      - run: just check-lock
+      - run: just lint
+      - run: just test
       - name: Upload coverage.xml as an artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -70,11 +66,10 @@ jobs:
         with:
           files: server/coverage/coverage.xml
           token: ${{ secrets.CODECOV_TOKEN }}
-      - name: Check OpenAPI schema
-        run: just check-schema
+      - run: just check-schema
 
-  charm-lockfile:
-    name: Test Charm (lockfile)
+  charm:
+    name: Test Charm
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -86,46 +81,10 @@ jobs:
           persist-credentials: false
       - name: Set up uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
-      - name: Install just
-        run: sudo snap install --classic just
-      - name: Check lockfile
-        run: just check-lock
-
-  charm-lint:
-    name: Test Charm (lint)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: server/charm
-    steps:
-      - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: false
-      - name: Set up uv
-        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
-      - name: Install just
-        run: sudo snap install --classic just
-      - name: Lint
-        run: just lint
-
-  charm-unit:
-    name: Test Charm (unit)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: server/charm
-    steps:
-      - name: Checkout
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: false
-      - name: Set up uv
-        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
-      - name: Install just
-        run: sudo snap install --classic just
-      - name: Run unit tests
-        run: just test
+      - run: sudo snap install --classic just
+      - run: just check-lock
+      - run: just lint
+      - run: just test
       - name: Upload coverage.xml as an artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -141,7 +100,7 @@ jobs:
 
   charm-integration:
     name: Test Charm (integration)
-    runs-on: self-hosted-linux-amd64-noble-large
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: server/charm
@@ -152,12 +111,22 @@ jobs:
           persist-credentials: false
       - name: Set up uv
         uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
-      - name: Install concierge
-        run: sudo snap install --classic concierge
-      - name: Install just
-        run: sudo snap install --classic just
-      - name: Run integration tests
-        run: just --yes integration --logs logs
+      - run: sudo snap install --classic just
+      - run: just --yes setup
+      - name: Export Juju controller names
+        id: controllers
+        run: |
+          LXD_CONTROLLER=$(juju controllers --format=json | jq -r '.controllers | to_entries[] | select(.value.cloud == "localhost") | .key')
+          if [[ -z "$LXD_CONTROLLER" ]]
+          then
+            echo "No LXD controller found."
+            juju controllers
+            exit 1
+          fi
+          echo "lxd_controller=$LXD_CONTROLLER" >> "$GITHUB_OUTPUT"
+      - run: just integration --logs logs
+        env:
+          JUJU_MACHINE_CONTROLLER: ${{ steps.controllers.outputs.lxd_controller }}
       - name: Upload charm as an artifact
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

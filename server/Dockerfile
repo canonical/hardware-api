@@ -1,10 +1,14 @@
-FROM python:3.13
+FROM ubuntu:24.04
+COPY --from=ghcr.io/astral-sh/uv:0.11.18 /uv /uvx /bin/
 
-RUN apt-get update -y && apt-get install -y sqlite3
+RUN --mount=type=cache,target=/var/cache/apt \
+    --mount=type=cache,target=/var/lib/apt,sharing=locked \
+    apt-get update -y && \
+    DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends --yes \
+    python3-venv \
+    sqlite3
 
 WORKDIR /home/server
-
-COPY --from=ghcr.io/astral-sh/uv:0.11.18 /uv /uvx /bin/
 
 ENV UV_COMPILE_BYTECODE=1
 ENV UV_LINK_MODE=copy
@@ -32,4 +36,4 @@ RUN if [ -x $IMPORT_TOOL_PATH ]; then \
 
 EXPOSE 8080
 
-CMD ["uv", "run", "uvicorn", "hwapi.main:app", "--host", "0.0.0.0", "--port", "8080"]
+CMD ["uvicorn", "hwapi.main:app", "--host", "0.0.0.0", "--port", "8080"]

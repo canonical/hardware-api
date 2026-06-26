@@ -6,42 +6,56 @@ help:
     @echo
     @just --list --unsorted
 
-[doc('Generate lockfile.')]
-lock:
-    uv lock
-
-[doc('Check lockfile.')]
-check-lock:
-    uv lock --check
-
-[doc("Update the project's environment.")]
-sync:
-    uv sync
-
-[doc('Format.')]
-format:
-    uvx tox run -e format
-
-[doc('Lint.')]
-lint:
-    uvx tox run -e lint
-
-[doc('Run unit tests.')]
-test:
-    uvx tox run -e unit
-
-[doc('Build the snap package.')]
-charmcraft:
-    charmcraft pack
-
-[confirm('Install juju and prepare environment?')]
-[doc('Set up integration test environment.')]
-[private]
-concierge:
+[confirm('Install Juju and prepare environment (destructive)?')]
+[doc('Set up integration test environment (destructive).')]
+[group('project')]
+setup:
+    sudo snap install --classic concierge
     sudo concierge prepare --verbose
 
+[doc('Generate lockfile.')]
+[group('venv')]
+lock:
+    @uv lock
+
+[doc('Check lockfile.')]
+[group('venv')]
+check-lock:
+    @uv lock --check
+
+[doc("Update the project's environment.")]
+[group('venv')]
+venv:
+    @uv sync --all-groups
+    @echo 'Activate the Python environment: {{ CYAN }}source .venv/bin/activate{{ NORMAL }}'
+
+[doc('Format all files.')]
+[group('lint')]
+format:
+    @uvx tox run -e format
+
+[doc('Lint all files.')]
+[group('lint')]
+lint:
+    @uvx tox run -e lint
+
+[doc('Run unit tests.')]
+[group('test')]
+test:
+    @uvx tox run -e unit
+
+[arg('logs', long='logs', help='Dump juju logs to this directory.')]
+[arg('no-setup', long='no-setup', value='true', help='Skip setup and use existing models.')]
+[arg('no-teardown', long='no-teardown', value='true', help='Skip destroying the models.')]
 [doc('Run integration tests.')]
-[arg('logs', long='logs')]
-[private]
-integration logs='': concierge charmcraft
-    uvx tox run -e integration {{ if logs != '' { '-- --juju-dump-logs ' + logs } else { '' } }}
+[group('test')]
+integration logs='' no-setup='false' no-teardown='false': charmcraft
+    @uvx tox run -e integration -- \
+        {{ if logs != '' { '--juju-dump-logs ' + logs } else { '' } }} \
+        {{ if no-setup == 'true' { '--no-juju-setup' } else { '' } }} \
+        {{ if no-teardown == 'true' { '--no-juju-teardown' } else { '' } }}
+
+[doc('Build the charm package.')]
+[group('package')]
+charmcraft:
+    @charmcraft pack

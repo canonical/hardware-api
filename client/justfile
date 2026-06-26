@@ -6,31 +6,61 @@ help:
     @echo
     @just --list --unsorted
 
-[doc('Build crate.')]
-build:
-    cargo build --all-features
-
-[doc('Format.')]
-format:
-    cargo fmt --all
-
-[arg('verbose', long='verbose', value='true')]
-[doc('Lint.')]
-lint verbose='false':
-    cargo fmt --all -- --check
-    cargo clippy --all-features {{ if verbose == 'true' { '--verbose' } else { '' } }}
-    cargo clippy --all-features --tests {{ if verbose == 'true' { '--verbose' } else { '' } }}
-
-[doc('Run unit tests.')]
-test:
-    cargo test --all-features
-
-[arg('output', long='output')]
-[doc('Run unit tests and gather coverage.')]
-unit output='coverage.xml':
-    cargo install cargo-llvm-cov
-    cargo llvm-cov --all-features --cobertura --output-path={{ output }}
+[confirm('Install development dependencies?')]
+[doc('Install development dependencies.')]
+[group('project')]
+setup:
+    sudo apt-get update
+    sudo apt-get install -y pkgconf libssl-dev build-essential
 
 [doc('Build the snap package.')]
+[group('package')]
 snapcraft:
-    snapcraft pack
+    @snapcraft pack
+
+[doc('Build crate.')]
+[group('package')]
+build:
+    @cargo build --all-features
+
+[doc('Publish crate.')]
+[group('package')]
+publish:
+    @cargo publish --locked --verbose --all-features
+
+[doc('Format all files.')]
+[group('lint')]
+format:
+    @echo 'Formatting Rust files...'
+    @cargo fmt --all
+    @echo 'Formatting Python files...'
+    @uvx tox run -e format
+    @echo 'All formatting done!'
+
+[arg('verbose', long='verbose', value='true', help='Enable verbose output.')]
+[doc('Lint all files.')]
+[group('lint')]
+lint verbose='false':
+    @echo 'Linting Rust files...'
+    @cargo fmt --all -- --check
+    @cargo clippy --all-features {{ if verbose == 'true' { '--verbose' } else { '' } }}
+    @cargo clippy --all-features --tests {{ if verbose == 'true' { '--verbose' } else { '' } }}
+    @echo 'Linting Python files...'
+    @uvx tox run -e lint
+    @echo 'All linting done!'
+
+[doc('Run unit tests.')]
+[group('test')]
+test:
+    @echo 'Running Rust unit tests...'
+    @cargo test --all-features
+    @echo 'Running Python unit tests...'
+    @uvx tox run -e unit
+    @echo 'All testing done!'
+
+[arg('output', long='output', help='Output path for coverage.xml.')]
+[doc('Run unit tests and gather coverage.')]
+[group('test')]
+unit output='coverage.xml':
+    @cargo install cargo-llvm-cov
+    @cargo llvm-cov --all-features --cobertura --output-path={{ output }}

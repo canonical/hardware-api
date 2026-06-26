@@ -1,4 +1,4 @@
-name: Test client lib and CLI tool
+name: Test Client
 permissions:
   contents: read
 on:
@@ -18,33 +18,30 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint-and-test:
-    name: Lint and test client
-    runs-on: self-hosted-linux-amd64-noble-large
+  test:
+    name: Test
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: client
     steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y pkgconf libssl-dev build-essential
+      - name: Set up uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+      - run: sudo snap install --classic just
+      - run: just --yes setup
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
         with:
           toolchain: stable
           components: rustfmt, clippy
-      - name: Install just
-        run: sudo snap install --classic just
       - run: just build
       - run: just lint
-      - name: Run cargo test
-        run: just test
-      - name: Run coverage tests
-        run: just unit --output coverage.xml
+      - run: just test
+      - run: just unit --output coverage.xml
       - name: Upload coverage.xml as an artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -57,32 +54,3 @@ jobs:
         with:
           files: client/coverage.xml
           token: ${{ secrets.CODECOV_TOKEN }}
-
-  py-bindings-test:
-    name: Test Python bindings
-    runs-on: self-hosted-linux-amd64-noble-large
-    defaults:
-      run:
-        working-directory: client
-    needs: lint-and-test
-    steps:
-      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
-        with:
-          persist-credentials: false
-      - name: Install system dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y pkgconf libssl-dev build-essential
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
-        with:
-          toolchain: stable
-      - uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405 # v6.2.0
-        with:
-          python-version: "3.13"
-      - name: Install tox
-        run: pip install tox
-      - name: Lint
-        run: tox run -e lint
-      - name: Unit
-        run: tox run -e unit
