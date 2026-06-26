@@ -18,7 +18,7 @@ logger = logging.getLogger(__name__)
 def test_pebble_layer(ctx: testing.Context, container: testing.Container):
     """Tests that the Pebble layer is correctly set up."""
     state_in = testing.State(
-        config={"port": 30000, "hostname": "hw", "log-level": "info"},
+        config={"port": 30000, "log-level": "info"},
         containers={container},
         leader=True,
     )
@@ -45,7 +45,7 @@ def test_pebble_layer(ctx: testing.Context, container: testing.Container):
 def test_config_changed_invalid_log_level(ctx: testing.Context, container: testing.Container):
     """Tests that an invalid log level in config_changed sets BlockedStatus."""
     state_in = testing.State(
-        config={"port": 30000, "hostname": "hw", "log-level": "invalid"},
+        config={"port": 30000, "log-level": "invalid"},
         containers={container},
         leader=True,
     )
@@ -58,7 +58,7 @@ def test_config_changed_pebble_not_ready(ctx: testing.Context, container: testin
     """Tests that config_changed defers event if Pebble is not ready."""
     container = dataclasses.replace(container, can_connect=False)
     state_in = testing.State(
-        config={"port": 30000, "hostname": "hw", "log-level": "info"},
+        config={"port": 30000, "log-level": "info"},
         containers={container},
         leader=True,
     )
@@ -70,7 +70,7 @@ def test_config_changed_pebble_not_ready(ctx: testing.Context, container: testin
 def test_config_changed_updates_pebble_layer(ctx: testing.Context, container: testing.Container):
     """Tests that config_changed updates the Pebble layer with new log level."""
     state_in = testing.State(
-        config={"port": 30000, "hostname": "hw", "log-level": "debug"},
+        config={"port": 30000, "log-level": "debug"},
         containers={container},
         leader=True,
     )

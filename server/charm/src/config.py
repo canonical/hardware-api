@@ -11,4 +11,3 @@ class HardwareApiConfig(pydantic.BaseModel):
 
     log_level: Literal["info", "debug", "warning", "error", "critical"] = "info"
     port: int = 30000
-    hostname: str = "hw"
