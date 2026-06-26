@@ -65,15 +65,13 @@ pub struct PublicCertificationStatus {
 }
 
 fn create_answer(
-    cache: &mut HWCache,
+    cache: &HWCache,
     source: CertificationSource,
     hardware_info: &CertificationStatusRequest,
 ) -> PublicCertificationStatus {
     let (certification_status, stale_status, stale_reason) = cache.get_status();
-
     let hardware_mismatch = !cache.compare_hardware_data(hardware_info);
-
-    PublicCertificationStatus {
+    return PublicCertificationStatus {
         status: certification_status,
         valid_cache: !cache.is_expired(),
         hardware_mismatch: hardware_mismatch,
@@ -81,7 +79,7 @@ fn create_answer(
         stale_reason: stale_reason,
         source: source,
         remote_access_enabled: cache.get_remote_access_enabled(),
-    }
+    };
 }
 
 pub fn check_certification_status(
@@ -91,37 +89,29 @@ pub fn check_certification_status(
 ) -> Result<PublicCertificationStatus> {
     let mut cache = HWCache::new(None);
 
+    let cache_answer = |cache: &HWCache| {
+        Ok(create_answer(
+                cache,
+                CertificationSource::Cache,
+                hardware_info,
+        ))
+    };
+
     if mode == CheckCertificationMode::Cached {
-        return Ok(create_answer(
-            &mut cache,
-            CertificationSource::Cache,
-            hardware_info,
-        ));
+        return cache_answer(&cache);
     }
 
     let hardware_mismatch = !cache.compare_hardware_data(hardware_info);
     if !cache.get_remote_access_enabled() && hardware_mismatch {
-        return Ok(create_answer(
-            &mut cache,
-            CertificationSource::Cache,
-            hardware_info,
-        ));
+        return cache_answer(&cache);
     }
 
     if !cache.is_expired() {
-        return Ok(create_answer(
-            &mut cache,
-            CertificationSource::Cache,
-            hardware_info,
-        ));
+        return cache_answer(&cache);
     }
 
     if !cache.get_remote_access_enabled() && mode != CheckCertificationMode::Forced {
-        return Ok(create_answer(
-            &mut cache,
-            CertificationSource::Cache,
-            hardware_info,
-        ));
+        return cache_answer(&cache);
     }
 
     let mut server_url = url.clone();
@@ -131,21 +121,13 @@ pub fn check_certification_status(
     if response.is_err() {
         let error = response.err().unwrap();
         cache.end_failed_certification(StaleStatus::ConnectingError, error.to_string());
-        return Ok(create_answer(
-            &mut cache,
-            CertificationSource::Cache,
-            hardware_info,
-        ));
+        return cache_answer(&cache);
     }
     let response = response.unwrap().json::<CertificationStatusResponse>();
     if response.is_err() {
         let error = response.err().unwrap();
         cache.end_failed_certification(StaleStatus::ServerError, error.to_string());
-        return Ok(create_answer(
-            &mut cache,
-            CertificationSource::Cache,
-            hardware_info,
-        ));
+        return cache_answer(&cache);
     }
     let response = response.unwrap();
     let certification_status: CertificationStatus;
@@ -165,11 +147,11 @@ pub fn check_certification_status(
     }
 
     cache.end_success_certification(certification_status);
-    Ok(create_answer(
+    return Ok(create_answer(
         &mut cache,
         CertificationSource::Server,
         hardware_info,
-    ))
+    ));
 }
 
 pub fn send_certification_status_request(
@@ -182,5 +164,5 @@ pub fn send_certification_status_request(
         .with_json(request)?
         .send()?
         .json()?;
-    Ok(response)
+    return Ok(response);
 }

@@ -17,16 +17,11 @@
  */
 
 use crate::models;
-use std::path::Path;
+use std::path::{Path, PathBuf};
 use std::{env, fs::File};
 
 use chrono::DateTime;
 use serde::{Deserialize, Serialize};
-
-#[cfg(test)]
-use crate::models::software::OS;
-#[cfg(test)]
-use test_temp_dir::{test_temp_dir, TestTempDir};
 
 use models::request_validators::CertificationStatusRequest;
 
@@ -63,7 +58,7 @@ impl Default for StaleStatus {
 pub struct HWCache {
     data: HWCacheData,
     current_hardware_data: Option<CertificationStatusRequest>,
-    cache_path: String,
+    cache_path: PathBuf,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
@@ -80,22 +75,25 @@ struct HWCacheData {
 }
 
 impl HWCache {
-    fn get_cache_path(cache_folder: Option<String>) -> String {
-        let snap_data: String;
+    fn get_cache_path(cache_folder: Option<&Path>) -> PathBuf {
+        let snap_data: &Path;
+        // snap_data_env must be defined outside the if statement to avoid the compiler to complain
+        // about the data being dropped too early.
+        let snap_data_env = env::var("SNAP_DATA").unwrap_or_else(|_| ".".to_string());
         if cache_folder.is_none() {
-            snap_data = env::var("SNAP_DATA").unwrap_or_else(|_| ".".to_string());
+            snap_data = Path::new(&snap_data_env);
         } else {
             snap_data = cache_folder.unwrap();
         }
-        let cache_path = Path::join(Path::new(&snap_data), crate::constants::CACHE_PATH);
-        cache_path.to_str().unwrap().to_string()
+        let cache_path = Path::join(snap_data, crate::constants::CACHE_FILE_NAME);
+        return cache_path;
     }
 
     fn get_now(&self) -> DateTime<chrono::Utc> {
-        chrono::Utc::now()
+        return chrono::Utc::now();
     }
 
-    pub fn new(cache_folder: Option<String>) -> Self {
+    pub fn new(cache_folder: Option<&Path>) -> Self {
         let mut built_cache = HWCache {
             data: HWCacheData {
                 ..Default::default()
@@ -104,7 +102,7 @@ impl HWCache {
             cache_path: HWCache::get_cache_path(cache_folder),
         };
 
-        if !Path::new(&built_cache.cache_path).exists() {
+        if !built_cache.cache_path.exists() {
             return built_cache;
         }
         let config = File::open(built_cache.cache_path.clone());
@@ -195,16 +193,16 @@ impl HWCache {
 
     /// Returns the current certification status, stale status, and stale reason (if any).
     pub fn get_status(&self) -> (CertificationStatus, StaleStatus, Option<String>) {
-        (
+        return(
             self.data.certification_status.clone(),
             self.data.stale.clone(),
             self.data.stale_reason.clone(),
-        )
+        );
     }
 
     /// Compares the given hardware data with the cached hardware data.
     /// Returns true if they are the same, false otherwise.
-    pub fn compare_hardware_data(&mut self, hardware_data: &CertificationStatusRequest) -> bool {
+    pub fn compare_hardware_data(&self, hardware_data: &CertificationStatusRequest) -> bool {
         if self.data.hardware_data.is_some()
             && self.data.hardware_data.as_ref().unwrap() == hardware_data
         {
@@ -224,7 +222,7 @@ impl HWCache {
             return true;
         }
         let now = self.get_now();
-        now > expires_at.unwrap()
+        return now > expires_at.unwrap();
     }
 
     pub fn set_remote_access_enabled(&mut self, new_state: bool) {
@@ -244,17 +242,18 @@ impl HWCache {
     }
 
     pub fn get_remote_access_enabled(&self) -> bool {
-        self.data.remote_access_enabled
+        return self.data.remote_access_enabled;
     }
 }
 
 #[cfg(test)]
 mod tests {
-
+    use crate::models::software::OS;
     use crate::models::{
         devices::{Board, Processor},
         software::KernelPackage,
     };
+    use test_temp_dir::{test_temp_dir, TestTempDir};
 
     use super::*;
 
@@ -292,13 +291,12 @@ mod tests {
         }
     }
 
-    fn set_snap_data_env_var() -> (TestTempDir, String) {
+    fn set_snap_data_env_var() -> TestTempDir {
         // Ensures that each test runs in a separate temporary directory. Can't
         // just set SNAP_DATA to a new temp dir because the tests seem to run in
         // parallel, so the variable would be overwritten.
         let temp_dir = test_temp_dir!();
-        let temp_dir_path = temp_dir.as_path_untracked().to_str().unwrap().to_string();
-        return (temp_dir, temp_dir_path);
+        return temp_dir;
     }
 
     fn keep_temp_dir_alive(_temp_dir: &TestTempDir) {
@@ -307,9 +305,9 @@ mod tests {
 
     #[test]
     fn test_set_remote_access_enabled() {
-        let (temp_dir, temp_dir_path) = set_snap_data_env_var();
+        let temp_dir = set_snap_data_env_var();
 
-        let mut cache = HWCache::new(Some(temp_dir_path));
+        let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
         cache.set_remote_access_enabled(true);
         assert!(cache.get_remote_access_enabled());
         cache.set_remote_access_enabled(false);
@@ -322,14 +320,14 @@ mod tests {
 
     #[test]
     fn test_cache_is_kept() {
-        let (temp_dir, temp_dir_path) = set_snap_data_env_var();
+        let temp_dir = set_snap_data_env_var();
 
-        let mut cache = HWCache::new(Some(temp_dir_path.clone()));
+        let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
         assert!(!cache.get_remote_access_enabled());
         cache.set_remote_access_enabled(true);
         assert!(cache.get_remote_access_enabled());
 
-        let cache2 = HWCache::new(Some(temp_dir_path));
+        let cache2 = HWCache::new(Some(temp_dir.as_path_untracked()));
         assert!(cache2.get_remote_access_enabled());
 
         keep_temp_dir_alive(&temp_dir);
@@ -337,9 +335,9 @@ mod tests {
 
     #[test]
     fn test_cache_is_invalidated() {
-        let (temp_dir, temp_dir_path) = set_snap_data_env_var();
+        let temp_dir = set_snap_data_env_var();
 
-        let mut cache = HWCache::new(Some(temp_dir_path));
+        let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
         assert!(!cache.get_remote_access_enabled());
         cache.set_remote_access_enabled(true);
         assert!(cache.get_remote_access_enabled());
@@ -365,9 +363,9 @@ mod tests {
 
     #[test]
     fn test_cache_hardware_mismatch() {
-        let (temp_dir, temp_dir_path) = set_snap_data_env_var();
+        let temp_dir = set_snap_data_env_var();
 
-        let mut cache = HWCache::new(Some(temp_dir_path));
+        let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
         assert!(!cache.get_remote_access_enabled());
         cache.set_remote_access_enabled(true);
         assert!(cache.get_remote_access_enabled());
@@ -383,9 +381,9 @@ mod tests {
 
     #[test]
     fn test_cache_state() {
-        let (temp_dir, temp_dir_path) = set_snap_data_env_var();
+        let temp_dir = set_snap_data_env_var();
 
-        let mut cache = HWCache::new(Some(temp_dir_path));
+        let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
         assert!(!cache.get_remote_access_enabled());
         cache.set_remote_access_enabled(true);
         assert!(cache.get_remote_access_enabled());
@@ -415,9 +413,9 @@ mod tests {
 
     #[test]
     fn test_cache_expiration_date_for_certified() {
-        let (temp_dir, temp_dir_path) = set_snap_data_env_var();
+        let temp_dir = set_snap_data_env_var();
 
-        let mut cache = HWCache::new(Some(temp_dir_path));
+        let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
         assert!(!cache.get_remote_access_enabled());
         cache.set_remote_access_enabled(true);
         assert!(cache.get_remote_access_enabled());
@@ -449,9 +447,9 @@ mod tests {
 
     #[test]
     fn test_cache_expiration_date_for_not_seen() {
-        let (temp_dir, temp_dir_path) = set_snap_data_env_var();
+        let temp_dir = set_snap_data_env_var();
 
-        let mut cache = HWCache::new(Some(temp_dir_path));
+        let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
         assert!(!cache.get_remote_access_enabled());
         cache.set_remote_access_enabled(true);
         assert!(cache.get_remote_access_enabled());
