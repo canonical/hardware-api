@@ -63,7 +63,7 @@ fn run(server_url: String) -> Result<()> {
 
     let response = check_certification_status(
         server_url,
-        hwlib::CheckCertificationMode::Normal,
+        hwlib::CheckCertificationMode::Forced,
         &current_hardware,
         None,
     )
@@ -73,5 +73,13 @@ fn run(server_url: String) -> Result<()> {
         serde_json::to_string_pretty(&response).context("cannot serialize response as JSON")?;
     println!("{response_json}");
 
-    Ok(())
+    let (staled, stale_reason) = response.is_staled();
+
+    if staled {
+        return Err(anyhow::anyhow!(
+            stale_reason.unwrap_or("unknown reason".to_string())
+        ));
+    } else {
+        return Ok(());
+    }
 }

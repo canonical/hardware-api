@@ -19,7 +19,8 @@
 use anyhow::Result;
 use hwlib::{
     models::request_validators::{CertificationStatusRequest, Paths},
-    models::response_validators::CertificationStatusResponse,
+    check_certification_status,
+    PublicCertificationStatus,
 };
 use simple_test_case::test_case;
 use std::{
@@ -40,7 +41,7 @@ fn get_test_device_paths(device_type: &str) -> Paths {
     }
 }
 
-fn load_response_file(filepath: &Path) -> CertificationStatusResponse {
+fn load_response_file(filepath: &Path) -> PublicCertificationStatus {
     let content = read_to_string(filepath)
         .unwrap_or_else(|_| panic!("Failed to read response file: {}", filepath.display()));
     serde_json::from_str(&content)
@@ -48,63 +49,22 @@ fn load_response_file(filepath: &Path) -> CertificationStatusResponse {
 }
 
 fn assert_response_matches_expected(
-    response: &CertificationStatusResponse,
-    expected: &CertificationStatusResponse,
+    response: &PublicCertificationStatus,
+    expected: &PublicCertificationStatus,
 ) {
-    let (actual_certified_url, actual_arch, actual_bios, actual_board, actual_releases) =
-        match response {
-            CertificationStatusResponse::Certified {
-                certified_url,
-                architecture,
-                bios,
-                board,
-                available_releases,
-                ..
-            }
-            | CertificationStatusResponse::CertifiedImageExists {
-                certified_url,
-                architecture,
-                bios,
-                board,
-                available_releases,
-                ..
-            } => (certified_url, architecture, bios, board, available_releases),
-            _ => panic!(
-                "Expected response to be Certified or Certified Image Exists, but it was {:?}",
-                response
-            ),
-        };
-
-    let (expected_certified_url, expected_arch, expected_bios, expected_board, expected_releases) =
-        match expected {
-            CertificationStatusResponse::Certified {
-                certified_url,
-                architecture,
-                bios,
-                board,
-                available_releases,
-                ..
-            }
-            | CertificationStatusResponse::CertifiedImageExists {
-                certified_url,
-                architecture,
-                bios,
-                board,
-                available_releases,
-                ..
-            } => (certified_url, architecture, bios, board, available_releases),
-            _ => panic!("Expected response must contain Certified or CertifiedImageExists status"),
-        };
+    let (status, certified_url, available_releases) = response.get_status();
+    let (expected_status, expected_certified_url, expected_available_releases) = expected.get_status();
 
     assert_eq!(
-        actual_certified_url, expected_certified_url,
+        status, expected_status,
+        "Certification status mismatch"
+    );
+    assert_eq!(
+        certified_url, expected_certified_url,
         "Certified URL mismatch"
     );
-    assert_eq!(actual_arch, expected_arch, "Architecture mismatch");
-    assert_eq!(actual_bios, expected_bios, "BIOS mismatch");
-    assert_eq!(actual_board, expected_board, "Board mismatch");
     assert_eq!(
-        actual_releases, expected_releases,
+        available_releases, expected_available_releases,
         "Available releases mismatch"
     );
 }
@@ -117,7 +77,7 @@ fn test_certification_request(dir_path: &str) -> Result<()> {
     let api_url = std::env::var("API_URL").expect("API_URL environment variable must be specified");
 
     let cert_request = CertificationStatusRequest::new(get_test_device_paths(dir_path))?;
-    let response = check_certification_status(api_url, hwlib::CheckCertificationMode::Force, &cert_request, None)?;
+    let response = check_certification_status(api_url, hwlib::CheckCertificationMode::Forced, &cert_request, None)?;
 
     let response_json_file = PathBuf::from("/app/client/test_data")
         .join(dir_path)
@@ -130,13 +90,13 @@ fn test_certification_request(dir_path: &str) -> Result<()> {
 
 #[test]
 fn test_server_connection_error() -> Result<()> {
-    let result = check_certification_status(
+    let result: Result<PublicCertificationStatus> = check_certification_status(
         "http://non-existent-server:8080".to_string(),
-        hwlib::CheckCertificationMode::Force,
+        hwlib::CheckCertificationMode::Forced,
         &CertificationStatusRequest::new(get_test_device_paths("amd64/dell_xps13"))?,
-        None,
-    );
+        None);
 
-    assert!(result.is_err());
+    let (staled, _) = result.unwrap().is_staled();
+    assert!(staled); // we are expecting a stale response due to server connection error
     Ok(())
 }

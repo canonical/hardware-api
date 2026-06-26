@@ -34,11 +34,11 @@ use anyhow::Result;
 use constants::CERT_STATUS_ENDPOINT;
 use models::{
     request_validators::CertificationStatusRequest,
-    response_validators::CertificationStatusResponse,
+    response_validators::CertificationStatusResponse, software::OS,
 };
 
 use cache::{CertificationStatus, HWCache, StaleStatus};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
 #[derive(PartialEq)]
 pub enum CheckCertificationMode {
@@ -47,16 +47,17 @@ pub enum CheckCertificationMode {
     Forced,
 }
 
-#[derive(Serialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq)]
 pub enum CertificationSource {
     Cache,
     Server,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Deserialize, Debug)]
 pub struct PublicCertificationStatus {
     status: CertificationStatus,
-    status_url: Option<String>,
+    certified_url: Option<String>,
+    available_releases: Vec<OS>,
     valid_cache: bool,
     hardware_mismatch: bool,
     stale: bool,
@@ -65,17 +66,32 @@ pub struct PublicCertificationStatus {
     remote_access_enabled: bool,
 }
 
+impl PublicCertificationStatus {
+    pub fn get_status(&self) -> (CertificationStatus, Option<String>, Vec<OS>) {
+        return (
+            self.status.clone(),
+            self.certified_url.clone(),
+            self.available_releases.clone(),
+        );
+    }
+
+    pub fn is_staled(&self) -> (bool, Option<String>) {
+        return (self.stale, self.stale_reason.clone());
+    }
+}
+
 fn create_answer(
     cache: &HWCache,
     source: CertificationSource,
     hardware_info: &CertificationStatusRequest,
 ) -> PublicCertificationStatus {
-    let (certification_status, certification_status_url, stale_status, stale_reason) =
+    let (certification_status, certification_certified_url, stale_status, stale_reason) =
         cache.get_status();
     return PublicCertificationStatus {
         status: certification_status,
-        status_url: certification_status_url,
+        certified_url: certification_certified_url,
         valid_cache: !cache.is_expired(),
+        available_releases: cache.get_available_releases(),
         hardware_mismatch: !cache.compare_hardware_data(hardware_info),
         stale: stale_status != StaleStatus::Valid,
         stale_reason: stale_reason,
@@ -125,7 +141,10 @@ pub fn check_certification_status(
     }
 
     let hardware_mismatch = !cache.compare_hardware_data(hardware_info);
-    if !cache.get_remote_access_enabled() && hardware_mismatch {
+    if !cache.get_remote_access_enabled()
+        && hardware_mismatch
+        && mode != CheckCertificationMode::Forced
+    {
         return cache_answer(&cache);
     }
 
@@ -148,27 +167,48 @@ pub fn check_certification_status(
     }
     let response = response.unwrap();
     let certification_status: CertificationStatus;
-    let certification_status_url: Option<String>;
+    let certification_certified_url: Option<String>;
+    let certification_available_releases: Vec<OS>;
     match response {
-        CertificationStatusResponse::Certified { certified_url, .. } => {
+        CertificationStatusResponse::Certified {
+            certified_url,
+            available_releases,
+            ..
+        } => {
             certification_status = CertificationStatus::Certified;
-            certification_status_url = Some(certified_url);
+            certification_certified_url = Some(certified_url);
+            certification_available_releases = available_releases;
         }
-        CertificationStatusResponse::CertifiedImageExists { certified_url, .. } => {
+        CertificationStatusResponse::CertifiedImageExists {
+            certified_url,
+            available_releases,
+            ..
+        } => {
             certification_status = CertificationStatus::CertifiedImageExists;
-            certification_status_url = Some(certified_url);
+            certification_certified_url = Some(certified_url);
+            certification_available_releases = available_releases;
         }
-        CertificationStatusResponse::RelatedCertifiedSystemExists { certified_url, .. } => {
+        CertificationStatusResponse::RelatedCertifiedSystemExists {
+            certified_url,
+            available_releases,
+            ..
+        } => {
             certification_status = CertificationStatus::RelatedCertifiedSystemExists;
-            certification_status_url = Some(certified_url);
+            certification_certified_url = Some(certified_url);
+            certification_available_releases = available_releases;
         }
         _ => {
             certification_status = CertificationStatus::NotSeen;
-            certification_status_url = None;
+            certification_certified_url = None;
+            certification_available_releases = vec![];
         }
     }
 
-    cache.end_success_certification(certification_status, certification_status_url);
+    cache.end_success_certification(
+        certification_status,
+        certification_certified_url,
+        certification_available_releases,
+    );
     return Ok(create_answer(
         &cache,
         CertificationSource::Server,
