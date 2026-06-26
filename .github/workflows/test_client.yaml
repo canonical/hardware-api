@@ -57,9 +57,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
   snap:
     name: Snap
-    runs-on: [self-hosted, linux, jammy, x64]
-    needs: py-bindings-test
-    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
     permissions:
       contents: read
     strategy:
