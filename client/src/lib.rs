@@ -47,7 +47,7 @@ pub enum CheckCertificationMode {
     Forced,
 }
 
-#[derive(Serialize, Debug)]
+#[derive(Serialize, Debug, PartialEq)]
 pub enum CertificationSource {
     Cache,
     Server,
@@ -72,12 +72,11 @@ fn create_answer(
 ) -> PublicCertificationStatus {
     let (certification_status, certification_status_url, stale_status, stale_reason) =
         cache.get_status();
-    let hardware_mismatch = !cache.compare_hardware_data(hardware_info);
     return PublicCertificationStatus {
         status: certification_status,
         status_url: certification_status_url,
         valid_cache: !cache.is_expired(),
-        hardware_mismatch: hardware_mismatch,
+        hardware_mismatch: !cache.compare_hardware_data(hardware_info),
         stale: stale_status != StaleStatus::Valid,
         stale_reason: stale_reason,
         source: source,
@@ -85,13 +84,34 @@ fn create_answer(
     };
 }
 
+#[cfg(not(test))]
+fn send_request(
+    server_url: String,
+    hardware_info: &CertificationStatusRequest,
+) -> Result<CertificationStatusResponse> {
+    let response = minreq::post(&server_url).with_json(hardware_info)?.send();
+    if response.is_err() {
+        let error = response.err().unwrap();
+        return Result::Err(anyhow::anyhow!(error.to_string()));
+    }
+    let response = response.unwrap().json::<CertificationStatusResponse>();
+    if response.is_err() {
+        let error = response.err().unwrap();
+        return Result::Err(anyhow::anyhow!(error.to_string()));
+    }
+    return Ok(response.unwrap());
+}
+
 pub fn check_certification_status(
     url: String,
     mode: CheckCertificationMode,
     hardware_info: &CertificationStatusRequest,
+    cache_opt: Option<&mut HWCache>,
 ) -> Result<PublicCertificationStatus> {
-    let mut cache = HWCache::new(None);
-
+    let mut cache = &mut HWCache::new(None);
+    if !cache_opt.is_none() {
+        cache = cache_opt.unwrap();
+    }
     let cache_answer = |cache: &HWCache| {
         Ok(create_answer(
             cache,
@@ -109,7 +129,7 @@ pub fn check_certification_status(
         return cache_answer(&cache);
     }
 
-    if !cache.is_expired() {
+    if !cache.is_expired() && mode != CheckCertificationMode::Forced {
         return cache_answer(&cache);
     }
 
@@ -120,16 +140,10 @@ pub fn check_certification_status(
     let mut server_url = url.clone();
     server_url.push_str(CERT_STATUS_ENDPOINT);
     cache.begin_certification(Some(server_url.clone()), hardware_info);
-    let response = minreq::post(&server_url).with_json(hardware_info)?.send();
+    let response = send_request(server_url, hardware_info);
     if response.is_err() {
         let error = response.err().unwrap();
         cache.end_failed_certification(StaleStatus::ConnectingError, error.to_string());
-        return cache_answer(&cache);
-    }
-    let response = response.unwrap().json::<CertificationStatusResponse>();
-    if response.is_err() {
-        let error = response.err().unwrap();
-        cache.end_failed_certification(StaleStatus::ServerError, error.to_string());
         return cache_answer(&cache);
     }
     let response = response.unwrap();
@@ -156,21 +170,320 @@ pub fn check_certification_status(
 
     cache.end_success_certification(certification_status, certification_status_url);
     return Ok(create_answer(
-        &mut cache,
+        &cache,
         CertificationSource::Server,
         hardware_info,
     ));
 }
 
-pub fn send_certification_status_request(
-    url: String,
-    request: &CertificationStatusRequest,
+#[cfg(test)]
+fn send_request(
+    server_url: String,
+    _: &CertificationStatusRequest,
 ) -> Result<CertificationStatusResponse> {
-    let mut server_url = url.clone();
-    server_url.push_str(CERT_STATUS_ENDPOINT);
-    let response = minreq::post(&server_url)
-        .with_json(request)?
-        .send()?
-        .json()?;
-    return Ok(response);
+    let only_url = server_url.as_str().split("/").nth(0).unwrap();
+    if only_url.starts_with("certified_") {
+        let arch = only_url.split("_").nth(1).unwrap();
+        return Result::Ok(CertificationStatusResponse::Certified {
+            certified_url: format!("https://certification.ubuntu.com/hardware/{}", arch),
+            architecture: arch.to_string(),
+            available_releases: vec![],
+            bios: Default::default(),
+            board: Default::default(),
+            chassis: Default::default(),
+        });
+    }
+
+    if only_url.starts_with("related_certified_system_exists_") {
+        let arch = only_url.split("_").nth(4).unwrap();
+        return Result::Ok(CertificationStatusResponse::RelatedCertifiedSystemExists {
+            certified_url: format!("https://certification.ubuntu.com/hardware/{}", arch),
+            architecture: arch.to_string(),
+            available_releases: vec![],
+            bios: Default::default(),
+            board: Default::default(),
+            chassis: Default::default(),
+            gpu: None,
+            audio: None,
+            video: None,
+            network: None,
+            wireless: None,
+            pci_peripherals: vec![],
+            usb_peripherals: vec![],
+        });
+    }
+
+    if only_url.starts_with("certified_image_exists_") {
+        let arch = only_url.split("_").nth(3).unwrap();
+        return Result::Ok(CertificationStatusResponse::CertifiedImageExists {
+            certified_url: format!("https://certification.ubuntu.com/hardware/{}", arch),
+            architecture: arch.to_string(),
+            available_releases: vec![],
+            bios: Default::default(),
+            board: Default::default(),
+            chassis: Default::default(),
+        });
+    }
+
+    return Result::Ok(CertificationStatusResponse::NotSeen);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::software::OS;
+    use crate::models::{
+        devices::{Board, Processor},
+        software::KernelPackage,
+    };
+    use test_temp_dir::{test_temp_dir, TestTempDir};
+
+    fn create_test_hardware_data(arch: String) -> CertificationStatusRequest {
+        CertificationStatusRequest {
+            architecture: arch,
+            bios: None,
+            board: Board::default(),
+            chassis: None,
+            model: "".to_string(),
+            os: OS {
+                codename: "".to_string(),
+                distributor: "".to_string(),
+                version: "".to_string(),
+                kernel: KernelPackage {
+                    name: None,
+                    version: "".to_string(),
+                    signature: None,
+                    loaded_modules: vec![],
+                },
+            },
+            pci_peripherals: vec![],
+            processor: Processor {
+                identifier: None,
+                frequency: 0,
+                version: "".to_string(),
+                manufacturer: "".to_string(),
+            },
+            usb_peripherals: vec![],
+            vendor: "".to_string(),
+        }
+    }
+
+    fn create_temporal_cache_folder() -> TestTempDir {
+        // Ensures that each test runs in a separate temporary directory. Can't
+        // just set SNAP_DATA to a new temp dir because the tests seem to run in
+        // parallel, so the variable would be overwritten.
+        let temp_dir = test_temp_dir!();
+        return temp_dir;
+    }
+
+    fn keep_temp_dir_alive(_temp_dir: &TestTempDir) {
+        // Keep the temp dir alive until the end of the test
+    }
+
+    #[test]
+    fn test_check_is_certified() {
+        let temp_dir = create_temporal_cache_folder();
+        let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
+        cache.set_remote_access_enabled(true);
+
+        let hardware_info = create_test_hardware_data("x86_64".to_string());
+        let result = check_certification_status(
+            "certified_x86_64".to_string(),
+            CheckCertificationMode::Normal,
+            &hardware_info,
+            Some(&mut cache),
+        );
+        assert!(result.is_ok());
+        let data = result.unwrap();
+        assert_eq!(data.status, CertificationStatus::Certified);
+        assert_eq!(data.source, CertificationSource::Server);
+        assert_eq!(data.hardware_mismatch, false);
+        assert_eq!(data.valid_cache, true);
+        assert_eq!(data.stale, false);
+        keep_temp_dir_alive(&temp_dir);
+    }
+
+    #[test]
+    fn test_check_first_call_no_connection() {
+        let temp_dir = create_temporal_cache_folder();
+        let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
+
+        let hardware_info = create_test_hardware_data("x86_64".to_string());
+        let result = check_certification_status(
+            "certified_x86_64".to_string(),
+            CheckCertificationMode::Normal,
+            &hardware_info,
+            Some(&mut cache),
+        );
+        assert!(result.is_ok());
+        let data = result.unwrap();
+        assert_eq!(data.status, CertificationStatus::Unknown);
+        assert_eq!(data.source, CertificationSource::Cache);
+        keep_temp_dir_alive(&temp_dir);
+    }
+
+    #[test]
+    fn test_check_is_certified_and_cached() {
+        let temp_dir = create_temporal_cache_folder();
+        let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
+        cache.set_remote_access_enabled(true);
+
+        let hardware_info = create_test_hardware_data("x86_64".to_string());
+        let result = check_certification_status(
+            "certified_x86_64".to_string(),
+            CheckCertificationMode::Normal,
+            &hardware_info,
+            Some(&mut cache),
+        );
+        assert!(result.is_ok());
+        let data = result.unwrap();
+        assert_eq!(data.status, CertificationStatus::Certified);
+        assert_eq!(data.source, CertificationSource::Server);
+        assert_eq!(data.hardware_mismatch, false);
+        assert_eq!(data.valid_cache, true);
+        assert_eq!(data.stale, false);
+
+        let result = check_certification_status(
+            "certified_x86_64".to_string(),
+            CheckCertificationMode::Normal,
+            &hardware_info,
+            Some(&mut cache),
+        );
+        assert!(result.is_ok());
+        let data = result.unwrap();
+        assert_eq!(data.status, CertificationStatus::Certified);
+        assert_eq!(data.source, CertificationSource::Cache);
+        assert_eq!(data.hardware_mismatch, false);
+        assert_eq!(data.valid_cache, true);
+        assert_eq!(data.stale, false);
+    }
+
+    #[test]
+    fn test_check_is_certified_forced() {
+        let temp_dir = create_temporal_cache_folder();
+        let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
+        cache.set_remote_access_enabled(true);
+
+        let hardware_info = create_test_hardware_data("x86_64".to_string());
+        let result = check_certification_status(
+            "certified_x86_64".to_string(),
+            CheckCertificationMode::Normal,
+            &hardware_info,
+            Some(&mut cache),
+        );
+        assert!(result.is_ok());
+        let data = result.unwrap();
+        assert_eq!(data.status, CertificationStatus::Certified);
+        assert_eq!(data.source, CertificationSource::Server);
+        assert_eq!(data.hardware_mismatch, false);
+        assert_eq!(data.valid_cache, true);
+        assert_eq!(data.stale, false);
+
+        let result = check_certification_status(
+            "certified_x86_64".to_string(),
+            CheckCertificationMode::Forced,
+            &hardware_info,
+            Some(&mut cache),
+        );
+        assert!(result.is_ok());
+        let data = result.unwrap();
+        assert_eq!(data.status, CertificationStatus::Certified);
+        assert_eq!(data.source, CertificationSource::Server);
+        assert_eq!(data.hardware_mismatch, false);
+        assert_eq!(data.valid_cache, true);
+        assert_eq!(data.stale, false);
+
+        keep_temp_dir_alive(&temp_dir);
+    }
+
+    #[test]
+    fn test_check_is_certified_hardware_mismatch() {
+        let temp_dir = create_temporal_cache_folder();
+        let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
+        cache.set_remote_access_enabled(true);
+
+        let hardware_info = create_test_hardware_data("x86_64".to_string());
+        let result = check_certification_status(
+            "certified_x86_64".to_string(),
+            CheckCertificationMode::Normal,
+            &hardware_info,
+            Some(&mut cache),
+        );
+        assert!(result.is_ok());
+        let data = result.unwrap();
+        assert_eq!(data.status, CertificationStatus::Certified);
+        assert_eq!(data.source, CertificationSource::Server);
+        assert_eq!(data.hardware_mismatch, false);
+        assert_eq!(data.valid_cache, true);
+        assert_eq!(data.stale, false);
+
+        let hardware_info = create_test_hardware_data("arm64".to_string());
+        let result = check_certification_status(
+            "certified_arm64".to_string(),
+            CheckCertificationMode::Normal,
+            &hardware_info,
+            Some(&mut cache),
+        );
+        assert!(result.is_ok());
+        let data = result.unwrap();
+        assert_eq!(data.status, CertificationStatus::Certified);
+        assert_eq!(data.source, CertificationSource::Cache);
+        assert_eq!(data.hardware_mismatch, true);
+        assert_eq!(data.valid_cache, true);
+        assert_eq!(data.stale, false);
+
+        let hardware_info = create_test_hardware_data("arm64".to_string());
+        let result = check_certification_status(
+            "certified_arm64".to_string(),
+            CheckCertificationMode::Forced,
+            &hardware_info,
+            Some(&mut cache),
+        );
+        assert!(result.is_ok());
+        let data = result.unwrap();
+        assert_eq!(data.status, CertificationStatus::Certified);
+        assert_eq!(data.source, CertificationSource::Server);
+        assert_eq!(data.hardware_mismatch, false);
+        assert_eq!(data.valid_cache, true);
+        assert_eq!(data.stale, false);
+
+        keep_temp_dir_alive(&temp_dir);
+    }
+
+    #[test]
+    fn test_check_is_certified_and_cached_in_cache_mode() {
+        let temp_dir = create_temporal_cache_folder();
+        let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
+        cache.set_remote_access_enabled(true);
+
+        let hardware_info = create_test_hardware_data("x86_64".to_string());
+        let result = check_certification_status(
+            "certified_x86_64".to_string(),
+            CheckCertificationMode::Normal,
+            &hardware_info,
+            Some(&mut cache),
+        );
+        assert!(result.is_ok());
+        let data = result.unwrap();
+        assert_eq!(data.status, CertificationStatus::Certified);
+        assert_eq!(data.source, CertificationSource::Server);
+        assert_eq!(data.hardware_mismatch, false);
+        assert_eq!(data.valid_cache, true);
+        assert_eq!(data.stale, false);
+
+        let hardware_info = create_test_hardware_data("arm64".to_string());
+        let result = check_certification_status(
+            "certified_arm64".to_string(),
+            CheckCertificationMode::Cached,
+            &hardware_info,
+            Some(&mut cache),
+        );
+        assert!(result.is_ok());
+        let data = result.unwrap();
+        assert_eq!(data.status, CertificationStatus::Certified);
+        assert_eq!(data.source, CertificationSource::Cache);
+        assert_eq!(data.hardware_mismatch, true);
+        assert_eq!(data.valid_cache, true);
+        assert_eq!(data.stale, false);
+    }
 }

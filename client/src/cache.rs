@@ -305,7 +305,7 @@ mod tests {
         }
     }
 
-    fn set_snap_data_env_var() -> TestTempDir {
+    fn create_temporal_cache_folder() -> TestTempDir {
         // Ensures that each test runs in a separate temporary directory. Can't
         // just set SNAP_DATA to a new temp dir because the tests seem to run in
         // parallel, so the variable would be overwritten.
@@ -319,7 +319,7 @@ mod tests {
 
     #[test]
     fn test_set_remote_access_enabled() {
-        let temp_dir = set_snap_data_env_var();
+        let temp_dir = create_temporal_cache_folder();
 
         let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
         cache.set_remote_access_enabled(true);
@@ -334,7 +334,7 @@ mod tests {
 
     #[test]
     fn test_cache_is_kept() {
-        let temp_dir = set_snap_data_env_var();
+        let temp_dir = create_temporal_cache_folder();
 
         let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
         assert!(!cache.get_remote_access_enabled());
@@ -349,7 +349,7 @@ mod tests {
 
     #[test]
     fn test_cache_is_invalidated() {
-        let temp_dir = set_snap_data_env_var();
+        let temp_dir = create_temporal_cache_folder();
 
         let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
         assert!(!cache.get_remote_access_enabled());
@@ -386,7 +386,7 @@ mod tests {
 
     #[test]
     fn test_cache_hardware_mismatch() {
-        let temp_dir = set_snap_data_env_var();
+        let temp_dir = create_temporal_cache_folder();
 
         let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
         assert!(!cache.get_remote_access_enabled());
@@ -413,7 +413,7 @@ mod tests {
 
     #[test]
     fn test_cache_state() {
-        let temp_dir = set_snap_data_env_var();
+        let temp_dir = create_temporal_cache_folder();
 
         let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
         assert!(!cache.get_remote_access_enabled());
@@ -451,7 +451,7 @@ mod tests {
 
     #[test]
     fn test_cache_expiration_date_for_certified() {
-        let temp_dir = set_snap_data_env_var();
+        let temp_dir = create_temporal_cache_folder();
 
         let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
         assert!(!cache.get_remote_access_enabled());
@@ -494,7 +494,7 @@ mod tests {
 
     #[test]
     fn test_cache_expiration_date_for_not_seen() {
-        let temp_dir = set_snap_data_env_var();
+        let temp_dir = create_temporal_cache_folder();
 
         let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
         assert!(!cache.get_remote_access_enabled());

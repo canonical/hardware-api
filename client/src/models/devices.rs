@@ -25,7 +25,7 @@ pub struct Audio {
     pub vendor: String,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Default, Clone)]
 pub struct Bios {
     pub firmware_revision: Option<String>,
     pub release_date: Option<String>,

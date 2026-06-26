@@ -65,6 +65,7 @@ fn run(server_url: String) -> Result<()> {
         server_url,
         hwlib::CheckCertificationMode::Normal,
         &current_hardware,
+        None,
     )
     .context("Failed")?;
 
