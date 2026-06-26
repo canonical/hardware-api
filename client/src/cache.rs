@@ -25,33 +25,23 @@ use serde::{Deserialize, Serialize};
 
 use models::request_validators::CertificationStatusRequest;
 
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
 pub enum CertificationStatus {
     Certified,
     NotSeen,
     CertifiedImageExists,
     RelatedCertifiedSystemExists,
+    #[default]
     Unknown,
 }
 
-impl Default for CertificationStatus {
-    fn default() -> Self {
-        CertificationStatus::Unknown
-    }
-}
-
-#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq, Default)]
 pub enum StaleStatus {
     Connecting,
     ConnectingError,
     ServerError,
+    #[default]
     Valid,
-}
-
-impl Default for StaleStatus {
-    fn default() -> Self {
-        StaleStatus::Valid
-    }
 }
 
 /// A cache for the hardware data and certification status.
@@ -78,15 +68,14 @@ struct HWCacheData {
 
 impl HWCache {
     fn get_cache_path(cache_folder: Option<&Path>) -> PathBuf {
-        let snap_data: &Path;
         // snap_data_env must be defined outside the if statement to avoid the compiler to complain
         // about the data being dropped too early.
         let snap_data_env = env::var("SNAP_DATA").unwrap_or_else(|_| ".".to_string());
-        if cache_folder.is_none() {
-            snap_data = Path::new(&snap_data_env);
+        let snap_data: &Path = if cache_folder.is_none() {
+            Path::new(&snap_data_env)
         } else {
-            snap_data = cache_folder.unwrap();
-        }
+            cache_folder.unwrap()
+        };
         let cache_path = Path::join(snap_data, crate::constants::CACHE_FILE_NAME);
         return cache_path;
     }
@@ -288,7 +277,7 @@ mod tests {
                 version: "".to_string(),
             },
             chassis: None,
-            model: model,
+            model,
             os: OS {
                 codename: "".to_string(),
                 distributor: "".to_string(),

@@ -94,8 +94,8 @@ fn create_answer(
         available_releases: cache.get_available_releases(),
         hardware_mismatch: !cache.compare_hardware_data(hardware_info),
         stale: stale_status != StaleStatus::Valid,
-        stale_reason: stale_reason,
-        source: source,
+        stale_reason,
+        source,
         remote_access_enabled: cache.get_remote_access_enabled(),
     };
 }
@@ -125,7 +125,7 @@ pub fn check_certification_status(
     cache_opt: Option<&mut HWCache>,
 ) -> Result<PublicCertificationStatus> {
     let mut cache = &mut HWCache::new(None);
-    if !cache_opt.is_none() {
+    if cache_opt.is_some() {
         cache = cache_opt.unwrap();
     }
     let cache_answer = |cache: &HWCache| {
@@ -137,7 +137,7 @@ pub fn check_certification_status(
     };
 
     if mode == CheckCertificationMode::Cached {
-        return cache_answer(&cache);
+        return cache_answer(cache);
     }
 
     let hardware_mismatch = !cache.compare_hardware_data(hardware_info);
@@ -145,15 +145,15 @@ pub fn check_certification_status(
         && hardware_mismatch
         && mode != CheckCertificationMode::Forced
     {
-        return cache_answer(&cache);
+        return cache_answer(cache);
     }
 
     if !cache.is_expired() && mode != CheckCertificationMode::Forced {
-        return cache_answer(&cache);
+        return cache_answer(cache);
     }
 
     if !cache.get_remote_access_enabled() && mode != CheckCertificationMode::Forced {
-        return cache_answer(&cache);
+        return cache_answer(cache);
     }
 
     let mut server_url = url.clone();
@@ -163,7 +163,7 @@ pub fn check_certification_status(
     if response.is_err() {
         let error = response.err().unwrap();
         cache.end_failed_certification(StaleStatus::ConnectingError, error.to_string());
-        return cache_answer(&cache);
+        return cache_answer(cache);
     }
     let response = response.unwrap();
     let certification_status: CertificationStatus;
@@ -210,7 +210,7 @@ pub fn check_certification_status(
         certification_available_releases,
     );
     return Ok(create_answer(
-        &cache,
+        cache,
         CertificationSource::Server,
         hardware_info,
     ));
@@ -221,7 +221,7 @@ fn send_request(
     server_url: String,
     _: &CertificationStatusRequest,
 ) -> Result<CertificationStatusResponse> {
-    let only_url = server_url.as_str().split("/").nth(0).unwrap();
+    let only_url = server_url.as_str().split("/").next().unwrap();
     if only_url.starts_with("certified_") {
         let arch = only_url.split("_").nth(1).unwrap();
         return Result::Ok(CertificationStatusResponse::Certified {
