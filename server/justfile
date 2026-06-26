@@ -14,6 +14,14 @@ help:
 schema:
     @uvx tox run -e schema
 
+[doc('Generate Terraform docs.')]
+[group('project')]
+[working-directory('terraform')]
+terraform-docs:
+    @docker run --rm --volume "$(pwd):/terraform-docs" -u $(id -u) \
+        quay.io/terraform-docs/terraform-docs:latest markdown /terraform-docs \
+        --output-file=README.md
+
 [doc('Generate lockfile.')]
 [group('venv')]
 lock:
@@ -35,10 +43,25 @@ venv:
 format:
     @uvx tox run -e format
 
+[doc('Format Terraform module.')]
+[group('lint')]
+[working-directory('terraform')]
+format-terraform:
+    @terraform fmt -recursive
+
 [doc('Lint all files.')]
 [group('lint')]
 lint:
     @uvx tox run -e lint
+
+[doc('Lint and check Terraform module and docs.')]
+[group('lint')]
+[working-directory('terraform')]
+check-terraform:
+    @terraform fmt -check -recursive -diff
+    @docker run --rm --volume "$(pwd):/terraform-docs" -u $(id -u) \
+        quay.io/terraform-docs/terraform-docs:latest markdown /terraform-docs \
+        --output-file=README.md --output-check
 
 [doc('Run unit tests.')]
 [group('test')]
