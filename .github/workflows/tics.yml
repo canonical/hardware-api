@@ -23,7 +23,7 @@ jobs:
       - run: sudo snap install --classic just
       - name: Install dependencies
         run: |
-          just client::setup
+          just --yes client::setup
           sudo apt-get install -y pipx python3-maturin
 
       # Client
