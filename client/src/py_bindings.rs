@@ -17,8 +17,9 @@
  */
 
 use crate::{
+    check_certification_status as native_check_certification_status,
     models::request_validators::{CertificationStatusRequest, Paths},
-    send_certification_status_request as native_send_certification_status_request,
+    CheckCertificationMode,
 };
 use pyo3::{
     exceptions::PyRuntimeError, prelude::*, types::PyString, wrap_pyfunction, Py, PyAny, PyResult,
@@ -33,7 +34,8 @@ fn send_certification_request(py: Python, url: String) -> PyResult<Py<PyAny>> {
     let request_body = CertificationStatusRequest::new(Paths::default())
         .map_err(|e| PyRuntimeError::new_err(format!("failed to create request: {e}")))?;
 
-    let response = native_send_certification_status_request(url, &request_body);
+    let response =
+        native_check_certification_status(url, CheckCertificationMode::Forced, &request_body, None);
 
     match response {
         Ok(response_value) => {
