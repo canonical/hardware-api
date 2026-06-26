@@ -321,6 +321,29 @@ mod tests {
     }
 
     #[test]
+    fn test_check_certified_image_exists() {
+        let temp_dir = create_temporal_cache_folder();
+        let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
+        cache.set_remote_access_enabled(true);
+
+        let hardware_info = create_test_hardware_data("x86_64".to_string());
+        let result = check_certification_status(
+            "certified_image_exists_x86_64".to_string(),
+            CheckCertificationMode::Normal,
+            &hardware_info,
+            Some(&mut cache),
+        );
+        assert!(result.is_ok());
+        let data = result.unwrap();
+        assert_eq!(data.status, CertificationStatus::CertifiedImageExists);
+        assert_eq!(data.source, CertificationSource::Server);
+        assert_eq!(data.hardware_mismatch, false);
+        assert_eq!(data.valid_cache, true);
+        assert_eq!(data.stale, false);
+        keep_temp_dir_alive(&temp_dir);
+    }
+
+    #[test]
     fn test_check_is_certified() {
         let temp_dir = create_temporal_cache_folder();
         let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
@@ -336,6 +359,55 @@ mod tests {
         assert!(result.is_ok());
         let data = result.unwrap();
         assert_eq!(data.status, CertificationStatus::Certified);
+        assert_eq!(data.source, CertificationSource::Server);
+        assert_eq!(data.hardware_mismatch, false);
+        assert_eq!(data.valid_cache, true);
+        assert_eq!(data.stale, false);
+        keep_temp_dir_alive(&temp_dir);
+    }
+
+    #[test]
+    fn test_check_related_certified() {
+        let temp_dir = create_temporal_cache_folder();
+        let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
+        cache.set_remote_access_enabled(true);
+
+        let hardware_info = create_test_hardware_data("x86_64".to_string());
+        let result = check_certification_status(
+            "related_certified_system_exists_x86_64".to_string(),
+            CheckCertificationMode::Normal,
+            &hardware_info,
+            Some(&mut cache),
+        );
+        assert!(result.is_ok());
+        let data = result.unwrap();
+        assert_eq!(
+            data.status,
+            CertificationStatus::RelatedCertifiedSystemExists
+        );
+        assert_eq!(data.source, CertificationSource::Server);
+        assert_eq!(data.hardware_mismatch, false);
+        assert_eq!(data.valid_cache, true);
+        assert_eq!(data.stale, false);
+        keep_temp_dir_alive(&temp_dir);
+    }
+
+    #[test]
+    fn test_check_not_seen() {
+        let temp_dir = create_temporal_cache_folder();
+        let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
+        cache.set_remote_access_enabled(true);
+
+        let hardware_info = create_test_hardware_data("x86_64".to_string());
+        let result = check_certification_status(
+            "not_seen_x86_64".to_string(),
+            CheckCertificationMode::Normal,
+            &hardware_info,
+            Some(&mut cache),
+        );
+        assert!(result.is_ok());
+        let data = result.unwrap();
+        assert_eq!(data.status, CertificationStatus::NotSeen);
         assert_eq!(data.source, CertificationSource::Server);
         assert_eq!(data.hardware_mismatch, false);
         assert_eq!(data.valid_cache, true);
