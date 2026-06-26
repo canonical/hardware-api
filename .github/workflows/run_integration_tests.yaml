@@ -23,7 +23,7 @@ concurrency:
 jobs:
   test:
     name: Run integration tests
-    runs-on: self-hosted-linux-amd64-noble-large
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: integration-tests
