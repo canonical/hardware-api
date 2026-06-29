@@ -37,7 +37,7 @@ fn send_certification_request(py: Python, url: String) -> PyResult<Py<PyAny>> {
     let response =
         native_check_certification_status(url, CheckCertificationMode::Forced, &request_body, None);
 
-    let json_str = serde_json::json!(response_value).to_string();
+    let json_str = serde_json::json!(response).to_string();
     let json = PyString::new(py, &json_str);
     let json_module = py.import("json")?;
     let json_object: Py<PyAny> = json_module.call_method1("loads", (json,))?.into();
