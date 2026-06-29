@@ -1,6 +1,6 @@
 .. _openapi:
 
-OpenAPI 
+OpenAPI
 =======
 
 .. vale off

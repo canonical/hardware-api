@@ -24,7 +24,7 @@ In this documentation
       :link: /tutorial/index
       :link-type: doc
 
-      **Start here**: a hands-on introduction to Hardware API for new users 
+      **Start here**: a hands-on introduction to Hardware API for new users
 
 .. grid:: 1 1 2 2
 
