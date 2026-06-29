@@ -66,8 +66,7 @@ fn run(server_url: String) -> Result<()> {
         hwlib::CheckCertificationMode::Forced,
         &current_hardware,
         None,
-    )
-    .context("Failed")?;
+    );
 
     let response_json =
         serde_json::to_string_pretty(&response).context("cannot serialize response as JSON")?;
