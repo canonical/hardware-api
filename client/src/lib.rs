@@ -124,10 +124,11 @@ pub fn check_certification_status(
     hardware_info: &CertificationStatusRequest,
     cache_opt: Option<&mut HWCache>,
 ) -> Result<PublicCertificationStatus> {
-    let mut cache = &mut HWCache::new(None);
-    if cache_opt.is_some() {
-        cache = cache_opt.unwrap();
-    }
+    let mut local_cache = HWCache::new(None);
+    let cache: &mut HWCache = match cache_opt {
+        Some(cache) => cache,
+        None => &mut local_cache,
+    };
     let cache_answer = |cache: &HWCache| {
         Ok(create_answer(
             cache,
