@@ -37,18 +37,11 @@ fn send_certification_request(py: Python, url: String) -> PyResult<Py<PyAny>> {
     let response =
         native_check_certification_status(url, CheckCertificationMode::Forced, &request_body, None);
 
-    match response {
-        Ok(response_value) => {
-            let json_str = serde_json::json!(response_value).to_string();
-            let json = PyString::new(py, &json_str);
-            let json_module = py.import("json")?;
-            let json_object: Py<PyAny> = json_module.call_method1("loads", (json,))?.into();
-            Ok(json_object)
-        }
-        Err(e) => Err(PyErr::new::<PyRuntimeError, _>(format!(
-            "Request failed: {e}"
-        ))),
-    }
+    let json_str = serde_json::json!(response_value).to_string();
+    let json = PyString::new(py, &json_str);
+    let json_module = py.import("json")?;
+    let json_object: Py<PyAny> = json_module.call_method1("loads", (json,))?.into();
+    Ok(json_object)
 }
 
 #[pymodule]
