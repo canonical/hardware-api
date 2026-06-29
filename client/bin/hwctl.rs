@@ -73,7 +73,7 @@ fn run(server_url: String) -> Result<()> {
         serde_json::to_string_pretty(&response).context("cannot serialize response as JSON")?;
     println!("{response_json}");
 
-    let (staled, stale_reason) = response.is_staled();
+    let (staled, stale_reason) = response.stale_status();
 
     if staled {
         return Err(anyhow::anyhow!(
