@@ -44,6 +44,18 @@ uv tool install rust-just
 
 Then run `just` from anywhere in the repository for usage.
 
+## Pre-commit
+
+The project provides [pre-commit] configuration files (`.pre-commit-config.yaml`).
+However, [prek] is preferred, as it supports the monorepo/workspace layout of
+the project.
+
+You can install the pre-commit hooks with the following `just` recipe:
+
+```shell
+just pre-commit
+```
+
 ## Workshop
 
 The project provides a [Workshop] definition to stand up a development
@@ -89,6 +101,8 @@ To run the server locally, make sure that no other application is using port
 [code-of-conduct]: https://ubuntu.com/community/code-of-conduct
 [cla]: https://ubuntu.com/legal/contributors
 [just]: https://github.com/casey/just
+[pre-commit]: https://pre-commit.com/
+[prek]: https://github.com/j178/prek
 [just-snap]: https://snapcraft.io/just
 [workshop]: https://github.com/canonical/workshop
 [workshop documentation]: https://ubuntu.com/workshop/docs/
