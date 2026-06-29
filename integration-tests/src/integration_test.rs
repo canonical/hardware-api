@@ -77,7 +77,7 @@ fn test_certification_request(dir_path: &str) -> Result<()> {
     let api_url = std::env::var("API_URL").expect("API_URL environment variable must be specified");
 
     let cert_request = CertificationStatusRequest::new(get_test_device_paths(dir_path))?;
-    let response = check_certification_status(api_url, hwlib::CheckCertificationMode::Forced, &cert_request, None)?;
+    let response = check_certification_status(api_url, hwlib::CheckCertificationMode::Forced, &cert_request, None);
 
     let response_json_file = PathBuf::from("/app/client/test_data")
         .join(dir_path)
@@ -90,13 +90,13 @@ fn test_certification_request(dir_path: &str) -> Result<()> {
 
 #[test]
 fn test_server_connection_error() -> Result<()> {
-    let result: Result<PublicCertificationStatus> = check_certification_status(
+    let result: PublicCertificationStatus = check_certification_status(
         "http://non-existent-server:8080".to_string(),
         hwlib::CheckCertificationMode::Forced,
         &CertificationStatusRequest::new(get_test_device_paths("amd64/dell_xps13"))?,
         None);
 
-    let (staled, _) = result.get_status();
+    let (staled, _, _) = result.get_status();
     assert!(staled); // we are expecting a stale response due to server connection error
     Ok(())
 }
