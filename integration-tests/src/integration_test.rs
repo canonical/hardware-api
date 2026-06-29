@@ -96,7 +96,7 @@ fn test_server_connection_error() -> Result<()> {
         &CertificationStatusRequest::new(get_test_device_paths("amd64/dell_xps13"))?,
         None);
 
-    let (staled, _, _) = result.get_status();
+    let (staled, _) = result.stale_status();
     assert!(staled); // we are expecting a stale response due to server connection error
     Ok(())
 }
