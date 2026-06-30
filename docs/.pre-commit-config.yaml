@@ -1,0 +1,27 @@
+repos:
+  - repo: local
+    hooks:
+      - id: spelling
+        name: Check spelling
+        entry: just spelling
+        pass_filenames: false
+        language: rust
+        types: [rst, yaml, text]
+        additional_dependencies:
+          - just
+      - id: woke
+        name: Check inclusive language
+        entry: just woke
+        pass_filenames: false
+        language: rust
+        types: [rst, yaml, text]
+        additional_dependencies:
+          - just
+      - id: linkcheck
+        name: Check links
+        entry: just linkcheck
+        pass_filenames: false
+        language: rust
+        types: [rst, yaml, text]
+        additional_dependencies:
+          - just

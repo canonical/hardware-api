@@ -55,7 +55,7 @@
 .swagger-ui .parameter__type,
 .swagger-ui .response-header,
 .swagger-ui .response-col_status,
-.swagger-ui .response-col_description, 
+.swagger-ui .response-col_description,
 .swagger-ui .response-col_links {
     color: var(--color-content-foreground) !important;
 }

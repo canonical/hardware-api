@@ -51,7 +51,7 @@ collects the following information:
 
         - :abbr:`SoC (system-on-chip)` identity information (``/sys/devices/soc*``)
         - Device trees
-    
+
 To learn more about the risks and information security measures in place to
 protect sensitive data, please refer to :ref:`security_overview`.
 
