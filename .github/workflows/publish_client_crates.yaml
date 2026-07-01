@@ -14,7 +14,7 @@ permissions:
 jobs:
   publish:
     name: Publish hwlib to crates.io
-    runs-on: self-hosted-linux-amd64-noble-large
+    runs-on: ubuntu-latest
     environment: release
     permissions:
       id-token: write # Required by the trusted auth
