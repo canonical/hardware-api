@@ -52,6 +52,7 @@ pub struct HWCache {
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
+#[serde(default)]
 struct HWCacheData {
     certification_status: CertificationStatus,
     certification_certified_url: Option<String>,
@@ -62,7 +63,7 @@ struct HWCacheData {
     expires_at: Option<String>,
     hardware_data: Option<CertificationStatusRequest>,
     remote_access_enabled: bool,
-    server: Option<String>,
+    server: String,
     available_releases: Vec<models::software::OS>,
 }
 
@@ -123,7 +124,7 @@ impl HWCache {
     /// hardware_data: The hardware data that will be sent in the certification request.
     pub fn begin_certification(
         &mut self,
-        server: Option<String>,
+        server: String,
         hardware_data: &CertificationStatusRequest,
     ) {
         self.data.stale = StaleStatus::Connecting;
@@ -204,6 +205,10 @@ impl HWCache {
             self.data.stale.clone(),
             self.data.stale_reason.clone(),
         );
+    }
+
+    pub fn get_server_url(&self) -> String {
+        return self.data.server.clone();
     }
 
     /// Compares the given hardware data with the cached hardware data.
@@ -301,21 +306,13 @@ mod tests {
         }
     }
 
-    fn create_temporal_cache_folder() -> TestTempDir {
-        // Ensures that each test runs in a separate temporary directory. Can't
-        // just set SNAP_DATA to a new temp dir because the tests seem to run in
-        // parallel, so the variable would be overwritten.
-        let temp_dir = test_temp_dir!();
-        return temp_dir;
-    }
-
     fn keep_temp_dir_alive(_temp_dir: &TestTempDir) {
         // Keep the temp dir alive until the end of the test
     }
 
     #[test]
     fn test_set_remote_access_enabled() {
-        let temp_dir = create_temporal_cache_folder();
+        let temp_dir = test_temp_dir!();
 
         let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
         cache.set_remote_access_enabled(true);
@@ -330,7 +327,7 @@ mod tests {
 
     #[test]
     fn test_cache_is_kept() {
-        let temp_dir = create_temporal_cache_folder();
+        let temp_dir = test_temp_dir!();
 
         let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
         assert!(!cache.get_remote_access_enabled());
@@ -345,7 +342,7 @@ mod tests {
 
     #[test]
     fn test_cache_is_invalidated() {
-        let temp_dir = create_temporal_cache_folder();
+        let temp_dir = test_temp_dir!();
 
         let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
         assert!(!cache.get_remote_access_enabled());
@@ -354,7 +351,10 @@ mod tests {
 
         assert!(cache.is_expired());
 
-        cache.begin_certification(None, &create_test_hardware_data("test_model".to_string()));
+        cache.begin_certification(
+            "".to_string(),
+            &create_test_hardware_data("test_model".to_string()),
+        );
         cache.end_success_certification(
             CertificationStatus::Certified,
             Some("https://example.com/certified".to_string()),
@@ -383,14 +383,17 @@ mod tests {
 
     #[test]
     fn test_cache_hardware_mismatch() {
-        let temp_dir = create_temporal_cache_folder();
+        let temp_dir = test_temp_dir!();
 
         let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
         assert!(!cache.get_remote_access_enabled());
         cache.set_remote_access_enabled(true);
         assert!(cache.get_remote_access_enabled());
 
-        cache.begin_certification(None, &create_test_hardware_data("test_model1".to_string()));
+        cache.begin_certification(
+            "".to_string(),
+            &create_test_hardware_data("test_model1".to_string()),
+        );
         cache.end_success_certification(
             CertificationStatus::Certified,
             Some("https://example.com/certified".to_string()),
@@ -411,7 +414,7 @@ mod tests {
 
     #[test]
     fn test_cache_state() {
-        let temp_dir = create_temporal_cache_folder();
+        let temp_dir = test_temp_dir!();
 
         let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
         assert!(!cache.get_remote_access_enabled());
@@ -423,7 +426,10 @@ mod tests {
         assert_eq!(stale_status, StaleStatus::Valid);
         assert!(certified_url.is_none());
 
-        cache.begin_certification(None, &create_test_hardware_data("test_model".to_string()));
+        cache.begin_certification(
+            "".to_string(),
+            &create_test_hardware_data("test_model".to_string()),
+        );
         cache.end_success_certification(
             CertificationStatus::Certified,
             Some("https://example.com/certified".to_string()),
@@ -435,7 +441,10 @@ mod tests {
         assert_eq!(certified_url.unwrap(), "https://example.com/certified");
         assert_eq!(stale_status, StaleStatus::Valid);
 
-        cache.begin_certification(None, &create_test_hardware_data("test_model".to_string()));
+        cache.begin_certification(
+            "".to_string(),
+            &create_test_hardware_data("test_model".to_string()),
+        );
         cache
             .end_failed_certification(StaleStatus::ConnectingError, "Connection error".to_string());
 
@@ -450,14 +459,17 @@ mod tests {
 
     #[test]
     fn test_cache_expiration_date_for_certified() {
-        let temp_dir = create_temporal_cache_folder();
+        let temp_dir = test_temp_dir!();
 
         let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
         assert!(!cache.get_remote_access_enabled());
         cache.set_remote_access_enabled(true);
         assert!(cache.get_remote_access_enabled());
 
-        cache.begin_certification(None, &create_test_hardware_data("test_model".to_string()));
+        cache.begin_certification(
+            "".to_string(),
+            &create_test_hardware_data("test_model".to_string()),
+        );
         cache.end_success_certification(
             CertificationStatus::Certified,
             Some("https://example.com/certified".to_string()),
@@ -494,14 +506,17 @@ mod tests {
 
     #[test]
     fn test_cache_expiration_date_for_not_seen() {
-        let temp_dir = create_temporal_cache_folder();
+        let temp_dir = test_temp_dir!();
 
         let mut cache = HWCache::new(Some(temp_dir.as_path_untracked()));
         assert!(!cache.get_remote_access_enabled());
         cache.set_remote_access_enabled(true);
         assert!(cache.get_remote_access_enabled());
 
-        cache.begin_certification(None, &create_test_hardware_data("test_model".to_string()));
+        cache.begin_certification(
+            "".to_string(),
+            &create_test_hardware_data("test_model".to_string()),
+        );
         cache.end_success_certification(CertificationStatus::NotSeen, None, vec![]);
 
         assert!(cache.data.certification_certified_url.is_none());

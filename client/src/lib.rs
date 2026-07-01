@@ -21,10 +21,10 @@
 #[macro_use]
 extern crate pretty_assertions;
 
-mod cache;
+pub mod cache;
 pub mod collectors;
-mod constants;
-mod helpers;
+pub mod constants;
+pub mod helpers;
 pub mod models;
 #[cfg(feature = "pybindings")]
 pub mod py_bindings;
@@ -64,6 +64,7 @@ pub struct PublicCertificationStatus {
     stale_reason: Option<String>,
     source: CertificationSource,
     remote_access_enabled: bool,
+    server_url: String,
 }
 
 impl PublicCertificationStatus {
@@ -77,6 +78,19 @@ impl PublicCertificationStatus {
 
     pub fn stale_status(&self) -> (bool, Option<String>) {
         return (self.stale, self.stale_reason.clone());
+    }
+
+    pub fn extra_data(&self) -> (bool, CertificationSource, bool, String, bool) {
+        return (
+            self.valid_cache,
+            match self.source {
+                CertificationSource::Cache => CertificationSource::Cache,
+                CertificationSource::Server => CertificationSource::Server,
+            },
+            self.remote_access_enabled,
+            self.server_url.clone(),
+            self.remote_access_enabled,
+        );
     }
 }
 
@@ -97,6 +111,7 @@ fn create_answer(
         stale_reason,
         source,
         remote_access_enabled: cache.get_remote_access_enabled(),
+        server_url: cache.get_server_url(),
     };
 }
 
@@ -154,7 +169,7 @@ pub fn check_certification_status(
 
     let mut server_url = url.clone();
     server_url.push_str(CERT_STATUS_ENDPOINT);
-    cache.begin_certification(Some(server_url.clone()), hardware_info);
+    cache.begin_certification(url.clone(), hardware_info);
     let response = send_request(server_url, hardware_info);
     if response.is_err() {
         let error = response.err().unwrap();

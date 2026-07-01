@@ -28,14 +28,22 @@ platforms:
   amd64:
 
 apps:
-  hwctl:
-    command: bin/hwctl
+  hwctl-daemon:
+    command: bin/hwctl-daemon
     plugs:
       - hardware-observe
       - kernel-module-observe
       - network
+      - network-bind
       - network-setup-observe
       - system-observe
+    daemon: simple
+    sockets:
+      hwctlsocket:
+        listen-stream: $SNAP_COMMON/hwctl.varlink
+
+  hwctl:
+    command: bin/hwctl
 
 parts:
   hwctl:

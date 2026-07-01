@@ -1,0 +1,39 @@
+interface com.ubuntu.hwctl
+
+type CertificationSource (auto, cache, server)
+
+type CertificationStatus (Unknown, Certified, NotSeen, CertifiedImageExists, RelatedCertifiedSystemExists)
+
+type Kernel (
+    name: ?string,
+    version: string,
+    signature: ?string,
+    loaded_modules: []string
+)
+type OS (
+    codename: string,
+    distributor: string,
+    version: string,
+    kernel: Kernel
+)
+type State (
+    status: CertificationStatus,
+    certified_url: ?string,
+    available_releases: ?[]OS,
+    valid_cache: bool,
+    hardware_mismatch: bool,
+    stale: bool,
+    stale_reason: ?string,
+    source: CertificationSource,
+    remote_access_enabled: bool,
+    server_url: string
+)
+
+method GetCertificationStatus(
+    source: CertificationSource,
+    server_url: ?string
+) -> (state: State)
+
+error CannotCollectSystemData ()
+
+method SetRemoteAccess(enabled: bool) -> ()

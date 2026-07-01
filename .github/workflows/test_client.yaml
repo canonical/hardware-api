@@ -83,6 +83,48 @@ jobs:
           path: |
             /home/runner/.cache/snapcraft/log/
             /home/runner/.local/state/snapcraft/log/
+      - name: Test snap
+        env:
+          SNAP_PATH: ${{ steps.snapcraft.outputs.snap }}
+        run: |
+          sudo apt update
+          sudo apt install -y jq
+          sudo snap install --dangerous $SNAP_PATH
+          sleep 2
+          if snap run hwctl ; then
+            echo "hwctl didn't return an error when the snap doesn't have the plugs connected"
+            exit 1
+          else
+            echo "hwctl failed, as expected, when the snap doesn't have the plugs connected"
+          fi
+          sudo snap connect hwctl:hardware-observe
+          sudo snap connect hwctl:kernel-module-observe
+          sudo snap connect hwctl:system-observe
+          snap run hwctl --origin cache |jq .source | grep '"cache"'
+
+          ./client/test_utils/certification_emulator.py certified 8000 &
+          ./client/test_utils/certification_emulator.py not-certified 8001 &
+          ./client/test_utils/certification_emulator.py image-exists 8002 &
+          ./client/test_utils/certification_emulator.py system-exists 8003 &
+          ./client/test_utils/certification_emulator.py error 8004 &
+          ./client/test_utils/certification_emulator.py error-data 8005 &
+          sleep 2
+          snap run hwctl --origin server --server http://localhost:8000 |jq .status | grep '"Certified"'
+          snap run hwctl --origin server --server http://localhost:8001 |jq .status | grep '"NotSeen"'
+          snap run hwctl --origin server --server http://localhost:8002 |jq .status | grep '"CertifiedImageExists"'
+          snap run hwctl --origin server --server http://localhost:8003 |jq .status | grep '"RelatedCertifiedSystemExists"'
+          if snap run hwctl --origin server --server http://localhost:8004 ; then
+            echo "hwctl didn't return an error when the server returned an error"
+            exit 1
+          else
+            echo "hwctl failed, as expected, when the server returned an error"
+          fi
+          if snap run hwctl --origin server --server http://localhost:8005 ; then
+            echo "hwctl didn't return an error when the server returned an error with data"
+            exit 1
+          else
+            echo "hwctl failed, as expected, when the server returned an error with data"
+          fi
       - name: Upload artifact
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
