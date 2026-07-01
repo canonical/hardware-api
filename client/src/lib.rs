@@ -41,10 +41,10 @@ pub use cache::{CertificationStatus, HWCache, StaleStatus};
 use serde::{Deserialize, Serialize};
 
 #[derive(PartialEq)]
-pub enum CheckCertificationMode {
-    Normal,
-    Cached,
-    Forced,
+pub enum CheckCertificationSource {
+    Auto,
+    Cache,
+    Server,
 }
 
 #[derive(Serialize, Deserialize, Debug, PartialEq)]
@@ -120,7 +120,7 @@ fn send_request(
 
 pub fn check_certification_status(
     url: String,
-    mode: CheckCertificationMode,
+    mode: CheckCertificationSource,
     hardware_info: &CertificationStatusRequest,
     cache_opt: Option<&mut HWCache>,
 ) -> PublicCertificationStatus {
@@ -132,23 +132,23 @@ pub fn check_certification_status(
     let cache_answer =
         |cache: &HWCache| create_answer(cache, CertificationSource::Cache, hardware_info);
 
-    if mode == CheckCertificationMode::Cached {
+    if mode == CheckCertificationSource::Cache {
         return cache_answer(cache);
     }
 
     let hardware_mismatch = !cache.compare_hardware_data(hardware_info);
     if !cache.get_remote_access_enabled()
         && hardware_mismatch
-        && mode != CheckCertificationMode::Forced
+        && mode != CheckCertificationSource::Server
     {
         return cache_answer(cache);
     }
 
-    if !cache.is_expired() && mode != CheckCertificationMode::Forced {
+    if !cache.is_expired() && mode != CheckCertificationSource::Server {
         return cache_answer(cache);
     }
 
-    if !cache.get_remote_access_enabled() && mode != CheckCertificationMode::Forced {
+    if !cache.get_remote_access_enabled() && mode != CheckCertificationSource::Server {
         return cache_answer(cache);
     }
 
@@ -333,7 +333,7 @@ mod tests {
         let hardware_info = create_test_hardware_data("x86_64".to_string());
         let _ = check_certification_status(
             "connectionerror_x86_64".to_string(),
-            CheckCertificationMode::Normal,
+            CheckCertificationSource::Auto,
             &hardware_info,
             Some(&mut cache),
         );
@@ -351,7 +351,7 @@ mod tests {
         let hardware_info = create_test_hardware_data("x86_64".to_string());
         let data = check_certification_status(
             "certifiedimageexists_x86_64".to_string(),
-            CheckCertificationMode::Normal,
+            CheckCertificationSource::Auto,
             &hardware_info,
             Some(&mut cache),
         );
@@ -372,7 +372,7 @@ mod tests {
         let hardware_info = create_test_hardware_data("x86_64".to_string());
         let data = check_certification_status(
             "certified_x86_64".to_string(),
-            CheckCertificationMode::Normal,
+            CheckCertificationSource::Auto,
             &hardware_info,
             Some(&mut cache),
         );
@@ -393,7 +393,7 @@ mod tests {
         let hardware_info = create_test_hardware_data("x86_64".to_string());
         let data = check_certification_status(
             "relatedcertifiedsystemexists_x86_64".to_string(),
-            CheckCertificationMode::Normal,
+            CheckCertificationSource::Auto,
             &hardware_info,
             Some(&mut cache),
         );
@@ -417,7 +417,7 @@ mod tests {
         let hardware_info = create_test_hardware_data("x86_64".to_string());
         let data = check_certification_status(
             "not_seen_x86_64".to_string(),
-            CheckCertificationMode::Normal,
+            CheckCertificationSource::Auto,
             &hardware_info,
             Some(&mut cache),
         );
@@ -437,7 +437,7 @@ mod tests {
         let hardware_info = create_test_hardware_data("x86_64".to_string());
         let data = check_certification_status(
             "certified_x86_64".to_string(),
-            CheckCertificationMode::Normal,
+            CheckCertificationSource::Auto,
             &hardware_info,
             Some(&mut cache),
         );
@@ -455,7 +455,7 @@ mod tests {
         let hardware_info = create_test_hardware_data("x86_64".to_string());
         let data = check_certification_status(
             "certified_x86_64".to_string(),
-            CheckCertificationMode::Normal,
+            CheckCertificationSource::Auto,
             &hardware_info,
             Some(&mut cache),
         );
@@ -467,7 +467,7 @@ mod tests {
 
         let data = check_certification_status(
             "certified_x86_64".to_string(),
-            CheckCertificationMode::Normal,
+            CheckCertificationSource::Auto,
             &hardware_info,
             Some(&mut cache),
         );
@@ -487,7 +487,7 @@ mod tests {
         let hardware_info = create_test_hardware_data("x86_64".to_string());
         let data = check_certification_status(
             "certified_x86_64".to_string(),
-            CheckCertificationMode::Normal,
+            CheckCertificationSource::Auto,
             &hardware_info,
             Some(&mut cache),
         );
@@ -499,7 +499,7 @@ mod tests {
 
         let data = check_certification_status(
             "certified_x86_64".to_string(),
-            CheckCertificationMode::Forced,
+            CheckCertificationSource::Server,
             &hardware_info,
             Some(&mut cache),
         );
@@ -521,7 +521,7 @@ mod tests {
         let hardware_info = create_test_hardware_data("x86_64".to_string());
         let data = check_certification_status(
             "certified_x86_64".to_string(),
-            CheckCertificationMode::Normal,
+            CheckCertificationSource::Auto,
             &hardware_info,
             Some(&mut cache),
         );
@@ -534,7 +534,7 @@ mod tests {
         let hardware_info = create_test_hardware_data("arm64".to_string());
         let data = check_certification_status(
             "certified_arm64".to_string(),
-            CheckCertificationMode::Normal,
+            CheckCertificationSource::Auto,
             &hardware_info,
             Some(&mut cache),
         );
@@ -547,7 +547,7 @@ mod tests {
         let hardware_info = create_test_hardware_data("arm64".to_string());
         let data = check_certification_status(
             "certified_arm64".to_string(),
-            CheckCertificationMode::Forced,
+            CheckCertificationSource::Server,
             &hardware_info,
             Some(&mut cache),
         );
@@ -569,7 +569,7 @@ mod tests {
         let hardware_info = create_test_hardware_data("x86_64".to_string());
         let data = check_certification_status(
             "certified_x86_64".to_string(),
-            CheckCertificationMode::Normal,
+            CheckCertificationSource::Auto,
             &hardware_info,
             Some(&mut cache),
         );
@@ -582,7 +582,7 @@ mod tests {
         let hardware_info = create_test_hardware_data("arm64".to_string());
         let data = check_certification_status(
             "certified_arm64".to_string(),
-            CheckCertificationMode::Cached,
+            CheckCertificationSource::Cache,
             &hardware_info,
             Some(&mut cache),
         );

@@ -63,7 +63,7 @@ fn run(server_url: String) -> Result<()> {
 
     let response = check_certification_status(
         server_url,
-        hwlib::CheckCertificationMode::Forced,
+        hwlib::CheckCertificationSource::Server,
         &current_hardware,
         None,
     );

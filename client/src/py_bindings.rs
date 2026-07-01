@@ -58,12 +58,12 @@ fn send_certification_request(py: Python, url: String) -> PyResult<Py<PyAny>> {
 #[pyfunction]
 fn check_certification_status(py: Python, url: String, mode: String) -> PyResult<Py<PyAny>> {
     let mode = match mode.as_str() {
-        "forced" => CheckCertificationMode::Forced,
-        "cached" => CheckCertificationMode::Cached,
-        "normal" => CheckCertificationMode::Normal,
+        "server" => CheckCertificationMode::Server,
+        "cache" => CheckCertificationMode::Cache,
+        "auto" => CheckCertificationMode::Auto,
         _ => {
             return Err(PyRuntimeError::new_err(format!(
-                "Invalid mode: {}. Valid modes are 'normal', 'forced' and 'cached'.",
+                "Invalid mode: {}. Valid modes are 'auto', 'server' and 'cache'.",
                 mode
             )))
         }
