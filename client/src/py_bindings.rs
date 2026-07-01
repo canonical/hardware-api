@@ -37,10 +37,9 @@ fn send_certification_request(py: Python, url: String) -> PyResult<Py<PyAny>> {
     let response =
         native_check_certification_status(url, CheckCertificationMode::Forced, &request_body, None);
 
-    if response.is_staled() {
-        let e = response
-            .stale_reason()
-            .unwrap_or("unknown reason".to_string());
+    let (staled, stale_reason) = response.stale_status();
+    if staled {
+        let e = stale_reason.unwrap_or("unknown reason".to_string());
         return Err(PyErr::new::<PyRuntimeError, _>(format!(
             "Request failed: {e}"
         )));
