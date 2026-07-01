@@ -18,7 +18,8 @@
  */
 
 use anyhow::{Context, Result};
-use clap::Parser;
+use clap::{Parser, ValueEnum};
+use std::fmt;
 use std::process::ExitCode;
 
 use hwlib::models::request_validators::{CertificationStatusRequest, Paths};
@@ -44,11 +45,45 @@ struct Args {
         help = "API server URL"
     )]
     hw_api_url: String,
+
+    #[arg(
+        long,
+        default_value_t = Verbosity::Brief,
+        value_enum,
+        value_name = "LEVEL",
+        help = "Output verbosity level"
+    )]
+    verbosity: Verbosity,
+
+    #[arg(long, help = "Shorthand for --verbosity=verbose")]
+    verbose: bool,
+}
+
+#[derive(ValueEnum, Clone, Debug, Default, PartialEq)]
+#[value(rename_all = "lowercase")]
+enum Verbosity {
+    #[default]
+    Brief,
+    Verbose,
+}
+
+impl fmt::Display for Verbosity {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Verbosity::Brief => write!(f, "brief"),
+            Verbosity::Verbose => write!(f, "verbose"),
+        }
+    }
 }
 
 fn main() -> ExitCode {
     let args = Args::parse();
-    match run(args.hw_api_url) {
+    let verbosity = if args.verbose {
+        Verbosity::Verbose
+    } else {
+        args.verbosity
+    };
+    match run(args.hw_api_url, verbosity) {
         Ok(_) => ExitCode::SUCCESS,
         Err(e) => {
             eprintln!("ERROR: {e:?}");
@@ -57,11 +92,22 @@ fn main() -> ExitCode {
     }
 }
 
-fn run(server_url: String) -> Result<()> {
+fn run(server_url: String, verbosity: Verbosity) -> Result<()> {
+    if verbosity == Verbosity::Verbose {
+        eprintln!("Collecting system data...");
+    }
     let cert_status_request =
         CertificationStatusRequest::new(Paths::default()).context("cannot collect system data")?;
+
+    if verbosity == Verbosity::Verbose {
+        eprintln!("Sending request to {}...", server_url);
+    }
     let response = send_certification_status_request(server_url, &cert_status_request)
         .context("cannot send certification status request")?;
+
+    if verbosity == Verbosity::Verbose {
+        eprintln!("Response received.");
+    }
     let response_json =
         serde_json::to_string_pretty(&response).context("cannot serialize response as JSON")?;
     println!("{response_json}");
