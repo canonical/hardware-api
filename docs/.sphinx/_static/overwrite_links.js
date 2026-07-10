@@ -1,38 +1,51 @@
-// Replace oldDomain with newDomain
-const oldDomain = 'canonical-hardware-api-documentation.readthedocs-hosted.com';
-const newDomain = 'ubuntu.com/docs/hardware-api';
+// Replaces rtd-address with new-address in links
+const rtd_address = 'canonical-hardware-api-documentation.readthedocs-hosted.com';
+const new_address = 'ubuntu.com/docs/hardware-api';
 
 function escapeRegExp(value) {
-    return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
 function overwriteMatchingAnchorUrls(container) {
-    if (!container) return;
+  if (!container) return;
 
-    const anchors = container.querySelectorAll('a[href], link[href]');
-    const oldDomainRegex = new RegExp(escapeRegExp(oldDomain), 'g');
-
-    anchors.forEach(anchor => {
-        anchor.href = anchor.href.replace(oldDomainRegex, newDomain);
-    });
+  const rtd_addressRegex = new RegExp(escapeRegExp(rtd_address), 'g');
+  container.querySelectorAll('a[href], link[href]').forEach((anchor) => {
+    anchor.href = anchor.href.replace(rtd_addressRegex, new_address);
+  });
 }
 
-overwriteMatchingAnchorUrls(document.querySelector('header'));
+function patchFlyout() {
+  const rtdFlyout = document.querySelector('readthedocs-flyout');
+  if (!rtdFlyout) return false;
 
-// Use a MutationObserver to wait for the RTD flyout element to appear in the DOM
-const observer = new MutationObserver(function(mutations, obs) {
+  overwriteMatchingAnchorUrls(rtdFlyout);
+  overwriteMatchingAnchorUrls(rtdFlyout.shadowRoot);
 
-    const rtdFlyout = document.querySelector('readthedocs-flyout');
-    if (!rtdFlyout) return;
+  rtdFlyout.addEventListener('click', () => {
+    overwriteMatchingAnchorUrls(rtdFlyout);
+    overwriteMatchingAnchorUrls(rtdFlyout.shadowRoot);
+  });
 
-    obs.disconnect();
+  return true;
+}
 
-    rtdFlyout.addEventListener('click', function() {
-        const shadowRoot = rtdFlyout.shadowRoot;
-        if (!shadowRoot) return;
+function init() {
+  overwriteMatchingAnchorUrls(document.querySelector('header'));
 
-        overwriteMatchingAnchorUrls(shadowRoot);
-    });
-});
+  if (patchFlyout()) return;
 
-observer.observe(document.body, { childList: true, subtree: true });
+  const observer = new MutationObserver(() => {
+    if (patchFlyout()) {
+      observer.disconnect();
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+}
+
+if (document.body) {
+  init();
+} else {
+  document.addEventListener('DOMContentLoaded', init);
+}
