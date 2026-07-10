@@ -55,7 +55,7 @@ copyright = "%s GPL-3.0, %s" % (datetime.date.today().year, author)
 # NOTE: The Open Graph Protocol (OGP) enhances page display in a social graph
 #       and is used by social media platforms; see https://ogp.me/
 
-ogp_site_url = "https://ubuntu.com/docs/hardware-api/"
+ogp_site_url = f"https://ubuntu.com/docs/hardware-api/{os.environ.get('READTHEDOCS_VERSION', 'local/')}"
 
 # Preview name of the documentation website
 
@@ -114,7 +114,7 @@ html_theme_options = {
 
 # Project slug; see https://meta.discourse.org/t/what-is-category-slug/87897
 
-slug = 'docs/hardware-api'  # "docs/" prefix required for hosting at ubuntu.com/docs
+slug = 'docs/hardware-api'  # "docs/" prefix required for hosting at ubuntu.com
 
 #######################
 # Sitemap configuration: https://sphinx-sitemap.readthedocs.io/
@@ -122,17 +122,11 @@ slug = 'docs/hardware-api'  # "docs/" prefix required for hosting at ubuntu.com/
 
 # Base URL of RTD hosted project
 
-html_baseurl = "https://ubuntu.com/docs/hardware-api/"
-sitemap_filename = "doc-sitemap.xml"  # Required to avoid sitemap conflicts
+html_baseurl = f"https://ubuntu.com/docs/hardware-api/{os.environ.get('READTHEDOCS_VERSION', 'local/')}"
+sitemap_filename = "doc-sitemap.xml"     # This value is added to ubuntu.com repo `templates/sitemap_index.xml`
 
-# URL scheme. Add language and version scheme elements.
-# When configured with RTD variables, check for RTD environment so manual runs succeed:
-
-if "READTHEDOCS_VERSION" in os.environ:
-    version = os.environ["READTHEDOCS_VERSION"]
-    sitemap_url_scheme = "{version}{link}"
-else:
-    sitemap_url_scheme = "MANUAL/{link}"
+# sphinx-sitemap uses html_baseurl to generate the full URL for each page:
+sitemap_url_scheme = "{link}"
 
 # Include `lastmod` dates in the sitemap:
 
