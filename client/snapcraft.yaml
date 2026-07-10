@@ -39,7 +39,7 @@ apps:
       - system-observe
     daemon: simple
     sockets:
-      hwctlsocket:
+      hwctl-socket:
         listen-stream: $SNAP_COMMON/hwctl.varlink
 
   hwctl:

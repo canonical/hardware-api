@@ -82,9 +82,8 @@ sudo apt-get install hwctl
 
 ## Service protocol
 
-The hwctl service is socket-activated, and it uses [Varlink](https://varlink.org/)
-as the underlying protocol. The protocol is defined in the `bin/com.ubuntu.hwctl.varlink`
-file. It has two methods:
+The hwctl service is socket-activated, and it uses [Varlink] as the underlying protocol.
+The protocol is defined in the `bin/com.ubuntu.hwctl.varlink` file. It has two methods:
 
 * GetCertificationStatus(source: CertificationSource, server_url: ?string) -> (state: State)
   It receives a `source` parameter, which can be any of `server`, `cache` or `auto`,
@@ -132,11 +131,7 @@ If you're interested, start with the
 
 The Hardware API Client is released under the [LGPL-3.0 license](./LICENSE)
 
-© 2025 Canonical Ltd.
-
-[^sudo]:
-    The client requires root access since we collect the hardware information
-    using SMBIOS data.
+© 2025-2026 Canonical Ltd.
 
 [snapcraft-badge]: https://snapcraft.io/hwctl/badge.svg
 [snapcraft-site]: https://snapcraft.io/hwctl
@@ -150,3 +145,4 @@ The Hardware API Client is released under the [LGPL-3.0 license](./LICENSE)
 [cov-latest]: https://codecov.io/gh/canonical/hardware-api
 [hw-server]: https://hw.ubuntu.com
 [github-issues]: https://github.com/canonical/hardware-api/issues
+[Varlink]: https://varlink.org/
