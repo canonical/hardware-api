@@ -55,7 +55,7 @@ copyright = "%s GPL-3.0, %s" % (datetime.date.today().year, author)
 # NOTE: The Open Graph Protocol (OGP) enhances page display in a social graph
 #       and is used by social media platforms; see https://ogp.me/
 
-ogp_site_url = f"https://ubuntu.com/docs/hardware-api/{os.environ.get('READTHEDOCS_VERSION', 'local/')}"
+ogp_site_url = f"https://ubuntu.com/docs/hardware-api/{os.environ.get('READTHEDOCS_VERSION', 'local')}/"
 
 # Preview name of the documentation website
 
@@ -122,7 +122,7 @@ slug = 'docs/hardware-api'  # "docs/" prefix required for hosting at ubuntu.com
 
 # Base URL of RTD hosted project
 
-html_baseurl = f"https://ubuntu.com/docs/hardware-api/{os.environ.get('READTHEDOCS_VERSION', 'local/')}"
+html_baseurl = f"https://ubuntu.com/docs/hardware-api/{os.environ.get('READTHEDOCS_VERSION', 'local')}/"
 sitemap_filename = "doc-sitemap.xml"     # This value is added to ubuntu.com repo `templates/sitemap_index.xml`
 
 # sphinx-sitemap uses html_baseurl to generate the full URL for each page:
