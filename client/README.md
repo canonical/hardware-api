@@ -9,11 +9,13 @@
 The **Hardware API Client** is the tool to check the certification status of
 hardware configurations.
 
-It consists of both the `hwctl-daemon` service and `hwctl` CLI tool.
+It consists of the `hwlib` library, the `hwctl-daemon` service and the `hwctl` CLI tool.
 
-- `hwctl-daemon`: Rust service for communicating with
-  [the API server](../server/) and cache results.
-- `hwctl`: CLI tool to retrieve the certification status and other data.
+- `hwlib`: Rust library for communicating with
+  [the API server](../server/) and to manage the certification cache.
+- `hwctl-daemon`: Rust service leveraging the `hwlib` library.
+- `hwctl`: CLI tool to retrieve the certification status and other data
+  from the daemon.
 
 ## Basic Usage
 
