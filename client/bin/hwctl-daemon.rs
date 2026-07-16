@@ -122,7 +122,21 @@ impl VarlinkInterface for ComUbuntuHwctl {
                 }
             },
             certified_url: url,
-            available_releases: None,
+            available_releases: Some(
+                os.iter()
+                    .map(|release| OS {
+                        codename: release.codename.clone(),
+                        distributor: release.distributor.clone(),
+                        version: release.version.clone(),
+                        kernel: Kernel {
+                            name: release.kernel.name.clone(),
+                            version: release.kernel.version.clone(),
+                            signature: release.kernel.signature.clone(),
+                            loaded_modules: release.kernel.loaded_modules.clone(),
+                        },
+                    })
+                    .collect(),
+            ),
             valid_cache: valid_cache,
             hardware_mismatch: hardware_mismatch,
             stale: stale,
@@ -220,7 +234,7 @@ mod tests {
 
         let socket_path_server: String = socket_path.clone();
         let th = spawn(move || {
-            create_server(socket_path_server, 1);
+            let _ = create_server(socket_path_server, 1);
         });
 
         loop {
