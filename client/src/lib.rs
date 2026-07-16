@@ -47,7 +47,7 @@ pub enum CheckCertificationSource {
     Server,
 }
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Deserialize, Debug, PartialEq, Clone)]
 pub enum CertificationSource {
     Cache,
     Server,
@@ -83,13 +83,10 @@ impl PublicCertificationStatus {
     pub fn extra_data(&self) -> (bool, CertificationSource, bool, String, bool) {
         return (
             self.valid_cache,
-            match self.source {
-                CertificationSource::Cache => CertificationSource::Cache,
-                CertificationSource::Server => CertificationSource::Server,
-            },
+            self.source.clone(),
             self.remote_access_enabled,
             self.server_url.clone(),
-            self.remote_access_enabled,
+            self.hardware_mismatch,
         );
     }
 }

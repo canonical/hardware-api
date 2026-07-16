@@ -143,16 +143,12 @@ impl VarlinkInterface for ComUbuntuHwctl {
         r#enabled: bool,
     ) -> varlink::Result<()> {
         let mut cache = hwlib::cache::HWCache::new(None);
-        if r#enabled {
-            cache.set_remote_access_enabled(true);
-        } else {
-            cache.set_remote_access_enabled(false);
-        }
+        cache.set_remote_access_enabled(r#enabled);
         return call.reply();
     }
 }
 
-fn create_server(socket_file: String, timeout: u64) {
+fn create_server(socket_file: String, timeout: u64) -> Result<(), varlink::Error> {
     let varlink_interface = com_ubuntu_hwctl::new(Box::new(ComUbuntuHwctl));
 
     let socket_file = format!("unix://{};mode=0666", socket_file);
@@ -166,7 +162,7 @@ fn create_server(socket_file: String, timeout: u64) {
         vec![Box::new(varlink_interface)],
     );
 
-    let _ = varlink::listen(
+    return varlink::listen(
         service,
         &socket_file,
         &varlink::ListenConfig {
@@ -195,7 +191,10 @@ fn main() -> ExitCode {
         }
     }
 
-    create_server(socket_file, 60);
+    if let Err(e) = create_server(socket_file, 60) {
+        eprintln!("ERROR: failed to create server: {:?}", e);
+        return ExitCode::FAILURE;
+    }
     return ExitCode::SUCCESS;
 }
 

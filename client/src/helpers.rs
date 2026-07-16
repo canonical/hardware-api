@@ -45,9 +45,8 @@ fn check_path_exists(socket_path: &str) -> bool {
 }
 
 pub fn get_socket_path(binary_type: BinaryType) -> Result<(String, String), anyhow::Error> {
-    if std::env::var("HWCTL_SOCKET_PATH").is_ok() {
-        let path = std::env::var("HWCTL_SOCKET_PATH").unwrap();
-        return Ok((path, std::env::var("HWCTL_SOCKET_PATH").unwrap()));
+    if let Ok(path) = std::env::var("HWCTL_SOCKET_PATH") {
+        return Ok((path.clone(), path));
     }
     if std::env::var("SNAP").is_ok() && std::env::var("SNAP_COMMON").is_ok() {
         let path = join_paths(&std::env::var("SNAP_COMMON").unwrap(), SOCKET_NAME);
