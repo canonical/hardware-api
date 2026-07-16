@@ -36,4 +36,6 @@ method GetCertificationStatus(
 
 error CannotCollectSystemData ()
 
+error AccessDenied ()
+
 method SetRemoteAccess(enabled: bool) -> ()

@@ -29,6 +29,7 @@ mod com_ubuntu_hwctl;
 use com_ubuntu_hwctl::VarlinkClientInterface;
 use varlink::Connection;
 
+use hwlib::constants;
 use hwlib::helpers;
 
 /// CLI tool to check hardware certification status.
@@ -47,7 +48,7 @@ struct Args {
     #[arg(
         long = "server",
         env = "HW_API_URL",
-        default_value = "https://hw.ubuntu.com",
+        default_value = constants::DEFAULT_SERVER_URL,
         help = "API server URL"
     )]
     hw_api_url: String,

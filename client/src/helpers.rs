@@ -44,6 +44,22 @@ fn check_path_exists(socket_path: &str) -> bool {
     return socket_path.exists();
 }
 
+pub fn get_snap_setting(setting_name: &str) -> Option<String> {
+    let output = std::process::Command::new("snapctl")
+        .arg("get")
+        .arg(setting_name)
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    let value = String::from_utf8_lossy(&output.stdout).trim().to_string();
+    if value.is_empty() {
+        return None;
+    }
+    Some(value)
+}
+
 pub fn get_socket_path(binary_type: BinaryType) -> Result<(String, String), anyhow::Error> {
     if let Ok(path) = std::env::var("HWCTL_SOCKET_PATH") {
         return Ok((path.clone(), path));
