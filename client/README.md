@@ -97,7 +97,7 @@ The protocol is defined in the `bin/com.ubuntu.hwctl.varlink` file. It has two m
     hardware, or the URL describing the related certified system.
   * available_releases: an array with the certified OS images available for this device, in the case of
     `CertifiedImageExists`. If not, it will be `null`.
-  * valid_cache: a boolean that specifies whether the cache is valid or is old/not-existen/other problem.
+  * valid_cache: a boolean that specifies whether the cache is valid or is old/non-existent/other problem.
   * hardware_mismatch: a boolean that specifies if the current hardware has changed respect to the one
     used to get the certified status. Only has meaning if the returned data was obtained from the cache.
   * stale: a boolean that is TRUE if the last connection to the server to update the certified status
