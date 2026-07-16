@@ -16,12 +16,75 @@
  *        Nadzeya Hutsko <nadzeya.hutsko@canonical.com>
  */
 
-use std::path::PathBuf;
+use crate::constants::SOCKET_NAME;
+use std::env;
+use std::path::{Path, PathBuf};
+
+#[derive(PartialEq)]
+pub enum BinaryType {
+    Server,
+    Client,
+}
 
 pub(crate) fn append_to_pathbuf(p: PathBuf, s: &str) -> PathBuf {
     let mut p = p.into_os_string();
+    if !p.to_str().unwrap().ends_with("/") {
+        p.push("/");
+    }
     p.push(s);
     p.into()
+}
+
+fn join_paths(base_path: &str, relative_path: &str) -> String {
+    let mut base_path = base_path.to_string();
+    if !base_path.ends_with("/") {
+        base_path = format!("{}/", base_path);
+    }
+    return format!("{}{}", base_path, relative_path);
+}
+
+fn check_path_exists(socket_path: &str) -> bool {
+    let socket_path = std::path::Path::new(&socket_path);
+    return socket_path.exists();
+}
+
+pub fn get_snap_data_path(cache_folder: Option<&Path>) -> PathBuf {
+    // snap_data_env must be defined outside the if statement to avoid the compiler to complain
+    // about the data being dropped too early.
+    let snap_data_env = env::var("SNAP_DATA").unwrap_or_else(|_| ".".to_string());
+    let snap_data: &Path = if cache_folder.is_none() {
+        Path::new(&snap_data_env)
+    } else {
+        cache_folder.unwrap()
+    };
+    return snap_data.to_path_buf();
+}
+
+pub fn get_socket_path(binary_type: BinaryType) -> Result<(String, String), anyhow::Error> {
+    if let Ok(path) = std::env::var("HWCTL_SOCKET_PATH") {
+        return Ok((path.clone(), path));
+    }
+    if std::env::var("SNAP").is_ok() && std::env::var("SNAP_COMMON").is_ok() {
+        let path = join_paths(&std::env::var("SNAP_COMMON").unwrap(), SOCKET_NAME);
+        if binary_type == BinaryType::Server || check_path_exists(&path) {
+            return Ok((path, std::env::var("SNAP_COMMON").unwrap()));
+        }
+    }
+
+    // To allow an unconfined client to connect to a confined daemon
+    if binary_type == BinaryType::Client {
+        let path = join_paths("/var/snap/hwctl/common", SOCKET_NAME);
+        if check_path_exists(&path) {
+            return Ok((path, "/var/snap/hwctl/common".to_string()));
+        }
+    }
+
+    let path = join_paths("/run/hwctl", SOCKET_NAME);
+    if binary_type == BinaryType::Server || check_path_exists(&path) {
+        return Ok((path, "/run/hwctl".to_string()));
+    }
+
+    return Err(anyhow::anyhow!("Socket file does not exist: {}", path));
 }
 
 #[cfg(test)]
@@ -93,5 +156,70 @@ pub(crate) mod test_utils {
             content = content.replace(&format!("${k}"), v);
         }
         content
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
+    use test_temp_dir::{test_temp_dir, TestTempDir};
+
+    use super::*;
+
+    use sealed_test::prelude::*;
+
+    fn keep_temp_dir_alive(_temp_dir: &TestTempDir) {
+        // Keep the temp dir alive until the end of the test
+    }
+
+    fn create_temporal_file(temp_dir: &TestTempDir, path: &str, name: &str) -> (String, String) {
+        let basepath = join_paths(temp_dir.as_path_untracked().to_str().unwrap(), path);
+        let fullpath = join_paths(&basepath.clone(), name);
+        let path = std::path::Path::new(&basepath);
+        let _ = std::fs::create_dir_all(path);
+        let _ = std::fs::write(&fullpath, "data");
+        return (basepath, fullpath);
+    }
+
+    // have to use sealed_test because the tests modify environment variables, which can affect other tests if run in parallel
+    #[sealed_test]
+    fn test_get_socket_path_in_snap() {
+        let temp_dir = test_temp_dir!();
+        let (basepath, fullpath) = create_temporal_file(&temp_dir, "common", SOCKET_NAME);
+
+        std::env::set_var("SNAP", "test_snap");
+        std::env::set_var("SNAP_COMMON", basepath.clone());
+
+        let socket_path = get_socket_path(BinaryType::Client);
+        assert!(socket_path.is_ok());
+        let (socket_file, socket_path) = socket_path.unwrap();
+        assert!(socket_file == fullpath);
+        assert!(socket_path == basepath);
+
+        let socket_path = get_socket_path(BinaryType::Server);
+
+        assert!(socket_path.is_ok());
+        let (socket_file, socket_path) = socket_path.unwrap();
+        assert!(socket_file == fullpath);
+        assert!(socket_path == basepath);
+
+        keep_temp_dir_alive(&temp_dir);
+    }
+
+    #[sealed_test]
+    fn test_get_socket_path_not_confined() {
+        std::env::remove_var("SNAP");
+        std::env::remove_var("SNAP_COMMON");
+        let basepath = "/run/hwctl";
+        let fullpath = join_paths(basepath, SOCKET_NAME);
+
+        let socket_path = get_socket_path(BinaryType::Server);
+        assert!(socket_path.is_ok());
+        let (socket_file, socket_path) = socket_path.unwrap();
+        assert!(socket_file == fullpath);
+        assert!(socket_path == basepath);
+
+        let socket_path = get_socket_path(BinaryType::Client);
+        assert!(socket_path.is_err());
     }
 }

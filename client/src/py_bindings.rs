@@ -41,6 +41,14 @@ fn send_certification_request(py: Python, url: String) -> PyResult<Py<PyAny>> {
         None,
     );
 
+    if response.is_err() {
+        let e = response.err().unwrap();
+        return Err(PyErr::new::<PyRuntimeError, _>(format!(
+            "Request failed: {e}"
+        )));
+    }
+    let response = response.unwrap();
+
     let (staled, stale_reason) = response.stale_status();
     if staled {
         let e = stale_reason.unwrap_or("unknown reason".to_string());
@@ -76,6 +84,14 @@ fn check_certification_status(py: Python, url: String, mode: String) -> PyResult
         .map_err(|e| PyRuntimeError::new_err(format!("failed to create request: {e}")))?;
 
     let response = native_check_certification_status(url, mode, &request_body, None);
+
+    if response.is_err() {
+        let e = response.err().unwrap();
+        return Err(PyErr::new::<PyRuntimeError, _>(format!(
+            "Request failed: {e}"
+        )));
+    }
+    let response = response.unwrap();
 
     let json_str = serde_json::json!(response).to_string();
     let json = PyString::new(py, &json_str);

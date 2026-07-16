@@ -21,11 +21,11 @@ use hwlib::{
     models::request_validators::{CertificationStatusRequest, Paths},
     check_certification_status,
     PublicCertificationStatus,
+    HWCache,
 };
 use simple_test_case::test_case;
 use std::{
-    fs::read_to_string,
-    path::{Path, PathBuf},
+    fs::read_to_string, path::{Path, PathBuf},
 };
 
 fn get_test_device_paths(device_type: &str) -> Paths {
@@ -76,26 +76,36 @@ fn assert_response_matches_expected(
 fn test_certification_request(dir_path: &str) -> Result<()> {
     let api_url = std::env::var("API_URL").expect("API_URL environment variable must be specified");
 
+    let mut local_cache = HWCache::new(None);
+    local_cache.set_allow_custom_url_enabled(true);
+
     let cert_request = CertificationStatusRequest::new(get_test_device_paths(dir_path))?;
-    let response = check_certification_status(api_url, hwlib::CheckCertificationSource::Server, &cert_request, None);
+    let response = check_certification_status(api_url, hwlib::CheckCertificationSource::Server, &cert_request, Some(&mut local_cache));
+    assert!(response.is_ok(), "Request failed: {:?}", response.err());
 
     let response_json_file = PathBuf::from("/app/client/test_data")
         .join(dir_path)
         .join("response.json");
     let expected_response = load_response_file(&response_json_file);
 
-    assert_response_matches_expected(&response, &expected_response);
+    assert_response_matches_expected(&response.unwrap(), &expected_response);
     Ok(())
 }
 
 #[test]
 fn test_server_connection_error() -> Result<()> {
-    let result: PublicCertificationStatus = check_certification_status(
+    let mut local_cache = HWCache::new(None);
+    local_cache.set_allow_custom_url_enabled(true);
+
+    let result = check_certification_status(
         "http://non-existent-server:8080".to_string(),
         hwlib::CheckCertificationSource::Server,
         &CertificationStatusRequest::new(get_test_device_paths("amd64/dell_xps13"))?,
-        None);
+        Some(&mut local_cache));
 
+    assert!(result.is_ok(), "Request failed: {:?}", result.err());
+
+    let result = result.unwrap();
     let (staled, _) = result.stale_status();
     assert!(staled); // we are expecting a stale response due to server connection error
     Ok(())

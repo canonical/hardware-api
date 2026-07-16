@@ -1,0 +1,34 @@
+#!/bin/sh
+
+CONFIG_FILE=${SNAP_DATA}/hw_settings.json
+[ -f "$CONFIG_FILE" ] || echo "{}" > ${CONFIG_FILE}
+
+get_bool() {
+    value=$(echo "${1:-}" | tr '[:upper:]' '[:lower:]')
+
+    # See if it's true
+    for yes in "true" "1" "yes" "on"; do
+        if [ "${value}" = "${yes}" ]; then
+            echo "true"
+            return
+        fi
+    done
+
+    # See if it's false
+    for no in "false" "0" "no" "off"; do
+        if [ "${value}" = "${no}" ]; then
+            echo "false"
+            return
+        fi
+    done
+
+    # default value if not set (or invalid)
+    echo "false"
+    return
+}
+
+if [ "$(get_bool "$(snapctl get allow-custom-url)")" = "true" ]; then
+    jq -r '."allow_custom_url" |= true' "$CONFIG_FILE" > "$CONFIG_FILE".tmp && mv "$CONFIG_FILE".tmp "$CONFIG_FILE"
+else
+    jq -r '."allow_custom_url" |= false' "$CONFIG_FILE" > "$CONFIG_FILE".tmp && mv "$CONFIG_FILE".tmp "$CONFIG_FILE"
+fi
