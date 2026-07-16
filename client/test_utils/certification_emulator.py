@@ -197,7 +197,7 @@ def run_server():
   "pci_peripherals": [],
   "usb_peripherals": [],
 }
-"""
+"""  # this last one is a malformed JSON to simulate an error in the data
     elif status == "error":
         response_code = 500
         response_contents = """{
