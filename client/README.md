@@ -92,7 +92,7 @@ The protocol is defined in the `bin/com.ubuntu.hwctl.varlink` file. It has two m
   and an optional (thus, it can be `null`) string with the certification server URL.
   It returns a State object with these fields:
 
-  * status: `NotSeen`, `Certificated`, `CertifiedImageExists`, `RelatedCertifiedSystemExists` or `Unknown`.
+  * status: `NotSeen`, `Certified`, `CertifiedImageExists`, `RelatedCertifiedSystemExists` or `Unknown`.
   * certified_url: either `null` if there is no applicable URL, or the URL describing either the current
     hardware, or the URL describing the related certified system.
   * available_releases: an array with the certified OS images available for this device, in the case of
