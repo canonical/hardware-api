@@ -114,7 +114,7 @@ The protocol is defined in the `bin/com.ubuntu.hwctl.varlink` file. It has two m
 
 For snapped services, the socket path is `/var/snap/hwctl/common/hwctl.varlink`, while for
 unconfined services, it is `/run/hwctl/hwctl.varlink`. Clients must always check the former
-first, and only check for the later if the former doesn't exists.
+first, and only check for the latter if the former doesn't exists.
 
 
 ## Community and Support
