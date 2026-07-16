@@ -81,21 +81,6 @@ impl VarlinkInterface for ComUbuntuHwctl {
         r#source: CertificationSource,
         r#server_url: Option<String>,
     ) -> varlink::Result<()> {
-        if r#server_url.is_some()
-            && r#server_url.as_ref().unwrap() != hwlib::constants::DEFAULT_SERVER_URL
-        {
-            let allow_custom_url = helpers::get_snap_setting("allow-custom-url");
-            if allow_custom_url.is_none() {
-                return call.reply_access_denied();
-            }
-            let allow_custom_url = allow_custom_url.unwrap();
-            if allow_custom_url.to_ascii_lowercase() != "true"
-                && allow_custom_url.to_ascii_lowercase() != "1"
-            {
-                return call.reply_access_denied();
-            }
-        }
-
         let source = match r#source {
             CertificationSource::server => CheckCertificationSource::Server,
             CertificationSource::cache => CheckCertificationSource::Cache,
@@ -119,6 +104,11 @@ impl VarlinkInterface for ComUbuntuHwctl {
             &current_hardware,
             None,
         );
+
+        if response.is_err() {
+            return call.reply_access_denied();
+        }
+        let response = response.unwrap();
 
         let (status, url, os) = response.get_status();
         let (stale, stale_reason) = response.stale_status();

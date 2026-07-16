@@ -31,6 +31,7 @@ pub const LSMOD: &str = "/usr/bin/lsmod";
 pub const CACHE_EXPIRATION_IF_CERTIFIED: u64 = 60 * 60 * 24 * 30; // 30  days
 pub const CACHE_EXPIRATION_IF_NOT_CERTIFIED: u64 = 60 * 60 * 24; // 1 day
 pub const CACHE_FILE_NAME: &str = "hw_cache.json";
+pub const SETTINGS_FILE_NAME: &str = "hw_settings.json";
 
 pub const SOCKET_NAME: &str = "hwctl.varlink";
 

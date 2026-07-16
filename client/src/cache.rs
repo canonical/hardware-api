@@ -16,9 +16,9 @@
  *        Sergio Costas Rodríguez <sergio.costas@canonical.com>
  */
 
-use crate::models;
+use crate::{helpers, models};
+use std::fs::File;
 use std::path::{Path, PathBuf};
-use std::{env, fs::File};
 
 use chrono::DateTime;
 use serde::{Deserialize, Serialize};
@@ -47,8 +47,10 @@ pub enum StaleStatus {
 /// A cache for the hardware data and certification status.
 pub struct HWCache {
     data: HWCacheData,
+    settings: SettingsData,
     current_hardware_data: Option<CertificationStatusRequest>,
     cache_path: PathBuf,
+    settings_path: PathBuf,
 }
 
 #[derive(Serialize, Deserialize, Debug, Default)]
@@ -62,27 +64,54 @@ struct HWCacheData {
     checked_at: Option<String>,
     expires_at: Option<String>,
     hardware_data: Option<CertificationStatusRequest>,
-    remote_access_enabled: bool,
     server: String,
     available_releases: Vec<models::software::OS>,
 }
 
-impl HWCache {
-    fn get_cache_path(cache_folder: Option<&Path>) -> PathBuf {
-        // snap_data_env must be defined outside the if statement to avoid the compiler to complain
-        // about the data being dropped too early.
-        let snap_data_env = env::var("SNAP_DATA").unwrap_or_else(|_| ".".to_string());
-        let snap_data: &Path = if cache_folder.is_none() {
-            Path::new(&snap_data_env)
-        } else {
-            cache_folder.unwrap()
-        };
-        let cache_path = Path::join(snap_data, crate::constants::CACHE_FILE_NAME);
-        return cache_path;
-    }
+#[derive(Serialize, Deserialize, Debug, Default)]
+#[serde(default)]
+struct SettingsData {
+    #[serde(default)]
+    remote_access_enabled: bool,
+    #[serde(default)]
+    allow_custom_url: bool,
+}
 
+impl HWCache {
     fn get_now(&self) -> DateTime<chrono::Utc> {
         return chrono::Utc::now();
+    }
+
+    fn read_cache_file(&mut self) {
+        if !self.cache_path.exists() {
+            return;
+        }
+        let config = File::open(self.cache_path.clone());
+        if config.is_err() {
+            return;
+        }
+        let cache: Result<HWCacheData, serde_json::Error> =
+            serde_json::from_reader(config.unwrap());
+        if cache.is_err() {
+            return;
+        }
+        self.data = cache.unwrap();
+    }
+
+    fn read_settings_file(&mut self) {
+        if !self.settings_path.exists() {
+            return;
+        }
+        let config = File::open(self.settings_path.clone());
+        if config.is_err() {
+            return;
+        }
+        let settings: Result<SettingsData, serde_json::Error> =
+            serde_json::from_reader(config.unwrap());
+        if settings.is_err() {
+            return;
+        }
+        self.settings = settings.unwrap();
     }
 
     pub fn new(cache_folder: Option<&Path>) -> Self {
@@ -90,23 +119,22 @@ impl HWCache {
             data: HWCacheData {
                 ..Default::default()
             },
+            settings: SettingsData {
+                ..Default::default()
+            },
             current_hardware_data: None,
-            cache_path: HWCache::get_cache_path(cache_folder),
+            cache_path: helpers::append_to_pathbuf(
+                helpers::get_snap_data_path(cache_folder),
+                crate::constants::CACHE_FILE_NAME,
+            ),
+            settings_path: helpers::append_to_pathbuf(
+                helpers::get_snap_data_path(cache_folder),
+                crate::constants::SETTINGS_FILE_NAME,
+            ),
         };
 
-        if !built_cache.cache_path.exists() {
-            return built_cache;
-        }
-        let config = File::open(built_cache.cache_path.clone());
-        if config.is_err() {
-            return built_cache;
-        }
-        let cache: Result<HWCacheData, serde_json::Error> =
-            serde_json::from_reader(config.unwrap());
-        if cache.is_err() {
-            return built_cache;
-        }
-        built_cache.data = cache.unwrap();
+        built_cache.read_cache_file();
+        built_cache.read_settings_file();
         return built_cache;
     }
 
@@ -116,6 +144,11 @@ impl HWCache {
             return;
         }
         let _ = serde_json::to_writer_pretty(config.unwrap(), &self.data);
+        let config = File::create(self.settings_path.clone());
+        if config.is_err() {
+            return;
+        }
+        let _ = serde_json::to_writer_pretty(config.unwrap(), &self.settings);
     }
 
     /// Specifies that a new certification check against a remote server is being started.
@@ -237,7 +270,7 @@ impl HWCache {
     }
 
     pub fn set_remote_access_enabled(&mut self, new_state: bool) {
-        self.data.remote_access_enabled = new_state;
+        self.settings.remote_access_enabled = new_state;
         if !new_state {
             // invalidate the cache if remote access is disabled, to
             // ensure to force a new check if remote access is re-enabled.
@@ -252,8 +285,17 @@ impl HWCache {
         self.save();
     }
 
+    pub fn set_allow_custom_url_enabled(&mut self, new_state: bool) {
+        self.settings.allow_custom_url = new_state;
+        self.save();
+    }
+
     pub fn get_remote_access_enabled(&self) -> bool {
-        return self.data.remote_access_enabled;
+        return self.settings.remote_access_enabled;
+    }
+
+    pub fn get_allow_custom_url_enabled(&self) -> bool {
+        return self.settings.allow_custom_url;
     }
 
     pub fn get_available_releases(&self) -> Vec<models::software::OS> {

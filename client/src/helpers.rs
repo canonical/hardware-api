@@ -17,7 +17,8 @@
  */
 
 use crate::constants::SOCKET_NAME;
-use std::path::PathBuf;
+use std::env;
+use std::path::{Path, PathBuf};
 
 #[derive(PartialEq)]
 pub enum BinaryType {
@@ -27,6 +28,9 @@ pub enum BinaryType {
 
 pub(crate) fn append_to_pathbuf(p: PathBuf, s: &str) -> PathBuf {
     let mut p = p.into_os_string();
+    if !p.to_str().unwrap().ends_with("/") {
+        p.push("/");
+    }
     p.push(s);
     p.into()
 }
@@ -44,20 +48,16 @@ fn check_path_exists(socket_path: &str) -> bool {
     return socket_path.exists();
 }
 
-pub fn get_snap_setting(setting_name: &str) -> Option<String> {
-    let output = std::process::Command::new("snapctl")
-        .arg("get")
-        .arg(setting_name)
-        .output()
-        .ok()?;
-    if !output.status.success() {
-        return None;
-    }
-    let value = String::from_utf8_lossy(&output.stdout).trim().to_string();
-    if value.is_empty() {
-        return None;
-    }
-    Some(value)
+pub fn get_snap_data_path(cache_folder: Option<&Path>) -> PathBuf {
+    // snap_data_env must be defined outside the if statement to avoid the compiler to complain
+    // about the data being dropped too early.
+    let snap_data_env = env::var("SNAP_DATA").unwrap_or_else(|_| ".".to_string());
+    let snap_data: &Path = if cache_folder.is_none() {
+        Path::new(&snap_data_env)
+    } else {
+        cache_folder.unwrap()
+    };
+    return snap_data.to_path_buf();
 }
 
 pub fn get_socket_path(binary_type: BinaryType) -> Result<(String, String), anyhow::Error> {
