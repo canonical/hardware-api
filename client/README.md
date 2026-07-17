@@ -33,6 +33,14 @@ the `--server` command line parameter:
 hwctl --server https://your.server.url
 ```
 
+An important detail is that this option is, by default, disabled in the
+snap version for security reasons. To enable it, just set the
+`allow-custom-url` setting to `true` in the `hwctl` snap with:
+
+```shell
+sudo snap set hwctl allow-custom-url=true
+```
+
 You can specify whether you want to get the currently cached data, to
 force a refresh from the server, or to let the application to decide
 (return cached data if there are valid cached values, or get them from
