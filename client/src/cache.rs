@@ -139,11 +139,15 @@ impl HWCache {
     }
 
     fn save(&self) {
-        let config = File::create(self.cache_path.clone());
-        if config.is_err() {
+        let cache = File::create(self.cache_path.clone());
+        if cache.is_err() {
             return;
         }
-        let _ = serde_json::to_writer_pretty(config.unwrap(), &self.data);
+        let _ = serde_json::to_writer_pretty(cache.unwrap(), &self.data);
+        let _ = std::fs::set_permissions(
+            self.cache_path.clone(),
+            std::os::unix::fs::PermissionsExt::from_mode(0o600),
+        );
         let config = File::create(self.settings_path.clone());
         if config.is_err() {
             return;
