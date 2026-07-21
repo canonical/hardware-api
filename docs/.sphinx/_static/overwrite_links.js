@@ -1,5 +1,5 @@
 // Replaces rtd-address with new-address in links
-const rtd_address = 'canonical-hardware-api-documentation.readthedocs-hosted.com';
+const rtd_address = 'canonical-hardware-api.readthedocs-hosted.com';
 const new_address = 'ubuntu.com/docs/hardware-api';
 
 function escapeRegExp(value) {
