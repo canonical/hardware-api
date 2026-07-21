@@ -57,7 +57,7 @@ jobs:
 
   build-and-push-charm:
     name: Build and push charm
-    runs-on: self-hosted-linux-amd64-jammy-xlarge
+    runs-on: ubuntu-latest
     needs: build-and-push-image
     permissions:
       contents: write # necessary to create tag
