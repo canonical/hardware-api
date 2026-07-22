@@ -1,4 +1,4 @@
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 COPY --from=ghcr.io/astral-sh/uv:0.11.24 /uv /uvx /bin/
 
 RUN --mount=type=cache,target=/var/cache/apt \
