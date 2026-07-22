@@ -64,11 +64,19 @@ def check_certification(
         return NotCertifiedResponse()
 
     # Match against board and bios
+    # NOTE: Board and BIOS matching are relaxed
+    # Missing board or BIOS does not fail certification on its own, and the
+    # machine lookup falls back to matching by vendor and model (platform).
     try:
         board = logic.find_board(db, system_info.board)
         bioses = logic.find_bioses(db, system_info.bios) if system_info.bios else []
         related_machine = logic.find_certified_machine(
-            db, system_info.architecture, board, bioses
+            db,
+            system_info.architecture,
+            board,
+            bioses,
+            system_info.vendor,
+            system_info.model,
         )
     except ValueError:
         logging.warning(
@@ -85,6 +93,10 @@ def check_certification(
         return NotCertifiedResponse()
 
     bios = repository.get_machine_bios(db, related_machine.id)
+    if board is None:
+        # Board could not be matched from the request;
+        # use the certified machine's board so the response is still complete.
+        board = repository.get_board_for_machine(db, related_machine.id)
     related_releases, kernels = repository.get_releases_and_kernels_for_machine(
         db, related_machine.id
     )
