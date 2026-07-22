@@ -128,6 +128,8 @@ def get_machine_with_same_hardware_params(
     version has drifted from the certified report (e.g. board revisions or BIOS
     updates).
     """
+    if board is None and not bios_ids:
+        return None
     stmt = (
         select(models.Machine)
         .select_from(models.Machine)
