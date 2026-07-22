@@ -30,6 +30,11 @@ def _clean_vendor_name(name: str):
     return name.replace("Inc.", "").replace("Inc", "").strip().lower()
 
 
+def _escape_like_pattern(value: str) -> str:
+    """Escape SQL LIKE wildcards for literal case-insensitive matching."""
+    return value.replace("%", "\\%").replace("_", "\\_")
+
+
 def get_or_create(
     db: Session,
     model: type[models.Base],
@@ -170,7 +175,7 @@ def get_machine_by_vendor_and_model(
             and_(
                 models.Report.architecture == arch,
                 models.Vendor.name.ilike(f"%{_clean_vendor_name(vendor_name)}%"),
-                models.Platform.name.ilike(model),
+                models.Platform.name.ilike(_escape_like_pattern(model), escape="\\"),
             )
         )
     )
