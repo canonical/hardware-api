@@ -32,7 +32,7 @@ def _clean_vendor_name(name: str):
 
 def _escape_like_pattern(value: str) -> str:
     """Escape SQL LIKE wildcards for literal case-insensitive matching."""
-    return value.replace("%", "\\%").replace("_", "\\_")
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
 def get_or_create(
