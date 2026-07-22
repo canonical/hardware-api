@@ -8,9 +8,9 @@ from hwapi.external.certified.urls import (
 
 def test_get_certified_platform_url():
     """Tests that the public platform URL is valid."""
-    platform_id = 123
-    url = get_certified_platform_url(platform_id)
-    assert url == f"https://ubuntu.com/certified/platforms/{platform_id}"
+    platform_name = "Some Platform Name"
+    url = get_certified_platform_url(platform_name)
+    assert url == "https://ubuntu.com/certified?q=Some+Platform+Name"
 
 
 def test_get_certified_configuration_url():

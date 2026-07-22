@@ -368,7 +368,7 @@ class CertificationStatusTestHelper:
         assert response.status_code == 200
         assert response.json() == {
             "status": "Related Certified System Exists",
-            "certified_url": get_certified_platform_url(platform.id),
+            "certified_url": get_certified_platform_url(platform.name),
             "architecture": "amd64",
             "board": {
                 "manufacturer": board.vendor.name,
