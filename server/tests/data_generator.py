@@ -222,6 +222,7 @@ class CertificationStatusTestHelper:
     @staticmethod
     def create_default_request(
         vendor_name: str = "Dell",
+        model: str = "Test Model",
         board_name: str = "Test Board",
         board_version: str = "v1.0",
         bios_vendor: str | None = None,
@@ -238,7 +239,7 @@ class CertificationStatusTestHelper:
     ) -> dict:
         request = {
             "vendor": vendor_name,
-            "model": "Test Model",
+            "model": model,
             "architecture": "amd64",
             "board": {
                 "manufacturer": vendor_name,

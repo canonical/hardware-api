@@ -29,10 +29,22 @@ from hwapi.external.certified.urls import (
 )
 
 
+def _build_board_validator(
+    board: models.Device | None,
+) -> data_validators.BoardValidator | None:
+    if board is None:
+        return None
+    return data_validators.BoardValidator(
+        manufacturer=board.vendor.name,
+        product_name=board.name,
+        version=board.version,
+    )
+
+
 def build_related_certified_response(
     db: Session,
     machine: models.Machine,
-    board: models.Device,
+    board: models.Device | None,
     bios: models.Bios | None,
     releases: list[models.Release],
     kernels: list[models.Kernel],
@@ -55,11 +67,7 @@ def build_related_certified_response(
     return RelatedCertifiedSystemExistsResponse(
         certified_url=certified_url,
         architecture=architecture,
-        board=data_validators.BoardValidator(
-            manufacturer=board.vendor.name,
-            product_name=board.name,
-            version=board.version,
-        ),
+        board=_build_board_validator(board),
         bios=bios_validator,
         available_releases=[
             data_validators.OSValidator(
@@ -80,7 +88,7 @@ def build_related_certified_response(
 def build_certified_response(
     db: Session,
     machine: models.Machine,
-    board: models.Device,
+    board: models.Device | None,
     bios: models.Bios | None,
     releases: list[models.Release],
     kernels: list[models.Kernel],
@@ -104,11 +112,7 @@ def build_certified_response(
     return CertifiedResponse(
         certified_url=certified_url,
         architecture=architecture,
-        board=data_validators.BoardValidator(
-            manufacturer=board.vendor.name,
-            product_name=board.name,
-            version=board.version,
-        ),
+        board=_build_board_validator(board),
         bios=bios_validator,
         available_releases=[
             data_validators.OSValidator(
@@ -129,7 +133,7 @@ def build_certified_response(
 def build_certified_image_exists_response(
     db: Session,
     machine: models.Machine,
-    board: models.Device,
+    board: models.Device | None,
     bios: models.Bios | None,
     releases: list[models.Release],
     kernels: list[models.Kernel],
@@ -152,11 +156,7 @@ def build_certified_image_exists_response(
     return CertifiedImageExistsResponse(
         certified_url=certified_url,
         architecture=architecture,
-        board=data_validators.BoardValidator(
-            manufacturer=board.vendor.name,
-            product_name=board.name,
-            version=board.version,
-        ),
+        board=_build_board_validator(board),
         bios=bios_validator,
         available_releases=[
             data_validators.OSValidator(

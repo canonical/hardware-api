@@ -18,7 +18,7 @@
 
 from typing import Any, Sequence
 
-from sqlalchemy import and_, null, select
+from sqlalchemy import and_, select
 from sqlalchemy.orm import Session, selectinload
 
 from hwapi.data_models import models
@@ -115,29 +115,63 @@ def get_bios_list(db: Session, vendor_name: str, version: str) -> Sequence[model
 
 
 def get_machine_with_same_hardware_params(
-    db: Session, arch: str, board: models.Device, bios_ids: list[int]
+    db: Session,
+    arch: str,
+    board: models.Device | None,
+    bios_ids: list[int],
 ) -> models.Machine | None:
-    """
-    Get a machine that has the given architecture, motherboard, and one of the specified BIOSes.
+    """Get a machine that has the given arch, mobo, and bios.
+
+    Board and BIOS matching are relaxed: if ``board`` is ``None`` no board filter
+    is applied, and if ``bios_ids`` is empty no BIOS filter is applied. This
+    allows machines to still be matched when their board part number or BIOS
+    version has drifted from the certified report (e.g. board revisions or BIOS
+    updates).
     """
     stmt = (
         select(models.Machine)
         .select_from(models.Machine)
         .join(models.Certificate)
         .join(models.Report, models.Certificate.reports)
-        .join(models.Device, models.Report.devices)
-        .filter(
-            and_(
-                models.Device.id == board.id,
-                models.Report.architecture == arch,
-            )
-        )
+        .filter(models.Report.architecture == arch)
     )
+
+    if board is not None:
+        stmt = stmt.join(models.Device, models.Report.devices).filter(
+            models.Device.id == board.id
+        )
 
     if bios_ids:
         stmt = stmt.filter(models.Report.bios_id.in_(bios_ids))
-    else:
-        stmt = stmt.filter(models.Report.bios_id.is_(null()))
+
+    machine = db.execute(stmt.distinct()).scalars().first()
+    return machine
+
+
+def get_machine_by_vendor_and_model(
+    db: Session, arch: str, vendor_name: str, model: str
+) -> models.Machine | None:
+    """Get a certified machine for the given arch whose platform and vendor match.
+
+    Used as a fallback when the exact board cannot be found, so that board
+    part-number variants of the same platform still resolve to their certificate.
+    """
+    stmt = (
+        select(models.Machine)
+        .select_from(models.Machine)
+        .join(models.Configuration)
+        .join(models.Platform)
+        .join(models.Vendor)
+        .join(models.Certificate)
+        .join(models.Report, models.Certificate.reports)
+        .filter(
+            and_(
+                models.Report.architecture == arch,
+                models.Vendor.name.ilike(f"%{_clean_vendor_name(vendor_name)}%"),
+                models.Platform.name.ilike(model),
+            )
+        )
+    )
 
     machine = db.execute(stmt.distinct()).scalars().first()
     return machine
@@ -219,6 +253,35 @@ def get_cpu_for_machine(db: Session, machine_id: int) -> models.Device | None:
             and_(
                 models.Machine.id == machine_id,
                 models.Device.category == DeviceCategory.PROCESSOR,
+            )
+        )
+        .options(selectinload(models.Device.vendor))
+        .order_by(models.Certificate.created_at.desc())
+    )
+    return db.execute(stmt).scalars().first()
+
+
+def get_board_for_machine(db: Session, machine_id: int) -> models.Device | None:
+    """Retrieve the board for the given machine based on the latest report.
+
+    Used to backfill the board in the response when the request's board could
+    not be matched (relaxed board matching), so responses still describe the
+    certified machine's board.
+
+    :param db: SQLAlchemy Session instance.
+    :param machine_id: integer ID of the machine.
+    :return: board Device object if found, None otherwise.
+    """
+    stmt = (
+        select(models.Device)
+        .select_from(models.Machine)
+        .join(models.Certificate, models.Machine.certificates)
+        .join(models.Report, models.Certificate.reports)
+        .join(models.Device, models.Report.devices)
+        .where(
+            and_(
+                models.Machine.id == machine_id,
+                models.Device.category == DeviceCategory.BOARD,
             )
         )
         .options(selectinload(models.Device.vendor))
