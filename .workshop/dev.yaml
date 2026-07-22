@@ -1,0 +1,21 @@
+name: dev
+base: ubuntu@24.04
+sdks:
+  - name: project-hardware-api
+  - name: uv
+  - name: rust
+  - name: docker-ce
+  - name: node
+  - name: just
+  - name: vscode-remote
+  - name: opencode
+  - name: copilot
+  - name: system
+    plugs:
+      hwapi:
+        interface: tunnel
+        endpoint: 8080
+actions:
+  just: just "$@"
+  opencode: opencode "$@"
+  copilot: copilot "$@"

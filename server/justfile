@@ -1,0 +1,84 @@
+# Server Charm sub-commands.
+mod charm
+
+[doc('Describe usage and list the available recipes.')]
+help:
+    @echo '{{ BOLD }}Canonical Hardware API Server{{ NORMAL }}'
+    @echo
+    @echo 'To run tasks for other sub-projects, run {{ CYAN }}`just ..`{{ NORMAL }}.'
+    @echo
+    @just --list --unsorted
+
+[doc('Generate OpenAPI schema.')]
+[group('project')]
+schema:
+    @uvx tox run -e schema
+
+[doc('Generate Terraform docs.')]
+[group('project')]
+[working-directory('terraform')]
+terraform-docs:
+    @docker run --rm --volume "$(pwd):/terraform-docs" -u $(id -u) \
+        quay.io/terraform-docs/terraform-docs:latest markdown /terraform-docs \
+        --output-file=README.md
+
+[doc('Generate lockfile.')]
+[group('venv')]
+lock:
+    @uv lock
+
+[doc('Check lockfile.')]
+[group('venv')]
+check-lock:
+    @uv lock --check
+
+[doc("Update the project's environment.")]
+[group('venv')]
+venv:
+    @uv sync
+    @echo 'Activate the Python environment: {{ CYAN }}source .venv/bin/activate{{ NORMAL }}'
+
+[doc('Format all files.')]
+[group('lint')]
+format:
+    @uvx tox run -e format
+
+[doc('Format Terraform module.')]
+[group('lint')]
+[working-directory('terraform')]
+format-terraform:
+    @terraform fmt -recursive
+
+[doc('Lint all files.')]
+[group('lint')]
+lint:
+    @uvx tox run -e lint
+
+[doc('Lint and check Terraform module and docs.')]
+[group('lint')]
+[working-directory('terraform')]
+check-terraform:
+    @terraform fmt -check -recursive -diff
+    @docker run --rm --volume "$(pwd):/terraform-docs" -u $(id -u) \
+        quay.io/terraform-docs/terraform-docs:latest markdown /terraform-docs \
+        --output-file=README.md --output-check
+
+[doc('Run unit tests.')]
+[group('test')]
+test:
+    @uvx tox run -e unit
+
+[doc('Check OpenAPI schema.')]
+[group('test')]
+check-schema:
+    @uvx tox run -e check-schema
+
+[doc('Run the server.')]
+[group('deploy')]
+serve:
+    @docker compose up --build hwapi-dev
+
+[doc('Tear down local deployment.')]
+[group('deploy')]
+teardown:
+    @docker compose down

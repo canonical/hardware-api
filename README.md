@@ -11,7 +11,7 @@ check the certification status of hardware configurations.
 A full deployment of Hardware API consists of the following components:
 
 - [`hwapi`](./server/): The Hardware API server.
-- [`hwctl`](./client/): The Hardware API client (library and CLI tool).
+- [`hwctl`](./client/): The Hardware API client (library, CLI, and service).
 
 ## Community and Support
 

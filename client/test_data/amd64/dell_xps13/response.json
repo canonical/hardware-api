@@ -1,20 +1,12 @@
 {
   "status": "Certified",
   "certified_url": "https://ubuntu.com/certified/202405-34051",
-  "architecture": "amd64",
-  "bios": {
-    "vendor": "Dell",
-    "version": "1.7.0",
-    "revision": null,
-    "firmware_revision": "1.9",
-    "release_date": null
-  },
-  "board": {
-    "manufacturer": "Dell",
-    "product_name": "02395C",
-    "version": "X04"
-  },
-  "chassis": null,
+  "valid_cache": true,
+  "hardware_mismatch": false,
+  "stale": false,
+  "stale_reason": null,
+  "source": "Server",
+  "remote_access_enabled": true,
   "available_releases": [
     {
       "distributor": "Ubuntu",
@@ -27,5 +19,6 @@
         "loaded_modules": []
       }
     }
-  ]
+  ],
+  "server_url": "https://hw.ubuntu.com"
 }

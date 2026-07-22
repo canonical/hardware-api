@@ -9,7 +9,6 @@ import logging
 import shlex
 
 import ops
-from charms.nginx_ingress_integrator.v0.nginx_route import require_nginx_route
 from charms.traefik_k8s.v2.ingress import (
     IngressPerAppReadyEvent,
     IngressPerAppRequirer,
@@ -32,29 +31,12 @@ class HardwareApiCharm(ops.CharmBase):
         super().__init__(*args)
         self.container = self.unit.get_container(CONTAINER_NAME)
         self.typed_config = self.load_config(HardwareApiConfig, errors="blocked")
-        self._setup_nginx()
         self._setup_ingress()
         self.framework.observe(
             self.on[CONTAINER_NAME].pebble_ready,
             self._on_hardware_api_pebble_ready,
         )
         self.framework.observe(self.on.config_changed, self._on_config_changed)
-
-    def _setup_nginx(self):
-        """Set up the NGINX requirer."""
-        # TODO: Remove once NGINX support is dropped
-        require_nginx_route(
-            charm=self,
-            service_hostname=self.typed_config.hostname,
-            service_name=self.app.name,
-            service_port=self.typed_config.port,
-        )
-        self.framework.observe(
-            self.on.nginx_route_relation_broken, self._on_route_relation_changed
-        )
-        self.framework.observe(
-            self.on.nginx_route_relation_changed, self._on_route_relation_changed
-        )
 
     def _setup_ingress(self):
         """Set up the Ingress requirer."""
@@ -80,30 +62,15 @@ class HardwareApiCharm(ops.CharmBase):
 
     def _on_route_relation_changed(self, event: ops.RelationEvent):
         """Handle a route relation change event."""
-        if len(self.get_active_route_providers()) > 1:
-            self.unit.status = ops.BlockedStatus("multiple route providers related")
-            return
         self.unit.status = ops.ActiveStatus()
 
     def _on_ingress_ready(self, event: IngressPerAppReadyEvent):
         """Handle the Ingress ready event."""
-        if len(self.get_active_route_providers()) > 1:
-            self.unit.status = ops.BlockedStatus("multiple route providers related")
-            return
         logger.info("Ingress is ready with URL: %s", event.url)
 
     def _on_ingress_revoked(self, event: IngressPerAppRevokedEvent):
         """Handle the Ingress revoked event."""
         logger.info("Ingress revoked")
-
-    def get_active_route_providers(self):
-        """Return a list of active route providers."""
-        providers = []
-        if self.model.get_relation("nginx-route"):
-            providers.append("nginx-route")
-        if self.model.get_relation("ingress"):
-            providers.append("ingress")
-        return providers
 
     def replan(self):
         """Replan the Pebble layer."""

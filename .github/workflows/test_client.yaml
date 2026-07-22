@@ -1,4 +1,4 @@
-name: Test client lib and CLI tool
+name: Test Client
 permissions:
   contents: read
 on:
@@ -13,78 +13,127 @@ on:
       - client/**
       - ".github/workflows/test_client.yaml"
   workflow_dispatch:
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  lint-and-test:
-    name: Lint and test client
-    runs-on: [self-hosted, linux, large, noble, x64]
+  test:
+    name: Test
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: client
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Install dependencies
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y pkgconf libssl-dev build-essential
+      - name: Set up uv
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+      - run: sudo snap install --classic just
+      - run: just --yes setup
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
         with:
           toolchain: stable
           components: rustfmt, clippy
-      - run: cargo build --all-features
-      - run: cargo check --all-features
-      - run: cargo fmt --all -- --check
-      - run: cargo clippy --all-features --verbose
-      - run: cargo clippy --all-features --tests --verbose
-      - name: Run cargo test
-        run: cargo test --all-features
-      - run: cargo install cargo-llvm-cov
-      - name: Run coverage tests
-        run: cargo llvm-cov --all-features --cobertura --output-path=coverage.xml
+      - run: just build
+      - run: just lint
+      - run: just test
+      - run: just unit --output coverage.xml
       - name: Upload coverage.xml as an artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: client_coverage
           path: client/coverage.xml
           if-no-files-found: error
           retention-days: 2
       - name: Upload coverage to codecov
-        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           files: client/coverage.xml
           token: ${{ secrets.CODECOV_TOKEN }}
-
-  py-bindings-test:
-    name: Test Python bindings
-    runs-on: [self-hosted, linux, large, noble, x64]
-    defaults:
-      run:
-        working-directory: client
-    needs: lint-and-test
+  snap:
+    name: Snap
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        arch: [amd64]
     steps:
-      - uses: actions/checkout@v6
+      - name: Checkout repository
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
-      - name: Install system dependencies
+      - name: Build
+        id: snapcraft
+        uses: canonical/snapcraft-multiarch-action@fb63b025e0775a87a0652bcec61107a34f272b74 # v1.10.2
+        with:
+          path: client
+          architecture: ${{ matrix.arch }}
+      - name: Upload snapcraft logs
+        if: failure()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: runtime-build-log-${{ matrix.arch }}
+          path: |
+            /home/runner/.cache/snapcraft/log/
+            /home/runner/.local/state/snapcraft/log/
+      - name: Test snap
+        env:
+          SNAP_PATH: ${{ steps.snapcraft.outputs.snap }}
         run: |
-          sudo apt-get update
-          sudo apt-get install -y pkgconf libssl-dev build-essential
-      - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@e97e2d8cc328f1b50210efc529dca0028893a2d9 # v1
+          sudo apt update
+          sudo apt install -y jq
+          sudo snap install --dangerous $SNAP_PATH
+          sleep 2
+          if snap run hwctl ; then
+            echo "hwctl didn't return an error when the snap doesn't have the plugs connected"
+            exit 1
+          else
+            echo "hwctl failed, as expected, when the snap doesn't have the plugs connected"
+          fi
+          sudo snap connect hwctl:hardware-observe
+          sudo snap connect hwctl:kernel-module-observe
+          sudo snap connect hwctl:system-observe
+          snap run hwctl --origin cache |jq .source | grep '"cache"'
+
+          ./client/test_utils/certification_emulator.py certified 8000 &
+          ./client/test_utils/certification_emulator.py not-certified 8001 &
+          ./client/test_utils/certification_emulator.py image-exists 8002 &
+          ./client/test_utils/certification_emulator.py system-exists 8003 &
+          ./client/test_utils/certification_emulator.py error 8004 &
+          ./client/test_utils/certification_emulator.py error-data 8005 &
+          sleep 2
+          if snap run hwctl --origin server --server http://localhost:8000 ; then
+            echo "hwctl didn't return an error when the server returned an error"
+            exit 1
+          else
+            echo "hwctl failed, as expected, when the server returned an error"
+          fi
+          sudo snap set hwctl allow-custom-url=true
+          snap run hwctl --origin server --server http://localhost:8000 |jq .status | grep '"Certified"'
+          snap run hwctl --origin server --server http://localhost:8001 |jq .status | grep '"NotSeen"'
+          snap run hwctl --origin server --server http://localhost:8002 |jq .status | grep '"CertifiedImageExists"'
+          snap run hwctl --origin server --server http://localhost:8003 |jq .status | grep '"RelatedCertifiedSystemExists"'
+          if snap run hwctl --origin server --server http://localhost:8004 ; then
+            echo "hwctl didn't return an error when the server returned an error"
+            exit 1
+          else
+            echo "hwctl failed, as expected, when the server returned an error"
+          fi
+          if snap run hwctl --origin server --server http://localhost:8005 ; then
+            echo "hwctl didn't return an error when the server returned an error with data"
+            exit 1
+          else
+            echo "hwctl failed, as expected, when the server returned an error with data"
+          fi
+      - name: Upload artifact
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
-          toolchain: stable
-      - uses: actions/setup-python@v6
-        with:
-          python-version: "3.13"
-      - name: Install tox
-        run: pip install tox
-      - name: Lint
-        run: tox run -e lint
-      - name: Unit
-        run: tox run -e unit
+          name: hwctl_${{ matrix.arch }}.snap
+          path: ${{ steps.snapcraft.outputs.snap }}

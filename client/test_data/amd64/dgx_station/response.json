@@ -1,20 +1,12 @@
 {
   "status": "Certified",
   "certified_url": "https://ubuntu.com/certified/201711-25989",
-  "architecture": "amd64",
-  "bios": {
-    "vendor": "American Megatrends Inc.",
-    "version": "0406",
-    "revision": null,
-    "firmware_revision": null,
-    "release_date": null
-  },
-  "board": {
-    "manufacturer": "empty",
-    "product_name": "X99-E-10G WS",
-    "version": "Rev 1.xx"
-  },
-  "chassis": null,
+  "valid_cache": true,
+  "hardware_mismatch": false,
+  "stale": false,
+  "stale_reason": null,
+  "source": "Server",
+  "remote_access_enabled": true,
   "available_releases": [
     {
       "distributor": "Ubuntu",
@@ -49,5 +41,6 @@
         "loaded_modules": []
       }
     }
-  ]
+  ],
+  "server_url": "https://hw.ubuntu.com"
 }

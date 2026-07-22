@@ -1,20 +1,11 @@
 {
   "status": "Certified",
-  "certified_url": "https://ubuntu.com/certified/202203-30052",
-  "architecture": "amd64",
-  "bios": {
-    "vendor": "Lenovo",
-    "version": "S07KT41A",
-    "revision": null,
-    "firmware_revision": "1.19",
-    "release_date": null
-  },
-  "board": {
-    "manufacturer": "Lenovo",
-    "product_name": "1046",
-    "version": "Not Defined"
-  },
-  "chassis": null,
+  "certified_url": "https://ubuntu.com/certified/202203-30052",  "valid_cache": true,
+  "hardware_mismatch": false,
+  "stale": false,
+  "stale_reason": null,
+  "source": "Server",
+  "remote_access_enabled": true,
   "available_releases": [
     {
       "distributor": "Ubuntu",
@@ -27,5 +18,6 @@
         "loaded_modules": []
       }
     }
-  ]
+  ],
+  "server_url": "https://hw.ubuntu.com"
 }

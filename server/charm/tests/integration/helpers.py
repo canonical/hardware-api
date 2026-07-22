@@ -51,6 +51,13 @@ def app_is_up(base_url: str, session: requests.Session | None = None) -> bool:
     return ok
 
 
+def model_short_name(model_name: str) -> str:
+    """Return model name without controller prefix."""
+    if ":" in model_name:
+        return model_name.split(":", maxsplit=1)[1]
+    return model_name
+
+
 def retry(retry_num: int, retry_sleep_sec: int):
     """Retry function decorator."""
 

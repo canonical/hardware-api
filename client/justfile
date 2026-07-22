@@ -1,0 +1,90 @@
+[doc('Describe usage and list the available recipes.')]
+help:
+    @echo '{{ BOLD }}Canonical Hardware API Client{{ NORMAL }}'
+    @echo
+    @echo 'To run tasks for other sub-projects, run {{ CYAN }}`just ..`{{ NORMAL }}.'
+    @echo
+    @just --list --unsorted
+
+[confirm('Install development dependencies?')]
+[doc('Install development dependencies.')]
+[group('project')]
+setup:
+    sudo apt-get update
+    sudo apt-get install -y pkgconf libssl-dev build-essential
+
+[doc('Check lockfile.')]
+[group('venv')]
+check-lock:
+    @cargo check --locked
+
+[doc('Build the snap package.')]
+[group('package')]
+snapcraft:
+    @snapcraft pack
+
+[doc('Build crate.')]
+[group('package')]
+build:
+    @cargo build --all-features
+
+[doc('Publish crate.')]
+[group('package')]
+publish:
+    @cargo publish --locked --verbose --all-features
+
+[doc('Format Rust files.')]
+[group('lint')]
+[private]
+format-rs:
+    @echo 'Formatting Rust files...'
+    @cargo fmt --all
+
+[doc('Format Python files.')]
+[group('lint')]
+[private]
+format-py:
+    @echo 'Formatting Python files...'
+    @uvx tox run -e format
+
+[doc('Format all files.')]
+[group('lint')]
+format: format-rs format-py
+    @echo 'All formatting done!'
+
+[doc('Lint Rust files.')]
+[group('lint')]
+[private]
+lint-rs:
+    @echo 'Linting Rust files...'
+    @cargo fmt --all -- --check
+    @cargo clippy --all-features
+    @cargo clippy --all-features --tests
+
+[doc('Lint Python files.')]
+[group('lint')]
+[private]
+lint-py:
+    @echo 'Linting Python files...'
+    @uvx tox run -e lint
+
+[doc('Lint all files.')]
+[group('lint')]
+lint: lint-rs lint-py
+    @echo 'All linting done!'
+
+[doc('Run unit tests.')]
+[group('test')]
+test:
+    @echo 'Running Rust unit tests...'
+    @cargo test --all-features
+    @echo 'Running Python unit tests...'
+    @uvx tox run -e unit
+    @echo 'All testing done!'
+
+[arg('output', long='output', help='Output path for coverage.xml.')]
+[doc('Run unit tests and gather coverage.')]
+[group('test')]
+unit output='coverage.xml':
+    @cargo install cargo-llvm-cov
+    @cargo llvm-cov --all-features --cobertura --output-path={{ output }}

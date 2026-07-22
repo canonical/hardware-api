@@ -27,11 +27,11 @@ jobs:
       pull-requests: write # necessary to add library status label
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Check libraries
-        uses: canonical/charming-actions/check-libraries@2.7.0
+        uses: canonical/charming-actions/check-libraries@1753e0803f70445132e92acd45c905aba6473225 # 2.7.0
         with:
           charm-path: server/charm
           credentials: ${{ secrets.CHARMHUB_TOKEN }}
@@ -39,138 +39,122 @@ jobs:
 
   test:
     name: Test server
-    runs-on: [self-hosted, linux, large, noble, x64]
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: server
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Set up uv
-        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
-      - name: Check lockfile
-        run: uv lock --check
-      - name: Install dependencies
-        run: uv sync
-      - name: Lint
-        run: uvx tox run -e lint
-      - name: Unit
-        run: uvx tox run -e unit
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+      - run: sudo snap install --classic just
+      - run: just check-lock
+      - run: just lint
+      - run: just test
       - name: Upload coverage.xml as an artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: server_coverage
           path: server/coverage/coverage.xml
           if-no-files-found: error
           retention-days: 2
       - name: Upload coverage to codecov
-        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           files: server/coverage/coverage.xml
           token: ${{ secrets.CODECOV_TOKEN }}
-      - name: Check OpenAPI schema
-        run: uvx tox run -e check-schema
+      - run: just check-schema
 
-  charm-lockfile:
-    name: Test Charm (lockfile)
+  charm:
+    name: Test Charm
     runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: server/charm
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Set up uv
-        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
-      - name: Check lockfile
-        run: uv lock --check
-
-  charm-lint:
-    name: Test Charm (lint)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: server/charm
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-      - name: Set up uv
-        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
-      - name: Install dependencies
-        run: uv sync --group=lint
-      - name: Lint
-        run: uvx tox run -e lint
-
-  charm-unit:
-    name: Test Charm (unit)
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: server/charm
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          persist-credentials: false
-      - name: Set up uv
-        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
-      - name: Install dependencies
-        run: uv sync --group=unit
-      - name: Run unit tests
-        run: uvx tox run -e unit
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+      - run: sudo snap install --classic just
+      - run: just check-lock
+      - run: just lint
+      - run: just test
       - name: Upload coverage.xml as an artifact
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: charm_coverage
           path: server/charm/coverage.xml
           if-no-files-found: error
           retention-days: 2
       - name: Upload coverage to codecov
-        uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de # v5.5.2
+        uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f # v7.0.0
         with:
           files: server/charm/coverage.xml
           token: ${{ secrets.CODECOV_TOKEN }}
 
   charm-integration:
     name: Test Charm (integration)
-    runs-on: [self-hosted, linux, large, noble, amd64]
+    runs-on: ubuntu-latest
     defaults:
       run:
         working-directory: server/charm
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
       - name: Set up uv
-        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
-      - name: Install dependencies
-        run: uv sync --group=integration
-      - name: Install concierge
-        run: sudo snap install --classic concierge
-      - name: Prepare environment
-        run: sudo concierge prepare --verbose
-      - name: Pack charm
-        run: charmcraft pack --verbose
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+      - run: sudo snap install --classic just
+      - run: just --yes setup
+      - name: Export Juju controller names
+        id: controllers
+        run: |
+          LXD_CONTROLLER=$(juju controllers --format=json | jq -r '.controllers | to_entries[] | select(.value.cloud == "localhost") | .key')
+          if [[ -z "$LXD_CONTROLLER" ]]
+          then
+            echo "No LXD controller found."
+            juju controllers
+            exit 1
+          fi
+          echo "lxd_controller=$LXD_CONTROLLER" >> "$GITHUB_OUTPUT"
+      - run: just integration --logs logs
+        env:
+          JUJU_MACHINE_CONTROLLER: ${{ steps.controllers.outputs.lxd_controller }}
       - name: Upload charm as an artifact
-        uses: actions/upload-artifact@v6
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: charm
           path: server/charm/*.charm
           if-no-files-found: error
           retention-days: 2
-      - name: Run integration tests
-        run: uvx tox run -e integration -- --juju-dump-logs logs
       - name: Upload logs
         if: ${{ !cancelled() }}
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: juju-dump-logs
           path: server/charm/logs
           retention-days: 2
+
+  terraform:
+    name: Terraform
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - name: Checkout
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        with:
+          persist-credentials: false
+      - name: install terraform
+        uses: hashicorp/setup-terraform@dfe3c3f87815947d99a8997f908cb6525fc44e9e # v4.0.1
+      - run: sudo snap install --classic just
+      - run: just check-terraform

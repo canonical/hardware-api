@@ -17,13 +17,14 @@ jobs:
       contents: read
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           persist-credentials: false
+      - run: sudo snap install --classic just
       - name: Install dependencies
         run: |
-          sudo apt-get update
-          sudo apt-get install -y pipx pkgconf python3-maturin libssl-dev build-essential
+          just --yes client::setup
+          sudo apt-get install -y pipx python3-maturin
 
       # Client
       - name: Install Rust toolchain
@@ -31,24 +32,22 @@ jobs:
         with:
           toolchain: stable
           components: rustfmt, clippy
-      - name: Install cargo-llvm-cov
-        run: cargo install cargo-llvm-cov
       - name: Gather coverage (client)
         working-directory: client
-        run: cargo llvm-cov --all-features --cobertura --output-path=coverage.xml
+        run: just unit --output coverage.xml
       - name: Build (client)
         working-directory: client
-        run: cargo build --all-features
+        run: just build
       - name: Install (client pybindings)
         working-directory: client
         run: pip install . --break-system-packages
 
       # Server
       - name: Set up uv
-        uses: astral-sh/setup-uv@08807647e7069bb48b6ef5acd8ec9567f424441b # v8.1.0
+        uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
       - name: Gather coverage (server)
         working-directory: server
-        run: uvx tox run -e unit
+        run: just test
       - name: Install (server)
         working-directory: server
         run: |
