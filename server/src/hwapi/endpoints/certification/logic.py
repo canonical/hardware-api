@@ -67,10 +67,12 @@ def find_certified_machine(
     :raises ValueError: If no certified machine matches.
     """
     bios_ids = [bios.id for bios in bios_list] if bios_list else []
-    machine = repository.get_machine_with_same_hardware_params(
-        db, arch, board, bios_ids
-    )
-    if machine is None:
+    machine: models.Machine | None = None
+    if board is not None:
+        machine = repository.get_machine_with_same_hardware_params(
+            db, arch, board, bios_ids
+        )
+    if machine is None and board is None:
         machine = repository.get_machine_by_vendor_and_model(db, arch, vendor, model)
     if not machine:
         raise ValueError("No certified machine matches the hardware specifications")
