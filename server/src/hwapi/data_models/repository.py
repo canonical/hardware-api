@@ -163,6 +163,8 @@ def get_machine_by_vendor_and_model(
     Used as a fallback when the exact board cannot be found, so that board
     part-number variants of the same platform still resolve to their certificate.
     """
+    escaped_vendor_name = _escape_like_pattern(_clean_vendor_name(vendor_name))
+    escaped_platform_name = _escape_like_pattern(model)
     stmt = (
         select(models.Machine)
         .select_from(models.Machine)
@@ -174,8 +176,8 @@ def get_machine_by_vendor_and_model(
         .filter(
             and_(
                 models.Report.architecture == arch,
-                models.Vendor.name.ilike(f"%{_clean_vendor_name(vendor_name)}%"),
-                models.Platform.name.ilike(_escape_like_pattern(model), escape="\\"),
+                models.Vendor.name.ilike(f"%{escaped_vendor_name}%", escape="\\"),
+                models.Platform.name.ilike(escaped_platform_name, escape="\\"),
             )
         )
     )
