@@ -49,7 +49,7 @@ def build_related_certified_response(
     releases: list[models.Release],
     kernels: list[models.Kernel],
 ) -> RelatedCertifiedSystemExistsResponse:
-    certified_url = get_certified_platform_url(machine.configuration.platform_id)
+    certified_url = get_certified_platform_url(machine.configuration.platform.name)
     architecture = repository.get_machine_architecture(db, machine.id)
     bios_validator = (
         data_validators.BiosValidator(
