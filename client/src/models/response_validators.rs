@@ -34,7 +34,7 @@ pub enum CertificationStatusResponse {
         architecture: String,
         available_releases: Vec<OS>,
         bios: Bios,
-        board: Board,
+        board: Option<Board>,
         chassis: Option<Chassis>,
     },
     #[serde(rename = "Not Seen")]
@@ -44,7 +44,7 @@ pub enum CertificationStatusResponse {
         certified_url: String,
         architecture: String,
         bios: Bios,
-        board: Board,
+        board: Option<Board>,
         available_releases: Vec<OS>,
         chassis: Option<Chassis>,
     },
@@ -52,7 +52,7 @@ pub enum CertificationStatusResponse {
     RelatedCertifiedSystemExists {
         certified_url: String,
         architecture: String,
-        board: Board,
+        board: Option<Board>,
         bios: Bios,
         chassis: Option<Chassis>,
         gpu: Option<Vec<GPU>>,
