@@ -26,35 +26,56 @@ from hwapi.data_models.data_validators import (
 )
 
 
-def find_board(db: Session, board_data: BoardValidator) -> models.Device:
+def find_board(db: Session, board_data: BoardValidator) -> models.Device | None:
     """
     Find the board device based on the given board data.
-    Raises ValueError if the board is not found.
+
+    Board matching is relaxed to a prefix match on the product name, so board
+    part-number variants of the same board still resolve to the same certified
+    board. Returns ``None`` if no board is found, in which case the platform
+    fallback can still resolve the machine.
     """
-    board = repository.get_board(db, board_data.manufacturer, board_data.product_name)
-    if not board:
-        raise ValueError("Hardware not certified: Board not found")
-    return board
+    return repository.get_board(db, board_data.manufacturer, board_data.product_name)
 
 
 def find_bioses(db: Session, bios_data: BiosValidator) -> list[models.Bios]:
     """
     Find the BIOS list based on the given BIOS data.
-    Raises ValueError if no matching BIOS is found.
+
+    Returns an empty list if no matching BIOS is found. No exact matches is not
+    a failure, as BIOS updates should still match.
     """
     bios_list = repository.get_bios_list(db, bios_data.vendor, bios_data.version)
-    if not bios_list:
-        raise ValueError("Hardware not certified: BIOS not found")
     return list(bios_list)
 
 
 def find_certified_machine(
-    db: Session, arch: str, board: models.Device, bios_list: list[models.Bios]
+    db: Session,
+    arch: str,
+    board: models.Device | None,
+    bios_list: list[models.Bios],
+    vendor: str,
+    model: str,
 ) -> models.Machine:
+    """Find a certified machine matching the request.
+
+    First attempts a match on architecture plus the (optional) board and BIOS.
+    A machine can still be found when the board part number or BIOS version has
+    drifted from the certified report.
+
+    If the relaxed hardware match fails (e.g. the board could not be
+    identified at all), falls back to matching by vendor and model (platform).
+
+    :raises ValueError: If no certified machine matches.
+    """
     bios_ids = [bios.id for bios in bios_list] if bios_list else []
-    machine = repository.get_machine_with_same_hardware_params(
-        db, arch, board, bios_ids
-    )
+    machine: models.Machine | None = None
+    if board is not None:
+        machine = repository.get_machine_with_same_hardware_params(
+            db, arch, board, bios_ids
+        )
+    if machine is None and board is None:
+        machine = repository.get_machine_by_vendor_and_model(db, arch, vendor, model)
     if not machine:
         raise ValueError("No certified machine matches the hardware specifications")
     return machine

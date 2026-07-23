@@ -1,11 +1,13 @@
 """This module contains the ubuntu.com/certified URLs."""
 
+from urllib.parse import urlencode
+
 BASE_URL = "https://ubuntu.com/certified"
 
 
-def get_certified_platform_url(platform_id: int) -> str:
+def get_certified_platform_url(platform_name: str) -> str:
     """Build the certified platform URL."""
-    return f"{BASE_URL}/platforms/{platform_id}"
+    return f"{BASE_URL}?{urlencode({'q': platform_name})}"
 
 
 def get_certified_configuration_url(canonical_id: str) -> str:

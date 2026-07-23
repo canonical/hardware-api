@@ -222,6 +222,7 @@ class CertificationStatusTestHelper:
     @staticmethod
     def create_default_request(
         vendor_name: str = "Dell",
+        model: str = "Test Model",
         board_name: str = "Test Board",
         board_version: str = "v1.0",
         bios_vendor: str | None = None,
@@ -238,7 +239,7 @@ class CertificationStatusTestHelper:
     ) -> dict:
         request = {
             "vendor": vendor_name,
-            "model": "Test Model",
+            "model": model,
             "architecture": "amd64",
             "board": {
                 "manufacturer": vendor_name,
@@ -367,7 +368,7 @@ class CertificationStatusTestHelper:
         assert response.status_code == 200
         assert response.json() == {
             "status": "Related Certified System Exists",
-            "certified_url": get_certified_platform_url(platform.id),
+            "certified_url": get_certified_platform_url(platform.name),
             "architecture": "amd64",
             "board": {
                 "manufacturer": board.vendor.name,

@@ -44,7 +44,7 @@ class CertifiedResponse(BaseModel):
 
     architecture: str
     bios: BiosValidator | None
-    board: BoardValidator
+    board: BoardValidator | None
     chassis: ChassisValidator | None = None
     available_releases: list[OSValidator]
 
@@ -62,7 +62,7 @@ class RelatedCertifiedSystemExistsResponse(BaseModel):
     """Link to relevant ubuntu.com/certified page."""
 
     architecture: str
-    board: BoardValidator
+    board: BoardValidator | None
     bios: BiosValidator | None
     chassis: ChassisValidator | None = None
     gpu: list[GPUValidator] | None = None
@@ -85,6 +85,6 @@ class CertifiedImageExistsResponse(BaseModel):
 
     architecture: str
     bios: BiosValidator | None
-    board: BoardValidator
+    board: BoardValidator | None
     chassis: ChassisValidator | None = None
     available_releases: list[OSValidator]

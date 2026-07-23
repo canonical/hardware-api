@@ -18,16 +18,24 @@
 
 from typing import Any, Sequence
 
-from sqlalchemy import and_, null, select
+from sqlalchemy import and_, select
 from sqlalchemy.orm import Session, selectinload
 
 from hwapi.data_models import models
 from hwapi.data_models.enums import DeviceCategory
 
+# Leading characters of a board identifier for prefix-based matching (board revisions).
+BOARD_NAME_PREFIX_LENGTH = 3
+
 
 def _clean_vendor_name(name: str):
     """Remove "Inc"/"Inc." substring from vendor name and leading whitespaces"""
     return name.replace("Inc.", "").replace("Inc", "").strip().lower()
+
+
+def _escape_like_pattern(value: str) -> str:
+    """Escape SQL LIKE wildcards for literal case-insensitive matching."""
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("_", "\\_")
 
 
 def get_or_create(
@@ -77,14 +85,27 @@ def get_vendor_by_name(db: Session, name: str) -> models.Vendor | None:
 
 
 def get_board(db: Session, vendor_name: str, product_name: str) -> models.Device | None:
-    """Return device object matching given board data"""
+    """Return device object matching given board data.
+
+    Board name matching is relaxed to a prefix match: revisions of a board
+    share a common leading prefix (see ``BOARD_NAME_PREFIX_LENGTH``). If the
+    product name is shorter than the prefix length, an exact (full-string) match
+    is used to avoid over-broad matching.
+    """
+    if len(product_name) >= BOARD_NAME_PREFIX_LENGTH:
+        prefix = _escape_like_pattern(product_name[:BOARD_NAME_PREFIX_LENGTH])
+        name_filter = models.Device.name.ilike(f"{prefix}%", escape="\\")
+    else:
+        name_filter = models.Device.name.ilike(
+            _escape_like_pattern(product_name), escape="\\"
+        )
     stmt = (
         select(models.Device)
         .join(models.Vendor)
         .where(
             and_(
                 models.Vendor.name.ilike(f"%{_clean_vendor_name(vendor_name)}%"),
-                models.Device.name.ilike(product_name),
+                name_filter,
                 models.Device.category.in_(
                     [
                         DeviceCategory.BOARD.value,
@@ -115,29 +136,68 @@ def get_bios_list(db: Session, vendor_name: str, version: str) -> Sequence[model
 
 
 def get_machine_with_same_hardware_params(
-    db: Session, arch: str, board: models.Device, bios_ids: list[int]
+    db: Session,
+    arch: str,
+    board: models.Device | None,
+    bios_ids: list[int],
 ) -> models.Machine | None:
+    """Get a machine that has the given arch, mobo, and bios.
+
+    Board and BIOS matching are relaxed: if ``board`` is ``None`` no board filter
+    is applied, and if ``bios_ids`` is empty no BIOS filter is applied. This
+    allows machines to still be matched when their board part number or BIOS
+    version has drifted from the certified report (e.g. board revisions or BIOS
+    updates).
     """
-    Get a machine that has the given architecture, motherboard, and one of the specified BIOSes.
-    """
+    if board is None and not bios_ids:
+        return None
     stmt = (
         select(models.Machine)
         .select_from(models.Machine)
         .join(models.Certificate)
         .join(models.Report, models.Certificate.reports)
-        .join(models.Device, models.Report.devices)
-        .filter(
-            and_(
-                models.Device.id == board.id,
-                models.Report.architecture == arch,
-            )
-        )
+        .filter(models.Report.architecture == arch)
+        .order_by(models.Certificate.created_at.desc())
     )
+
+    if board is not None:
+        stmt = stmt.join(models.Device, models.Report.devices).filter(
+            models.Device.id == board.id
+        )
 
     if bios_ids:
         stmt = stmt.filter(models.Report.bios_id.in_(bios_ids))
-    else:
-        stmt = stmt.filter(models.Report.bios_id.is_(null()))
+
+    machine = db.execute(stmt.distinct()).scalars().first()
+    return machine
+
+
+def get_machine_by_vendor_and_model(
+    db: Session, arch: str, vendor_name: str, model: str
+) -> models.Machine | None:
+    """Get a certified machine for the given arch whose platform and vendor match.
+
+    Used as a fallback when the exact board cannot be found, so that board
+    part-number variants of the same platform still resolve to their certificate.
+    """
+    escaped_vendor_name = _escape_like_pattern(_clean_vendor_name(vendor_name))
+    escaped_platform_name = _escape_like_pattern(model)
+    stmt = (
+        select(models.Machine)
+        .select_from(models.Machine)
+        .join(models.Configuration)
+        .join(models.Platform)
+        .join(models.Vendor)
+        .join(models.Certificate)
+        .join(models.Report, models.Certificate.reports)
+        .filter(
+            and_(
+                models.Report.architecture == arch,
+                models.Vendor.name.ilike(f"%{escaped_vendor_name}%", escape="\\"),
+                models.Platform.name.ilike(escaped_platform_name, escape="\\"),
+            )
+        )
+    )
 
     machine = db.execute(stmt.distinct()).scalars().first()
     return machine
@@ -219,6 +279,35 @@ def get_cpu_for_machine(db: Session, machine_id: int) -> models.Device | None:
             and_(
                 models.Machine.id == machine_id,
                 models.Device.category == DeviceCategory.PROCESSOR,
+            )
+        )
+        .options(selectinload(models.Device.vendor))
+        .order_by(models.Certificate.created_at.desc())
+    )
+    return db.execute(stmt).scalars().first()
+
+
+def get_board_for_machine(db: Session, machine_id: int) -> models.Device | None:
+    """Retrieve the board for the given machine based on the latest report.
+
+    Used to backfill the board in the response when the request's board could
+    not be matched (relaxed board matching), so responses still describe the
+    certified machine's board.
+
+    :param db: SQLAlchemy Session instance.
+    :param machine_id: integer ID of the machine.
+    :return: board Device object if found, None otherwise.
+    """
+    stmt = (
+        select(models.Device)
+        .select_from(models.Machine)
+        .join(models.Certificate, models.Machine.certificates)
+        .join(models.Report, models.Certificate.reports)
+        .join(models.Device, models.Report.devices)
+        .where(
+            and_(
+                models.Machine.id == machine_id,
+                models.Device.category == DeviceCategory.BOARD,
             )
         )
         .options(selectinload(models.Device.vendor))
