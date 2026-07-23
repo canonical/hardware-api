@@ -423,3 +423,65 @@ def test_board_drifted_matches_by_model(
     CertificationStatusTestHelper.assert_certified_response(
         response, machine, board, bios, release, report.kernel
     )
+
+
+def test_board_prefix_variant_matches(
+    generator: DataGenerator, test_client: TestClient
+):
+    """Board part-number variants sharing a common prefix should match.
+
+    The request board name (e.g. "21QJCTO1WW") differs from the certified board
+    name ("21QKZCTYCN"), but both share the "21Q" prefix, so the board match
+    (and therefore the machine) should still resolve to Certified.
+    """
+    vendor = generator.gen_vendor()
+    bios = generator.gen_bios(vendor, version="1.0")
+    release = generator.gen_release(release="22.04", codename="jammy")
+    platform = generator.gen_platform(vendor=vendor, name="Certified Platform X")
+    machine = generator.gen_machine(
+        configuration=generator.gen_configuration(platform=platform),
+    )
+    certificate = generator.gen_certificate(machine, release)
+    report = generator.gen_report(certificate, generator.gen_kernel(), bios)
+    processor = generator.gen_processor(
+        vendor=generator.gen_vendor(name="Intel Corp."), reports=[report]
+    )
+    generator.gen_cpuid_object("0xb0671", processor.codename)
+    board = generator.gen_board(vendor, name="21QKZCTYCN", reports=[report])
+
+    request = CertificationStatusTestHelper.create_default_request(
+        board_name="21QJCTO1WW",
+        board_version="X01",
+        bios_vendor=bios.vendor.name,
+        bios_version=bios.version,
+        bios_revision=bios.revision,
+        os_version=release.release,
+        os_codename=release.codename,
+        # Raptor Lake CPU ID
+        processor_id=[0x71, 0x06, 0x0B, 0x00, 0xFF, 0xFB, 0xEB, 0xBF],
+    )
+    response = test_client.post("/v1/certification/status", json=request)
+
+    CertificationStatusTestHelper.assert_certified_response(
+        response, machine, board, bios, release, report.kernel
+    )
+
+
+def test_board_different_prefix_does_not_match(
+    generator: DataGenerator, test_client: TestClient
+):
+    """Boards with different prefixes must not match (guard against over-matching)."""
+    vendor = generator.gen_vendor()
+    generator.gen_board(
+        vendor,
+        identifier="dmi:0001",
+        name="20NKZCTYCN",
+        version="v1.0",
+    )
+
+    request = CertificationStatusTestHelper.create_default_request(
+        board_name="21QJCTO1WW",
+    )
+    response = test_client.post("/v1/certification/status", json=request)
+
+    CertificationStatusTestHelper.assert_not_seen_response(response)
