@@ -157,6 +157,7 @@ def get_machine_with_same_hardware_params(
         .join(models.Certificate)
         .join(models.Report, models.Certificate.reports)
         .filter(models.Report.architecture == arch)
+        .order_by(models.Certificate.created_at.desc())
     )
 
     if board is not None:
