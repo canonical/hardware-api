@@ -24,6 +24,9 @@ from sqlalchemy.orm import Session, selectinload
 from hwapi.data_models import models
 from hwapi.data_models.enums import DeviceCategory
 
+# Leading characters of a board identifier for prefix-based matching (board revisions).
+BOARD_NAME_PREFIX_LENGTH = 3
+
 
 def _clean_vendor_name(name: str):
     """Remove "Inc"/"Inc." substring from vendor name and leading whitespaces"""
@@ -82,14 +85,27 @@ def get_vendor_by_name(db: Session, name: str) -> models.Vendor | None:
 
 
 def get_board(db: Session, vendor_name: str, product_name: str) -> models.Device | None:
-    """Return device object matching given board data"""
+    """Return device object matching given board data.
+
+    Board name matching is relaxed to a prefix match: revisions of a board
+    share a common leading prefix (see ``BOARD_NAME_PREFIX_LENGTH``). If the
+    product name is shorter than the prefix length, an exact (full-string) match
+    is used to avoid over-broad matching.
+    """
+    if len(product_name) >= BOARD_NAME_PREFIX_LENGTH:
+        prefix = _escape_like_pattern(product_name[:BOARD_NAME_PREFIX_LENGTH])
+        name_filter = models.Device.name.ilike(f"{prefix}%", escape="\\")
+    else:
+        name_filter = models.Device.name.ilike(
+            _escape_like_pattern(product_name), escape="\\"
+        )
     stmt = (
         select(models.Device)
         .join(models.Vendor)
         .where(
             and_(
                 models.Vendor.name.ilike(f"%{_clean_vendor_name(vendor_name)}%"),
-                models.Device.name.ilike(product_name),
+                name_filter,
                 models.Device.category.in_(
                     [
                         DeviceCategory.BOARD.value,

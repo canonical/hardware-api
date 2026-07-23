@@ -30,8 +30,10 @@ def find_board(db: Session, board_data: BoardValidator) -> models.Device | None:
     """
     Find the board device based on the given board data.
 
-    Returns ``None`` if the board is not found. Board part number
-    variants of the same platform can still resolve via the platform fallback.
+    Board matching is relaxed to a prefix match on the product name, so board
+    part-number variants of the same board still resolve to the same certified
+    board. Returns ``None`` if no board is found, in which case the platform
+    fallback can still resolve the machine.
     """
     return repository.get_board(db, board_data.manufacturer, board_data.product_name)
 
