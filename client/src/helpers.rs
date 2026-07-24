@@ -40,24 +40,24 @@ fn join_paths(base_path: &str, relative_path: &str) -> String {
     if !base_path.ends_with("/") {
         base_path = format!("{}/", base_path);
     }
-    return format!("{}{}", base_path, relative_path);
+    format!("{}{}", base_path, relative_path)
 }
 
 fn check_path_exists(socket_path: &str) -> bool {
     let socket_path = std::path::Path::new(&socket_path);
-    return socket_path.exists();
+    socket_path.exists()
 }
 
 pub fn get_snap_data_path(cache_folder: Option<&Path>) -> PathBuf {
     // snap_data_env must be defined outside the if statement to avoid the compiler to complain
     // about the data being dropped too early.
     let snap_data_env = env::var("SNAP_DATA").unwrap_or_else(|_| ".".to_string());
-    let snap_data: &Path = if cache_folder.is_none() {
-        Path::new(&snap_data_env)
+    let snap_data: &Path = if let Some(folder) = cache_folder {
+        folder
     } else {
-        cache_folder.unwrap()
+        Path::new(&snap_data_env)
     };
-    return snap_data.to_path_buf();
+    snap_data.to_path_buf()
 }
 
 pub fn get_socket_path(binary_type: BinaryType) -> Result<(String, String), anyhow::Error> {
@@ -84,7 +84,7 @@ pub fn get_socket_path(binary_type: BinaryType) -> Result<(String, String), anyh
         return Ok((path, "/run/hwctl".to_string()));
     }
 
-    return Err(anyhow::anyhow!("Socket file does not exist: {}", path));
+    Err(anyhow::anyhow!("Socket file does not exist: {}", path))
 }
 
 #[cfg(test)]
@@ -178,7 +178,7 @@ mod tests {
         let path = std::path::Path::new(&basepath);
         let _ = std::fs::create_dir_all(path);
         let _ = std::fs::write(&fullpath, "data");
-        return (basepath, fullpath);
+        (basepath, fullpath)
     }
 
     // have to use sealed_test because the tests modify environment variables, which can affect other tests if run in parallel
