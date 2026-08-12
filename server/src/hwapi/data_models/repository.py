@@ -18,7 +18,7 @@
 
 from typing import Any, Sequence
 
-from sqlalchemy import and_, select
+from sqlalchemy import Select, and_, select
 from sqlalchemy.orm import Session, selectinload
 
 from hwapi.data_models import models
@@ -179,28 +179,52 @@ def get_machine_by_vendor_and_model(
 
     Used as a fallback when the exact board cannot be found, so that board
     part-number variants of the same platform still resolve to their certificate.
+
+    Platform name matching is relaxed: the vendor may be prefixed on the
+    client-provided model (e.g. "Dell Pro Max 16 MC16250") while C3 stores
+    only the bare platform name (e.g. "Pro Max 16 MC16250"). We try the
+    stripped form when an exact match on the original name fails.
     """
     escaped_vendor_name = _escape_like_pattern(_clean_vendor_name(vendor_name))
-    escaped_platform_name = _escape_like_pattern(model)
-    stmt = (
-        select(models.Machine)
-        .select_from(models.Machine)
-        .join(models.Configuration)
-        .join(models.Platform)
-        .join(models.Vendor)
-        .join(models.Certificate)
-        .join(models.Report, models.Certificate.reports)
-        .filter(
-            and_(
-                models.Report.architecture == arch,
-                models.Vendor.name.ilike(f"%{escaped_vendor_name}%", escape="\\"),
-                models.Platform.name.ilike(escaped_platform_name, escape="\\"),
+
+    def _build_stmt(platform_pattern: str) -> "Select[tuple[models.Machine]]":
+        escaped_pattern = _escape_like_pattern(platform_pattern)
+        return (
+            select(models.Machine)
+            .select_from(models.Machine)
+            .join(models.Configuration)
+            .join(models.Platform)
+            .join(models.Vendor)
+            .join(models.Certificate)
+            .join(models.Report, models.Certificate.reports)
+            .filter(
+                and_(
+                    models.Report.architecture == arch,
+                    models.Vendor.name.ilike(f"%{escaped_vendor_name}%", escape="\\"),
+                    models.Platform.name.ilike(escaped_pattern, escape="\\"),
+                )
             )
         )
-    )
 
+    stmt = _build_stmt(model)
     machine = db.execute(stmt.distinct()).scalars().first()
-    return machine
+
+    if machine is not None:
+        return machine
+
+    clean_vendor = _clean_vendor_name(vendor_name)
+    if clean_vendor:
+        stripped = model.strip()
+        for prefix in (vendor_name, clean_vendor):
+            prefix_lower = prefix.lower()
+            if stripped.lower().startswith(prefix_lower):
+                stripped_model = stripped[len(prefix_lower) :].strip()
+                if stripped_model:
+                    stmt = _build_stmt(stripped_model)
+                    machine = db.execute(stmt.distinct()).scalars().first()
+                    return machine
+
+    return None
 
 
 def get_machine_by_canonical_id(
