@@ -2,7 +2,7 @@
 
 This repository follows strict conventions for organizing agent-oriented knowledge documents, and this document is required reading for any agent that wants to read or write these.
 
-Read the top-level `.kb/agents.md` before continuing below.
+Read the top-level `.kb/agents.md` file before continuing below.
 
 # Overview
 
