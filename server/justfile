@@ -76,7 +76,12 @@ check-schema:
 [doc('Run the server.')]
 [group('deploy')]
 serve:
-    @docker compose up --build hwapi-dev
+    @docker compose up --detach --build hwapi-dev
+
+[doc('Show logs for the running instance.')]
+[group('deploy')]
+logs:
+    -@docker compose logs --follow
 
 [doc('Tear down local deployment.')]
 [group('deploy')]
