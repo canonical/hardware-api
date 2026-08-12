@@ -73,13 +73,23 @@ lint-py:
 lint: lint-rs lint-py
     @echo 'All linting done!'
 
-[doc('Run unit tests.')]
+[doc('Run Rust unit tests.')]
 [group('test')]
-test:
+[private]
+test-rs:
     @echo 'Running Rust unit tests...'
     @cargo test --all-features
+
+[doc('Run Python unit tests.')]
+[group('test')]
+[private]
+test-py:
     @echo 'Running Python unit tests...'
     @uvx tox run -e unit
+
+[doc('Run unit tests.')]
+[group('test')]
+test: test-rs test-py
     @echo 'All testing done!'
 
 [arg('output', long='output', help='Output path for coverage.xml.')]
