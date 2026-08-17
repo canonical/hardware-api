@@ -75,7 +75,7 @@ class C3Client:
         return session
 
     def _make_request_with_retries(
-        self, url: str, max_retries=5, base_delay=2, max_delay=60
+        self, url: str, max_retries=5, base_delay=2, max_delay=60, params=None
     ):
         """Make HTTP request with custom retry logic for timeout errors"""
         for attempt in range(max_retries):
@@ -86,7 +86,7 @@ class C3Client:
                     attempt + 1,
                     max_retries,
                 )
-                response = self.session.get(url, timeout=90)
+                response = self.session.get(url, params=params, timeout=90)
                 response.raise_for_status()
                 return response
 
@@ -141,7 +141,7 @@ class C3Client:
                     logger.error("Non-retryable HTTP error for %s: %s", url, e)
                     raise e
 
-    def load_hardware_data(self):
+    def load_hardware_data(self, canonical_ids: list[str] | None = None):
         """Orchestrator that calls the loaders in the correct order"""
         # Load CPU IDs
         logger.info("Importing CPU IDs and codenames from %s", urls.C3_URL)
@@ -149,6 +149,11 @@ class C3Client:
         self._import_cpu_ids(url)
 
         # Load certified configurations
+        params = (
+            {"hardware__canonical_id__in": ",".join(canonical_ids)}
+            if canonical_ids
+            else None
+        )
         logger.info(
             "Importing certified configurations and machines from %s", urls.C3_URL
         )
@@ -157,9 +162,15 @@ class C3Client:
             url,
             self._load_certified_configurations_from_response,
             response_models.PublicCertificate,
+            params=params,
         )
 
         # Load devices
+        params = (
+            {"report__physical_machine__canonical_id__in": ",".join(canonical_ids)}
+            if canonical_ids
+            else None
+        )
         LIMIT = 1000
         logger.info("Importing devices from %s", urls.C3_URL)
         url = urls.PUBLIC_DEVICES_URL + urls.get_limit_offset(LIMIT)
@@ -167,6 +178,7 @@ class C3Client:
             url,
             self._load_devices_from_response,
             response_models.PublicDeviceInstance,
+            params=params,
         )
 
     def _import_cpu_ids(self, url: str):
@@ -179,7 +191,9 @@ class C3Client:
                 )
         self.db.commit()
 
-    def _import_from_c3(self, url: str, loader: Callable, resp_model: Type[BaseModel]):
+    def _import_from_c3(
+        self, url: str, loader: Callable, resp_model: Type[BaseModel], params=None
+    ):
         """
         A general method to load some kind of data from the specified C3 endpoint
         with retry logic
@@ -197,7 +211,7 @@ class C3Client:
             logging.debug(f"Retrieving {next_url}")
 
             # Use retry logic for each request
-            response = self._make_request_with_retries(next_url)
+            response = self._make_request_with_retries(next_url, params=params)
             response_json = response.json()
 
             if counter == 0:
