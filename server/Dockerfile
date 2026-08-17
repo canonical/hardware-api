@@ -30,8 +30,8 @@ ENV DB_URL=$DB_URL
 ARG C3_URL=https://certification.canonical.com
 ENV C3_URL=$C3_URL
 
-RUN if [ -x $IMPORT_TOOL_PATH ]; then \
-    uv run $IMPORT_TOOL_PATH; \
+RUN if [ -x "$IMPORT_TOOL_PATH" ]; then \
+    uv run "$IMPORT_TOOL_PATH"; \
     fi
 
 EXPOSE 8080
