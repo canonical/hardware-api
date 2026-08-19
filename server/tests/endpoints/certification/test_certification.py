@@ -512,6 +512,52 @@ def test_unknown_board_fallback_model_with_vendor_prefix(
     )
 
 
+def test_model_matches_platform_with_cpu_suffix(
+    generator: DataGenerator, test_client: TestClient
+):
+    """Board not found; platform name carries a CPU/configuration qualifier.
+
+    C3 stores the platform as "Inspiron 15 3530 (i5-1335U)" while the client
+    reports the SMBIOS model "Inspiron 15 3530". The model fallback should
+    still match the platform by treating the client model as a prefix of the
+    platform name.
+    """
+    vendor = generator.gen_vendor(name="Dell")
+    bios = generator.gen_bios(vendor, version="1.0")
+    release = generator.gen_release(release="22.04", codename="jammy")
+    platform = generator.gen_platform(vendor=vendor, name="Inspiron 15 3530 (i5-1335U)")
+    machine = generator.gen_machine(
+        configuration=generator.gen_configuration(platform=platform),
+    )
+    certificate = generator.gen_certificate(machine, release)
+    report = generator.gen_report(certificate, generator.gen_kernel(), bios)
+    processor = generator.gen_processor(
+        vendor=generator.gen_vendor(name="Intel Corp."), reports=[report]
+    )
+    generator.gen_cpuid_object("0xb0671", processor.codename)
+    board = generator.gen_board(vendor, name="0VPMKH", reports=[report])
+
+    request = CertificationStatusTestHelper.create_default_request(
+        vendor_name=vendor.name,
+        model="Inspiron 15 3530",
+        # Board part number that does not exist in the DB
+        board_name="UnknownBoardVariant",
+        board_version="A00",
+        bios_vendor=bios.vendor.name,
+        bios_version=bios.version,
+        bios_revision=bios.revision,
+        os_version=release.release,
+        os_codename=release.codename,
+        # Raptor Lake CPU ID
+        processor_id=[0x71, 0x06, 0x0B, 0x00, 0xFF, 0xFB, 0xEB, 0xBF],
+    )
+    response = test_client.post("/v1/certification/status", json=request)
+
+    CertificationStatusTestHelper.assert_certified_response(
+        response, machine, board, bios, release, report.kernel
+    )
+
+
 def test_board_different_prefix_does_not_match(
     generator: DataGenerator, test_client: TestClient
 ):

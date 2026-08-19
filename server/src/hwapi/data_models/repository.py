@@ -18,7 +18,7 @@
 
 from typing import Any, Sequence
 
-from sqlalchemy import Select, and_, select
+from sqlalchemy import and_, select
 from sqlalchemy.orm import Session, selectinload
 
 from hwapi.data_models import models
@@ -184,12 +184,19 @@ def get_machine_by_vendor_and_model(
     client-provided model (e.g. "Dell Pro Max 16 MC16250") while C3 stores
     only the bare platform name (e.g. "Pro Max 16 MC16250"). We try the
     stripped form when an exact match on the original name fails.
+
+    C3 platform names also frequently carry a qualifier or year that
+    is not part of the SMBIOS model reported by the client. The client model is
+    therefore matched as a prefix of the platform name.
     """
     escaped_vendor_name = _escape_like_pattern(_clean_vendor_name(vendor_name))
 
-    def _build_stmt(platform_pattern: str) -> "Select[tuple[models.Machine]]":
-        escaped_pattern = _escape_like_pattern(platform_pattern)
-        return (
+    def _find_by_platform(platform_pattern: str) -> models.Machine | None:
+        pattern = platform_pattern.strip()
+        if not pattern:
+            return None
+        escaped_pattern = _escape_like_pattern(pattern)
+        stmt = (
             select(models.Machine)
             .select_from(models.Machine)
             .join(models.Configuration)
@@ -201,14 +208,13 @@ def get_machine_by_vendor_and_model(
                 and_(
                     models.Report.architecture == arch,
                     models.Vendor.name.ilike(f"%{escaped_vendor_name}%", escape="\\"),
-                    models.Platform.name.ilike(escaped_pattern, escape="\\"),
+                    models.Platform.name.ilike(f"{escaped_pattern}%", escape="\\"),
                 )
             )
         )
+        return db.execute(stmt.distinct()).scalars().first()
 
-    stmt = _build_stmt(model)
-    machine = db.execute(stmt.distinct()).scalars().first()
-
+    machine = _find_by_platform(model)
     if machine is not None:
         return machine
 
@@ -220,9 +226,9 @@ def get_machine_by_vendor_and_model(
             if stripped.lower().startswith(prefix_lower):
                 stripped_model = stripped[len(prefix_lower) :].strip()
                 if stripped_model:
-                    stmt = _build_stmt(stripped_model)
-                    machine = db.execute(stmt.distinct()).scalars().first()
-                    return machine
+                    machine = _find_by_platform(stripped_model)
+                    if machine is not None:
+                        return machine
 
     return None
 
