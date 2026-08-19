@@ -25,6 +25,7 @@ from typing import Callable, Type
 import requests
 from pydantic import BaseModel
 from requests.adapters import HTTPAdapter
+from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 from urllib3.util.retry import Retry
@@ -178,6 +179,21 @@ class C3Client:
             url,
             self._load_devices_from_response,
             response_models.PublicDeviceInstance,
+            params=params,
+        )
+
+        # Load machine reports (motherboard/board data)
+        params = (
+            {"physical_machine__canonical_id__in": ",".join(canonical_ids)}
+            if canonical_ids
+            else None
+        )
+        logger.info("Importing machine reports from %s", urls.C3_URL)
+        url = urls.MACHINE_REPORTS_URL + urls.get_limit_offset(LIMIT)
+        self._import_from_c3(
+            url,
+            self._load_machine_reports_from_response,
+            response_models.MachineReport,
             params=params,
         )
 
@@ -399,4 +415,68 @@ class C3Client:
         )
         if created or device not in report.devices:
             report.devices.append(device)
+        self.db.commit()
+
+    def _load_machine_reports_from_response(
+        self, machine_report: response_models.MachineReport
+    ):
+        """Load the motherboard/board data from a machine report.
+
+        The public-devices endpoint does not always expose the board for a
+        machine, so the machine reports endpoint is used as the authoritative
+        source for board data. The board is stored as a ``BOARD`` device and
+        linked to the machine's report so it can be returned in certification
+        responses and matched by the loose matching logic.
+        """
+        machine = get_machine_by_canonical_id(self.db, machine_report.canonical_id)
+        if machine is None:
+            return
+        if machine_report.devices is None:
+            return
+        boards = machine_report.devices.board
+        if not boards:
+            return
+
+        report = (
+            self.db.execute(
+                select(models.Report)
+                .join(models.Certificate)
+                .where(models.Certificate.machine_id == machine.id)
+                .order_by(models.Certificate.created_at.desc())
+            )
+            .scalars()
+            .first()
+        )
+        if report is None:
+            return
+
+        for board in boards:
+            vendor, _ = get_or_create(self.db, models.Vendor, name=board.vendor)
+            device = (
+                self.db.execute(
+                    select(models.Device).where(
+                        models.Device.identifier == board.identifier,
+                        models.Device.category == enums.DeviceCategory.BOARD.value,
+                    )
+                )
+                .scalars()
+                .first()
+            )
+            if device is None:
+                device = models.Device(
+                    subproduct_name="",
+                    device_type="",
+                    codename="",
+                    identifier=board.identifier,
+                    name=board.product,
+                    version="",
+                    vendor_id=vendor.id,
+                    subsystem="",
+                    bus=enums.BusType.dmi.value,
+                    category=enums.DeviceCategory.BOARD.value,
+                )
+                self.db.add(device)
+                self.db.commit()
+            if device not in report.devices:
+                report.devices.append(device)
         self.db.commit()

@@ -58,6 +58,7 @@ class C3TestDataImporter:
         endpoints = {
             "/api/v2/public-certificates/": "public_certificates.json",
             "/api/v2/public-devices/?pagination=limitoffset&limit=1000": "public_devices.json",
+            "/api/v2/machinereports/?pagination=limitoffset&limit=1000": "machine_reports.json",
             "/api/v2/cpuids/": "cpuids.json",
         }
 
@@ -99,6 +100,7 @@ class C3TestDataImporter:
         required_files = [
             "public_certificates.json",
             "public_devices.json",
+            "machine_reports.json",
             "cpuids.json",
         ]
 
