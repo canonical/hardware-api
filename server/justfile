@@ -76,7 +76,13 @@ check-schema:
 [doc('Run the server.')]
 [group('deploy')]
 serve:
-    @docker compose up --build hwapi-dev
+    @docker compose up --detach --build hwapi-dev
+
+[arg('canonical_ids', help='Canonical IDs to import from C3.')]
+[doc('Import certificates from C3.')]
+[group('deploy')]
+import-cids +canonical_ids:
+    @docker compose exec hwapi-dev ./scripts/import_certificates.py {{ canonical_ids }}
 
 [doc('Tear down local deployment.')]
 [group('deploy')]

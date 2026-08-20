@@ -71,3 +71,18 @@ class PublicDeviceInstance(BaseModel):
     device: Device
     driver_name: str
     cpu_codename: str
+
+
+class MachineReportBoard(BaseModel):
+    vendor: str
+    product: str
+    identifier: str
+
+
+class MachineReportDevices(BaseModel):
+    board: list[MachineReportBoard] = []
+
+
+class MachineReport(BaseModel):
+    canonical_id: str
+    devices: MachineReportDevices | None = None

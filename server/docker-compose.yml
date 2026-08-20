@@ -4,9 +4,9 @@ services:
       context: .
       dockerfile: Dockerfile
       args:
-        IMPORT_TOOL_PATH: ${IMPORT_TOOL_PATH:-./scripts/import_from_c3.py}
+        IMPORT_TOOL_PATH: ${IMPORT_TOOL_PATH:-}
         DB_URL: ${DB_URL:-sqlite:////home/server/hwapi.db}
-        C3_URL: ${C3_URL:-https://certification.staging.canonical.com}
+        C3_URL: ${C3_URL:-https://certification.canonical.com}
     command: uvicorn hwapi.main:app --host 0.0.0.0 --port 8080 --reload
     working_dir: /home/server
     volumes:

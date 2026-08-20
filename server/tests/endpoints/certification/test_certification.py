@@ -332,3 +332,247 @@ def test_hardware_matches_multiple_bios(
     CertificationStatusTestHelper.assert_certified_response(
         response, machine, board, bios, release, report.kernel
     )
+
+
+def test_bios_version_drifted_still_certified(
+    generator: DataGenerator, test_client: TestClient
+):
+    """Test certified when BIOS version has drifted from the certified report.
+
+    The request BIOS version does not exist in the DB
+    (e.g. a post-certification BIOS update), but the board, platform, CPU and
+    OS all match. The machine should still be reported as Certified, using the
+    certified machine's BIOS in the response.
+    """
+    vendor = generator.gen_vendor()
+    bios = generator.gen_bios(vendor, version="1.0")
+    release = generator.gen_release(release="22.04", codename="jammy")
+    machine = generator.gen_machine(
+        configuration=generator.gen_configuration(
+            platform=generator.gen_platform(vendor=vendor),
+        ),
+    )
+    certificate = generator.gen_certificate(machine, release)
+    report = generator.gen_report(certificate, generator.gen_kernel(), bios)
+    processor = generator.gen_processor(
+        vendor=generator.gen_vendor(name="Intel Corp."), reports=[report]
+    )
+    generator.gen_cpuid_object("0xb0671", processor.codename)
+    board = generator.gen_board(vendor, reports=[report])
+
+    request = CertificationStatusTestHelper.create_default_request(
+        board_name=board.name,
+        board_version=board.version,
+        bios_vendor=bios.vendor.name,
+        # BIOS version that does not exist in the DB
+        bios_version="9.9.9",
+        bios_revision="ZZ",
+        os_version=release.release,
+        os_codename=release.codename,
+        # Raptor Lake CPU ID
+        processor_id=[0x71, 0x06, 0x0B, 0x00, 0xFF, 0xFB, 0xEB, 0xBF],
+    )
+    response = test_client.post("/v1/certification/status", json=request)
+
+    CertificationStatusTestHelper.assert_certified_response(
+        response, machine, board, bios, release, report.kernel
+    )
+
+
+def test_board_drifted_matches_by_model(
+    generator: DataGenerator, test_client: TestClient
+):
+    """Test certified when board part number has drifted from the certified report.
+
+    The request board part number does not exist in the DB
+    (e.g. a board revision variant of the same platform), but the vendor and
+    platform match. The machine should still be reported as Certified
+    via the vendor+model fallback, using the certified machine's board in the
+    response.
+    """
+    vendor = generator.gen_vendor()
+    bios = generator.gen_bios(vendor, version="1.0")
+    release = generator.gen_release(release="22.04", codename="jammy")
+    platform = generator.gen_platform(vendor=vendor, name="Certified Platform X")
+    machine = generator.gen_machine(
+        configuration=generator.gen_configuration(platform=platform),
+    )
+    certificate = generator.gen_certificate(machine, release)
+    report = generator.gen_report(certificate, generator.gen_kernel(), bios)
+    processor = generator.gen_processor(
+        vendor=generator.gen_vendor(name="Intel Corp."), reports=[report]
+    )
+    generator.gen_cpuid_object("0xb0671", processor.codename)
+    board = generator.gen_board(vendor, name="CertifiedBoard", reports=[report])
+
+    request = CertificationStatusTestHelper.create_default_request(
+        model=platform.name,
+        # Board part number that does not exist in the DB
+        board_name="UnknownBoardVariant",
+        board_version="X01",
+        bios_vendor=bios.vendor.name,
+        bios_version=bios.version,
+        bios_revision=bios.revision,
+        os_version=release.release,
+        os_codename=release.codename,
+        # Raptor Lake CPU ID
+        processor_id=[0x71, 0x06, 0x0B, 0x00, 0xFF, 0xFB, 0xEB, 0xBF],
+    )
+    response = test_client.post("/v1/certification/status", json=request)
+
+    CertificationStatusTestHelper.assert_certified_response(
+        response, machine, board, bios, release, report.kernel
+    )
+
+
+def test_board_prefix_variant_matches(
+    generator: DataGenerator, test_client: TestClient
+):
+    """Board part-number variants sharing a common prefix should match.
+
+    The request board name (e.g. "21QJCTO1WW") differs from the certified board
+    name ("21QKZCTYCN"), but both share the "21Q" prefix, so the board match
+    (and therefore the machine) should still resolve to Certified.
+    """
+    vendor = generator.gen_vendor()
+    bios = generator.gen_bios(vendor, version="1.0")
+    release = generator.gen_release(release="22.04", codename="jammy")
+    platform = generator.gen_platform(vendor=vendor, name="Certified Platform X")
+    machine = generator.gen_machine(
+        configuration=generator.gen_configuration(platform=platform),
+    )
+    certificate = generator.gen_certificate(machine, release)
+    report = generator.gen_report(certificate, generator.gen_kernel(), bios)
+    processor = generator.gen_processor(
+        vendor=generator.gen_vendor(name="Intel Corp."), reports=[report]
+    )
+    generator.gen_cpuid_object("0xb0671", processor.codename)
+    board = generator.gen_board(vendor, name="21QKZCTYCN", reports=[report])
+
+    request = CertificationStatusTestHelper.create_default_request(
+        board_name="21QJCTO1WW",
+        board_version="X01",
+        bios_vendor=bios.vendor.name,
+        bios_version=bios.version,
+        bios_revision=bios.revision,
+        os_version=release.release,
+        os_codename=release.codename,
+        # Raptor Lake CPU ID
+        processor_id=[0x71, 0x06, 0x0B, 0x00, 0xFF, 0xFB, 0xEB, 0xBF],
+    )
+    response = test_client.post("/v1/certification/status", json=request)
+
+    CertificationStatusTestHelper.assert_certified_response(
+        response, machine, board, bios, release, report.kernel
+    )
+
+
+def test_unknown_board_fallback_model_with_vendor_prefix(
+    generator: DataGenerator, test_client: TestClient
+):
+    """Board not found; fallback model match has vendor prefix in client model.
+
+    The client sends "Dell Pro Max 16 MC16250" but C3 stores the platform as
+    "Pro Max 16 MC16250" (no vendor prefix). The model-fallback should still
+    match the platform by treating the vendor name as an optional prefix on
+    the platform name.
+    """
+    vendor = generator.gen_vendor(name="Dell")
+    bios = generator.gen_bios(vendor, version="1.0")
+    release = generator.gen_release(release="22.04", codename="jammy")
+    platform = generator.gen_platform(vendor=vendor, name="Pro Max 16 MC16250")
+    machine = generator.gen_machine(
+        configuration=generator.gen_configuration(platform=platform),
+    )
+    certificate = generator.gen_certificate(machine, release)
+    report = generator.gen_report(certificate, generator.gen_kernel(), bios)
+    processor = generator.gen_processor(
+        vendor=generator.gen_vendor(name="Intel Corp."), reports=[report]
+    )
+    generator.gen_cpuid_object("0xb0671", processor.codename)
+    board = generator.gen_board(vendor, name="0J69XP", reports=[report])
+
+    request = CertificationStatusTestHelper.create_default_request(
+        vendor_name=vendor.name,
+        model="Dell Pro Max 16 MC16250",
+        board_name="01FH9C",
+        board_version="A00",
+        bios_vendor=bios.vendor.name,
+        bios_version=bios.version,
+        bios_revision=bios.revision,
+        os_version=release.release,
+        os_codename=release.codename,
+        # Raptor Lake CPU ID
+        processor_id=[0x71, 0x06, 0x0B, 0x00, 0xFF, 0xFB, 0xEB, 0xBF],
+    )
+    response = test_client.post("/v1/certification/status", json=request)
+
+    CertificationStatusTestHelper.assert_certified_response(
+        response, machine, board, bios, release, report.kernel
+    )
+
+
+def test_model_matches_platform_with_cpu_suffix(
+    generator: DataGenerator, test_client: TestClient
+):
+    """Board not found; platform name carries a CPU/configuration qualifier.
+
+    C3 stores the platform as "Inspiron 15 3530 (i5-1335U)" while the client
+    reports the SMBIOS model "Inspiron 15 3530". The model fallback should
+    still match the platform by treating the client model as a prefix of the
+    platform name.
+    """
+    vendor = generator.gen_vendor(name="Dell")
+    bios = generator.gen_bios(vendor, version="1.0")
+    release = generator.gen_release(release="22.04", codename="jammy")
+    platform = generator.gen_platform(vendor=vendor, name="Inspiron 15 3530 (i5-1335U)")
+    machine = generator.gen_machine(
+        configuration=generator.gen_configuration(platform=platform),
+    )
+    certificate = generator.gen_certificate(machine, release)
+    report = generator.gen_report(certificate, generator.gen_kernel(), bios)
+    processor = generator.gen_processor(
+        vendor=generator.gen_vendor(name="Intel Corp."), reports=[report]
+    )
+    generator.gen_cpuid_object("0xb0671", processor.codename)
+    board = generator.gen_board(vendor, name="0VPMKH", reports=[report])
+
+    request = CertificationStatusTestHelper.create_default_request(
+        vendor_name=vendor.name,
+        model="Inspiron 15 3530",
+        # Board part number that does not exist in the DB
+        board_name="UnknownBoardVariant",
+        board_version="A00",
+        bios_vendor=bios.vendor.name,
+        bios_version=bios.version,
+        bios_revision=bios.revision,
+        os_version=release.release,
+        os_codename=release.codename,
+        # Raptor Lake CPU ID
+        processor_id=[0x71, 0x06, 0x0B, 0x00, 0xFF, 0xFB, 0xEB, 0xBF],
+    )
+    response = test_client.post("/v1/certification/status", json=request)
+
+    CertificationStatusTestHelper.assert_certified_response(
+        response, machine, board, bios, release, report.kernel
+    )
+
+
+def test_board_different_prefix_does_not_match(
+    generator: DataGenerator, test_client: TestClient
+):
+    """Boards with different prefixes must not match (guard against over-matching)."""
+    vendor = generator.gen_vendor()
+    generator.gen_board(
+        vendor,
+        identifier="dmi:0001",
+        name="20NKZCTYCN",
+        version="v1.0",
+    )
+
+    request = CertificationStatusTestHelper.create_default_request(
+        board_name="21QJCTO1WW",
+    )
+    response = test_client.post("/v1/certification/status", json=request)
+
+    CertificationStatusTestHelper.assert_not_seen_response(response)
