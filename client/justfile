@@ -55,7 +55,7 @@ format: format-rs format-py
 [doc('Lint Rust files.')]
 [group('lint')]
 [private]
-lint-rs:
+lint-rs: build
     @echo 'Linting Rust files...'
     @cargo fmt --all -- --check
     @cargo clippy --all-features

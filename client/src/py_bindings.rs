@@ -60,7 +60,7 @@ fn send_certification_request(py: Python, url: String) -> PyResult<Py<PyAny>> {
     let json = PyString::new(py, &json_str);
     let json_module = py.import("json")?;
     let json_object: Py<PyAny> = json_module.call_method1("loads", (json,))?.into();
-    return Ok(json_object);
+    Ok(json_object)
 }
 
 /// This function gives full access to the new cache functionality.

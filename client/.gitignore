@@ -1,3 +1,4 @@
+bin/com_ubuntu_hwctl.rs
 target
 cargo_home
 .cargo-checksum.json

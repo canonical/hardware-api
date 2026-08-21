@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
-import sys
 import http.server
+import sys
 import time
 
 response_code = 200
@@ -9,8 +9,6 @@ response_contents = '{"status": "certified", "certified_url": "https://certifica
 
 class mysimpleHTTPRequestHandler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
-        global response_code, response_contents
-
         time.sleep(1)
         self.send_response(response_code)
         self.send_header("Content-type", "application/json")

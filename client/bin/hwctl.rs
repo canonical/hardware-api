@@ -129,7 +129,7 @@ fn run(
     }
     let reply = reply.unwrap().state;
 
-    return Ok(reply);
+    Ok(reply)
 }
 
 fn main() -> ExitCode {
@@ -164,7 +164,7 @@ fn main() -> ExitCode {
     if reply.stale {
         return ExitCode::FAILURE;
     }
-    return ExitCode::SUCCESS;
+    ExitCode::SUCCESS
 }
 
 #[cfg(test)]
@@ -215,7 +215,7 @@ mod tests {
                 remote_access_enabled: unsafe { CURRENT_REMOTE_ACCESS },
                 server_url: "fake_url".to_string(),
             };
-            return call.reply(response_varlink);
+            call.reply(response_varlink)
         }
 
         fn set_remote_access(
@@ -229,7 +229,7 @@ mod tests {
             unsafe {
                 CURRENT_REMOTE_ACCESS = r#new_remote_access;
             }
-            return call.reply();
+            call.reply()
         }
     }
 
