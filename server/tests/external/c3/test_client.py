@@ -447,6 +447,87 @@ def test_load_devices_cpu_codename(
     assert processor.codename == "Skylake"
 
 
+def test_load_board_device_from_devices(
+    db_session: Session,
+    requests_mock: Mocker,
+    test_client: TestClient,
+    generator: DataGenerator,
+):
+    """Test that BOARD devices are imported from the PUBLIC_DEVICES endpoint."""
+    vendor = generator.gen_vendor()
+    platform = generator.gen_platform(vendor, name="Inspiron 15 3530")
+    configuration = generator.gen_configuration(platform)
+    machine = generator.gen_machine(configuration, canonical_id="202212-31017")
+    certificate = generator.gen_certificate(
+        machine, generator.gen_release(), name="2305-14601"
+    )
+
+    requests_mock.get(CPU_IDS_URL, json={})
+    requests_mock.get(
+        PUBLIC_CERTIFICATES_URL,
+        json={
+            "count": 0,
+            "next": None,
+            "previous": None,
+            "results": [],
+        },
+    )
+
+    requests_mock.get(
+        f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}",
+        json={
+            "count": 1,
+            "next": None,
+            "previous": None,
+            "results": [
+                {
+                    "machine_canonical_id": machine.canonical_id,
+                    "certificate_name": certificate.name,
+                    "device": {
+                        "name": "0VPMKH",
+                        "subproduct_name": None,
+                        "vendor": "Dell",
+                        "device_type": None,
+                        "bus": "dmi",
+                        "identifier": "dmi:0VPMKH",
+                        "subsystem": None,
+                        "version": None,
+                        "category": "BOARD",
+                        "codename": "",
+                    },
+                    "driver_name": "",
+                    "cpu_codename": "",
+                }
+            ],
+        },
+    )
+
+    c3_client = C3Client(db=db_session)
+    c3_client.load_hardware_data()
+
+    board = (
+        db_session.query(models.Device)
+        .filter_by(category=models.DeviceCategory.BOARD)
+        .first()
+    )
+    assert board is not None
+    assert board.name == "0VPMKH"
+    assert board.vendor.name == "Dell"
+
+    machine_from_db = (
+        db_session.query(models.Machine).filter_by(canonical_id="202212-31017").first()
+    )
+    assert machine_from_db is not None
+    report = (
+        db_session.query(models.Report)
+        .join(models.Certificate)
+        .filter(models.Certificate.machine_id == machine_from_db.id)
+        .first()
+    )
+    assert report is not None
+    assert board in report.devices
+
+
 def test_import_cpuids(
     db_session: Session, requests_mock: Mocker, test_client: TestClient
 ):
