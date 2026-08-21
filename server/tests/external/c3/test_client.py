@@ -28,7 +28,6 @@ from hwapi.data_models import models
 from hwapi.external.c3.client import C3Client
 from hwapi.external.c3.urls import (
     CPU_IDS_URL,
-    MACHINE_REPORTS_URL,
     PUBLIC_CERTIFICATES_URL,
     PUBLIC_DEVICES_URL,
     get_limit_offset,
@@ -83,10 +82,6 @@ def test_load_certificates(db_session: Session, requests_mock: Mocker):
     )
 
     c3_client = C3Client(db=db_session)
-    requests_mock.get(
-        f"{MACHINE_REPORTS_URL}{get_limit_offset(1000)}",
-        json={"count": 0, "next": None, "previous": None, "results": []},
-    )
     c3_client.load_hardware_data()
 
     assert db_session.query(models.Vendor).count() == 1
@@ -144,10 +139,6 @@ def test_load_certificates_with_missing_kernel_bios(
     )
 
     c3_client = C3Client(db=db_session)
-    requests_mock.get(
-        f"{MACHINE_REPORTS_URL}{get_limit_offset(1000)}",
-        json={"count": 0, "next": None, "previous": None, "results": []},
-    )
     c3_client.load_hardware_data()
 
     assert db_session.query(models.Kernel).count() == 0
@@ -244,10 +235,6 @@ def test_load_devices(
     )
 
     c3_client = C3Client(db=db_session)
-    requests_mock.get(
-        f"{MACHINE_REPORTS_URL}{get_limit_offset(1000)}",
-        json={"count": 0, "next": None, "previous": None, "results": []},
-    )
     c3_client.load_hardware_data()
 
     assert db_session.query(models.Device).count() == 2
@@ -379,10 +366,6 @@ def test_load_devices_duplicate_names(
     )
 
     c3_client = C3Client(db=db_session)
-    requests_mock.get(
-        f"{MACHINE_REPORTS_URL}{get_limit_offset(1000)}",
-        json={"count": 0, "next": None, "previous": None, "results": []},
-    )
     c3_client.load_hardware_data()
 
     assert db_session.query(models.Device).count() == 2
@@ -455,10 +438,6 @@ def test_load_devices_cpu_codename(
     )
 
     c3_client = C3Client(db=db_session)
-    requests_mock.get(
-        f"{MACHINE_REPORTS_URL}{get_limit_offset(1000)}",
-        json={"count": 0, "next": None, "previous": None, "results": []},
-    )
     c3_client.load_hardware_data()
     processor = (
         db_session.query(models.Device).filter_by(identifier="1111:2222").first()
@@ -468,65 +447,55 @@ def test_load_devices_cpu_codename(
     assert processor.codename == "Skylake"
 
 
-def test_load_machine_report_board(db_session: Session, requests_mock: Mocker):
-    """Test that the board is imported from the machine reports endpoint."""
+def test_load_board_device_from_devices(
+    db_session: Session,
+    requests_mock: Mocker,
+    generator: DataGenerator,
+):
+    """Test that BOARD devices are imported from the PUBLIC_DEVICES endpoint."""
+    vendor = generator.gen_vendor()
+    platform = generator.gen_platform(vendor, name="Inspiron 15 3530")
+    configuration = generator.gen_configuration(platform)
+    machine = generator.gen_machine(configuration, canonical_id="202212-31017")
+    certificate = generator.gen_certificate(
+        machine, generator.gen_release(), name="2305-14601"
+    )
+
     requests_mock.get(CPU_IDS_URL, json={})
     requests_mock.get(
         PUBLIC_CERTIFICATES_URL,
         json={
-            "count": 1,
+            "count": 0,
             "next": None,
             "previous": None,
-            "results": [
-                {
-                    "canonical_id": "202212-31017",
-                    "vendor": "Dell",
-                    "platform": "Inspiron 15 3530",
-                    "configuration": "Inspiron 15 3530",
-                    "created_at": "2022-08-15T17:31:54.008447+01:00",
-                    "completed": "2022-08-15T17:31:54.124274+01:00",
-                    "name": "2305-14601",
-                    "release": {
-                        "codename": "noble",
-                        "release": "24.04 LTS",
-                        "release_date": "2024-04-09",
-                        "supported_until": "2034-04-25",
-                        "i_version": 2404,
-                    },
-                    "architecture": "amd64",
-                    "kernel_version": "6.8.0-1009-oem",
-                    "bios": None,
-                    "firmware_revision": None,
-                }
-            ],
+            "results": [],
         },
     )
+
     requests_mock.get(
         f"{PUBLIC_DEVICES_URL}{get_limit_offset(1000)}",
-        json={"count": 0, "next": None, "previous": None, "results": []},
-    )
-    requests_mock.get(
-        f"{MACHINE_REPORTS_URL}{get_limit_offset(1000)}",
         json={
             "count": 1,
             "next": None,
             "previous": None,
             "results": [
                 {
-                    "canonical_id": "202212-31017",
-                    "submission": 294296,
-                    "memory": {},
-                    "cpu": {},
-                    "kernel_version": "6.8.0-1009-oem",
-                    "devices": {
-                        "board": [
-                            {
-                                "vendor": "Dell",
-                                "product": "0VPMKH",
-                                "identifier": "dmi:0VPMKH",
-                            }
-                        ]
+                    "machine_canonical_id": machine.canonical_id,
+                    "certificate_name": certificate.name,
+                    "device": {
+                        "name": "0VPMKH",
+                        "subproduct_name": None,
+                        "vendor": "Dell",
+                        "device_type": None,
+                        "bus": "dmi",
+                        "identifier": "dmi:0VPMKH",
+                        "subsystem": None,
+                        "version": None,
+                        "category": "BOARD",
+                        "codename": "",
                     },
+                    "driver_name": "",
+                    "cpu_codename": "",
                 }
             ],
         },
@@ -544,14 +513,14 @@ def test_load_machine_report_board(db_session: Session, requests_mock: Mocker):
     assert board.name == "0VPMKH"
     assert board.vendor.name == "Dell"
 
-    machine = (
+    machine_from_db = (
         db_session.query(models.Machine).filter_by(canonical_id="202212-31017").first()
     )
-    assert machine is not None
+    assert machine_from_db is not None
     report = (
         db_session.query(models.Report)
         .join(models.Certificate)
-        .filter(models.Certificate.machine_id == machine.id)
+        .filter(models.Certificate.machine_id == machine_from_db.id)
         .first()
     )
     assert report is not None
@@ -587,10 +556,6 @@ def test_import_cpuids(
     )
 
     c3_client = C3Client(db=db_session)
-    requests_mock.get(
-        f"{MACHINE_REPORTS_URL}{get_limit_offset(1000)}",
-        json={"count": 0, "next": None, "previous": None, "results": []},
-    )
     c3_client.load_hardware_data()
 
     assert db_session.query(models.CpuId).count() == 2
@@ -627,10 +592,6 @@ def test_retry_on_read_timeout(db_session: Session, requests_mock: Mocker):
     )
 
     c3_client = C3Client(db=db_session)
-    requests_mock.get(
-        f"{MACHINE_REPORTS_URL}{get_limit_offset(1000)}",
-        json={"count": 0, "next": None, "previous": None, "results": []},
-    )
 
     # Should succeed despite initial timeouts
     with patch("time.sleep") as mock_sleep:  # Speed up test by mocking sleep
@@ -664,10 +625,6 @@ def test_retry_on_connection_error(db_session: Session, requests_mock: Mocker):
     )
 
     c3_client = C3Client(db=db_session)
-    requests_mock.get(
-        f"{MACHINE_REPORTS_URL}{get_limit_offset(1000)}",
-        json={"count": 0, "next": None, "previous": None, "results": []},
-    )
 
     with patch("time.sleep"):
         c3_client.load_hardware_data()
@@ -697,10 +654,6 @@ def test_retry_on_server_errors(db_session: Session, requests_mock: Mocker):
     )
 
     c3_client = C3Client(db=db_session)
-    requests_mock.get(
-        f"{MACHINE_REPORTS_URL}{get_limit_offset(1000)}",
-        json={"count": 0, "next": None, "previous": None, "results": []},
-    )
 
     with patch("time.sleep"):
         c3_client.load_hardware_data()
@@ -729,10 +682,6 @@ def test_retry_on_rate_limit(db_session: Session, requests_mock: Mocker):
     )
 
     c3_client = C3Client(db=db_session)
-    requests_mock.get(
-        f"{MACHINE_REPORTS_URL}{get_limit_offset(1000)}",
-        json={"count": 0, "next": None, "previous": None, "results": []},
-    )
 
     with patch("time.sleep"):
         c3_client.load_hardware_data()
@@ -745,10 +694,6 @@ def test_no_retry_on_client_errors(db_session: Session, requests_mock: Mocker):
     requests_mock.get(CPU_IDS_URL, status_code=404, text="Not Found")
 
     c3_client = C3Client(db=db_session)
-    requests_mock.get(
-        f"{MACHINE_REPORTS_URL}{get_limit_offset(1000)}",
-        json={"count": 0, "next": None, "previous": None, "results": []},
-    )
 
     # Should raise HTTPError immediately without retries
     with pytest.raises(requests.exceptions.HTTPError):
@@ -763,10 +708,6 @@ def test_max_retries_exceeded(db_session: Session, requests_mock: Mocker):
     )
 
     c3_client = C3Client(db=db_session)
-    requests_mock.get(
-        f"{MACHINE_REPORTS_URL}{get_limit_offset(1000)}",
-        json={"count": 0, "next": None, "previous": None, "results": []},
-    )
 
     with patch("time.sleep") as mock_sleep:
         with pytest.raises(requests.exceptions.ReadTimeout):
@@ -881,10 +822,6 @@ def test_retry_with_pagination(
     )
 
     c3_client = C3Client(db=db_session)
-    requests_mock.get(
-        f"{MACHINE_REPORTS_URL}{get_limit_offset(1000)}",
-        json={"count": 0, "next": None, "previous": None, "results": []},
-    )
 
     with patch("time.sleep"):
         c3_client.load_hardware_data()
@@ -923,10 +860,6 @@ def test_retry_logging(db_session: Session, requests_mock: Mocker, caplog):
     )
 
     c3_client = C3Client(db=db_session)
-    requests_mock.get(
-        f"{MACHINE_REPORTS_URL}{get_limit_offset(1000)}",
-        json={"count": 0, "next": None, "previous": None, "results": []},
-    )
 
     with patch("time.sleep"):
         c3_client.load_hardware_data()
@@ -1075,10 +1008,6 @@ def test_intermittent_failures_recovery(
     )
 
     c3_client = C3Client(db=db_session)
-    requests_mock.get(
-        f"{MACHINE_REPORTS_URL}{get_limit_offset(1000)}",
-        json={"count": 0, "next": None, "previous": None, "results": []},
-    )
 
     with patch("time.sleep"):
         c3_client.load_hardware_data()
