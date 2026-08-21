@@ -450,7 +450,6 @@ def test_load_devices_cpu_codename(
 def test_load_board_device_from_devices(
     db_session: Session,
     requests_mock: Mocker,
-    test_client: TestClient,
     generator: DataGenerator,
 ):
     """Test that BOARD devices are imported from the PUBLIC_DEVICES endpoint."""
