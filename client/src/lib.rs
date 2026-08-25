@@ -69,25 +69,25 @@ pub struct PublicCertificationStatus {
 
 impl PublicCertificationStatus {
     pub fn get_status(&self) -> (CertificationStatus, Option<String>, Vec<OS>) {
-        return (
+        (
             self.status.clone(),
             self.certified_url.clone(),
             self.available_releases.clone(),
-        );
+        )
     }
 
     pub fn stale_status(&self) -> (bool, Option<String>) {
-        return (self.stale, self.stale_reason.clone());
+        (self.stale, self.stale_reason.clone())
     }
 
     pub fn extra_data(&self) -> (bool, CertificationSource, bool, String, bool) {
-        return (
+        (
             self.valid_cache,
             self.source.clone(),
             self.remote_access_enabled,
             self.server_url.clone(),
             self.hardware_mismatch,
-        );
+        )
     }
 }
 
@@ -98,7 +98,7 @@ fn create_answer(
 ) -> PublicCertificationStatus {
     let (certification_status, certification_certified_url, stale_status, stale_reason) =
         cache.get_status();
-    return PublicCertificationStatus {
+    PublicCertificationStatus {
         status: certification_status,
         certified_url: certification_certified_url,
         valid_cache: !cache.is_expired(),
@@ -109,7 +109,7 @@ fn create_answer(
         source,
         remote_access_enabled: cache.get_remote_access_enabled(),
         server_url: cache.get_server_url(),
-    };
+    }
 }
 
 #[cfg(not(test))]
@@ -120,14 +120,14 @@ fn send_request(
     let response = minreq::post(&server_url).with_json(hardware_info)?.send();
     if response.is_err() {
         let error = response.err().unwrap();
-        return Result::Err(anyhow::anyhow!("Connecting error: {}", error.to_string()));
+        return Result::Err(anyhow::anyhow!("Connecting error: {}", error));
     }
     let response = response.unwrap().json::<CertificationStatusResponse>();
     if response.is_err() {
         let error = response.err().unwrap();
-        return Result::Err(anyhow::anyhow!("Server error: {}", error.to_string()));
+        return Result::Err(anyhow::anyhow!("Server error: {}", error));
     }
-    return Ok(response.unwrap());
+    Ok(response.unwrap())
 }
 
 pub fn check_certification_status(
@@ -229,11 +229,11 @@ pub fn check_certification_status(
         certification_certified_url,
         certification_available_releases,
     );
-    return Ok(create_answer(
+    Ok(create_answer(
         cache,
         CertificationSource::Server,
         hardware_info,
-    ));
+    ))
 }
 
 #[cfg(test)]
@@ -290,7 +290,7 @@ fn send_request(
             "Connecting error: simulated connection error"
         ));
     }
-    return Result::Ok(CertificationStatusResponse::NotSeen);
+    Result::Ok(CertificationStatusResponse::NotSeen)
 }
 
 #[cfg(test)]
@@ -338,7 +338,7 @@ mod tests {
         // just set SNAP_DATA to a new temp dir because the tests seem to run in
         // parallel, so the variable would be overwritten.
         let temp_dir = test_temp_dir!();
-        return temp_dir;
+        temp_dir
     }
 
     fn keep_temp_dir_alive(_temp_dir: &TestTempDir) {
@@ -348,7 +348,7 @@ mod tests {
     fn new_cache(temp_dir: &std::path::Path) -> HWCache {
         let mut cache = HWCache::new(Some(temp_dir));
         cache.set_allow_custom_url_enabled(true);
-        return cache;
+        cache
     }
 
     #[test]

@@ -96,6 +96,7 @@ impl VarlinkInterface for ComUbuntuHwctl {
         if current_hardware.is_err() {
             return call.reply_cannot_collect_system_data();
         }
+        #[allow(clippy::unnecessary_literal_unwrap)]
         let current_hardware = current_hardware.unwrap();
 
         let response = check_certification_status(
@@ -142,18 +143,18 @@ impl VarlinkInterface for ComUbuntuHwctl {
                     })
                     .collect(),
             ),
-            valid_cache: valid_cache,
-            hardware_mismatch: hardware_mismatch,
-            stale: stale,
-            stale_reason: stale_reason,
+            valid_cache,
+            hardware_mismatch,
+            stale,
+            stale_reason,
             source: match source {
                 hwlib::CertificationSource::Cache => CertificationSource::cache,
                 hwlib::CertificationSource::Server => CertificationSource::server,
             },
-            remote_access_enabled: remote_access_enabled,
-            server_url: server_url,
+            remote_access_enabled,
+            server_url,
         };
-        return call.reply(response_varlink);
+        call.reply(response_varlink)
     }
 
     fn set_remote_access(
@@ -163,7 +164,7 @@ impl VarlinkInterface for ComUbuntuHwctl {
     ) -> varlink::Result<()> {
         let mut cache = hwlib::cache::HWCache::new(None);
         cache.set_remote_access_enabled(r#enabled);
-        return call.reply();
+        call.reply()
     }
 }
 
@@ -181,14 +182,14 @@ fn create_server(socket_file: String, timeout: u64) -> Result<(), varlink::Error
         vec![Box::new(varlink_interface)],
     );
 
-    return varlink::listen(
+    varlink::listen(
         service,
         &socket_file,
         &varlink::ListenConfig {
             idle_timeout: timeout,
             ..Default::default()
         },
-    );
+    )
 }
 
 fn main() -> ExitCode {
@@ -214,7 +215,7 @@ fn main() -> ExitCode {
         eprintln!("ERROR: failed to create server: {:?}", e);
         return ExitCode::FAILURE;
     }
-    return ExitCode::SUCCESS;
+    ExitCode::SUCCESS
 }
 
 #[cfg(test)]
@@ -250,7 +251,7 @@ mod tests {
         }
         let client_connection = Connection::with_address(&socket_file);
 
-        assert!(!client_connection.is_err());
+        assert!(client_connection.is_ok());
 
         let client_connection = client_connection.unwrap();
 
@@ -260,7 +261,7 @@ mod tests {
             .get_certification_status(com_ubuntu_hwctl::CertificationSource::cache, None)
             .call();
 
-        assert!(!reply.is_err());
+        assert!(reply.is_ok());
 
         let state = reply.unwrap().state;
         assert!(state.status == CertificationStatus::Unknown);
@@ -271,7 +272,7 @@ mod tests {
             .get_certification_status(com_ubuntu_hwctl::CertificationSource::cache, None)
             .call();
 
-        assert!(!reply.is_err());
+        assert!(reply.is_ok());
 
         let state = reply.unwrap().state;
         assert!(state.status == CertificationStatus::Unknown);
@@ -282,7 +283,7 @@ mod tests {
             .get_certification_status(com_ubuntu_hwctl::CertificationSource::cache, None)
             .call();
 
-        assert!(!reply.is_err());
+        assert!(reply.is_ok());
 
         let state = reply.unwrap().state;
         assert!(state.status == CertificationStatus::Unknown);
