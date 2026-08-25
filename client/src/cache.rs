@@ -79,7 +79,7 @@ struct SettingsData {
 
 impl HWCache {
     fn get_now(&self) -> DateTime<chrono::Utc> {
-        return chrono::Utc::now();
+        chrono::Utc::now()
     }
 
     fn read_cache_file(&mut self) {
@@ -135,7 +135,7 @@ impl HWCache {
 
         built_cache.read_cache_file();
         built_cache.read_settings_file();
-        return built_cache;
+        built_cache
     }
 
     fn save(&self) {
@@ -236,16 +236,16 @@ impl HWCache {
         StaleStatus,
         Option<String>,
     ) {
-        return (
+        (
             self.data.certification_status.clone(),
             self.data.certification_certified_url.clone(),
             self.data.stale.clone(),
             self.data.stale_reason.clone(),
-        );
+        )
     }
 
     pub fn get_server_url(&self) -> String {
-        return self.data.server.clone();
+        self.data.server.clone()
     }
 
     /// Compares the given hardware data with the cached hardware data.
@@ -256,7 +256,7 @@ impl HWCache {
         {
             return true;
         }
-        return false;
+        false
     }
 
     /// Returns true if the cache has expired, false otherwise.
@@ -270,7 +270,7 @@ impl HWCache {
             return true;
         }
         let now = self.get_now();
-        return now > expires_at.unwrap();
+        now > expires_at.unwrap()
     }
 
     pub fn set_remote_access_enabled(&mut self, new_state: bool) {
@@ -295,15 +295,15 @@ impl HWCache {
     }
 
     pub fn get_remote_access_enabled(&self) -> bool {
-        return self.settings.remote_access_enabled;
+        self.settings.remote_access_enabled
     }
 
     pub fn get_allow_custom_url_enabled(&self) -> bool {
-        return self.settings.allow_custom_url;
+        self.settings.allow_custom_url
     }
 
     pub fn get_available_releases(&self) -> Vec<models::software::OS> {
-        return self.data.available_releases.clone();
+        self.data.available_releases.clone()
     }
 }
 
