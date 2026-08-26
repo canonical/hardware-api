@@ -59,7 +59,7 @@ jobs:
 
   build-and-push-charm:
     name: Build and push charm
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-24.04
     needs: build-and-push-image
     permissions:
       contents: write # necessary to create tag
