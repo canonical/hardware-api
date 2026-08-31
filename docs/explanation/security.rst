@@ -20,7 +20,7 @@ exploit known vulnerabilities in specific hardware components or configurations.
 Information Security
 --------------------
 
-The Hardware API client collects and processes hardware information of the
+The ``hwctl-daemon`` collects and processes hardware information of the
 running system, gathered from `SMBIOS`_. The information collected by Hardware
 API is sensitive, but does not include
 :abbr:`PII (Personally Identifiable Information)`, user credentials, or
@@ -31,17 +31,19 @@ listed in detail in :ref:`certification_status`.
 Isolation & Containerization
 ----------------------------
 
-The client is designed to minimize the amount of sensitive information
-it can access. Both the snap and the deb package are confined using `AppArmor`_,
-which restricts the client's access to only the necessary system resources and
-files required to gather hardware information.
+The client is split into an unprivileged ``hwctl`` CLI and a privileged,
+socket-activated ``hwctl-daemon``. The CLI holds no privileged access and talks
+to the daemon over a local `Varlink`_ Unix socket; only the daemon collects and
+submits hardware data.
 
-The ``hwctl`` `snap`_ is packaged with strict confinement and has a limited set
-of interfaces required to access system information.
+The daemon is confined to minimize the amount of sensitive information it can
+access. The ``hwctl`` `snap`_ is packaged with strict confinement, enforced by
+`AppArmor`_, and its ``hwctl-daemon`` app exposes only the interfaces needed to
+read system information (for example, ``hardware-observe``).
 
-The ``hwctl`` deb package includes an AppArmor profile that restricts
-access to only the necessary system resources and files required to gather
-hardware information.
+The daemon caches the collected hardware data and the server response on disk
+at ``/var/snap/hwctl/current/hw_cache.json``, owned by root with mode ``0600``,
+so it is readable only by root.
 
 Cryptography
 ------------
