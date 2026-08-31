@@ -21,8 +21,8 @@ Information Security
 --------------------
 
 The ``hwctl-daemon`` collects and processes hardware information of the
-running system, gathered from `SMBIOS`_. The information collected by Hardware
-API is sensitive, but does not include
+running system, gathered from `SMBIOS`_. The information collected by the daemon
+is sensitive, but does not include
 :abbr:`PII (Personally Identifiable Information)`, user credentials, or
 activity. The information collected is limited to manufacturer/vendor, model,
 and versions of hardware components, firmware, kernel, OS, and BIOS. These are
