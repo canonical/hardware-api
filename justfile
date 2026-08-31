@@ -29,7 +29,7 @@ lint:
 [doc('Perform static analysis on GitHub workflows.')]
 [group('test')]
 zizmor:
-    @uvx zizmor --pedantic .
+    @uvx zizmor --gh-token="$(gh auth token)" .
 
 [doc('Run all unit tests.')]
 [group('test')]
