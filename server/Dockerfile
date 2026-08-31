@@ -1,5 +1,5 @@
 FROM ubuntu:26.04
-COPY --from=ghcr.io/astral-sh/uv:0.12.6 /uv /uvx /bin/
+COPY --from=ghcr.io/astral-sh/uv:0.12.7 /uv /uvx /bin/
 
 RUN --mount=type=cache,target=/var/cache/apt \
     --mount=type=cache,target=/var/lib/apt,sharing=locked \
