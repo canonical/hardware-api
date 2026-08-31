@@ -9,6 +9,7 @@
 .. _snap: https://snapcraft.io/hwctl
 .. _Ubuntu Certified: https://ubuntu.com/certified
 .. _Ubuntu HWAPI: https://hw.ubuntu.com/
+.. _Varlink: https://varlink.org/
 
 
 .. SHORTCUTS
