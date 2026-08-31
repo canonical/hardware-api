@@ -76,18 +76,11 @@ hwctl --enable-server-access
 
 ## Installation
 
-`hwctl` is available on all major Linux distributions.
-
-On snap-ready systems, you can install it on the command-line with:
+`hwctl` is provided as a snap. On snap-ready systems, install it from the
+command line with:
 
 ```shell
 sudo snap install hwctl
-```
-
-On Questing Quokka (25.10), you can also install it using `apt`:
-
-```shell
-sudo apt-get install hwctl
 ```
 
 ## Service protocol
