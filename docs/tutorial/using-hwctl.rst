@@ -7,39 +7,23 @@ the certification status of your hardware configuration.
 Install ``hwctl``
 -----------------
 
-.. tab-set::
-   .. tab-item:: Deb (Ubuntu)
-      :sync: deb
+``hwctl`` is provided as a snap. Install it on any supported Ubuntu release
+with:
 
-      On Questing Quokka (25.10) or later, you can install ``hwctl`` using
-      ``apt``:
+.. code:: bash
 
-      .. code:: bash
-
-         sudo apt-get install hwctl
-
-   .. tab-item:: Snap
-      :sync: snap
-
-      You can install the ``hwctl`` `snap`_ on any supported Ubuntu release:
-
-      .. code:: bash
-
-         sudo snap install hwctl
+   sudo snap install hwctl
 
 Check certification status
 --------------------------
 
-.. note::
-
-    The client requires root access since we collect the hardware information
-    using `SMBIOS`_ data.
-
-To check your machine's certification status, simply run ``hwctl`` with root privileges:
+To check your machine's certification status, run ``hwctl``. It connects to
+the ``hwctl-daemon``, which collects the hardware information and talks to the
+server.
 
 .. terminal::
    :copy:
-   :input: sudo hwctl
+   :input: hwctl
 
    {
      "status": "Not Seen"
