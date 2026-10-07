@@ -44,7 +44,7 @@ jobs:
       - run: just test
       - run: just unit --output coverage.xml
       - name: Upload coverage.xml as an artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: client_coverage
           path: client/coverage.xml
@@ -77,7 +77,7 @@ jobs:
           architecture: ${{ matrix.arch }}
       - name: Upload snapcraft logs
         if: failure()
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: runtime-build-log-${{ matrix.arch }}
           path: |
@@ -133,7 +133,7 @@ jobs:
             echo "hwctl failed, as expected, when the server returned an error with data"
           fi
       - name: Upload artifact
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
           name: hwctl_${{ matrix.arch }}.snap
           path: ${{ steps.snapcraft.outputs.snap }}
