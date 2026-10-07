@@ -1,0 +1,9 @@
+clients:
+  secscan: {}
+
+artifacts:
+  - name: hwapi
+    type: rock
+    charm: hardware-api
+    channel: edge
+    charm_resource: hardware-api-image

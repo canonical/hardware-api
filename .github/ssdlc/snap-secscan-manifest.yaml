@@ -1,0 +1,7 @@
+clients:
+  secscan: {}
+
+artifacts:
+  - name: hwctl
+    type: snap
+    channel: latest/edge

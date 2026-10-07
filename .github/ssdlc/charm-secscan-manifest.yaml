@@ -1,0 +1,7 @@
+clients:
+  secscan: {}
+
+artifacts:
+  - name: hardware-api
+    type: charm
+    channel: edge
