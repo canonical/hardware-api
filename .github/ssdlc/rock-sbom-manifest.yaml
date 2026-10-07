@@ -1,0 +1,12 @@
+clients:
+  sbom:
+    department: devices_engineering
+    team: certification
+    email: certification@canonical.com
+
+artifacts:
+  - name: hwapi
+    type: rock
+    charm: hardware-api
+    channel: edge
+    charm_resource: hardware-api-image

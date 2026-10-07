@@ -1,0 +1,60 @@
+name: SSDLC
+
+permissions:
+  contents: read
+  packages: read
+
+on:
+  workflow_dispatch:
+    inputs:
+      type:
+        description: Type of scan to run
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - sbom
+          - secscan
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  sbom:
+    if: ${{ github.event.inputs.type == 'sbom' || github.event.inputs.type == 'all' }}
+    name: SBOM
+    runs-on: self-hosted-linux-amd64-noble-private-endpoint-small
+    strategy:
+      fail-fast: false
+      matrix:
+        artifact: [charm, rock, snap]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run
+        uses: canonical/sbomber/.github/actions/run@2b11503a3d840abadc50a9c14a7f0cc56e8b8096
+        with:
+          manifest: .github/ssdlc/${{ matrix.artifact }}-sbom-manifest.yaml
+          artifact-name: scan-${{ matrix.artifact }}-sbom
+  secscan:
+    if: ${{ github.event.inputs.type == 'secscan' || github.event.inputs.type == 'all' }}
+    name: Security Scan
+    runs-on: self-hosted-linux-amd64-noble-private-endpoint-small
+    strategy:
+      fail-fast: false
+      matrix:
+        artifact: [charm, rock, snap]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Run
+        uses: canonical/sbomber/.github/actions/run@2b11503a3d840abadc50a9c14a7f0cc56e8b8096
+        with:
+          manifest: .github/ssdlc/${{ matrix.artifact }}-secscan-manifest.yaml
+          artifact-name: scan-${{ matrix.artifact }}-secscan

@@ -1,0 +1,10 @@
+clients:
+  sbom:
+    department: devices_engineering
+    team: certification
+    email: certification@canonical.com
+
+artifacts:
+  - name: hwctl
+    type: snap
+    channel: latest/edge
