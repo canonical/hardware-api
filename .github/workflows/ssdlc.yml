@@ -5,6 +5,7 @@ permissions:
   packages: read
 
 on:
+  pull_request:
   workflow_dispatch:
     inputs:
       type:
