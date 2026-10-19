@@ -190,6 +190,10 @@ fn create_server(socket_file: String, timeout: u64) -> Result<(), varlink::Error
             ..Default::default()
         },
     )
+    .or_else(|err| match err.kind() {
+        varlink::ErrorKind::Timeout => Ok(()),
+        _ => Err(err),
+    })
 }
 
 fn main() -> ExitCode {
@@ -239,9 +243,8 @@ mod tests {
         let socket_file = format!("unix://{};mode=0666", socket_path);
 
         let socket_path_server: String = socket_path.clone();
-        let th = spawn(move || {
-            let _ = create_server(socket_path_server, 1);
-        });
+        let th =
+            spawn(move || -> Result<(), varlink::Error> { create_server(socket_path_server, 1) });
 
         loop {
             if std::path::Path::new(&socket_path).exists() {
@@ -291,7 +294,9 @@ mod tests {
 
         // needed to ensure that the server exits
         drop(hwctl_service);
-        th.join().unwrap();
+        th.join()
+            .expect("Varlink server thread panicked")
+            .expect("Varlink server returned error");
         keep_temp_dir_alive(&temp_dir);
     }
 }
