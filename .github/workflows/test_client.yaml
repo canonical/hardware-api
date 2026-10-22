@@ -35,10 +35,7 @@ jobs:
       - run: sudo snap install --classic just
       - run: just --yes setup
       - name: Install Rust toolchain
-        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1
-        with:
-          toolchain: stable
-          components: rustfmt, clippy
+        run: rustup toolchain install stable --component rustfmt --component clippy
       - run: just build
       - run: just lint
       - run: just test
