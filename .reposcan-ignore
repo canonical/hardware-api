@@ -1,0 +1,17 @@
+# .reposcan-ignore
+#   <tool>  <ruleId>  <path-glob>  [content-regex]
+
+# treat the following as verified action creators
+poutine  github_action_from_unverified_creator_used  **  "uses: canonical/"
+poutine  github_action_from_unverified_creator_used  **  "uses: astral-sh/"
+poutine  github_action_from_unverified_creator_used  **  "uses: tiobe/"
+poutine  github_action_from_unverified_creator_used  **  "uses: zizmorcore/"
+poutine  github_action_from_unverified_creator_used  **  "uses: rust-lang/"
+
+# test suite
+semgrep  dockerfile.security.missing-user.missing-user  integration-tests/**
+checkov  CKV_DOCKER_2                                   integration-tests/**
+checkov  CKV_DOCKER_3                                   integration-tests/**
+
+# openapi schema is auto-generated
+checkov  CKV_OPENAPI_*  server/schemas/openapi.yaml
