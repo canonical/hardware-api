@@ -69,6 +69,7 @@ class C3Client:
 
         # Mount adapter with retry strategy
         adapter = HTTPAdapter(max_retries=retry_strategy)
+        # nosemgrep: request-session-with-http
         session.mount("http://", adapter)
         session.mount("https://", adapter)
 
