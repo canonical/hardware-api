@@ -1,4 +1,36 @@
+# Secrets / local configuration
+.env
+.env.*
+
+# VCS
+.git/
+
+# Python
 venv/
 .venv/
-.git/
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Testing and tooling
+.tox/
+.nox/
+.coverage
+.coverage.*
+coverage/
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+tox.ini
+codecov.yaml
+.pre-commit-config.yaml
+
+# Packaging / infrastructure as code
+charm/
+terraform/
+
+# Generated output
 schemas/
