@@ -105,6 +105,8 @@ class HardwareApiCharm(ops.CharmBase):
                         ]
                     ),
                     "startup": "enabled",
+                    "user": "hwapi",
+                    "group": "hwapi",
                     "environment": self._app_environment,
                 }
             },

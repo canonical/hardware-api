@@ -28,10 +28,8 @@ jobs:
           persist-credentials: false
       - run: sudo snap install --classic just
       - run: just setup
-      - name: Set up Rust
-        uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1
-        with:
-          toolchain: stable
+      - name: Install Rust toolchain
+        run: rustup toolchain install stable
       - name: Extract version from tag
         id: get_version
         run: |
