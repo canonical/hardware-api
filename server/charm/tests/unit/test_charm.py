@@ -30,6 +30,8 @@ def test_pebble_layer(ctx: testing.Context, container: testing.Container):
                 "summary": "Hardware API server",
                 "command": "uvicorn hwapi.main:app --host 0.0.0.0 --port 30000 --log-level info",
                 "startup": "enabled",
+                "user": "hwapi",
+                "group": "hwapi",
                 # Since environment is empty, Layer.to_dict() omits it.
             }
         }
@@ -82,6 +84,8 @@ def test_config_changed_updates_pebble_layer(ctx: testing.Context, container: te
                 "summary": "Hardware API server",
                 "command": "uvicorn hwapi.main:app --host 0.0.0.0 --port 30000 --log-level debug",
                 "startup": "enabled",
+                "user": "hwapi",
+                "group": "hwapi",
                 # Since environment is empty, Layer.to_dict() omits it.
             }
         }
