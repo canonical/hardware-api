@@ -84,6 +84,11 @@ serve:
 import-cids +canonical_ids:
     @docker compose exec hwapi-dev ./scripts/import_certificates.py {{ canonical_ids }}
 
+[doc('Show logs for the running instance.')]
+[group('deploy')]
+logs:
+    -@docker compose logs --follow
+
 [doc('Tear down local deployment.')]
 [group('deploy')]
 teardown:
