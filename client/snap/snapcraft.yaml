@@ -1,21 +1,21 @@
 name: hwctl
 adopt-info: hwctl
 license: GPL-3.0-only
-summary: Canonical Certified Hardware API Client
+title: Ubuntu Certified
+summary: Check if your computer is Ubuntu Certified
 description: |
-  `hwctl` is a `hwlib` backed CLI tool for collecting and sending hardware
-  information to a Hardware API server to find certification status of device models.
+  Ubuntu Certified devices are tested for reliability and performance, ensuring the best Ubuntu experience.
 
-  The production deployment of the Hardware API server is available at
-  https://hw.ubuntu.com.
+  To check if your computer is Ubuntu Certified:
 
-  You can view the Hardware API OpenAPI schema at
-  https://canonical.github.io/hardware-api/.
+  - On Ubuntu, install this and go to `Settings > System > Ubuntu Certified`.
+  - On any Linux distribution, run `hwctl` in the terminal.
 
-website:
-  - https://github.com/canonical/hardware-api
-  - https://canonical.github.io/hardware-api
-  - https://hw.ubuntu.com
+  The Hardware API server is available at https://hw.ubuntu.com.
+
+  You can view the Hardware API OpenAPI schema at https://ubuntu.com/docs/hardware-api/latest/reference/openapi/.
+
+website: https://ubuntu.com/docs/hardware-api/latest
 source-code: https://github.com/canonical/hardware-api/tree/main/client
 issues: https://github.com/canonical/hardware-api/issues
 contact: https://github.com/canonical/hardware-api/issues
