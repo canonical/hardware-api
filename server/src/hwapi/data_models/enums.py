@@ -120,6 +120,7 @@ class DeviceCategory(str, Enum):
     TPU = "TPU"
     USB = "USB"
     VIDEO = "VIDEO"
+    VIRTUAL_NETWORK = "VIRTUAL_NETWORK"
     WATCHDOG = "WATCHDOG"
     WIRELESS = "WIRELESS"
     WWAN = "WWAN"
