@@ -19,7 +19,8 @@
  */
 
 use anyhow::Result;
-use clap::Parser;
+use clap::{Parser, ValueEnum};
+use std::fmt;
 use std::process::ExitCode;
 
 extern crate serde_derive;
@@ -62,6 +63,33 @@ struct Args {
     enable_server_access: bool,
     #[arg(long, action = clap::ArgAction::SetTrue, help = "Prevent the daemon from connecting to the hardware database server")]
     disable_server_access: bool,
+    #[arg(
+        long,
+        default_value_t = Verbosity::Brief,
+        value_enum,
+        value_name = "LEVEL",
+        help = "Output verbosity level"
+    )]
+    verbosity: Verbosity,
+    #[arg(long, help = "Shorthand for --verbosity=verbose")]
+    verbose: bool,
+}
+
+#[derive(ValueEnum, Clone, Copy, Debug, Default, PartialEq)]
+#[value(rename_all = "lowercase")]
+enum Verbosity {
+    #[default]
+    Brief,
+    Verbose,
+}
+
+impl fmt::Display for Verbosity {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self {
+            Verbosity::Brief => write!(f, "brief"),
+            Verbosity::Verbose => write!(f, "verbose"),
+        }
+    }
 }
 
 fn run(
@@ -70,7 +98,15 @@ fn run(
     hw_source: String,
     enable_server_access: bool,
     disable_server_access: bool,
+    verbosity: Verbosity,
 ) -> Result<com_ubuntu_hwctl::State> {
+    // Progress messages go to stderr so stdout stays the JSON response.
+    let progress = |msg: String| {
+        if verbosity == Verbosity::Verbose {
+            eprintln!("{msg}");
+        }
+    };
+
     let mut source = match hw_source.as_str() {
         "server" => com_ubuntu_hwctl::CertificationSource::server,
         "cache" => com_ubuntu_hwctl::CertificationSource::cache,
@@ -85,6 +121,7 @@ fn run(
 
     let socket_file = format!("unix://{}", socket_file);
 
+    progress(format!("Connecting to hwctl daemon at {socket_file}..."));
     let connection = Connection::with_address(&socket_file);
 
     if connection.is_err() {
@@ -99,6 +136,7 @@ fn run(
     let mut hwctl_service = com_ubuntu_hwctl::VarlinkClient::new(connection);
 
     if enable_server_access {
+        progress("Enabling server access...".to_string());
         let reply = hwctl_service.set_remote_access(true).call();
         if reply.is_err() {
             return Err(anyhow::anyhow!(
@@ -110,6 +148,7 @@ fn run(
     }
 
     if disable_server_access {
+        progress("Disabling server access...".to_string());
         let reply = hwctl_service.set_remote_access(false).call();
         if reply.is_err() {
             return Err(anyhow::anyhow!(
@@ -120,6 +159,9 @@ fn run(
         source = com_ubuntu_hwctl::CertificationSource::cache;
     }
 
+    progress(format!(
+        "Requesting certification status (origin: {source:?}, server: {server_url})..."
+    ));
     let reply = hwctl_service
         .get_certification_status(source, Some(server_url))
         .call();
@@ -128,6 +170,7 @@ fn run(
         return Err(anyhow::anyhow!("Response error: {}", reply.err().unwrap()));
     }
     let reply = reply.unwrap().state;
+    progress("Response received.".to_string());
 
     Ok(reply)
 }
@@ -144,12 +187,18 @@ fn main() -> ExitCode {
     }
 
     let (socket_file, _) = socket_folder.unwrap();
+    let verbosity = if args.verbose {
+        Verbosity::Verbose
+    } else {
+        args.verbosity
+    };
     let reply = run(
         socket_file,
         args.hw_api_url,
         args.hw_source,
         args.enable_server_access,
         args.disable_server_access,
+        verbosity,
     );
 
     if reply.is_err() {
@@ -282,6 +331,7 @@ mod tests {
             "invalid option".to_string(),
             false,
             false,
+            Verbosity::Brief,
         );
         assert!(result.is_err());
 
@@ -291,6 +341,7 @@ mod tests {
             "auto".to_string(),
             false,
             false,
+            Verbosity::Brief,
         );
         assert!(result.is_ok());
         let result = result.unwrap();
@@ -313,6 +364,7 @@ mod tests {
             "server".to_string(),
             true,
             false,
+            Verbosity::Brief,
         );
         assert!(result.is_ok());
         let result = result.unwrap();
@@ -335,6 +387,7 @@ mod tests {
             "server".to_string(),
             false,
             true,
+            Verbosity::Brief,
         );
         assert!(result.is_ok());
         let result = result.unwrap();
@@ -361,6 +414,7 @@ mod tests {
             "server".to_string(),
             false,
             true,
+            Verbosity::Brief,
         );
         assert!(result.is_err());
 
@@ -370,6 +424,7 @@ mod tests {
             "server".to_string(),
             true,
             false,
+            Verbosity::Brief,
         );
         assert!(result.is_err());
 
@@ -379,10 +434,26 @@ mod tests {
             "server".to_string(),
             false,
             false,
+            Verbosity::Brief,
         );
         assert!(result.is_err());
 
         th.join().unwrap();
         keep_temp_dir_alive(&temp_dir);
+    }
+
+    #[test]
+    fn test_verbosity_args() {
+        let args = Args::try_parse_from(["hwctl"]).unwrap();
+        assert_eq!(args.verbosity, Verbosity::Brief);
+        assert!(!args.verbose);
+
+        let args = Args::try_parse_from(["hwctl", "--verbosity=verbose"]).unwrap();
+        assert_eq!(args.verbosity, Verbosity::Verbose);
+
+        let args = Args::try_parse_from(["hwctl", "--verbose"]).unwrap();
+        assert!(args.verbose);
+
+        assert!(Args::try_parse_from(["hwctl", "--verbosity=trace"]).is_err());
     }
 }
